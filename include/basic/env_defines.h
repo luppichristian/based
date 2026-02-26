@@ -240,11 +240,9 @@ Below you can find the actual definitions: */
 #if defined(COMPILER_MSVC) && !defined(PLATFORM_WINDOWS)
 #  error "env_defines.h: COMPILER_MSVC is only supported on PLATFORM_WINDOWS."
 #endif
-
 #if defined(COMPILER_APPLE_CLANG) && !defined(PLATFORM_MACOS) && !defined(PLATFORM_IOS)
 #  error "env_defines.h: COMPILER_APPLE_CLANG is only supported on PLATFORM_MACOS or PLATFORM_IOS."
 #endif
-
 #if defined(COMPILER_EMSCRIPTEN) && !defined(PLATFORM_WEB)
 #  error "env_defines.h: COMPILER_EMSCRIPTEN is only supported on PLATFORM_WEB."
 #endif
@@ -253,7 +251,6 @@ Below you can find the actual definitions: */
 #if defined(ARCH_WASM) && !defined(PLATFORM_WEB)
 #  error "env_defines.h: ARCH_WASM requires PLATFORM_WEB."
 #endif
-
 #if defined(PLATFORM_WEB) && !defined(ARCH_WASM)
 #  error "env_defines.h: PLATFORM_WEB requires ARCH_WASM."
 #endif

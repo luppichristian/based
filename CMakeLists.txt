@@ -1,8 +1,13 @@
 # MIT License
 # Copyright (c) 2026 Christian Luppi
 
+# =========================================================================
+# Setup
+# =========================================================================
+
 cmake_minimum_required(VERSION 3.19)
 project(based C CXX)
+include(FetchContent)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -12,19 +17,22 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 option(BASED_BUILD_TESTS  "Build tests"                ON)
 option(BASED_GTEST_FETCH  "Fetch GoogleTest if not found" ON)
 
-# ── Library ──────────────────────────────────────────────────────────────────
+# =========================================================================
+# Library (always static for now)
+# =========================================================================
 
 file(GLOB BASED_SOURCES "src/*.c")
 add_library(based STATIC ${BASED_SOURCES})
 target_include_directories(based PUBLIC include)
 
-# ── Tests ─────────────────────────────────────────────────────────────────────
+# =========================================================================
+# Tests
+# =========================================================================
 
 if(BASED_BUILD_TESTS)
     find_package(GTest QUIET)
 
     if(NOT GTest_FOUND AND BASED_GTEST_FETCH)
-        include(FetchContent)
         FetchContent_Declare(
             googletest
             URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
