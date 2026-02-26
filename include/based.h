@@ -3,7 +3,10 @@
 
 #pragma once
 
+// Include basic module.
 #include "basic/env_defines.h"
+#include "basic/keyword_defines.h"
+#include "basic/primitive_types.h"
 
 // Returns the sum of a and b.
 int based_add(int a, int b);
