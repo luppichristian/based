@@ -6,6 +6,9 @@
 // Required for compiler detection and platform-specific definitions.
 #include "env_defines.h"
 
+// Include standard boolean type for 'bool', 'true', and 'false'.
+#include <stdbool.h>
+
 /*
 Define custom keywords used in the project.
 I like custom keywords, they make the code more readable to me, you can 100% tell
@@ -15,18 +18,16 @@ so I want to have a single place where I can define them and use them throughout
 
 Functional keywords:
 - 'thread_local' for thread-local storage.
-- 'dllexport' for exporting symbols from a shared library.
-- 'dllimport' for importing symbols from a shared library.
+- 'dll_export' for exporting symbols from a shared library.
+- 'dll_import' for importing symbols from a shared library.
 - 'static_assert' for compile-time assertions.
-- 'unused' for marking variables or functions as intentionally unused to avoid compiler warnings.
-- 'deprecated' for marking functions or variables as deprecated.
-- 'noreturn' for functions that do not return to the caller.
-- 'forceinline' for suggesting the compiler to inline a function.
-- 'noinline' for suggesting the compiler not to inline a function.
-- 'alignas' for specifying the alignment of a variable or type.
-- 'alignof' for querying the alignment requirement of a type.
+- 'no_return' for functions that do not return to the caller.
+- 'force_inline' for suggesting the compiler to inline a function.
+- 'no_inline' for suggesting the compiler not to inline a function.
+- 'align_as' for specifying the alignment of a variable or type.
+- 'align_of' for querying the alignment requirement of a type.
 - 'likely' and 'unlikely' for branch prediction hints to the compiler.
-- 'readonly' for variables that are constant and should not be modified after init.
+- 'read_only' for variables that are constant and should not be modified after init.
 
 Purely cosmetic keywords:
 - 'func' as a shorthand for 'function' to improve readability.
@@ -55,17 +56,17 @@ If ALL_GLOBAL_VARS_STATIC is defined, all global variables will be declared as s
 #  define thread_local
 #endif
 
-// dllexport / dllimport — symbol visibility for shared libraries.
+// dll_export / dll_import — symbol visibility for shared libraries.
 #if defined(PLATFORM_WINDOWS)
-#  define dllexport __declspec(dllexport)
-#  define dllimport __declspec(dllimport)
+#  define dll_export __declspec(dllexport)
+#  define dll_import __declspec(dllimport)
 #elif defined(COMPILER_GCC) || defined(COMPILER_CLANG) || \
     defined(COMPILER_APPLE_CLANG) || defined(COMPILER_INTEL)
-#  define dllexport __attribute__((visibility("default")))
-#  define dllimport
+#  define dll_export __attribute__((visibility("default")))
+#  define dll_import
 #else
-#  define dllexport
-#  define dllimport
+#  define dll_export
+#  define dll_import
 #endif
 
 // static_assert — compile-time assertion.
@@ -80,94 +81,66 @@ If ALL_GLOBAL_VARS_STATIC is defined, all global variables will be declared as s
 #  endif
 #endif
 
-// unused — suppress unused variable/parameter warnings.
-#if defined(__cplusplus) && __cplusplus >= 201703L
-#  define unused [[maybe_unused]]
-#elif defined(COMPILER_GCC) || defined(COMPILER_CLANG) || \
-    defined(COMPILER_APPLE_CLANG) || defined(COMPILER_INTEL)
-#  define unused __attribute__((unused))
-#else
-#  define unused
-#endif
-
-// deprecated — mark a symbol as deprecated.
-#if defined(__cplusplus) && __cplusplus >= 201402L
-#  define deprecated [[deprecated]]
+// no_return — function does not return to the caller.
+#if defined(__cplusplus) && __cplusplus >= 201103L
+#  define no_return [[noreturn]]
+#elif defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L
+#  define no_return _Noreturn
 #elif defined(COMPILER_MSVC)
-#  define deprecated __declspec(deprecated)
+#  define no_return __declspec(noreturn)
 #elif defined(COMPILER_GCC) || defined(COMPILER_CLANG) || \
     defined(COMPILER_APPLE_CLANG) || defined(COMPILER_INTEL)
-#  define deprecated __attribute__((deprecated))
+#  define no_return __attribute__((noreturn))
 #else
-#  define deprecated
+#  define no_return
 #endif
 
-// noreturn — function does not return to the caller.
-#ifndef noreturn
-#  if defined(__cplusplus) && __cplusplus >= 201103L
-#    define noreturn [[noreturn]]
-#  elif defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L
-#    define noreturn _Noreturn
-#  elif defined(COMPILER_MSVC)
-#    define noreturn __declspec(noreturn)
-#  elif defined(COMPILER_GCC) || defined(COMPILER_CLANG) || \
-      defined(COMPILER_APPLE_CLANG) || defined(COMPILER_INTEL)
-#    define noreturn __attribute__((noreturn))
-#  else
-#    define noreturn
-#  endif
-#endif
-
-// forceinline — ask the compiler to always inline this function.
+// force_inline — ask the compiler to always inline this function.
 #if defined(COMPILER_MSVC) || defined(COMPILER_INTEL)
-#  define forceinline __forceinline
+#  define force_inline __forceinline
 #elif defined(COMPILER_GCC) || defined(COMPILER_CLANG) || \
     defined(COMPILER_APPLE_CLANG)
-#  define forceinline __attribute__((always_inline)) inline
+#  define force_inline __attribute__((always_inline)) inline
 #else
-#  define forceinline inline
+#  define force_inline inline
 #endif
 
-// noinline — ask the compiler never to inline this function.
+// no_inline — ask the compiler never to inline this function.
 #if defined(COMPILER_MSVC) || defined(COMPILER_INTEL)
-#  define noinline __declspec(noinline)
+#  define no_inline __declspec(noinline)
 #elif defined(COMPILER_GCC) || defined(COMPILER_CLANG) || \
     defined(COMPILER_APPLE_CLANG)
-#  define noinline __attribute__((noinline))
+#  define no_inline __attribute__((noinline))
 #else
-#  define noinline
+#  define no_inline
 #endif
 
-// alignas — specify the alignment of a variable or type.
-#ifndef alignas
-#  if defined(__cplusplus) && __cplusplus >= 201103L
-// C++11 keyword — already defined.
-#  elif defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L
-#    define alignas(x) _Alignas(x)
-#  elif defined(COMPILER_MSVC)
-#    define alignas(x) __declspec(align(x))
-#  elif defined(COMPILER_GCC) || defined(COMPILER_CLANG) || \
-      defined(COMPILER_APPLE_CLANG) || defined(COMPILER_INTEL)
-#    define alignas(x) __attribute__((aligned(x)))
-#  else
-#    define alignas(x)
-#  endif
+// align_as — specify the alignment of a variable or type.
+#if defined(__cplusplus) && __cplusplus >= 201103L
+#  define align_as(x) alignas(x)
+#elif defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L
+#  define align_as(x) _Alignas(x)
+#elif defined(COMPILER_MSVC)
+#  define align_as(x) __declspec(align(x))
+#elif defined(COMPILER_GCC) || defined(COMPILER_CLANG) || \
+    defined(COMPILER_APPLE_CLANG) || defined(COMPILER_INTEL)
+#  define align_as(x) __attribute__((aligned(x)))
+#else
+#  define align_as(x)
 #endif
 
-// alignof — query the alignment requirement of a type.
-#ifndef alignof
-#  if defined(__cplusplus) && __cplusplus >= 201103L
-// C++11 keyword — already defined.
-#  elif defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L
-#    define alignof(x) _Alignof(x)
-#  elif defined(COMPILER_MSVC)
-#    define alignof(x) __alignof(x)
-#  elif defined(COMPILER_GCC) || defined(COMPILER_CLANG) || \
-      defined(COMPILER_APPLE_CLANG) || defined(COMPILER_INTEL)
-#    define alignof(x) __alignof__(x)
-#  else
-#    define alignof(x) sizeof(x)
-#  endif
+// align_of — query the alignment requirement of a type.
+#if defined(__cplusplus) && __cplusplus >= 201103L
+#  define align_of(x) alignof(x)
+#elif defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L
+#  define align_of(x) _Alignof(x)
+#elif defined(COMPILER_MSVC)
+#  define align_of(x) __alignof(x)
+#elif defined(COMPILER_GCC) || defined(COMPILER_CLANG) || \
+    defined(COMPILER_APPLE_CLANG) || defined(COMPILER_INTEL)
+#  define align_of(x) __alignof__(x)
+#else
+#  define align_of(x) sizeof(x)
 #endif
 
 // likely / unlikely — branch prediction hints.
@@ -180,7 +153,7 @@ If ALL_GLOBAL_VARS_STATIC is defined, all global variables will be declared as s
 #  define unlikely(x) (x)
 #endif
 
-// readonly — constant variable explicitly placed in the read-only data section.
+// read_only — constant variable explicitly placed in the read-only data section.
 // MSVC  → .rdata   (PE read-only data segment)
 // Linux → .rodata  (ELF read-only data segment)
 // macOS → __TEXT,__const (Mach-O read-only text segment)
@@ -188,27 +161,27 @@ If ALL_GLOBAL_VARS_STATIC is defined, all global variables will be declared as s
 #if defined(COMPILER_MSVC)
 #  pragma section(".rdata", read)
 #  if defined(ALL_GLOBAL_VARS_STATIC)
-#    define readonly static __declspec(allocate(".rdata")) const
+#    define read_only static __declspec(allocate(".rdata")) const
 #  else
-#    define readonly __declspec(allocate(".rdata")) const
+#    define read_only __declspec(allocate(".rdata")) const
 #  endif
 #elif defined(COMPILER_APPLE_CLANG)
 #  if defined(ALL_GLOBAL_VARS_STATIC)
-#    define readonly static const __attribute__((section("__TEXT,__const")))
+#    define read_only static const __attribute__((section("__TEXT,__const")))
 #  else
-#    define readonly const __attribute__((section("__TEXT,__const")))
+#    define read_only const __attribute__((section("__TEXT,__const")))
 #  endif
 #elif defined(COMPILER_GCC) || defined(COMPILER_CLANG) || defined(COMPILER_INTEL)
 #  if defined(ALL_GLOBAL_VARS_STATIC)
-#    define readonly static const __attribute__((section(".rodata")))
+#    define read_only static const __attribute__((section(".rodata")))
 #  else
-#    define readonly const __attribute__((section(".rodata")))
+#    define read_only const __attribute__((section(".rodata")))
 #  endif
 #else
 #  if defined(ALL_GLOBAL_VARS_STATIC)
-#    define readonly static const
+#    define read_only static const
 #  else
-#    define readonly const
+#    define read_only const
 #  endif
 #endif
 
