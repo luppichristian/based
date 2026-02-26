@@ -1,0 +1,26 @@
+// MIT License
+// Copyright (c) 2026 Christian Luppi
+
+#pragma once
+
+#include "../basic/primitive_types.h"
+
+// Opaque handle to a semaphore.
+typedef void* semaphore;
+
+// Creates a new semaphore with the given initial count and returns a handle to it.
+func semaphore semaphore_create(u32 initial_count);
+
+// Destroys the given semaphore and releases any associated resources.
+func b32 semaphore_destroy(semaphore sem);
+
+// Returns true if the given semaphore handle is valid, false otherwise.
+func b32 semaphore_is_valid(semaphore sem);
+
+// Waits (decrements) the given semaphore.
+// If the semaphore's count is greater than zero, this function will decrement the count and return
+// immediately. If the count is zero, this function will block until another thread increments the count.
+func void semaphore_wait(semaphore sem);
+
+// Increments the given semaphore, potentially unblocking a waiting thread.
+func void semaphore_signal(semaphore sem);

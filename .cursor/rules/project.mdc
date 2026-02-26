@@ -16,9 +16,22 @@ include/basic/
   keyword_defines.h          # Custom keyword aliases (read_only, func, global_var, …)
   primitive_types.h          # Portable type aliases (i32, f64, b8, sz, …)
   utility_defines.h          # General-purpose utility macros
-src/based.c                  # Library implementation (C11)
+include/threads/
+  thread.h                   # Thread creation, join, detach, ID (opaque handle + thread_func)
+  thread_current.h           # Current-thread utilities (ID, sleep, yield, priority)
+  atomics.h                  # Lock-free atomic types and operations (atomic_i32, etc.)
+  condvar.h                  # Condition variable (condvar_t, wait/signal/broadcast)
+  mutex.h                    # Mutual-exclusion lock (mutex_t, lock/unlock/trylock)
+  semaphore.h                # Counting semaphore (semaphore_t, wait/post)
+src/threads/
+  thread.c                   # thread_create / thread_join / thread_detach / thread_get_id
+  thread_current.c           # thread_current_* helpers
+  atomics.c                  # atomic_* implementations
+  condvar.c                  # condvar_* implementations
+  mutex.c                    # mutex_* implementations
+  semaphore.c                # semaphore_* implementations
 tests/test_based.cpp         # GoogleTest tests (C++20, extern "C" wrapper)
-CMakeLists.txt               # CMake build; fetches GoogleTest automatically
+CMakeLists.txt               # CMake build; fetches GoogleTest + SDL3 automatically
 .clang-format                # Formatting config — always respect this
 .clang-tidy                  # Linting config — always respect this
 .cursor/rules/               # These rule files — keep them up to date when conventions change
@@ -26,7 +39,7 @@ CMakeLists.txt               # CMake build; fetches GoogleTest automatically
 
 ## Build
 
-- Library: C11 static (`based.lib` / `libbased.a`)
+- Library: C11 static (`based.lib` / `libbased.a`); links against SDL3 (used for thread/sync primitives)
 - Tests: C++20, GoogleTest v1.14.0 (auto-fetched via FetchContent)
 - Build dir: `build/`; run `cmake --build build` to compile
 
@@ -44,4 +57,4 @@ Every source file starts with:
 
 ## Rule maintenance
 
-When adding new conventions, helpers, or modules, update the relevant `.cursor/rules/*.mdc` files to reflect the changes.
+**Every time a source or header file is created or deleted, the Structure section above must be updated in the same response — no exceptions.** Add the new file with a short description, or remove the deleted entry. Never finish a task that touches the file tree without syncing this rule.

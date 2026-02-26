@@ -18,12 +18,36 @@ option(BASED_BUILD_TESTS  "Build tests"                ON)
 option(BASED_GTEST_FETCH  "Fetch GoogleTest if not found" ON)
 
 # =========================================================================
+# SDL3
+# =========================================================================
+
+option(BASED_SDL3_FETCH "Fetch SDL3 if not found" ON)
+
+find_package(SDL3 QUIET)
+
+if(NOT SDL3_FOUND AND BASED_SDL3_FETCH)
+    set(SDL_SHARED          OFF CACHE BOOL "" FORCE)
+    set(SDL_STATIC          ON  CACHE BOOL "" FORCE)
+    set(SDL_TEST_LIBRARY    OFF CACHE BOOL "" FORCE)
+    set(SDL_TESTS           OFF CACHE BOOL "" FORCE)
+    set(SDL_EXAMPLES        OFF CACHE BOOL "" FORCE)
+
+    FetchContent_Declare(
+        SDL3
+        URL https://github.com/libsdl-org/SDL/releases/download/release-3.2.0/SDL3-3.2.0.tar.gz
+        DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+    )
+    FetchContent_MakeAvailable(SDL3)
+endif()
+
+# =========================================================================
 # Library (always static for now)
 # =========================================================================
 
-file(GLOB BASED_SOURCES "src/*.c")
+file(GLOB_RECURSE BASED_SOURCES "src/**.c")
 add_library(based STATIC ${BASED_SOURCES})
 target_include_directories(based PUBLIC include)
+target_link_libraries(based PUBLIC SDL3::SDL3)
 
 # =========================================================================
 # Tests

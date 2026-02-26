@@ -1,0 +1,164 @@
+// MIT License
+// Copyright (c) 2026 Christian Luppi
+
+#include "threads/atomics.h"
+#include <SDL3/SDL.h>
+
+// Layout-compatibility assertions:
+//   atomic_i32 { i32 val; }  <->  SDL_AtomicInt { int value; }    (i32 == int32_t == int)
+//   atomic_u32 { u32 val; }  <->  SDL_AtomicU32 { Uint32 value; } (u32 == uint32_t == Uint32)
+// The (void*) intermediate cast is the idiomatic C way to suppress strict-aliasing analysis
+// while preserving defined pointer-conversion semantics.
+SDL_COMPILE_TIME_ASSERT(atomic_i32_compat, sizeof(atomic_i32) == sizeof(SDL_AtomicInt));
+SDL_COMPILE_TIME_ASSERT(atomic_u32_compat, sizeof(atomic_u32) == sizeof(SDL_AtomicU32));
+
+// =========================================================================
+// atomic_i32
+// =========================================================================
+
+func i32 atomic_i32_get(atomic_i32* atom) {
+  return SDL_GetAtomicInt((SDL_AtomicInt*)(void*)atom);
+}
+
+func i32 atomic_i32_set(atomic_i32* atom, i32 val) {
+  return (i32)SDL_SetAtomicInt((SDL_AtomicInt*)(void*)atom, (int)val);
+}
+
+func b32 atomic_i32_cmpex(atomic_i32* atom, i32* expected, i32 desired) {
+  if (SDL_CompareAndSwapAtomicInt((SDL_AtomicInt*)(void*)atom, (int)*expected, (int)desired)) {
+    return 1;
+  }
+  *expected = (i32)SDL_GetAtomicInt((SDL_AtomicInt*)(void*)atom);
+  return 0;
+}
+
+func i32 atomic_i32_add(atomic_i32* atom, i32 delta) {
+  return (i32)SDL_AddAtomicInt((SDL_AtomicInt*)(void*)atom, (int)delta);
+}
+
+func i32 atomic_i32_sub(atomic_i32* atom, i32 delta) {
+  return (i32)SDL_AddAtomicInt((SDL_AtomicInt*)(void*)atom, -(int)delta);
+}
+
+func b32 atomic_i32_eq(atomic_i32* atom, i32 val) {
+  return atomic_i32_get(atom) == val;
+}
+func b32 atomic_i32_neq(atomic_i32* atom, i32 val) {
+  return atomic_i32_get(atom) != val;
+}
+func b32 atomic_i32_lt(atomic_i32* atom, i32 val) {
+  return atomic_i32_get(atom) < val;
+}
+func b32 atomic_i32_gt(atomic_i32* atom, i32 val) {
+  return atomic_i32_get(atom) > val;
+}
+func b32 atomic_i32_lte(atomic_i32* atom, i32 val) {
+  return atomic_i32_get(atom) <= val;
+}
+func b32 atomic_i32_gte(atomic_i32* atom, i32 val) {
+  return atomic_i32_get(atom) >= val;
+}
+
+// =========================================================================
+// atomic_u32
+// =========================================================================
+
+func u32 atomic_u32_get(atomic_u32* atom) {
+  return (u32)SDL_GetAtomicU32((SDL_AtomicU32*)(void*)atom);
+}
+
+func u32 atomic_u32_set(atomic_u32* atom, u32 val) {
+  return (u32)SDL_SetAtomicU32((SDL_AtomicU32*)(void*)atom, (Uint32)val);
+}
+
+func b32 atomic_u32_cmpex(atomic_u32* atom, u32* expected, u32 desired) {
+  if (SDL_CompareAndSwapAtomicU32((SDL_AtomicU32*)(void*)atom, (Uint32)*expected, (Uint32)desired)) {
+    return 1;
+  }
+  *expected = (u32)SDL_GetAtomicU32((SDL_AtomicU32*)(void*)atom);
+  return 0;
+}
+
+// SDL3 has no SDL_AddAtomicU32 — implement via CAS loop.
+func u32 atomic_u32_add(atomic_u32* atom, u32 delta) {
+  u32 old;
+  do {
+    old = atomic_u32_get(atom);
+  } while (!SDL_CompareAndSwapAtomicU32((SDL_AtomicU32*)(void*)atom, (Uint32)old, (Uint32)(old + delta)));
+  return old;
+}
+
+func u32 atomic_u32_sub(atomic_u32* atom, u32 delta) {
+  u32 old;
+  do {
+    old = atomic_u32_get(atom);
+  } while (!SDL_CompareAndSwapAtomicU32((SDL_AtomicU32*)(void*)atom, (Uint32)old, (Uint32)(old - delta)));
+  return old;
+}
+
+func b32 atomic_u32_eq(atomic_u32* atom, u32 val) {
+  return atomic_u32_get(atom) == val;
+}
+func b32 atomic_u32_neq(atomic_u32* atom, u32 val) {
+  return atomic_u32_get(atom) != val;
+}
+func b32 atomic_u32_lt(atomic_u32* atom, u32 val) {
+  return atomic_u32_get(atom) < val;
+}
+func b32 atomic_u32_gt(atomic_u32* atom, u32 val) {
+  return atomic_u32_get(atom) > val;
+}
+func b32 atomic_u32_lte(atomic_u32* atom, u32 val) {
+  return atomic_u32_get(atom) <= val;
+}
+func b32 atomic_u32_gte(atomic_u32* atom, u32 val) {
+  return atomic_u32_get(atom) >= val;
+}
+
+// =========================================================================
+// atomic_ptr
+// =========================================================================
+
+func void* atomic_ptr_get(atomic_ptr* atom) {
+  return SDL_GetAtomicPointer(&atom->val);
+}
+
+func void* atomic_ptr_set(atomic_ptr* atom, void* val) {
+  return SDL_SetAtomicPointer(&atom->val, val);
+}
+
+func b32 atomic_ptr_cmpex(atomic_ptr* atom, void** expected, void* desired) {
+  if (SDL_CompareAndSwapAtomicPointer(&atom->val, *expected, desired)) {
+    return 1;
+  }
+  *expected = SDL_GetAtomicPointer(&atom->val);
+  return 0;
+}
+
+func b32 atomic_ptr_eq(atomic_ptr* atom, void* val) {
+  return atomic_ptr_get(atom) == val;
+}
+func b32 atomic_ptr_neq(atomic_ptr* atom, void* val) {
+  return atomic_ptr_get(atom) != val;
+}
+
+// =========================================================================
+// Memory Fences
+// =========================================================================
+
+func void atomic_fence_acquire(void) {
+  SDL_MemoryBarrierAcquireFunction();
+}
+
+func void atomic_fence_release(void) {
+  SDL_MemoryBarrierReleaseFunction();
+}
+
+func void atomic_fence(void) {
+  SDL_MemoryBarrierReleaseFunction();
+  SDL_MemoryBarrierAcquireFunction();
+}
+
+func void atomic_pause(void) {
+  SDL_CPUPauseInstruction();
+}

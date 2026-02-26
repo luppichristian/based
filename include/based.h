@@ -9,5 +9,10 @@
 #include "basic/primitive_types.h"
 #include "basic/utility_defines.h"
 
-// Returns the sum of a and b.
-int based_add(int a, int b);
+// Include threading modules.
+#include "threads/thread.h"
+#include "threads/thread_current.h"
+#include "threads/atomics.h"
+#include "threads/condvar.h"
+#include "threads/mutex.h"
+#include "threads/semaphore.h"
