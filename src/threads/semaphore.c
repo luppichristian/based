@@ -24,6 +24,14 @@ func void semaphore_wait(semaphore sem) {
   SDL_WaitSemaphore((SDL_Semaphore*)sem);
 }
 
+func b32 semaphore_trywait(semaphore sem) {
+  return SDL_TryWaitSemaphore((SDL_Semaphore*)sem);
+}
+
+func b32 semaphore_wait_timeout(semaphore sem, u32 millis) {
+  return SDL_WaitSemaphoreTimeout((SDL_Semaphore*)sem, (Sint32)millis);
+}
+
 func void semaphore_signal(semaphore sem) {
   SDL_SignalSemaphore((SDL_Semaphore*)sem);
 }

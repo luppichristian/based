@@ -47,3 +47,6 @@ func void thread_detach(thread thd);
 
 // Returns the OS-level identifier of the given thread.
 func u64 thread_get_id(thread thd);
+
+// Returns the debug name of the given thread, or NULL if none was set.
+func const c8* thread_get_name(thread thd);

@@ -15,4 +15,6 @@
 #include "threads/atomics.h"
 #include "threads/condvar.h"
 #include "threads/mutex.h"
+#include "threads/rwlock.h"
 #include "threads/semaphore.h"
+#include "threads/spinlock.h"

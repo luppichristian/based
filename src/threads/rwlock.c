@@ -1,0 +1,45 @@
+// MIT License
+// Copyright (c) 2026 Christian Luppi
+
+#include "threads/rwlock.h"
+#include <SDL3/SDL.h>
+
+func rwlock rwlock_create(void) {
+  return (rwlock)SDL_CreateRWLock();
+}
+
+func b32 rwlock_destroy(rwlock rw) {
+  if (!rw) {
+    return 0;
+  }
+  SDL_DestroyRWLock((SDL_RWLock*)rw);
+  return 1;
+}
+
+func b32 rwlock_is_valid(rwlock rw) {
+  return rw != NULL;
+}
+
+func void rwlock_read_lock(rwlock rw) {
+  SDL_LockRWLockForReading((SDL_RWLock*)rw);
+}
+
+func void rwlock_read_unlock(rwlock rw) {
+  SDL_UnlockRWLock((SDL_RWLock*)rw);
+}
+
+func void rwlock_write_lock(rwlock rw) {
+  SDL_LockRWLockForWriting((SDL_RWLock*)rw);
+}
+
+func void rwlock_write_unlock(rwlock rw) {
+  SDL_UnlockRWLock((SDL_RWLock*)rw);
+}
+
+func b32 rwlock_try_read_lock(rwlock rw) {
+  return SDL_TryLockRWLockForReading((SDL_RWLock*)rw);
+}
+
+func b32 rwlock_try_write_lock(rwlock rw) {
+  return SDL_TryLockRWLockForWriting((SDL_RWLock*)rw);
+}

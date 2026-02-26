@@ -33,3 +33,7 @@ func void thread_detach(thread thd) {
 func u64 thread_get_id(thread thd) {
   return (u64)SDL_GetThreadID((SDL_Thread*)thd);
 }
+
+func const c8* thread_get_name(thread thd) {
+  return SDL_GetThreadName((SDL_Thread*)thd);
+}

@@ -1,0 +1,43 @@
+// MIT License
+// Copyright (c) 2026 Christian Luppi
+
+#pragma once
+
+#include "../basic/primitive_types.h"
+
+// Opaque handle to a reader-writer lock.
+typedef void* rwlock;
+
+// Creates a new reader-writer lock and returns a handle to it.
+// Multiple threads may hold the read lock simultaneously; the write lock is exclusive.
+func rwlock rwlock_create(void);
+
+// Destroys the given reader-writer lock and releases any associated resources.
+func b32 rwlock_destroy(rwlock rw);
+
+// Returns true if the given reader-writer lock handle is valid, false otherwise.
+func b32 rwlock_is_valid(rwlock rw);
+
+// Acquires the lock for reading. Blocks if a writer currently holds the lock.
+// Read locks are recursive — the calling thread may acquire multiple read locks.
+// Do not request a read lock while holding the write lock on the same rwlock.
+func void rwlock_read_lock(rwlock rw);
+
+// Releases a previously acquired read lock.
+func void rwlock_read_unlock(rwlock rw);
+
+// Acquires the lock for writing. Blocks until all readers and the previous writer release.
+// Write locks are NOT recursive.
+// Do not request a write lock while holding a read lock on the same rwlock.
+func void rwlock_write_lock(rwlock rw);
+
+// Releases the write lock.
+func void rwlock_write_unlock(rwlock rw);
+
+// Tries to acquire the read lock without blocking.
+// Returns true if the lock was acquired, false if a writer currently holds the lock.
+func b32 rwlock_try_read_lock(rwlock rw);
+
+// Tries to acquire the write lock without blocking.
+// Returns true if the lock was acquired, false if any thread currently holds the lock.
+func b32 rwlock_try_write_lock(rwlock rw);

@@ -20,6 +20,14 @@ typedef struct atomic_u32 {
   u32 val;
 } atomic_u32;
 
+typedef struct atomic_i64 {
+  i64 val;
+} atomic_i64;
+
+typedef struct atomic_u64 {
+  u64 val;
+} atomic_u64;
+
 // Atomic pointer — a void* that can be exchanged across threads.
 typedef struct atomic_ptr {
   void* val;
@@ -82,6 +90,62 @@ func b32 atomic_u32_lt(atomic_u32* atom, u32 val);
 func b32 atomic_u32_gt(atomic_u32* atom, u32 val);
 func b32 atomic_u32_lte(atomic_u32* atom, u32 val);
 func b32 atomic_u32_gte(atomic_u32* atom, u32 val);
+
+// =========================================================================
+// atomic_i64
+// =========================================================================
+
+// Atomically loads and returns the current value.
+func i64 atomic_i64_get(atomic_i64* atom);
+
+// Atomically replaces the value with val and returns the previous value.
+func i64 atomic_i64_set(atomic_i64* atom, i64 val);
+
+// If the current value equals *expected, replaces it with desired and returns true.
+// On failure, writes the current value into *expected and returns false.
+func b32 atomic_i64_cmpex(atomic_i64* atom, i64* expected, i64 desired);
+
+// Atomically adds delta and returns the value before the addition.
+func i64 atomic_i64_add(atomic_i64* atom, i64 delta);
+
+// Atomically subtracts delta and returns the value before the subtraction.
+func i64 atomic_i64_sub(atomic_i64* atom, i64 delta);
+
+// Compare the current value against val (via a single atomic load).
+func b32 atomic_i64_eq(atomic_i64* atom, i64 val);
+func b32 atomic_i64_neq(atomic_i64* atom, i64 val);
+func b32 atomic_i64_lt(atomic_i64* atom, i64 val);
+func b32 atomic_i64_gt(atomic_i64* atom, i64 val);
+func b32 atomic_i64_lte(atomic_i64* atom, i64 val);
+func b32 atomic_i64_gte(atomic_i64* atom, i64 val);
+
+// =========================================================================
+// atomic_u64
+// =========================================================================
+
+// Atomically loads and returns the current value.
+func u64 atomic_u64_get(atomic_u64* atom);
+
+// Atomically replaces the value with val and returns the previous value.
+func u64 atomic_u64_set(atomic_u64* atom, u64 val);
+
+// If the current value equals *expected, replaces it with desired and returns true.
+// On failure, writes the current value into *expected and returns false.
+func b32 atomic_u64_cmpex(atomic_u64* atom, u64* expected, u64 desired);
+
+// Atomically adds delta and returns the value before the addition.
+func u64 atomic_u64_add(atomic_u64* atom, u64 delta);
+
+// Atomically subtracts delta and returns the value before the subtraction.
+func u64 atomic_u64_sub(atomic_u64* atom, u64 delta);
+
+// Compare the current value against val (via a single atomic load).
+func b32 atomic_u64_eq(atomic_u64* atom, u64 val);
+func b32 atomic_u64_neq(atomic_u64* atom, u64 val);
+func b32 atomic_u64_lt(atomic_u64* atom, u64 val);
+func b32 atomic_u64_gt(atomic_u64* atom, u64 val);
+func b32 atomic_u64_lte(atomic_u64* atom, u64 val);
+func b32 atomic_u64_gte(atomic_u64* atom, u64 val);
 
 // =========================================================================
 // atomic_ptr

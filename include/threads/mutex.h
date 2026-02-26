@@ -22,6 +22,10 @@ func b32 mutex_is_valid(mutex mtx);
 // this function will block until the mutex becomes available.
 func void mutex_lock(mutex mtx);
 
+// Tries to lock the given mutex without blocking.
+// Returns true if the lock was acquired, false if the mutex is already held by another thread.
+func b32 mutex_trylock(mutex mtx);
+
 // Unlocks the given mutex.
 // The mutex must be locked by the current thread before calling this function.
 func void mutex_unlock(mutex mtx);

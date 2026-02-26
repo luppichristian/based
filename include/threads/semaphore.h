@@ -22,5 +22,13 @@ func b32 semaphore_is_valid(semaphore sem);
 // immediately. If the count is zero, this function will block until another thread increments the count.
 func void semaphore_wait(semaphore sem);
 
+// Tries to decrement the semaphore without blocking.
+// Returns true if the count was positive and was decremented, false if the count is zero.
+func b32 semaphore_trywait(semaphore sem);
+
+// Waits up to millis milliseconds for the semaphore count to become positive, then decrements it.
+// Returns true if the semaphore was decremented, false if the timeout elapsed.
+func b32 semaphore_wait_timeout(semaphore sem, u32 millis);
+
 // Increments the given semaphore, potentially unblocking a waiting thread.
 func void semaphore_signal(semaphore sem);
