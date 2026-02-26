@@ -35,6 +35,9 @@ typedef struct allocator {
 // Allocates a block of memory of the given size using the provided allocator.
 func void* _allocator_alloc(allocator* alloc, sz size, callsite site);
 
+// Allocates a block of memory for an array of elements, initializing it to zero.
+func void* _allocator_calloc(allocator* alloc, sz count, sz size, callsite site);
+
 // Deallocates a previously allocated block of memory using the provided allocator.
 func void _allocator_dealloc(allocator* alloc, void* ptr, sz size, callsite site);
 
@@ -46,5 +49,7 @@ func void* _allocator_realloc(allocator* alloc, void* ptr, sz old_size, sz new_s
   _allocator_alloc(alloc, size, CALLSITE_HERE)
 #define allocator_dealloc(alloc, ptr, size) \
   _allocator_dealloc(alloc, ptr, size, CALLSITE_HERE)
+#define allocator_calloc(alloc, count, size) \
+  _allocator_calloc(alloc, count, size, CALLSITE_HERE)
 #define allocator_realloc(alloc, ptr, old_size, new_size) \
   _allocator_realloc(alloc, ptr, old_size, new_size, CALLSITE_HERE)
