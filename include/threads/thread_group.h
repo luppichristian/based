@@ -30,21 +30,18 @@ typedef struct {
   u32 count;
 } thread_group;
 
-// Initializes group with count threads, all executing entry(index, arg).
+// Creates a group of count threads, all executing entry(index, arg).
 // Threads start immediately; index runs from 0 to count-1.
-// Returns true on success. On failure the group is left zeroed and no threads are running.
-func b32 thread_group_create(thread_group* group, u32 count, thread_group_func entry, void* arg);
+// Returns a pointer to the allocated group, or NULL on failure.
+func thread_group* thread_group_create(u32 count, thread_group_func entry, void* arg);
 
 // Like thread_group_create, but each thread is named "<base_name>[<index>]".
 // Names are visible in debuggers and profilers.
-func b32 thread_group_create_named(
-    thread_group* group,
-    u32 count,
-    thread_group_func entry,
-    void* arg,
-    const c8* base_name);
+func thread_group* thread_group_create_named(u32 count, thread_group_func entry, void* arg,
+                                              const c8* base_name);
 
-// Frees internal resources. All threads must have been joined or detached before calling this.
+// Joins or detaches all threads, frees internal resources, and frees the group itself.
+// Passing NULL is safe and does nothing.
 func void thread_group_destroy(thread_group* group);
 
 // Returns true if the group was successfully created and holds live thread handles.

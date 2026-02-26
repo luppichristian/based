@@ -4,6 +4,7 @@
 #pragma once
 
 // Include basic module.
+#include "basic/codespace.h"
 #include "basic/env_defines.h"
 #include "basic/keyword_defines.h"
 #include "basic/primitive_types.h"
