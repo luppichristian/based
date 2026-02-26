@@ -1,0 +1,47 @@
+---
+description: Project overview, structure, and build system for the based C library
+alwaysApply: true
+---
+
+# based — Project Overview
+
+A cross-platform C11 utility library by Christian Luppi (MIT License). It provides portable primitive types, custom keywords, utility macros, and environment detection.
+
+## Structure
+
+```
+include/based.h              # Public umbrella header — include this
+include/basic/
+  env_defines.h              # Platform / arch / compiler / build detection macros
+  keyword_defines.h          # Custom keyword aliases (read_only, func, global_var, …)
+  primitive_types.h          # Portable type aliases (i32, f64, b8, sz, …)
+  utility_defines.h          # General-purpose utility macros
+src/based.c                  # Library implementation (C11)
+tests/test_based.cpp         # GoogleTest tests (C++20, extern "C" wrapper)
+CMakeLists.txt               # CMake build; fetches GoogleTest automatically
+.clang-format                # Formatting config — always respect this
+.clang-tidy                  # Linting config — always respect this
+.cursor/rules/               # These rule files — keep them up to date when conventions change
+```
+
+## Build
+
+- Library: C11 static (`based.lib` / `libbased.a`)
+- Tests: C++20, GoogleTest v1.14.0 (auto-fetched via FetchContent)
+- Build dir: `build/`; run `cmake --build build` to compile
+
+## Formatting & linting
+
+All code must conform to `.clang-format` and pass `.clang-tidy` checks (warnings treated as errors). Never override or bypass these configs.
+
+## License header
+
+Every source file starts with:
+```c
+// MIT License
+// Copyright (c) 2026 Christian Luppi
+```
+
+## Rule maintenance
+
+When adding new conventions, helpers, or modules, update the relevant `.cursor/rules/*.mdc` files to reflect the changes.
