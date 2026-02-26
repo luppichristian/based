@@ -10,11 +10,12 @@
 #include "basic/utility_defines.h"
 
 // Include threading modules.
-#include "threads/thread.h"
-#include "threads/thread_current.h"
 #include "threads/atomics.h"
 #include "threads/condvar.h"
 #include "threads/mutex.h"
 #include "threads/rwlock.h"
 #include "threads/semaphore.h"
 #include "threads/spinlock.h"
+#include "threads/thread.h"
+#include "threads/thread_current.h"
+#include "threads/thread_group.h"

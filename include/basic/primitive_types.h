@@ -155,9 +155,9 @@ read_only global_var u64x U64X_MAX = 18446744073709551615ULL;
 // Pointer and size types
 // =========================================================================
 
-typedef size_t    sz;
+typedef size_t sz;
 typedef uintptr_t up;
-typedef intptr_t  sp;
+typedef intptr_t sp;
 typedef ptrdiff_t dp;
 
 read_only global_var sz SZ_MIN = 0;

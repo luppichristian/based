@@ -19,6 +19,7 @@ include/basic/
 include/threads/
   thread.h                   # Thread creation, join, detach, ID (opaque handle + thread_func)
   thread_current.h           # Current-thread utilities (ID, sleep, yield, get/set priority)
+  thread_group.h             # Thread group: spawn/add/join-all/detach-all a set of threads
   atomics.h                  # Lock-free atomic types and operations (atomic_i32/u32/i64/u64/ptr)
   condvar.h                  # Condition variable (wait/signal/broadcast, with timeout)
   mutex.h                    # Mutual-exclusion lock (lock/trylock/unlock)
@@ -28,6 +29,7 @@ include/threads/
 src/threads/
   thread.c                   # thread_create / thread_join / thread_detach / thread_get_id
   thread_current.c           # thread_current_* helpers
+  thread_group.c             # thread_group_* implementations
   atomics.c                  # atomic_* implementations (SDL3 for 32-bit, stdatomic for 64-bit)
   condvar.c                  # condvar_* implementations
   mutex.c                    # mutex_* implementations

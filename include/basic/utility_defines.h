@@ -61,71 +61,71 @@ Big numeric utilities (powers of 1000):
 // =========================================================================
 
 // stringify — converts x to a string literal without expanding macros.
-#define stringify(x)         #x
+#define stringify(x) #x
 
 // stringify_exp — converts x to a string literal after macro expansion.
-#define stringify_exp(x)     stringify(x)
+#define stringify_exp(x) stringify(x)
 
 // concat — pastes two tokens together without expanding macros.
-#define concat(x, y)         x##y
+#define concat(x, y) x##y
 
 // concat_exp — pastes two tokens together after macro expansion.
-#define concat_exp(x, y)     concat(x, y)
+#define concat_exp(x, y) concat(x, y)
 
 // =========================================================================
 // Array Utilities
 // =========================================================================
 
 // countof — number of elements in a fixed-size array.
-#define countof(x)           (sizeof(x) / sizeof((x)[0]))
+#define countof(x) (sizeof(x) / sizeof((x)[0]))
 
 // sizeof_each — size in bytes of a single element of a fixed-size array.
-#define sizeof_each(x)       sizeof((x)[0])
+#define sizeof_each(x) sizeof((x)[0])
 
 // multiline_literal — converts a multi-line token sequence into a string literal.
-#define multiline_literal(...)  stringify_exp(__VA_ARGS__)
+#define multiline_literal(...) stringify_exp(__VA_ARGS__)
 
 // =========================================================================
 // Bit Utilities
 // =========================================================================
 
 // bit — value with only bit x set.
-#define bit(x)               (1 << (x))
+#define bit(x) (1 << (x))
 
 // bit_is_set — non-zero if bit b is set in bits.
-#define bit_is_set(bits, b)  ((bits) & (b))
+#define bit_is_set(bits, b) ((bits) & (b))
 
 // bit_set — sets bit b in bits.
-#define bit_set(bits, b)     ((bits) |= (b))
+#define bit_set(bits, b) ((bits) |= (b))
 
 // bit_unset — clears bit b in bits.
-#define bit_unset(bits, b)   ((bits) &= ~(b))
+#define bit_unset(bits, b) ((bits) &= ~(b))
 
 // bit_toggle — toggles bit b in bits.
-#define bit_toggle(bits, b)  ((bits) ^= (b))
+#define bit_toggle(bits, b) ((bits) ^= (b))
 
 // =========================================================================
 // Struct / Pointer Utilities
 // =========================================================================
 
 // field_sizeof — size in bytes of a field within a struct.
-#define field_sizeof(type, field)          sizeof(((type *)0)->field)
+#define field_sizeof(type, field) sizeof(((type*)0)->field)
 
 // offset_of — byte offset of a field within a struct.
-#define offset_of(type, field)             offsetof(type, field)
+#define offset_of(type, field) offsetof(type, field)
 
 // container_of — pointer to the enclosing struct given a pointer to one of its fields.
-#define container_of(ptr, type, field)     ((type *)((char *)(ptr) - offset_of(type, field)))
+#define container_of(ptr, type, field) ((type*)((char*)(ptr) - offset_of(type, field)))
 
 // =========================================================================
 // Range / Bounds Utilities
 // =========================================================================
 
 // in_range — non-zero if lo <= x <= hi.
-#define in_range(x, lo, hi)   ((x) >= (lo) && (x) <= (hi))
+#define in_range(x, lo, hi) ((x) >= (lo) && (x) <= (hi))
 
 // in_bounds — non-zero if index i is a valid index for fixed-size array arr.
-#define in_bounds(arr, i)     ((i) >= 0 && (size_t)(i) < countof(arr))
+#define in_bounds(arr, i) ((i) >= 0 && (size_t)(i) < countof(arr))
 
 // =========================================================================
 // Swap Utility
@@ -133,20 +133,25 @@ Big numeric utilities (powers of 1000):
 
 // swap — swaps the values of a and b using a temporary of the given type.
 // Note: type must be provided explicitly; a and b must not have side effects.
-#define swap(type, a, b)      do { type _swap_tmp = (a); (a) = (b); (b) = _swap_tmp; } while (0)
+#define swap(type, a, b)  \
+  do {                    \
+    type _swap_tmp = (a); \
+    (a) = (b);            \
+    (b) = _swap_tmp;      \
+  } while (0)
 
 // =========================================================================
 // Alignment Utilities
 // =========================================================================
 
 // is_pow2 — non-zero if x is a non-zero power of two.
-#define is_pow2(x)            ((x) != 0 && ((x) & ((x) - 1)) == 0)
+#define is_pow2(x) ((x) != 0 && ((x) & ((x) - 1)) == 0)
 
 // align_up — rounds x up to the next multiple of n (n must be a power of two).
-#define align_up(x, n)        (((x) + (n) - 1) & ~((n) - 1))
+#define align_up(x, n) (((x) + (n) - 1) & ~((n) - 1))
 
 // align_down — rounds x down to the nearest multiple of n (n must be a power of two).
-#define align_down(x, n)      ((x) & ~((n) - 1))
+#define align_down(x, n) ((x) & ~((n) - 1))
 
 // =========================================================================
 // Byte Numeric Utilities (powers of 1024)
