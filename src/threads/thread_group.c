@@ -11,62 +11,54 @@ static i32 thread_group_wrapper(void* raw) {
 }
 
 // Shared creation path. base_name may be NULL for unnamed threads.
-static thread_group* create_impl(u32 count, thread_group_func entry, void* arg,
-                                  const c8* base_name) {
+static thread_group create_impl(u32 count, thread_group_func entry, void* arg, const c8* base_name) {
+  thread_group empty = {0};
   if (!count || !entry) {
-    return NULL;
+    return empty;
   }
 
-  thread_group* group = (thread_group*)SDL_malloc(sizeof(thread_group));
-  if (!group) {
-    return NULL;
-  }
+  thread_group group = {0};
+  group.threads = (thread*)SDL_malloc((size_t)count * sizeof(thread));
+  group.slots = (thread_group_slot*)SDL_malloc((size_t)count * sizeof(thread_group_slot));
 
-  group->count   = 0;
-  group->threads = (thread*)SDL_malloc((size_t)count * sizeof(thread));
-  group->slots   = (thread_group_slot*)SDL_malloc((size_t)count * sizeof(thread_group_slot));
-
-  if (!group->threads || !group->slots) {
-    SDL_free(group->threads);
-    SDL_free(group->slots);
-    SDL_free(group);
-    return NULL;
+  if (!group.threads || !group.slots) {
+    SDL_free(group.threads);
+    SDL_free(group.slots);
+    return empty;
   }
 
   for (u32 i = 0; i < count; i++) {
-    group->slots[i].entry = entry;
-    group->slots[i].arg   = arg;
-    group->slots[i].index = i;
+    group.slots[i].entry = entry;
+    group.slots[i].arg = arg;
+    group.slots[i].index = i;
 
     if (base_name) {
       c8 name_buf[256];
       SDL_snprintf(name_buf, sizeof(name_buf), "%s[%u]", base_name, i);
-      group->threads[i] = thread_create_named(thread_group_wrapper, &group->slots[i], name_buf);
+      group.threads[i] = thread_create_named(thread_group_wrapper, &group.slots[i], name_buf);
     } else {
-      group->threads[i] = thread_create(thread_group_wrapper, &group->slots[i]);
+      group.threads[i] = thread_create(thread_group_wrapper, &group.slots[i]);
     }
 
-    if (!group->threads[i]) {
+    if (!group.threads[i]) {
       for (u32 j = 0; j < i; j++) {
-        thread_detach(group->threads[j]);
+        thread_detach(group.threads[j]);
       }
-      SDL_free(group->threads);
-      SDL_free(group->slots);
-      SDL_free(group);
-      return NULL;
+      SDL_free(group.threads);
+      SDL_free(group.slots);
+      return empty;
     }
   }
 
-  group->count = count;
+  group.count = count;
   return group;
 }
 
-func thread_group* thread_group_create(u32 count, thread_group_func entry, void* arg) {
+func thread_group thread_group_create(u32 count, thread_group_func entry, void* arg) {
   return create_impl(count, entry, arg, NULL);
 }
 
-func thread_group* thread_group_create_named(u32 count, thread_group_func entry, void* arg,
-                                              const c8* base_name) {
+func thread_group thread_group_create_named(u32 count, thread_group_func entry, void* arg, const c8* base_name) {
   return create_impl(count, entry, arg, base_name);
 }
 
@@ -76,14 +68,16 @@ func void thread_group_destroy(thread_group* group) {
   }
   SDL_free(group->threads);
   SDL_free(group->slots);
-  SDL_free(group);
+  group->threads = NULL;
+  group->slots = NULL;
+  group->count = 0;
 }
 
 func b32 thread_group_is_valid(thread_group* group) {
   return group && group->threads != NULL;
 }
 
-func u32 thread_group_count(thread_group* group) {
+func u32 thread_group_get_count(thread_group* group) {
   return group ? group->count : 0;
 }
 

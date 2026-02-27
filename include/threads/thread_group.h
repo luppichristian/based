@@ -32,15 +32,18 @@ typedef struct {
 
 // Creates a group of count threads, all executing entry(index, arg).
 // Threads start immediately; index runs from 0 to count-1.
-// Returns a pointer to the allocated group, or NULL on failure.
-func thread_group* thread_group_create(u32 count, thread_group_func entry, void* arg);
+// Returns the group by value; check with thread_group_is_valid on failure.
+func thread_group thread_group_create(u32 count, thread_group_func entry, void* arg);
 
 // Like thread_group_create, but each thread is named "<base_name>[<index>]".
 // Names are visible in debuggers and profilers.
-func thread_group* thread_group_create_named(u32 count, thread_group_func entry, void* arg,
-                                              const c8* base_name);
+func thread_group thread_group_create_named(
+    u32 count,
+    thread_group_func entry,
+    void* arg,
+    const c8* base_name);
 
-// Joins or detaches all threads, frees internal resources, and frees the group itself.
+// Frees internal resources and zeroes the group.
 // Passing NULL is safe and does nothing.
 func void thread_group_destroy(thread_group* group);
 
@@ -48,13 +51,13 @@ func void thread_group_destroy(thread_group* group);
 func b32 thread_group_is_valid(thread_group* group);
 
 // Returns the number of threads in the group.
-func u32 thread_group_count(thread_group* group);
+func u32 thread_group_get_count(thread_group* group);
 
 // Returns the thread handle at the given index, or NULL if the index is out of range.
 func thread thread_group_get(thread_group* group, u32 index);
 
 // Blocks until every thread in the group has finished.
-// If out_exit_codes is non-NULL it must point to an array of at least thread_group_count() i32s;
+// If out_exit_codes is non-NULL it must point to an array of at least thread_group_get_count() i32s;
 // each element is written with the corresponding thread's exit code in index order.
 // Returns true if all joins succeeded, false otherwise.
 func b32 thread_group_join_all(thread_group* group, i32* out_exit_codes);
