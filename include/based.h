@@ -10,6 +10,11 @@
 #include "basic/primitive_types.h"
 #include "basic/utility_defines.h"
 
+// Include container modules.
+#include "containers/doubly_list.h"
+#include "containers/singly_list.h"
+#include "containers/stack_list.h"
+
 // Include threading modules.
 #include "threads/atomics.h"
 #include "threads/condvar.h"

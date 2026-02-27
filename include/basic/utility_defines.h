@@ -13,6 +13,7 @@ Stringification and token-pasting:
 - 'stringify_exp(x)'                turns x into a string literal after macro expansion.
 - 'concat(x, y)'                    pastes two tokens together without expanding macros.
 - 'concat_exp(x, y)'                pastes two tokens together after macro expansion.
+- 'expression(x)'                   evaluates x as an expression.
 
 Array utilities:
 - 'countof(x)'                      number of elements in a fixed-size array.
@@ -71,6 +72,10 @@ Big numeric utilities (powers of 1000):
 
 // concat_exp — pastes two tokens together after macro expansion.
 #define concat_exp(x, y) concat(x, y)
+
+// expression — evaluates x as an expression, ensuring it is not treated as a statement.
+#define expression(x) \
+  do { (void)(x); } while (0)
 
 // =========================================================================
 // Array Utilities

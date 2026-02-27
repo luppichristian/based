@@ -16,6 +16,10 @@ include/basic/
   keyword_defines.h          # Custom keyword aliases (read_only, func, global_var, …)
   primitive_types.h          # Portable type aliases (i32, f64, b8, sz, …)
   utility_defines.h          # General-purpose utility macros
+include/containers/
+  stack_list.h               # Intrusive singly-linked LIFO stack (STACK_LIST_PUSH/POP/…)
+  singly_list.h              # Intrusive singly-linked list with head+tail (PUSH_FRONT/BACK, POP_FRONT)
+  doubly_list.h              # Intrusive doubly-linked list with head+tail (PUSH/POP front+back, REMOVE, INSERT)
 include/memory/
   allocator.h                # Custom allocator interface (alloc/free/realloc callbacks)
   buffer.h                   # Non-owning buffer view (ptr + size, slicing, split, cmp, set)
