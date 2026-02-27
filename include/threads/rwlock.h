@@ -3,17 +3,21 @@
 
 #pragma once
 
-#include "../basic/primitive_types.h"
+#include "../basic/codespace.h"
 
 // Opaque handle to a reader-writer lock.
 typedef void* rwlock;
 
 // Creates a new reader-writer lock and returns a handle to it.
 // Multiple threads may hold the read lock simultaneously; the write lock is exclusive.
-func rwlock rwlock_create(void);
+func rwlock _rwlock_create(callsite site);
 
 // Destroys the given reader-writer lock and releases any associated resources.
-func b32 rwlock_destroy(rwlock rw);
+func b32 _rwlock_destroy(rwlock rw, callsite site);
+
+// Convenience macros that automatically capture the callsite information for debugging purposes.
+#define rwlock_create()    _rwlock_create(CALLSITE_HERE)
+#define rwlock_destroy(rw) _rwlock_destroy(rw, CALLSITE_HERE)
 
 // Returns true if the given reader-writer lock handle is valid, false otherwise.
 func b32 rwlock_is_valid(rwlock rw);

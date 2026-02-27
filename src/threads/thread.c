@@ -2,17 +2,19 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "threads/thread.h"
-#include <SDL3/SDL.h>
+#include "../sdl3_include.h"
 
 // SDL_ThreadFunction is `int (SDLCALL *)(void*)`.
 // SDLCALL is __cdecl on Windows, which is the default C calling convention,
 // so casting thread_func (i32 (*)(void*)) to SDL_ThreadFunction is safe on all targets.
 
-func thread thread_create(thread_func entry, void* arg) {
+func thread _thread_create(thread_func entry, void* arg, callsite site) {
+  (void)site;
   return (thread)SDL_CreateThread((SDL_ThreadFunction)entry, NULL, arg);
 }
 
-func thread thread_create_named(thread_func entry, void* arg, const c8* name) {
+func thread _thread_create_named(thread_func entry, void* arg, const c8* name, callsite site) {
+  (void)site;
   return (thread)SDL_CreateThread((SDL_ThreadFunction)entry, name, arg);
 }
 

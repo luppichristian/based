@@ -2,17 +2,19 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "threads/spinlock.h"
-#include <SDL3/SDL.h>
+#include "../sdl3_include.h"
 
-func spinlock spinlock_create() {
-  SDL_SpinLock* sl = (SDL_SpinLock*)SDL_malloc(sizeof(SDL_SpinLock));
-  if (sl) {
-    *sl = 0;
+func spinlock _spinlock_create(callsite site) {
+  (void)site;
+  SDL_SpinLock* spl = (SDL_SpinLock*)SDL_malloc(sizeof(SDL_SpinLock));
+  if (spl) {
+    *spl = 0;
   }
-  return (spinlock)sl;
+  return (spinlock)spl;
 }
 
-func void spinlock_destroy(spinlock sl) {
+func void _spinlock_destroy(spinlock sl, callsite site) {
+  (void)site;
   SDL_free(sl);
 }
 

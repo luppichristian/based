@@ -3,16 +3,20 @@
 
 #pragma once
 
-#include "../basic/primitive_types.h"
+#include "../basic/codespace.h"
 
 // Opaque handle to a semaphore.
 typedef void* semaphore;
 
 // Creates a new semaphore with the given initial count and returns a handle to it.
-func semaphore semaphore_create(u32 initial_count);
+func semaphore _semaphore_create(u32 initial_count, callsite site);
 
 // Destroys the given semaphore and releases any associated resources.
-func b32 semaphore_destroy(semaphore sem);
+func b32 _semaphore_destroy(semaphore sem, callsite site);
+
+// Convenience macros that automatically capture the callsite information for debugging purposes.
+#define semaphore_create(initial_count) _semaphore_create(initial_count, CALLSITE_HERE)
+#define semaphore_destroy(sem)          _semaphore_destroy(sem, CALLSITE_HERE)
 
 // Returns true if the given semaphore handle is valid, false otherwise.
 func b32 semaphore_is_valid(semaphore sem);

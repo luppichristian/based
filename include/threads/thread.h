@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "../basic/primitive_types.h"
+#include "../basic/codespace.h"
 
 // =========================================================================
 // Thread Priority
@@ -28,11 +28,17 @@ typedef void* thread;
 typedef i32 (*thread_func)(void* arg);
 
 // Creates a new thread that executes entry(arg) and returns a handle to it.
-func thread thread_create(thread_func entry, void* arg);
+func thread _thread_create(thread_func entry, void* arg, callsite site);
 
 // Creates a new named thread that executes entry(arg) and returns a handle to it.
 // The name is used only for debugging purposes (e.g. visible in debuggers/profilers).
-func thread thread_create_named(thread_func entry, void* arg, const c8* name);
+func thread _thread_create_named(thread_func entry, void* arg, const c8* name, callsite site);
+
+// Convenience macros that automatically capture the callsite information for debugging purposes.
+#define thread_create(entry, arg) \
+  _thread_create(entry, arg, CALLSITE_HERE)
+#define thread_create_named(entry, arg, name) \
+  _thread_create_named(entry, arg, name, CALLSITE_HERE)
 
 // Returns true if the given thread handle is valid, false otherwise.
 func b32 thread_is_valid(thread thd);

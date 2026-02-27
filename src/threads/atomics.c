@@ -2,7 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "threads/atomics.h"
-#include <SDL3/SDL.h>
+#include "../sdl3_include.h"
 #include <stdatomic.h>
 
 // Layout-compatibility assertions:

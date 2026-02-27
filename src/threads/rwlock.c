@@ -2,13 +2,15 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "threads/rwlock.h"
-#include <SDL3/SDL.h>
+#include "../sdl3_include.h"
 
-func rwlock rwlock_create(void) {
+func rwlock _rwlock_create(callsite site) {
+  (void)site;
   return (rwlock)SDL_CreateRWLock();
 }
 
-func b32 rwlock_destroy(rwlock rw) {
+func b32 _rwlock_destroy(rwlock rw, callsite site) {
+  (void)site;
   if (!rw) {
     return 0;
   }

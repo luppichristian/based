@@ -2,13 +2,15 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "threads/condvar.h"
-#include <SDL3/SDL.h>
+#include "../sdl3_include.h"
 
-func condvar condvar_create(void) {
+func condvar _condvar_create(callsite site) {
+  (void)site;
   return (condvar)SDL_CreateCondition();
 }
 
-func b32 condvar_destroy(condvar cond) {
+func b32 _condvar_destroy(condvar cond, callsite site) {
+  (void)site;
   if (!cond) {
     return 0;
   }

@@ -3,16 +3,20 @@
 
 #pragma once
 
-#include "../basic/primitive_types.h"
+#include "../basic/codespace.h"
 
 // Opaque handle to a mutex.
 typedef void* mutex;
 
 // Creates a new mutex and returns a handle to it.
-func mutex mutex_create();
+func mutex _mutex_create(callsite site);
 
 // Destroys the given mutex and releases any associated resources.
-func b32 mutex_destroy(mutex mtx);
+func b32 _mutex_destroy(mutex mtx, callsite site);
+
+// Convenience macros that automatically capture the callsite information for debugging purposes.
+#define mutex_create()     _mutex_create(CALLSITE_HERE)
+#define mutex_destroy(mtx) _mutex_destroy(mtx, CALLSITE_HERE)
 
 // Returns true if the given mutex handle is valid, false otherwise.
 func b32 mutex_is_valid(mutex mtx);

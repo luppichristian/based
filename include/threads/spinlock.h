@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "../basic/primitive_types.h"
+#include "../basic/codespace.h"
 
 // Opaque handle to a spinlock.
 // Spinlocks busy-wait and are only appropriate for very short critical sections where
@@ -12,10 +12,14 @@
 typedef void* spinlock;
 
 // Creates a new spinlock in the unlocked state.
-func spinlock spinlock_create();
+func spinlock _spinlock_create(callsite site);
 
 // Destroys the spinlock and releases its resources.
-func void spinlock_destroy(spinlock sl);
+func void _spinlock_destroy(spinlock sl, callsite site);
+
+// Convenience macros that automatically pass the callsite information.
+#define spinlock_create()    _spinlock_create(CALLSITE_HERE)
+#define spinlock_destroy(sl) _spinlock_destroy(sl, CALLSITE_HERE)
 
 // Returns true if the spinlock handle is valid, false otherwise.
 func b32 spinlock_is_valid(spinlock sl);

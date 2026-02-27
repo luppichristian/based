@@ -2,13 +2,15 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "threads/mutex.h"
-#include <SDL3/SDL.h>
+#include "../sdl3_include.h"
 
-func mutex mutex_create(void) {
+func mutex _mutex_create(callsite site) {
+  (void)site;
   return (mutex)SDL_CreateMutex();
 }
 
-func b32 mutex_destroy(mutex mtx) {
+func b32 _mutex_destroy(mutex mtx, callsite site) {
+  (void)site;
   if (!mtx) {
     return 0;
   }

@@ -2,13 +2,15 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "threads/semaphore.h"
-#include <SDL3/SDL.h>
+#include "../sdl3_include.h"
 
-func semaphore semaphore_create(u32 initial_count) {
+func semaphore _semaphore_create(u32 initial_count, callsite site) {
+  (void)site;
   return (semaphore)SDL_CreateSemaphore((Uint32)initial_count);
 }
 
-func b32 semaphore_destroy(semaphore sem) {
+func b32 _semaphore_destroy(semaphore sem, callsite site) {
+  (void)site;
   if (!sem) {
     return 0;
   }

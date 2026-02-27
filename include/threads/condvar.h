@@ -3,17 +3,21 @@
 
 #pragma once
 
-#include "../basic/primitive_types.h"
+#include "../basic/codespace.h"
 #include "mutex.h"
 
 // Opaque handle to a condition variable.
 typedef void* condvar;
 
 // Creates a new condition variable and returns a handle to it.
-func condvar condvar_create(void);
+func condvar _condvar_create(callsite site);
 
 // Destroys the given condition variable and releases any associated resources.
-func b32 condvar_destroy(condvar cond);
+func b32 _condvar_destroy(condvar cond, callsite site);
+
+// Convenience macros that automatically capture the callsite information for debugging purposes.
+#define condvar_create()      _condvar_create(CALLSITE_HERE)
+#define condvar_destroy(cond) _condvar_destroy(cond, CALLSITE_HERE)
 
 // Returns true if the given condition variable handle is valid, false otherwise.
 func b32 condvar_is_valid(condvar cond);

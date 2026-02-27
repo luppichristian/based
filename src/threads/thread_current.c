@@ -2,26 +2,33 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "threads/thread_current.h"
-#include <SDL3/SDL.h>
+#include "../sdl3_include.h"
+#include "basic/utility_defines.h"
+
+// Tracks the scheduling priority of the current thread; defaults to NORMAL (OS default).
+thread_local global_var thread_priority tls_priority = THREAD_PRIORITY_NORMAL;
+
+// Mapping of our thread_priority enum to SDL_ThreadPriority values.
+read_only global_var SDL_ThreadPriority sdl_priorities[] = {
+    SDL_THREAD_PRIORITY_LOW,
+    SDL_THREAD_PRIORITY_NORMAL,
+    SDL_THREAD_PRIORITY_HIGH,
+    SDL_THREAD_PRIORITY_TIME_CRITICAL,
+};
 
 func u64 thread_id(void) {
   return (u64)SDL_GetCurrentThreadID();
 }
-
-// Tracks the scheduling priority of the current thread; defaults to NORMAL (OS default).
-thread_local static thread_priority tls_priority = THREAD_PRIORITY_NORMAL;
 
 func thread_priority thread_get_priority(void) {
   return tls_priority;
 }
 
 func b32 thread_set_priority(thread_priority priority) {
-  static const SDL_ThreadPriority sdl_priorities[] = {
-      SDL_THREAD_PRIORITY_LOW,
-      SDL_THREAD_PRIORITY_NORMAL,
-      SDL_THREAD_PRIORITY_HIGH,
-      SDL_THREAD_PRIORITY_TIME_CRITICAL,
-  };
+  if (priority >= countof(sdl_priorities)) {
+    return false;  // Invalid priority
+  }
+
   b32 ok = SDL_SetCurrentThreadPriority(sdl_priorities[priority]);
   if (ok) {
     tls_priority = priority;

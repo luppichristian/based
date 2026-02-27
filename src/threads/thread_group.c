@@ -2,7 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "threads/thread_group.h"
-#include <SDL3/SDL.h>
+#include "../sdl3_include.h"
 
 // SDL thread wrapper — bridges thread_func into thread_group_func.
 static i32 thread_group_wrapper(void* raw) {
@@ -54,15 +54,23 @@ static thread_group create_impl(u32 count, thread_group_func entry, void* arg, c
   return group;
 }
 
-func thread_group thread_group_create(u32 count, thread_group_func entry, void* arg) {
+func thread_group _thread_group_create(u32 count, thread_group_func entry, void* arg, callsite site) {
+  (void)site;
   return create_impl(count, entry, arg, NULL);
 }
 
-func thread_group thread_group_create_named(u32 count, thread_group_func entry, void* arg, const c8* base_name) {
+func thread_group _thread_group_create_named(
+    u32 count,
+    thread_group_func entry,
+    void* arg,
+    const c8* base_name,
+    callsite site) {
+  (void)site;
   return create_impl(count, entry, arg, base_name);
 }
 
-func void thread_group_destroy(thread_group* group) {
+func void _thread_group_destroy(thread_group* group, callsite site) {
+  (void)site;
   if (!group) {
     return;
   }

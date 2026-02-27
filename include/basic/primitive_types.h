@@ -173,20 +173,20 @@ read_only global_var dp DP_MAX = PTRDIFF_MAX;
 // Compile-time size guarantees
 // =========================================================================
 
-static_assert(sizeof(i8) == 1, "primitive_types.h: i8 must be 1 byte");
-static_assert(sizeof(u8) == 1, "primitive_types.h: u8 must be 1 byte");
-static_assert(sizeof(i16) == 2, "primitive_types.h: i16 must be 2 bytes");
-static_assert(sizeof(u16) == 2, "primitive_types.h: u16 must be 2 bytes");
-static_assert(sizeof(i32) == 4, "primitive_types.h: i32 must be 4 bytes");
-static_assert(sizeof(u32) == 4, "primitive_types.h: u32 must be 4 bytes");
-static_assert(sizeof(i64) == 8, "primitive_types.h: i64 must be 8 bytes");
-static_assert(sizeof(u64) == 8, "primitive_types.h: u64 must be 8 bytes");
-static_assert(sizeof(f32) == 4, "primitive_types.h: f32 must be 4 bytes");
-static_assert(sizeof(f64) == 8, "primitive_types.h: f64 must be 8 bytes");
-static_assert(sizeof(b8) == 1, "primitive_types.h: b8 must be 1 byte");
-static_assert(sizeof(b16) == 2, "primitive_types.h: b16 must be 2 bytes");
-static_assert(sizeof(b32) == 4, "primitive_types.h: b32 must be 4 bytes");
-static_assert(sizeof(b64) == 8, "primitive_types.h: b64 must be 8 bytes");
-static_assert(sizeof(c8) == 1, "primitive_types.h: c8 must be 1 byte");
-static_assert(sizeof(c16) == 2, "primitive_types.h: c16 must be 2 bytes");
-static_assert(sizeof(c32) == 4, "primitive_types.h: c32 must be 4 bytes");
+static_assert(sizeof(i8) == 1);
+static_assert(sizeof(u8) == 1);
+static_assert(sizeof(i16) == 2);
+static_assert(sizeof(u16) == 2);
+static_assert(sizeof(i32) == 4);
+static_assert(sizeof(u32) == 4);
+static_assert(sizeof(i64) == 8);
+static_assert(sizeof(u64) == 8);
+static_assert(sizeof(f32) == 4);
+static_assert(sizeof(f64) == 8);
+static_assert(sizeof(b8) == 1);
+static_assert(sizeof(b16) == 2);
+static_assert(sizeof(b32) == 4);
+static_assert(sizeof(b64) == 8);
+static_assert(sizeof(c8) == 1);
+static_assert(sizeof(c16) == 2);
+static_assert(sizeof(c32) == 4);

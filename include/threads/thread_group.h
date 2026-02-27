@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "../basic/primitive_types.h"
+#include "../basic/codespace.h"
 #include "thread.h"
 
 // =========================================================================
@@ -33,19 +33,27 @@ typedef struct {
 // Creates a group of count threads, all executing entry(index, arg).
 // Threads start immediately; index runs from 0 to count-1.
 // Returns the group by value; check with thread_group_is_valid on failure.
-func thread_group thread_group_create(u32 count, thread_group_func entry, void* arg);
+func thread_group _thread_group_create(u32 count, thread_group_func entry, void* arg, callsite site);
 
 // Like thread_group_create, but each thread is named "<base_name>[<index>]".
 // Names are visible in debuggers and profilers.
-func thread_group thread_group_create_named(
+func thread_group _thread_group_create_named(
     u32 count,
     thread_group_func entry,
     void* arg,
-    const c8* base_name);
+    const c8* base_name,
+    callsite site);
 
 // Frees internal resources and zeroes the group.
 // Passing NULL is safe and does nothing.
-func void thread_group_destroy(thread_group* group);
+func void _thread_group_destroy(thread_group* group, callsite site);
+
+// Convenience macros that automatically capture the callsite information for debugging purposes.
+#define thread_group_create(count, entry, arg) \
+  _thread_group_create(count, entry, arg, CALLSITE_HERE)
+#define thread_group_create_named(count, entry, arg, base_name) \
+  _thread_group_create_named(count, entry, arg, base_name, CALLSITE_HERE)
+#define thread_group_destroy(group) _thread_group_destroy(group, CALLSITE_HERE)
 
 // Returns true if the group was successfully created and holds live thread handles.
 func b32 thread_group_is_valid(thread_group* group);
