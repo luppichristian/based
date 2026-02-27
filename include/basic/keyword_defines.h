@@ -7,6 +7,7 @@
 #include "env_defines.h"
 
 // Include standard boolean type for 'bool', 'true', and 'false'.
+#include <assert.h>
 #include <stdbool.h>
 
 /*

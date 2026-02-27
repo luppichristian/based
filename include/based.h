@@ -4,6 +4,7 @@
 #pragma once
 
 // Include basic module.
+#include "basic/assert.h"
 #include "basic/codespace.h"
 #include "basic/env_defines.h"
 #include "basic/keyword_defines.h"
