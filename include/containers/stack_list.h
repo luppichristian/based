@@ -42,3 +42,8 @@
     (node)->next = nullptr;                     \
   }                                             \
 })
+
+// STACK_LIST_FOREACH iterates over all nodes from head to the end of the stack.
+// 'it' is declared as the loop variable; its type is deduced from 'head'.
+#define STACK_LIST_FOREACH(head, it) \
+  for (auto it = (head); (it) != nullptr; (it) = (it)->next)

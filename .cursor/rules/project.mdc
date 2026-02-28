@@ -19,9 +19,14 @@ include/basic/
   primitive_types.h          # Portable type aliases (i32, f64, b8, sz, …)
   utility_defines.h          # General-purpose utility macros
 include/containers/
-  stack_list.h               # Intrusive singly-linked LIFO stack (STACK_LIST_PUSH/POP/…)
-  singly_list.h              # Intrusive singly-linked list with head+tail (PUSH_FRONT/BACK, POP_FRONT)
-  doubly_list.h              # Intrusive doubly-linked list with head+tail (PUSH/POP front+back, REMOVE, INSERT)
+  binary_tree.h              # Intrusive structural binary tree (left/right/parent; INSERT_LEFT/RIGHT, REMOVE, ROTATE_LEFT/RIGHT, FOREACH preorder/inorder/postorder)
+  bitset.h                   # Fixed-width bitset over u64[] (SET/CLEAR/TEST/TOGGLE/COUNT/FIRST_SET/FOREACH_SET)
+  doubly_list.h              # Intrusive doubly-linked list with head+tail (PUSH/POP front+back, REMOVE, INSERT, FOREACH)
+  hash_map.h                 # Open-addressing Robin Hood hash table (u64 key → void* value, iterator, hash_* utils)
+  ring_list.h                # Intrusive circular doubly-linked list (PUSH/POP front+back, REMOVE, INSERT, FOREACH)
+  singly_list.h              # Intrusive singly-linked list with head+tail (PUSH_FRONT/BACK, POP_FRONT, FOREACH)
+  stack_list.h               # Intrusive singly-linked LIFO stack (STACK_LIST_PUSH/POP/FOREACH)
+  tree.h                     # Intrusive N-ary tree, left-child/right-sibling (parent/first_child/last_child/next_sibling/prev_sibling; INSERT_CHILD/BEFORE/AFTER, REMOVE, FOREACH_CHILDREN, FOREACH_PREORDER)
 include/memory/
   allocator.h                # Custom allocator interface (alloc/free/realloc callbacks)
   arena.h                    # Linear (bump-pointer) allocator with block chain and optional mutex
@@ -44,6 +49,8 @@ include/threads/
 src/basic/
   assert.c                   # _assert / assert_set_mode / assert_set_callback implementations
   log.c                      # _log / log_set_level / log_set_callback implementations
+src/containers/
+  hash_map.c                 # hash_map_create/destroy/set/get/has/remove/clear/next + hash_* utilities
 src/memory/
   allocator.c                # allocator_alloc / calloc / dealloc / realloc implementations
   arena.c                    # arena_create / destroy / add_block / remove_block / alloc / realloc / clear

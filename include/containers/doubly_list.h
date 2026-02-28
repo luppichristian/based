@@ -104,3 +104,13 @@
     (head) = (node);                                                     \
   (before)->prev = (node);                                               \
 })
+
+// DOUBLY_LIST_FOREACH iterates forward from head to tail.
+// 'it' is declared as the loop variable; its type is deduced from 'head'.
+#define DOUBLY_LIST_FOREACH(head, tail, it) \
+  for (auto it = (head); (it) != nullptr; (it) = (it)->next)
+
+// DOUBLY_LIST_FOREACH_REVERSE iterates backward from tail to head.
+// 'it' is declared as the loop variable; its type is deduced from 'tail'.
+#define DOUBLY_LIST_FOREACH_REVERSE(head, tail, it) \
+  for (auto it = (tail); (it) != nullptr; (it) = (it)->prev)

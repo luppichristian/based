@@ -12,9 +12,14 @@
 #include "basic/utility_defines.h"
 
 // Include container modules.
+#include "containers/binary_tree.h"
+#include "containers/bitset.h"
 #include "containers/doubly_list.h"
+#include "containers/hash_map.h"
+#include "containers/ring_list.h"
 #include "containers/singly_list.h"
 #include "containers/stack_list.h"
+#include "containers/tree.h"
 
 // Include memory modules.
 #include "memory/allocator.h"

@@ -54,3 +54,8 @@
     (node)->next = nullptr;                                  \
   }                                                          \
 })
+
+// SINGLY_LIST_FOREACH iterates over all nodes from head to tail.
+// 'it' is declared as the loop variable; its type is deduced from 'head'.
+#define SINGLY_LIST_FOREACH(head, tail, it) \
+  for (auto it = (head); (it) != nullptr; (it) = (it)->next)
