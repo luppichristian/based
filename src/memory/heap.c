@@ -167,7 +167,7 @@ func void* heap_realloc_callback(
 // Create / Destroy
 // =========================================================================
 
-func heap heap_create(allocator* parent_alloc, mutex opt_mutex, sz default_block_sz) {
+func heap heap_create(allocator parent_alloc, mutex opt_mutex, sz default_block_sz) {
   heap hep;
   memset(&hep, 0, sizeof(hep));
   hep.parent = parent_alloc;
@@ -176,7 +176,7 @@ func heap heap_create(allocator* parent_alloc, mutex opt_mutex, sz default_block
   return hep;
 }
 
-func heap heap_create_mutexed(allocator* parent_alloc, sz default_block_sz) {
+func heap heap_create_mutexed(allocator parent_alloc, sz default_block_sz) {
   heap hep = heap_create(parent_alloc, mutex_create(), default_block_sz);
   hep.mutex_owned = 1;
   return hep;
@@ -190,8 +190,8 @@ func void heap_destroy(heap* hep) {
   heap_block* blk = hep->blocks_head;
   while (blk) {
     heap_block* nxt = blk->next;
-    if (blk->owned && hep->parent) {
-      _allocator_dealloc(hep->parent, blk, blk->size, CALLSITE_HERE);
+    if (blk->owned && hep->parent.alloc_fn) {
+      _allocator_dealloc(&hep->parent, blk, blk->size, CALLSITE_HERE);
     }
     blk = nxt;
   }
@@ -295,11 +295,11 @@ func void* _heap_alloc(heap* hep, sz size, sz align, callsite site) {
 
   void* result = heap_try_alloc(hep, size, eff_align);
 
-  if (!result && hep->parent) {
+  if (!result && hep->parent.alloc_fn) {
     sz overhead = sizeof(heap_block) + sizeof(heap_chunk) + HEAP_BACK_REF_SZ;
     sz needed = overhead + size;
     sz block_sz = hep->default_block_sz > needed ? hep->default_block_sz : needed;
-    heap_block* new_blk = (heap_block*)_allocator_alloc(hep->parent, block_sz, site);
+    heap_block* new_blk = (heap_block*)_allocator_alloc(&hep->parent, block_sz, site);
     if (new_blk) {
       heap_block_setup(hep, new_blk, block_sz, 1);
       heap_chain_block(hep, new_blk);

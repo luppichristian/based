@@ -34,7 +34,7 @@ typedef struct arena_block {
 typedef struct arena {
   arena_block* blocks_head;
   arena_block* blocks_tail;
-  allocator* parent;    // Grows by allocating new blocks; may be NULL.
+  allocator parent;     // Grows by allocating new blocks; zeroed means no parent.
   mutex opt_mutex;      // Thread-safety guard; NULL means no locking.
   sz default_block_sz;  // Byte size of blocks auto-allocated from parent.
   b8 mutex_owned;       // True when opt_mutex was created by arena_create_mutexed.
@@ -42,16 +42,16 @@ typedef struct arena {
 
 // Creates a new arena.
 // parent_alloc     — allocator used to obtain new blocks when the current ones are full;
-//                    pass NULL for fixed-buffer-only operation.
+//                    pass a zeroed allocator for fixed-buffer-only operation.
 // opt_mutex        — mutex that guards every operation; pass NULL to disable locking.
-// default_block_sz — byte size for automatically grown blocks (ignored when parent_alloc is NULL).
-func arena arena_create(allocator* parent_alloc, mutex opt_mutex, sz default_block_sz);
+// default_block_sz — byte size for automatically grown blocks (ignored when parent has no alloc_fn).
+func arena arena_create(allocator parent_alloc, mutex opt_mutex, sz default_block_sz);
 
 // Creates a new arena and internally allocates a dedicated mutex for thread safety.
 // The mutex is destroyed automatically by arena_destroy.
 // parent_alloc     — same as arena_create.
 // default_block_sz — same as arena_create.
-func arena arena_create_mutexed(allocator* parent_alloc, sz default_block_sz);
+func arena arena_create_mutexed(allocator parent_alloc, sz default_block_sz);
 
 // Releases all blocks that were auto-allocated through the parent allocator and
 // resets the arena to its initial empty state. Manually added blocks are detached

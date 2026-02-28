@@ -69,7 +69,7 @@ func void* arena_realloc_callback(
 // Create / Destroy
 // =========================================================================
 
-func arena arena_create(allocator* parent_alloc, mutex opt_mutex, sz default_block_sz) {
+func arena arena_create(allocator parent_alloc, mutex opt_mutex, sz default_block_sz) {
   arena arn;
   memset(&arn, 0, sizeof(arn));
   arn.parent = parent_alloc;
@@ -78,7 +78,7 @@ func arena arena_create(allocator* parent_alloc, mutex opt_mutex, sz default_blo
   return arn;
 }
 
-func arena arena_create_mutexed(allocator* parent_alloc, sz default_block_sz) {
+func arena arena_create_mutexed(allocator parent_alloc, sz default_block_sz) {
   arena arn = arena_create(parent_alloc, mutex_create(), default_block_sz);
   arn.mutex_owned = 1;
   return arn;
@@ -92,8 +92,8 @@ func void arena_destroy(arena* arn) {
   arena_block* blk = arn->blocks_head;
   while (blk) {
     arena_block* nxt = blk->next;
-    if (blk->owned && arn->parent) {
-      _allocator_dealloc(arn->parent, blk, blk->size, CALLSITE_HERE);
+    if (blk->owned && arn->parent.alloc_fn) {
+      _allocator_dealloc(&arn->parent, blk, blk->size, CALLSITE_HERE);
     }
     blk = nxt;
   }
@@ -191,10 +191,10 @@ func void* _arena_alloc(arena* arn, sz size, sz align, callsite site) {
     blk = blk->next;
   }
 
-  if (!result && arn->parent) {
+  if (!result && arn->parent.alloc_fn) {
     sz needed = sizeof(arena_block) + align + size;
     sz block_sz = arn->default_block_sz > needed ? arn->default_block_sz : needed;
-    arena_block* new_blk = (arena_block*)_allocator_alloc(arn->parent, block_sz, site);
+    arena_block* new_blk = (arena_block*)_allocator_alloc(&arn->parent, block_sz, site);
     if (new_blk) {
       arena_block_setup(new_blk, block_sz, 1);
       arena_chain_block(arn, new_blk);

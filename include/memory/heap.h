@@ -49,7 +49,7 @@ typedef struct heap {
   heap_block* blocks_head;
   heap_block* blocks_tail;
   heap_chunk* free_head;  // Head of the singly-linked free-chunk list.
-  allocator* parent;      // Grows by allocating new blocks; may be NULL.
+  allocator parent;       // Grows by allocating new blocks; zeroed means no parent.
   mutex opt_mutex;        // Thread-safety guard; NULL means no locking.
   sz default_block_sz;    // Byte size of blocks auto-allocated from parent.
   b8 mutex_owned;         // True when opt_mutex was created by heap_create_mutexed.
@@ -57,16 +57,16 @@ typedef struct heap {
 
 // Creates a new heap.
 // parent_alloc     — allocator used to obtain new blocks when all free chunks are exhausted;
-//                    pass NULL for fixed-buffer-only operation.
+//                    pass a zeroed allocator for fixed-buffer-only operation.
 // opt_mutex        — mutex that guards every operation; pass NULL to disable locking.
-// default_block_sz — byte size for automatically grown blocks (ignored when parent_alloc is NULL).
-func heap heap_create(allocator* parent_alloc, mutex opt_mutex, sz default_block_sz);
+// default_block_sz — byte size for automatically grown blocks (ignored when parent has no alloc_fn).
+func heap heap_create(allocator parent_alloc, mutex opt_mutex, sz default_block_sz);
 
 // Creates a new heap and internally allocates a dedicated mutex for thread safety.
 // The mutex is destroyed automatically by heap_destroy.
 // parent_alloc     — same as heap_create.
 // default_block_sz — same as heap_create.
-func heap heap_create_mutexed(allocator* parent_alloc, sz default_block_sz);
+func heap heap_create_mutexed(allocator parent_alloc, sz default_block_sz);
 
 // Releases all blocks that were auto-allocated through the parent allocator and
 // resets the heap to its initial empty state. Manually added blocks are detached
