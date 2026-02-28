@@ -1,0 +1,511 @@
+// MIT License
+// Copyright (c) 2026 Christian Luppi
+
+#include "strings/strings.h"
+
+// =========================================================================
+// str8
+// =========================================================================
+
+func str8 str8_make(c8* ptr, sz cap) {
+  str8 str;
+  str.ptr = ptr;
+  str.cap = cap;
+  str.size = cstr8_len(ptr);
+  return str;
+}
+
+func str8 str8_empty(c8* ptr, sz cap) {
+  str8 str;
+  str.ptr = ptr;
+  str.cap = cap;
+  str.size = 0;
+  cstr8_clear(ptr);
+  return str;
+}
+
+func str8 str8_from_cstr(c8* ptr, sz cap, const c8* src) {
+  str8 str;
+  str.ptr = ptr;
+  str.cap = cap;
+  str.size = cstr8_copy(ptr, cap, src);
+  return str;
+}
+
+func b32 str8_is_empty(str8 str) {
+  return str.size == 0 ? 1 : 0;
+}
+
+func i32 str8_cmp(str8 lhs, str8 rhs) {
+  return cstr8_cmp(lhs.ptr, rhs.ptr);
+}
+
+func i32 str8_cmp_nocase(str8 lhs, str8 rhs) {
+  return cstr8_cmp_nocase(lhs.ptr, rhs.ptr);
+}
+
+func const c8* str8_find(str8 str, const c8* sub) {
+  return cstr8_find(str.ptr, sub);
+}
+
+func const c8* str8_find_char(str8 str, c8 chr) {
+  return cstr8_find_char(str.ptr, chr);
+}
+
+func const c8* str8_find_last(str8 str, const c8* sub) {
+  return cstr8_find_last(str.ptr, sub);
+}
+
+func const c8* str8_find_last_char(str8 str, c8 chr) {
+  return cstr8_find_last_char(str.ptr, chr);
+}
+
+func sz str8_count_char(str8 str, c8 chr) {
+  return cstr8_count_char(str.ptr, chr);
+}
+
+func b32 str8_starts_with(str8 str, const c8* prefix) {
+  return cstr8_starts_with(str.ptr, prefix);
+}
+
+func b32 str8_ends_with(str8 str, const c8* suffix) {
+  return cstr8_ends_with(str.ptr, suffix);
+}
+
+func b32 str8_to_i64(str8 str, i64* out) {
+  return cstr8_to_i64(str.ptr, out);
+}
+
+func b32 str8_to_f64(str8 str, f64* out) {
+  return cstr8_to_f64(str.ptr, out);
+}
+
+func void str8_clear(str8* str) {
+  cstr8_clear(str->ptr);
+  str->size = 0;
+}
+
+func sz str8_copy(str8* str, const c8* src) {
+  str->size = cstr8_copy(str->ptr, str->cap, src);
+  return str->size;
+}
+
+func sz str8_concat(str8* str, const c8* src) {
+  str->size = cstr8_concat(str->ptr, str->cap, src);
+  return str->size;
+}
+
+func sz str8_append_char(str8* str, c8 chr) {
+  str->size = cstr8_append_char(str->ptr, str->cap, chr);
+  return str->size;
+}
+
+func void str8_truncate(str8* str, sz length) {
+  cstr8_truncate(str->ptr, length);
+  if (length < str->size) {
+    str->size = length;
+  }
+}
+
+func b32 str8_format(str8* str, const c8* fmt, ...) {
+  va_list args;
+  va_start(args, fmt);
+  b32 result = cstr8_vformat(str->ptr, str->cap, fmt, args);
+  va_end(args);
+  str->size = cstr8_len(str->ptr);
+  return result;
+}
+
+func b32 str8_vformat(str8* str, const c8* fmt, va_list args) {
+  b32 result = cstr8_vformat(str->ptr, str->cap, fmt, args);
+  str->size = cstr8_len(str->ptr);
+  return result;
+}
+
+func b32 str8_append_format(str8* str, const c8* fmt, ...) {
+  va_list args;
+  va_start(args, fmt);
+  b32 result = cstr8_append_vformat(str->ptr, str->cap, fmt, args);
+  va_end(args);
+  str->size = cstr8_len(str->ptr);
+  return result;
+}
+
+func b32 str8_append_vformat(str8* str, const c8* fmt, va_list args) {
+  b32 result = cstr8_append_vformat(str->ptr, str->cap, fmt, args);
+  str->size = cstr8_len(str->ptr);
+  return result;
+}
+
+func void str8_to_upper(str8* str) {
+  cstr8_to_upper(str->ptr);
+}
+
+func void str8_to_lower(str8* str) {
+  cstr8_to_lower(str->ptr);
+}
+
+func void str8_trim(str8* str) {
+  cstr8_trim(str->ptr);
+  str->size = cstr8_len(str->ptr);
+}
+
+func void str8_replace_char(str8* str, c8 from_chr, c8 to_chr) {
+  cstr8_replace_char(str->ptr, from_chr, to_chr);
+}
+
+func sz str8_remove_char(str8* str, c8 chr) {
+  sz removed = cstr8_remove_char(str->ptr, chr);
+  str->size -= removed;
+  return removed;
+}
+
+func sz str8_remove_whitespace(str8* str) {
+  sz removed = cstr8_remove_whitespace(str->ptr);
+  str->size -= removed;
+  return removed;
+}
+
+func b32 str8_remove_prefix(str8* str, const c8* prefix) {
+  b32 result = cstr8_remove_prefix(str->ptr, prefix);
+  if (result) {
+    str->size = cstr8_len(str->ptr);
+  }
+  return result;
+}
+
+func b32 str8_remove_suffix(str8* str, const c8* suffix) {
+  b32 result = cstr8_remove_suffix(str->ptr, suffix);
+  if (result) {
+    str->size = cstr8_len(str->ptr);
+  }
+  return result;
+}
+
+func sz str8_replace(str8* str, const c8* from, const c8* rep) {
+  sz count = cstr8_replace(str->ptr, str->cap, from, rep);
+  str->size = cstr8_len(str->ptr);
+  return count;
+}
+
+func void str8_beautify(str8* str) {
+  cstr8_beautify(str->ptr);
+}
+
+// =========================================================================
+// str16
+// =========================================================================
+
+func str16 str16_make(c16* ptr, sz cap) {
+  str16 str;
+  str.ptr = ptr;
+  str.cap = cap;
+  str.size = cstr16_len(ptr);
+  return str;
+}
+
+func str16 str16_empty(c16* ptr, sz cap) {
+  str16 str;
+  str.ptr = ptr;
+  str.cap = cap;
+  str.size = 0;
+  cstr16_clear(ptr);
+  return str;
+}
+
+func str16 str16_from_cstr(c16* ptr, sz cap, const c16* src) {
+  str16 str;
+  str.ptr = ptr;
+  str.cap = cap;
+  str.size = cstr16_copy(ptr, cap, src);
+  return str;
+}
+
+func b32 str16_is_empty(str16 str) {
+  return str.size == 0 ? 1 : 0;
+}
+
+func i32 str16_cmp(str16 lhs, str16 rhs) {
+  return cstr16_cmp(lhs.ptr, rhs.ptr);
+}
+
+func i32 str16_cmp_nocase(str16 lhs, str16 rhs) {
+  return cstr16_cmp_nocase(lhs.ptr, rhs.ptr);
+}
+
+func const c16* str16_find(str16 str, const c16* sub) {
+  return cstr16_find(str.ptr, sub);
+}
+
+func const c16* str16_find_char(str16 str, c16 chr) {
+  return cstr16_find_char(str.ptr, chr);
+}
+
+func const c16* str16_find_last(str16 str, const c16* sub) {
+  return cstr16_find_last(str.ptr, sub);
+}
+
+func const c16* str16_find_last_char(str16 str, c16 chr) {
+  return cstr16_find_last_char(str.ptr, chr);
+}
+
+func sz str16_count_char(str16 str, c16 chr) {
+  return cstr16_count_char(str.ptr, chr);
+}
+
+func b32 str16_starts_with(str16 str, const c16* prefix) {
+  return cstr16_starts_with(str.ptr, prefix);
+}
+
+func b32 str16_ends_with(str16 str, const c16* suffix) {
+  return cstr16_ends_with(str.ptr, suffix);
+}
+
+func b32 str16_to_i64(str16 str, i64* out) {
+  return cstr16_to_i64(str.ptr, out);
+}
+
+func b32 str16_to_f64(str16 str, f64* out) {
+  return cstr16_to_f64(str.ptr, out);
+}
+
+func void str16_clear(str16* str) {
+  cstr16_clear(str->ptr);
+  str->size = 0;
+}
+
+func sz str16_copy(str16* str, const c16* src) {
+  str->size = cstr16_copy(str->ptr, str->cap, src);
+  return str->size;
+}
+
+func sz str16_concat(str16* str, const c16* src) {
+  str->size = cstr16_concat(str->ptr, str->cap, src);
+  return str->size;
+}
+
+func sz str16_append_char(str16* str, c16 chr) {
+  str->size = cstr16_append_char(str->ptr, str->cap, chr);
+  return str->size;
+}
+
+func void str16_truncate(str16* str, sz length) {
+  cstr16_truncate(str->ptr, length);
+  if (length < str->size) {
+    str->size = length;
+  }
+}
+
+func void str16_to_upper(str16* str) {
+  cstr16_to_upper(str->ptr);
+}
+
+func void str16_to_lower(str16* str) {
+  cstr16_to_lower(str->ptr);
+}
+
+func void str16_trim(str16* str) {
+  cstr16_trim(str->ptr);
+  str->size = cstr16_len(str->ptr);
+}
+
+func void str16_replace_char(str16* str, c16 from_chr, c16 to_chr) {
+  cstr16_replace_char(str->ptr, from_chr, to_chr);
+}
+
+func sz str16_remove_char(str16* str, c16 chr) {
+  sz removed = cstr16_remove_char(str->ptr, chr);
+  str->size -= removed;
+  return removed;
+}
+
+func sz str16_remove_whitespace(str16* str) {
+  sz removed = cstr16_remove_whitespace(str->ptr);
+  str->size -= removed;
+  return removed;
+}
+
+func b32 str16_remove_prefix(str16* str, const c16* prefix) {
+  b32 result = cstr16_remove_prefix(str->ptr, prefix);
+  if (result) {
+    str->size = cstr16_len(str->ptr);
+  }
+  return result;
+}
+
+func b32 str16_remove_suffix(str16* str, const c16* suffix) {
+  b32 result = cstr16_remove_suffix(str->ptr, suffix);
+  if (result) {
+    str->size = cstr16_len(str->ptr);
+  }
+  return result;
+}
+
+func sz str16_replace(str16* str, const c16* from, const c16* rep) {
+  sz count = cstr16_replace(str->ptr, str->cap, from, rep);
+  str->size = cstr16_len(str->ptr);
+  return count;
+}
+
+func void str16_beautify(str16* str) {
+  cstr16_beautify(str->ptr);
+}
+
+// =========================================================================
+// str32
+// =========================================================================
+
+func str32 str32_make(c32* ptr, sz cap) {
+  str32 str;
+  str.ptr = ptr;
+  str.cap = cap;
+  str.size = cstr32_len(ptr);
+  return str;
+}
+
+func str32 str32_empty(c32* ptr, sz cap) {
+  str32 str;
+  str.ptr = ptr;
+  str.cap = cap;
+  str.size = 0;
+  cstr32_clear(ptr);
+  return str;
+}
+
+func str32 str32_from_cstr(c32* ptr, sz cap, const c32* src) {
+  str32 str;
+  str.ptr = ptr;
+  str.cap = cap;
+  str.size = cstr32_copy(ptr, cap, src);
+  return str;
+}
+
+func b32 str32_is_empty(str32 str) {
+  return str.size == 0 ? 1 : 0;
+}
+
+func i32 str32_cmp(str32 lhs, str32 rhs) {
+  return cstr32_cmp(lhs.ptr, rhs.ptr);
+}
+
+func i32 str32_cmp_nocase(str32 lhs, str32 rhs) {
+  return cstr32_cmp_nocase(lhs.ptr, rhs.ptr);
+}
+
+func const c32* str32_find(str32 str, const c32* sub) {
+  return cstr32_find(str.ptr, sub);
+}
+
+func const c32* str32_find_char(str32 str, c32 chr) {
+  return cstr32_find_char(str.ptr, chr);
+}
+
+func const c32* str32_find_last(str32 str, const c32* sub) {
+  return cstr32_find_last(str.ptr, sub);
+}
+
+func const c32* str32_find_last_char(str32 str, c32 chr) {
+  return cstr32_find_last_char(str.ptr, chr);
+}
+
+func sz str32_count_char(str32 str, c32 chr) {
+  return cstr32_count_char(str.ptr, chr);
+}
+
+func b32 str32_starts_with(str32 str, const c32* prefix) {
+  return cstr32_starts_with(str.ptr, prefix);
+}
+
+func b32 str32_ends_with(str32 str, const c32* suffix) {
+  return cstr32_ends_with(str.ptr, suffix);
+}
+
+func b32 str32_to_i64(str32 str, i64* out) {
+  return cstr32_to_i64(str.ptr, out);
+}
+
+func b32 str32_to_f64(str32 str, f64* out) {
+  return cstr32_to_f64(str.ptr, out);
+}
+
+func void str32_clear(str32* str) {
+  cstr32_clear(str->ptr);
+  str->size = 0;
+}
+
+func sz str32_copy(str32* str, const c32* src) {
+  str->size = cstr32_copy(str->ptr, str->cap, src);
+  return str->size;
+}
+
+func sz str32_concat(str32* str, const c32* src) {
+  str->size = cstr32_concat(str->ptr, str->cap, src);
+  return str->size;
+}
+
+func sz str32_append_char(str32* str, c32 chr) {
+  str->size = cstr32_append_char(str->ptr, str->cap, chr);
+  return str->size;
+}
+
+func void str32_truncate(str32* str, sz length) {
+  cstr32_truncate(str->ptr, length);
+  if (length < str->size) {
+    str->size = length;
+  }
+}
+
+func void str32_to_upper(str32* str) {
+  cstr32_to_upper(str->ptr);
+}
+
+func void str32_to_lower(str32* str) {
+  cstr32_to_lower(str->ptr);
+}
+
+func void str32_trim(str32* str) {
+  cstr32_trim(str->ptr);
+  str->size = cstr32_len(str->ptr);
+}
+
+func void str32_replace_char(str32* str, c32 from_chr, c32 to_chr) {
+  cstr32_replace_char(str->ptr, from_chr, to_chr);
+}
+
+func sz str32_remove_char(str32* str, c32 chr) {
+  sz removed = cstr32_remove_char(str->ptr, chr);
+  str->size -= removed;
+  return removed;
+}
+
+func sz str32_remove_whitespace(str32* str) {
+  sz removed = cstr32_remove_whitespace(str->ptr);
+  str->size -= removed;
+  return removed;
+}
+
+func b32 str32_remove_prefix(str32* str, const c32* prefix) {
+  b32 result = cstr32_remove_prefix(str->ptr, prefix);
+  if (result) {
+    str->size = cstr32_len(str->ptr);
+  }
+  return result;
+}
+
+func b32 str32_remove_suffix(str32* str, const c32* suffix) {
+  b32 result = cstr32_remove_suffix(str->ptr, suffix);
+  if (result) {
+    str->size = cstr32_len(str->ptr);
+  }
+  return result;
+}
+
+func sz str32_replace(str32* str, const c32* from, const c32* rep) {
+  sz count = cstr32_replace(str->ptr, str->cap, from, rep);
+  str->size = cstr32_len(str->ptr);
+  return count;
+}
+
+func void str32_beautify(str32* str) {
+  cstr32_beautify(str->ptr);
+}

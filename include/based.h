@@ -32,6 +32,11 @@
 #include "memory/scratch.h"
 #include "memory/vmem.h"
 
+// Include string modules.
+#include "strings/cstrings.h"
+#include "strings/strings.h"
+#include "strings/unicode.h"
+
 // Include threading modules.
 #include "threads/atomics.h"
 #include "threads/condvar.h"
