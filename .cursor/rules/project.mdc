@@ -27,6 +27,10 @@ include/memory/
   arena.h                    # Linear (bump-pointer) allocator with block chain and optional mutex
   buffer.h                   # Non-owning buffer view (ptr + size, slicing, split, cmp, set)
   heap.h                     # General-purpose allocator with free-list, coalescing, and optional mutex
+  pool.h                     # Fixed-size object pool: O(1) alloc/dealloc via intrusive free list
+  ring.h                     # Byte-oriented circular buffer with read/write/peek/skip and optional mutex
+  scratch.h                  # Arena checkpoint (scratch_begin/end): rewind tail block and free new blocks
+  vmem.h                     # OS virtual-memory primitives: reserve/commit/decommit/release/alloc/free
 include/threads/
   thread.h                   # Thread creation, join, detach, ID (opaque handle + thread_func)
   thread_current.h           # Current-thread utilities (ID, sleep, yield, get/set priority)
@@ -45,6 +49,10 @@ src/memory/
   arena.c                    # arena_create / destroy / add_block / remove_block / alloc / realloc / clear
   buffer.c                   # buffer_* implementations (constructors, slicing, cmp, set)
   heap.c                     # heap_create / destroy / add_block / remove_block / alloc / dealloc / realloc / clear
+  pool.c                     # pool_create / destroy / add_block / remove_block / alloc / dealloc / clear
+  ring.c                     # ring_create / destroy / write / read / peek / skip / clear
+  scratch.c                  # scratch_begin / scratch_end implementations
+  vmem.c                     # vmem_* implementations (Windows: VirtualAlloc; POSIX: mmap; fallback: malloc)
 src/threads/
   thread.c                   # thread_create / thread_join / thread_detach / thread_get_id
   thread_current.c           # thread_current_* helpers

@@ -19,8 +19,12 @@
 // Include memory modules.
 #include "memory/allocator.h"
 #include "memory/arena.h"
-#include "memory/heap.h"
 #include "memory/buffer.h"
+#include "memory/heap.h"
+#include "memory/pool.h"
+#include "memory/ring.h"
+#include "memory/scratch.h"
+#include "memory/vmem.h"
 
 // Include threading modules.
 #include "threads/atomics.h"

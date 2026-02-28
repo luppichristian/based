@@ -102,6 +102,7 @@ func void* _arena_realloc(
     sz align,
     callsite site);
 
+// Convenience macros that automatically capture the callsite for better diagnostics.
 #define arena_alloc(arn, size, align) \
   _arena_alloc(arn, size, align, CALLSITE_HERE)
 #define arena_realloc(arn, ptr, old_size, new_size, align) \
