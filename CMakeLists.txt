@@ -41,13 +41,32 @@ if(NOT SDL3_FOUND AND BASED_SDL3_FETCH)
 endif()
 
 # =========================================================================
+# Olib
+# =========================================================================
+
+option(BASED_OLIB_FETCH "Fetch Olib if not found" ON)
+find_package(olib QUIET)
+
+if(NOT olib_FOUND AND BASED_OLIB_FETCH)
+    set(OLIB_BUILD_TESTS    OFF CACHE BOOL "" FORCE)
+    set(OLIB_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+    set(OLIB_BUILD_CLI      OFF CACHE BOOL "" FORCE)
+    FetchContent_Declare(
+        olib
+        URL https://github.com/luppichristian/olib/archive/refs/tags/v1.0.0.zip
+        DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+    )
+    FetchContent_MakeAvailable(olib)
+endif()
+
+# =========================================================================
 # Library (always static for now)
 # =========================================================================
 
 file(GLOB_RECURSE BASED_SOURCES "src/**.c")
 add_library(based STATIC ${BASED_SOURCES})
 target_include_directories(based PUBLIC include)
-target_link_libraries(based PUBLIC SDL3::SDL3)
+target_link_libraries(based PRIVATE SDL3::SDL3 PUBLIC olib::static)
 
 # =========================================================================
 # Tests
