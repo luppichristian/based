@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "basic/primitive_types.h"
 #include "basic/keyword_defines.h"
+#include "basic/primitive_types.h"
 #include "memory/allocator.h"
 
 // hash_map is an open-addressing Robin Hood hash table.
@@ -33,18 +33,18 @@
 
 // One slot in the backing array.
 typedef struct hash_map_slot {
-  u64   key;
+  u64 key;
   void* value;
-  u32   probe_dist;  // distance from the slot's ideal (home) position
-  b32   occupied;
+  u32 probe_dist;  // distance from the slot's ideal (home) position
+  b32 occupied;
 } hash_map_slot;
 
 // The hash map handle.
 typedef struct hash_map {
   hash_map_slot* slots;
-  sz             count;   // number of occupied entries
-  sz             cap;     // total slot count, always a power of two
-  allocator      alloc;
+  sz count;  // number of occupied entries
+  sz cap;    // total slot count, always a power of two
+  allocator alloc;
 } hash_map;
 
 // Opaque iterator — holds the current slot index.  Obtain one with

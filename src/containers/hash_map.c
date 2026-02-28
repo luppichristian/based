@@ -19,7 +19,7 @@ func u64 hash_ptr(const void* ptr) {
 }
 
 func u64 hash_bytes(const void* ptr, sz len) {
-  u64       hash = 14695981039346656037ULL;
+  u64 hash = 14695981039346656037ULL;
   const u8* data = (const u8*)ptr;
   for (sz idx = 0; idx < len; idx++) {
     hash ^= (u64)data[idx];
@@ -48,14 +48,14 @@ static b32 hash_map_raw_insert(
     sz cap,
     u64 key,
     void* value) {
-  sz  pos  = (sz)(hash_u64(key) & (u64)(cap - 1));
+  sz pos = (sz)(hash_u64(key) & (u64)(cap - 1));
   u32 dist = 0;
 
   hash_map_slot incoming;
-  incoming.key        = key;
-  incoming.value      = value;
+  incoming.key = key;
+  incoming.value = value;
   incoming.probe_dist = 0;
-  incoming.occupied   = 1;
+  incoming.occupied = 1;
 
   for (;;) {
     hash_map_slot* slot = &slots[pos];
@@ -73,9 +73,9 @@ static b32 hash_map_raw_insert(
     // Robin Hood: steal the slot from the luckier resident.
     if (slot->probe_dist < dist) {
       hash_map_slot tmp = *slot;
-      *slot    = incoming;
+      *slot = incoming;
       incoming = tmp;
-      dist     = incoming.probe_dist;
+      dist = incoming.probe_dist;
     }
 
     dist++;
@@ -104,13 +104,13 @@ static b32 hash_map_rehash(hash_map* map, sz new_cap) {
     allocator_dealloc(&map->alloc, map->slots, map->cap * sizeof(hash_map_slot));
   }
   map->slots = new_slots;
-  map->cap   = new_cap;
+  map->cap = new_cap;
   return 1;
 }
 
 // Find the slot for key in map->slots; returns a pointer to the slot or NULL.
 static hash_map_slot* hash_map_find_slot(hash_map* map, u64 key) {
-  sz  pos  = (sz)(hash_u64(key) & (u64)(map->cap - 1));
+  sz pos = (sz)(hash_u64(key) & (u64)(map->cap - 1));
   u32 dist = 0;
 
   for (;;) {
@@ -139,7 +139,7 @@ func hash_map hash_map_create(sz cap, allocator alloc) {
   while (actual < cap) {
     actual *= 2;
   }
-  map.cap   = actual;
+  map.cap = actual;
   map.slots = (hash_map_slot*)allocator_calloc(&map.alloc, actual, sizeof(hash_map_slot));
   return map;
 }
@@ -150,7 +150,7 @@ func void hash_map_destroy(hash_map* map) {
     map->slots = NULL;
   }
   map->count = 0;
-  map->cap   = 0;
+  map->cap = 0;
 }
 
 func void hash_map_clear(hash_map* map) {
@@ -203,7 +203,7 @@ func b32 hash_map_remove(hash_map* map, u64 key) {
     return 0;
   }
 
-  sz  pos  = (sz)(hash_u64(key) & (u64)(map->cap - 1));
+  sz pos = (sz)(hash_u64(key) & (u64)(map->cap - 1));
   u32 dist = 0;
 
   for (;;) {
@@ -217,7 +217,7 @@ func b32 hash_map_remove(hash_map* map, u64 key) {
       // needing tombstones.
       sz cur = pos;
       for (;;) {
-        sz             nxt       = (cur + 1) & (map->cap - 1);
+        sz nxt = (cur + 1) & (map->cap - 1);
         hash_map_slot* next_slot = &map->slots[nxt];
         if (!next_slot->occupied || next_slot->probe_dist == 0) {
           memset(&map->slots[cur], 0, sizeof(hash_map_slot));

@@ -7,6 +7,7 @@
 #include "basic/assert.h"
 #include "basic/codespace.h"
 #include "basic/env_defines.h"
+#include "basic/intrinsics.h"
 #include "basic/keyword_defines.h"
 #include "basic/primitive_types.h"
 #include "basic/utility_defines.h"

@@ -20,15 +20,15 @@
 // Thread safety is optional: supply a valid mutex in opt_mutex to enable it,
 // or pass NULL to treat the ring as single-threaded.
 typedef struct ring {
-  u8* ptr;          // Base pointer to the backing buffer.
-  sz capacity;      // Total byte capacity of the backing buffer.
-  sz read_pos;      // Read cursor (byte offset within [0, capacity)).
-  sz write_pos;     // Write cursor (byte offset within [0, capacity)).
-  sz count;         // Number of bytes currently stored.
-  allocator parent; // Used when the backing buffer was auto-allocated.
-  mutex opt_mutex;  // Thread-safety guard; NULL means no locking.
-  b8 buf_owned;     // True when ptr was allocated through parent.
-  b8 mutex_owned;   // True when opt_mutex was created by ring_create_mutexed.
+  u8* ptr;           // Base pointer to the backing buffer.
+  sz capacity;       // Total byte capacity of the backing buffer.
+  sz read_pos;       // Read cursor (byte offset within [0, capacity)).
+  sz write_pos;      // Write cursor (byte offset within [0, capacity)).
+  sz count;          // Number of bytes currently stored.
+  allocator parent;  // Used when the backing buffer was auto-allocated.
+  mutex opt_mutex;   // Thread-safety guard; NULL means no locking.
+  b8 buf_owned;      // True when ptr was allocated through parent.
+  b8 mutex_owned;    // True when opt_mutex was created by ring_create_mutexed.
 } ring;
 
 // Creates a ring backed by an existing caller-owned buffer.

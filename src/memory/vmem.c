@@ -10,7 +10,7 @@
 
 #if defined(PLATFORM_WINDOWS)
 
-#include <windows.h>
+#  include <windows.h>
 
 func sz vmem_page_size(void) {
   SYSTEM_INFO info;
@@ -46,8 +46,8 @@ func b32 vmem_free(void* ptr, sz size) {
 
 #elif defined(PLATFORM_UNIX) || defined(PLATFORM_ANDROID) || defined(PLATFORM_IOS)
 
-#include <sys/mman.h>
-#include <unistd.h>
+#  include <sys/mman.h>
+#  include <unistd.h>
 
 func sz vmem_page_size(void) {
   return (sz)sysconf(_SC_PAGESIZE);
@@ -97,7 +97,7 @@ func b32 vmem_free(void* ptr, sz size) {
 // =========================================================================
 // reserve + commit collapse into a single malloc; decommit is a no-op.
 
-#include <stdlib.h>
+#  include <stdlib.h>
 
 func sz vmem_page_size(void) {
   return 4096;
