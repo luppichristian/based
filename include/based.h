@@ -16,6 +16,12 @@
 #include "containers/singly_list.h"
 #include "containers/stack_list.h"
 
+// Include memory modules.
+#include "memory/allocator.h"
+#include "memory/arena.h"
+#include "memory/heap.h"
+#include "memory/buffer.h"
+
 // Include threading modules.
 #include "threads/atomics.h"
 #include "threads/condvar.h"

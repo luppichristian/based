@@ -24,7 +24,9 @@ include/containers/
   doubly_list.h              # Intrusive doubly-linked list with head+tail (PUSH/POP front+back, REMOVE, INSERT)
 include/memory/
   allocator.h                # Custom allocator interface (alloc/free/realloc callbacks)
+  arena.h                    # Linear (bump-pointer) allocator with block chain and optional mutex
   buffer.h                   # Non-owning buffer view (ptr + size, slicing, split, cmp, set)
+  heap.h                     # General-purpose allocator with free-list, coalescing, and optional mutex
 include/threads/
   thread.h                   # Thread creation, join, detach, ID (opaque handle + thread_func)
   thread_current.h           # Current-thread utilities (ID, sleep, yield, get/set priority)
@@ -40,7 +42,9 @@ src/basic/
   log.c                      # _log / log_set_level / log_set_callback implementations
 src/memory/
   allocator.c                # allocator_alloc / calloc / dealloc / realloc implementations
+  arena.c                    # arena_create / destroy / add_block / remove_block / alloc / realloc / clear
   buffer.c                   # buffer_* implementations (constructors, slicing, cmp, set)
+  heap.c                     # heap_create / destroy / add_block / remove_block / alloc / dealloc / realloc / clear
 src/threads/
   thread.c                   # thread_create / thread_join / thread_detach / thread_get_id
   thread_current.c           # thread_current_* helpers
