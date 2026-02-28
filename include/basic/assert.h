@@ -10,14 +10,16 @@
 // Assert function
 // =========================================================================
 
+// If assert is already defined, undefine it to avoid conflicts with our own implementation.
+#ifdef assert
+#  undef assert
+#endif
+
 // Assert function called by the ASSERT macro.
 // It will act depending on the internal setup.
 func void _assert(b32 condition, const char* msg, callsite site);
 
 // Convenience macro for assertions. It will call the _assert function.
-#ifdef assert
-#  undef assert
-#endif
 #define assert(condition) _assert((condition), #condition, CALLSITE_HERE)
 
 // =========================================================================
@@ -26,12 +28,10 @@ func void _assert(b32 condition, const char* msg, callsite site);
 
 // Different modes settable at runtime.
 typedef enum assert_mode {
-  ASSERT_MODE_DEBUG,  // Opens a debug window and waits for user input, in
-                      // the window you can choose to break point, ignore or quit the application.
-                      // The message is also logged.
-
-  ASSERT_MODE_QUIT,  // Quits the application immediately.
-
+  ASSERT_MODE_DEBUG,   // On Desktop: Opens a debug window and waits for user input, in
+                       // the window you can choose to break point, ignore or quit the application.
+                       // The message is also logged.
+  ASSERT_MODE_QUIT,    // Quits the application immediately.
   ASSERT_MODE_LOG,     // Just log a message.
   ASSERT_MODE_IGNORE,  // Ignores the assertion, does nothing.
 } assert_mode;

@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "basic/assert.h"
+#include "basic/log.h"
 #include "../sdl3_include.h"
 
 #include <stdlib.h>
@@ -10,20 +11,21 @@
 // Internal state
 // =========================================================================
 
-static assert_mode assert_mode_current = ASSERT_MODE_DEFAULT;
-static assert_callback assert_callback_current = NULL;
+global_var assert_mode assert_mode_current = ASSERT_MODE_DEFAULT;
+global_var assert_callback assert_callback_current = NULL;
 
 // =========================================================================
 // Internal helpers
 // =========================================================================
 
 func void assert_log_msg(const c8* msg, callsite site) {
-  // TODO: Use proper logging system.
+  _log(LOG_LEVEL_FATAL, site, "Assertion failed: %s", msg);
 }
 
 // Returns: 0 = ignore, 1 = breakpoint, 2 = quit.
 // Defaults to quit if the message box cannot be displayed.
 func i32 assert_dialog(const c8* msg, callsite site) {
+  // TODO: Only do this if on desktop...
   // TODO: Proper message.
   c8 buf[1024];
   SDL_snprintf(buf, sizeof(buf), "Assertion failed: %s\n\nin %s() at %s:%u", msg, site.function, site.filename, site.line);
