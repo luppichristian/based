@@ -509,3 +509,37 @@ func sz str32_replace(str32* str, const c32* from, const c32* rep) {
 func void str32_beautify(str32* str) {
   cstr32_beautify(str->ptr);
 }
+
+// =========================================================================
+// Cross-encoding conversion
+// =========================================================================
+
+func sz str8_to_str16(str8 src, str16* dst) {
+  dst->size = cstr8_to_cstr16(src.ptr, dst->ptr, dst->cap);
+  return dst->size;
+}
+
+func sz str8_to_str32(str8 src, str32* dst) {
+  dst->size = cstr8_to_cstr32(src.ptr, dst->ptr, dst->cap);
+  return dst->size;
+}
+
+func sz str16_to_str8(str16 src, str8* dst) {
+  dst->size = cstr16_to_cstr8(src.ptr, dst->ptr, dst->cap);
+  return dst->size;
+}
+
+func sz str16_to_str32(str16 src, str32* dst) {
+  dst->size = cstr16_to_cstr32(src.ptr, dst->ptr, dst->cap);
+  return dst->size;
+}
+
+func sz str32_to_str8(str32 src, str8* dst) {
+  dst->size = cstr32_to_cstr8(src.ptr, dst->ptr, dst->cap);
+  return dst->size;
+}
+
+func sz str32_to_str16(str32 src, str16* dst) {
+  dst->size = cstr32_to_cstr16(src.ptr, dst->ptr, dst->cap);
+  return dst->size;
+}

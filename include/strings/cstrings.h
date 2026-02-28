@@ -344,3 +344,48 @@ func sz cstr16_to_cstr8(const c16* src, c8* buf, sz buf_cap);
 func sz cstr16_to_cstr32(const c16* src, c32* buf, sz buf_cap);
 func sz cstr32_to_cstr8(const c32* src, c8* buf, sz buf_cap);
 func sz cstr32_to_cstr16(const c32* src, c16* buf, sz buf_cap);
+
+// =========================================================================
+// Capacity constants
+// =========================================================================
+
+// Predefined capacity values for the fixed-size string types below.
+// Macros (not variables) so they are valid in array bounds / typedefs.
+#define STR_CAP_TINY   16
+#define STR_CAP_SHORT  64
+#define STR_CAP_MEDIUM 512
+#define STR_CAP_LONG   1024
+#define STR_CAP_LARGE  2048
+
+// =========================================================================
+// str8 — Fixed-capacity UTF-8 strings
+// =========================================================================
+
+// Stack-allocated, null-terminated UTF-8 strings with a compile-time capacity.
+// All operations are provided via macros that automatically forward countof(buf)
+// as the capacity, so the caller never has to spell out a size.
+typedef c8 str8_tiny[STR_CAP_TINY];
+typedef c8 str8_short[STR_CAP_SHORT];
+typedef c8 str8_medium[STR_CAP_MEDIUM];
+typedef c8 str8_long[STR_CAP_LONG];
+typedef c8 str8_large[STR_CAP_LARGE];
+
+// =========================================================================
+// str16 — Fixed-capacity UTF-16 strings
+// =========================================================================
+
+typedef c16 str16_tiny[STR_CAP_TINY];
+typedef c16 str16_short[STR_CAP_SHORT];
+typedef c16 str16_medium[STR_CAP_MEDIUM];
+typedef c16 str16_long[STR_CAP_LONG];
+typedef c16 str16_large[STR_CAP_LARGE];
+
+// =========================================================================
+// str32 — Fixed-capacity UTF-32 strings
+// =========================================================================
+
+typedef c32 str32_tiny[STR_CAP_TINY];
+typedef c32 str32_short[STR_CAP_SHORT];
+typedef c32 str32_medium[STR_CAP_MEDIUM];
+typedef c32 str32_long[STR_CAP_LONG];
+typedef c32 str32_large[STR_CAP_LARGE];

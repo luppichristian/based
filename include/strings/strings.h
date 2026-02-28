@@ -336,3 +336,19 @@ func sz str32_replace(str32* str, const c32* from, const c32* rep);
 
 // Lowercases all ASCII letters in str in place, then capitalizes the first character.
 func void str32_beautify(str32* str);
+
+// =========================================================================
+// Cross-encoding conversion
+// =========================================================================
+
+// Each function converts a source string to the target encoding,
+// writing at most dst->cap - 1 output units into dst and always null-terminating.
+// Updates dst->size on return.
+// Returns the number of code units written, excluding the null terminator.
+
+func sz str8_to_str16(str8 src, str16* dst);
+func sz str8_to_str32(str8 src, str32* dst);
+func sz str16_to_str8(str16 src, str8* dst);
+func sz str16_to_str32(str16 src, str32* dst);
+func sz str32_to_str8(str32 src, str8* dst);
+func sz str32_to_str16(str32 src, str16* dst);

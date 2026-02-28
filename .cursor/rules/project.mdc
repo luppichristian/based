@@ -40,6 +40,7 @@ include/memory/
   vmem.h                     # OS virtual-memory primitives: reserve/commit/decommit/release/alloc/free
 include/strings/
   cstrings.h                 # Null-terminated cstr8/16/32 utilities: len, cmp[_nocase], copy, concat, append_char, find, case, trim, replace, remove, format, parse + cross-encoding conversions
+  fixed_strings.h            # Fixed-capacity string types (fstr8/16/32_tiny…large) owning their buffer; FSTR8/16/32_* macro wrappers for all cstrings.h ops with automatic countof cap; cross-encoding FSTR*_TO_FSTR* macros
   strings.h                  # str8/16/32 immutable views (ptr + size); STR8/16/32 macros; fixed-size typedefs str8_tiny…large / str16_* / str32_* (STR_CAP_TINY=16…LARGE=2048); cross-encoding str8_to_str16 etc.
   unicode.h                  # UTF-8 / UTF-16 / UTF-32 encode, decode, and cross-encoding conversion
 include/threads/
