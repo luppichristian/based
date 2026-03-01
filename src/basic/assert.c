@@ -96,3 +96,13 @@ func void _assert(b32 condition, const c8* msg, callsite site) {
       break;
   }
 }
+
+void _lm2_custom_assert(
+    int expression,
+    const char* msg,
+    const char* file,
+    const char* function,
+    int line) {
+  callsite site = {file, function, (u32)line};
+  _assert(expression, msg, site);
+}

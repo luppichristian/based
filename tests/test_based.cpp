@@ -2,10 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include <gtest/gtest.h>
-
-extern "C" {
 #include "based.h"
-}
 
 // TEST(based_add, positive_numbers) {
 //   EXPECT_EQ(based_add(2, 3), 5);

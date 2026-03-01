@@ -50,3 +50,13 @@
 
 // Olib, my library for working with file formats...
 #include <olib.h>
+
+// libmath2, my library for math utilities and functions...
+// Should be complete with everything needed.
+#ifndef LM2_ENABLE_UNPREFIXED_NAMES
+#  define LM2_ENABLE_UNPREFIXED_NAMES
+#endif
+#ifndef LM2_CUSTOM_ASSERT
+#  define LM2_CUSTOM_ASSERT
+#endif
+#include <lm2.h>

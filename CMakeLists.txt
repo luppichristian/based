@@ -22,7 +22,6 @@ option(BASED_GTEST_FETCH  "Fetch GoogleTest if not found" ON)
 # =========================================================================
 
 option(BASED_SDL3_FETCH "Fetch SDL3 if not found" ON)
-
 find_package(SDL3 QUIET)
 
 if(NOT SDL3_FOUND AND BASED_SDL3_FETCH)
@@ -60,13 +59,33 @@ if(NOT olib_FOUND AND BASED_OLIB_FETCH)
 endif()
 
 # =========================================================================
+# libmath2
+# =========================================================================
+
+option(BASED_LIBMATH2_FETCH "Fetch libmath2 if not found" ON)
+find_package(libmath2 QUIET)
+if(NOT libmath2_FOUND AND BASED_LIBMATH2_FETCH)
+    set(LM2_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+    set(LM2_BUILD_SHARED OFF CACHE BOOL "" FORCE)
+    FetchContent_Declare(
+        libmath2
+        URL https://github.com/luppichristian/libmath2/archive/main.zip
+        DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+    )
+    FetchContent_MakeAvailable(libmath2)
+endif()
+
+# Define LM2_CUSTOM_ASSERT to use custom assert in libmath2.
+target_compile_definitions(libmath2 PUBLIC LM2_CUSTOM_ASSERT)
+
+# =========================================================================
 # Library (always static for now)
 # =========================================================================
 
 file(GLOB_RECURSE BASED_SOURCES "src/**.c")
 add_library(based STATIC ${BASED_SOURCES})
 target_include_directories(based PUBLIC include)
-target_link_libraries(based PRIVATE SDL3::SDL3 PUBLIC olib::static)
+target_link_libraries(based PRIVATE SDL3::SDL3 PUBLIC olib::static libmath2)
 
 # =========================================================================
 # Tests
