@@ -59,6 +59,7 @@ include/                      # public API headers
     scratch.h                 # arena checkpoint helper
     vmem.h                    # low-level virtual-memory primitives
   strings/                    # UTF-aware string and Unicode helpers
+    char.h                    # per-code-unit ASCII classification, case, and hex helpers
     cstrings.h                # null-terminated string utilities
     strings.h                 # bounded mutable string wrappers
     unicode.h                 # UTF encoding, decoding, and conversion

@@ -33,6 +33,7 @@
 #include "memory/vmem.h"
 
 // Include string modules.
+#include "strings/char.h"
 #include "strings/cstrings.h"
 #include "strings/strings.h"
 #include "strings/unicode.h"

@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "strings/cstrings.h"
+#include "strings/char.h"
 #include "strings/unicode.h"
 
 #include <errno.h>
@@ -14,21 +15,7 @@
 // Internal helpers
 // =========================================================================
 
-static b32 cstr_is_ws8(c8 chr) {
-  return chr == ' ' || chr == '\t' || chr == '\n' || chr == '\r' || chr == '\f' || chr == '\v';
-}
-
-static b32 cstr_is_ws16(c16 chr) {
-  return chr == (c16)' ' || chr == (c16)'\t' || chr == (c16)'\n' || chr == (c16)'\r' ||
-         chr == (c16)'\f' || chr == (c16)'\v';
-}
-
-static b32 cstr_is_ws32(c32 chr) {
-  return chr == (c32)' ' || chr == (c32)'\t' || chr == (c32)'\n' || chr == (c32)'\r' ||
-         chr == (c32)'\f' || chr == (c32)'\v';
-}
-
-static sz cstr16_len_impl(const c16* str) {
+func sz cstr16_len_impl(const c16* str) {
   sz len = 0;
   while (str[len] != (c16)'\0') {
     len++;
@@ -36,7 +23,7 @@ static sz cstr16_len_impl(const c16* str) {
   return len;
 }
 
-static sz cstr32_len_impl(const c32* str) {
+func sz cstr32_len_impl(const c32* str) {
   sz len = 0;
   while (str[len] != (c32)'\0') {
     len++;
@@ -70,14 +57,8 @@ func i32 cstr8_cmp_n(const c8* lhs, const c8* rhs, sz cnt) {
 
 func i32 cstr8_cmp_nocase(const c8* lhs, const c8* rhs) {
   while (*lhs != '\0' && *rhs != '\0') {
-    unsigned char lchr = (unsigned char)*lhs;
-    unsigned char rchr = (unsigned char)*rhs;
-    if (lchr >= 'A' && lchr <= 'Z') {
-      lchr = (unsigned char)(lchr - 'A' + 'a');
-    }
-    if (rchr >= 'A' && rchr <= 'Z') {
-      rchr = (unsigned char)(rchr - 'A' + 'a');
-    }
+    u8 lchr = (u8)char8_to_lower(*lhs);
+    u8 rchr = (u8)char8_to_lower(*rhs);
     if (lchr < rchr) {
       return -1;
     }
@@ -87,14 +68,8 @@ func i32 cstr8_cmp_nocase(const c8* lhs, const c8* rhs) {
     lhs++;
     rhs++;
   }
-  unsigned char lchr = (unsigned char)*lhs;
-  unsigned char rchr = (unsigned char)*rhs;
-  if (lchr >= 'A' && lchr <= 'Z') {
-    lchr = (unsigned char)(lchr - 'A' + 'a');
-  }
-  if (rchr >= 'A' && rchr <= 'Z') {
-    rchr = (unsigned char)(rchr - 'A' + 'a');
-  }
+  u8 lchr = (u8)char8_to_lower(*lhs);
+  u8 rchr = (u8)char8_to_lower(*rhs);
   if (lchr < rchr) {
     return -1;
   }
@@ -273,27 +248,23 @@ func b32 cstr8_ends_with(const c8* str, const c8* suffix) {
 
 func void cstr8_to_upper(c8* str) {
   for (sz idx = 0; str[idx] != '\0'; idx++) {
-    if (str[idx] >= 'a' && str[idx] <= 'z') {
-      str[idx] = (c8)(str[idx] - 'a' + 'A');
-    }
+    str[idx] = char8_to_upper(str[idx]);
   }
 }
 
 func void cstr8_to_lower(c8* str) {
   for (sz idx = 0; str[idx] != '\0'; idx++) {
-    if (str[idx] >= 'A' && str[idx] <= 'Z') {
-      str[idx] = (c8)(str[idx] - 'A' + 'a');
-    }
+    str[idx] = char8_to_lower(str[idx]);
   }
 }
 
 func void cstr8_trim(c8* str) {
   sz start = 0;
-  while (cstr_is_ws8(str[start])) {
+  while (char8_is_space(str[start])) {
     start++;
   }
   sz len = strlen(str + start);
-  while (len > 0 && cstr_is_ws8(str[start + len - 1])) {
+  while (len > 0 && char8_is_space(str[start + len - 1])) {
     len--;
   }
   memmove(str, str + start, len);
@@ -326,7 +297,7 @@ func sz cstr8_remove_whitespace(c8* str) {
   sz write = 0;
   sz removed = 0;
   for (sz idx = 0; str[idx] != '\0'; idx++) {
-    if (!cstr_is_ws8(str[idx])) {
+    if (!char8_is_space(str[idx])) {
       str[write++] = str[idx];
     } else {
       removed++;
@@ -398,9 +369,7 @@ func sz cstr8_common_prefix(const c8* lhs, const c8* rhs, c8* buf, sz buf_cap) {
 
 func void cstr8_beautify(c8* str) {
   cstr8_to_lower(str);
-  if (str[0] >= 'a' && str[0] <= 'z') {
-    str[0] = (c8)(str[0] - 'a' + 'A');
-  }
+  str[0] = char8_to_upper(str[0]);
 }
 
 // =========================================================================
@@ -433,7 +402,7 @@ func b32 cstr8_to_f64(const c8* str, f64* out) {
 // cstr16 — Helpers for ASCII narrowing (for parsing)
 // =========================================================================
 
-static b32 cstr16_to_ascii(const c16* str, c8* buf, sz buf_size) {
+func b32 cstr16_to_ascii(const c16* str, c8* buf, sz buf_size) {
   sz idx = 0;
   while (str[idx] != (c16)'\0') {
     if (str[idx] > 0x7FU || idx >= buf_size - 1) {
@@ -446,7 +415,7 @@ static b32 cstr16_to_ascii(const c16* str, c8* buf, sz buf_size) {
   return 1;
 }
 
-static b32 cstr32_to_ascii(const c32* str, c8* buf, sz buf_size) {
+func b32 cstr32_to_ascii(const c32* str, c8* buf, sz buf_size) {
   sz idx = 0;
   while (str[idx] != (c32)'\0') {
     if (str[idx] > 0x7FU || idx >= buf_size - 1) {
@@ -503,14 +472,8 @@ func i32 cstr16_cmp_n(const c16* lhs, const c16* rhs, sz cnt) {
 
 func i32 cstr16_cmp_nocase(const c16* lhs, const c16* rhs) {
   while (*lhs != (c16)'\0' && *rhs != (c16)'\0') {
-    c16 lchr = *lhs;
-    c16 rchr = *rhs;
-    if (lchr >= (c16)'A' && lchr <= (c16)'Z') {
-      lchr = (c16)(lchr - (c16)'A' + (c16)'a');
-    }
-    if (rchr >= (c16)'A' && rchr <= (c16)'Z') {
-      rchr = (c16)(rchr - (c16)'A' + (c16)'a');
-    }
+    c16 lchr = char16_to_lower(*lhs);
+    c16 rchr = char16_to_lower(*rhs);
     if (lchr < rchr) {
       return -1;
     }
@@ -520,14 +483,8 @@ func i32 cstr16_cmp_nocase(const c16* lhs, const c16* rhs) {
     lhs++;
     rhs++;
   }
-  c16 lchr = *lhs;
-  c16 rchr = *rhs;
-  if (lchr >= (c16)'A' && lchr <= (c16)'Z') {
-    lchr = (c16)(lchr - (c16)'A' + (c16)'a');
-  }
-  if (rchr >= (c16)'A' && rchr <= (c16)'Z') {
-    rchr = (c16)(rchr - (c16)'A' + (c16)'a');
-  }
+  c16 lchr = char16_to_lower(*lhs);
+  c16 rchr = char16_to_lower(*rhs);
   if (lchr < rchr) {
     return -1;
   }
@@ -695,27 +652,23 @@ func b32 cstr16_ends_with(const c16* str, const c16* suffix) {
 
 func void cstr16_to_upper(c16* str) {
   for (sz idx = 0; str[idx] != (c16)'\0'; idx++) {
-    if (str[idx] >= (c16)'a' && str[idx] <= (c16)'z') {
-      str[idx] = (c16)(str[idx] - (c16)'a' + (c16)'A');
-    }
+    str[idx] = char16_to_upper(str[idx]);
   }
 }
 
 func void cstr16_to_lower(c16* str) {
   for (sz idx = 0; str[idx] != (c16)'\0'; idx++) {
-    if (str[idx] >= (c16)'A' && str[idx] <= (c16)'Z') {
-      str[idx] = (c16)(str[idx] - (c16)'A' + (c16)'a');
-    }
+    str[idx] = char16_to_lower(str[idx]);
   }
 }
 
 func void cstr16_trim(c16* str) {
   sz start = 0;
-  while (cstr_is_ws16(str[start])) {
+  while (char16_is_space(str[start])) {
     start++;
   }
   sz len = cstr16_len_impl(str + start);
-  while (len > 0 && cstr_is_ws16(str[start + len - 1])) {
+  while (len > 0 && char16_is_space(str[start + len - 1])) {
     len--;
   }
   memmove(str, str + start, len * sizeof(c16));
@@ -748,7 +701,7 @@ func sz cstr16_remove_whitespace(c16* str) {
   sz write = 0;
   sz removed = 0;
   for (sz idx = 0; str[idx] != (c16)'\0'; idx++) {
-    if (!cstr_is_ws16(str[idx])) {
+    if (!char16_is_space(str[idx])) {
       str[write++] = str[idx];
     } else {
       removed++;
@@ -823,9 +776,7 @@ func sz cstr16_common_prefix(const c16* lhs, const c16* rhs, c16* buf, sz buf_ca
 
 func void cstr16_beautify(c16* str) {
   cstr16_to_lower(str);
-  if (str[0] >= (c16)'a' && str[0] <= (c16)'z') {
-    str[0] = (c16)(str[0] - (c16)'a' + (c16)'A');
-  }
+  str[0] = char16_to_upper(str[0]);
 }
 
 // =========================================================================
@@ -892,14 +843,8 @@ func i32 cstr32_cmp_n(const c32* lhs, const c32* rhs, sz cnt) {
 
 func i32 cstr32_cmp_nocase(const c32* lhs, const c32* rhs) {
   while (*lhs != (c32)'\0' && *rhs != (c32)'\0') {
-    c32 lchr = *lhs;
-    c32 rchr = *rhs;
-    if (lchr >= (c32)'A' && lchr <= (c32)'Z') {
-      lchr = lchr - (c32)'A' + (c32)'a';
-    }
-    if (rchr >= (c32)'A' && rchr <= (c32)'Z') {
-      rchr = rchr - (c32)'A' + (c32)'a';
-    }
+    c32 lchr = char32_to_lower(*lhs);
+    c32 rchr = char32_to_lower(*rhs);
     if (lchr < rchr) {
       return -1;
     }
@@ -909,14 +854,8 @@ func i32 cstr32_cmp_nocase(const c32* lhs, const c32* rhs) {
     lhs++;
     rhs++;
   }
-  c32 lchr = *lhs;
-  c32 rchr = *rhs;
-  if (lchr >= (c32)'A' && lchr <= (c32)'Z') {
-    lchr = lchr - (c32)'A' + (c32)'a';
-  }
-  if (rchr >= (c32)'A' && rchr <= (c32)'Z') {
-    rchr = rchr - (c32)'A' + (c32)'a';
-  }
+  c32 lchr = char32_to_lower(*lhs);
+  c32 rchr = char32_to_lower(*rhs);
   if (lchr < rchr) {
     return -1;
   }
@@ -1084,27 +1023,23 @@ func b32 cstr32_ends_with(const c32* str, const c32* suffix) {
 
 func void cstr32_to_upper(c32* str) {
   for (sz idx = 0; str[idx] != (c32)'\0'; idx++) {
-    if (str[idx] >= (c32)'a' && str[idx] <= (c32)'z') {
-      str[idx] = str[idx] - (c32)'a' + (c32)'A';
-    }
+    str[idx] = char32_to_upper(str[idx]);
   }
 }
 
 func void cstr32_to_lower(c32* str) {
   for (sz idx = 0; str[idx] != (c32)'\0'; idx++) {
-    if (str[idx] >= (c32)'A' && str[idx] <= (c32)'Z') {
-      str[idx] = str[idx] - (c32)'A' + (c32)'a';
-    }
+    str[idx] = char32_to_lower(str[idx]);
   }
 }
 
 func void cstr32_trim(c32* str) {
   sz start = 0;
-  while (cstr_is_ws32(str[start])) {
+  while (char32_is_space(str[start])) {
     start++;
   }
   sz len = cstr32_len_impl(str + start);
-  while (len > 0 && cstr_is_ws32(str[start + len - 1])) {
+  while (len > 0 && char32_is_space(str[start + len - 1])) {
     len--;
   }
   memmove(str, str + start, len * sizeof(c32));
@@ -1137,7 +1072,7 @@ func sz cstr32_remove_whitespace(c32* str) {
   sz write = 0;
   sz removed = 0;
   for (sz idx = 0; str[idx] != (c32)'\0'; idx++) {
-    if (!cstr_is_ws32(str[idx])) {
+    if (!char32_is_space(str[idx])) {
       str[write++] = str[idx];
     } else {
       removed++;
@@ -1212,9 +1147,7 @@ func sz cstr32_common_prefix(const c32* lhs, const c32* rhs, c32* buf, sz buf_ca
 
 func void cstr32_beautify(c32* str) {
   cstr32_to_lower(str);
-  if (str[0] >= (c32)'a' && str[0] <= (c32)'z') {
-    str[0] = str[0] - (c32)'a' + (c32)'A';
-  }
+  str[0] = char32_to_upper(str[0]);
 }
 
 // =========================================================================

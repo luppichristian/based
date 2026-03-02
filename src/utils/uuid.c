@@ -4,26 +4,9 @@
 #include "utils/uuid.h"
 
 #include "basic/utility_defines.h"
+#include "strings/char.h"
 
 #include <string.h>
-
-func i32 uuid_hex_to_nibble(c8 chr) {
-  if (chr >= '0' && chr <= '9') {
-    return chr - '0';
-  }
-  if (chr >= 'a' && chr <= 'f') {
-    return chr - 'a' + 10;
-  }
-  if (chr >= 'A' && chr <= 'F') {
-    return chr - 'A' + 10;
-  }
-  return -1;
-}
-
-func c8 uuid_nibble_to_hex(u8 nibble) {
-  local_persist const c8 digits[] = "0123456789abcdef";
-  return digits[nibble & 0x0FU];
-}
 
 func uuid uuid_zero(void) {
   uuid value = {0};
@@ -112,8 +95,8 @@ func b32 uuid_parse_cstr8(const c8* src, uuid* out) {
       continue;
     }
 
-    i32 high = uuid_hex_to_nibble(src[src_index]);
-    i32 low = uuid_hex_to_nibble(src[src_index + 1]);
+    i32 high = char8_hex_to_nibble(src[src_index]);
+    i32 low = char8_hex_to_nibble(src[src_index + 1]);
     if (high < 0 || low < 0) {
       return 0;
     }
@@ -143,8 +126,8 @@ func b32 uuid_to_cstr8(uuid value, c8* dst, sz cap) {
     }
 
     u8 byte_value = value.bytes[byte_index];
-    dst[dst_index++] = uuid_nibble_to_hex((u8)(byte_value >> 4U));
-    dst[dst_index++] = uuid_nibble_to_hex((u8)(byte_value & 0x0FU));
+    dst[dst_index++] = char8_nibble_to_hex((u8)(byte_value >> 4U));
+    dst[dst_index++] = char8_nibble_to_hex((u8)(byte_value & 0x0FU));
   }
 
   dst[dst_index] = '\0';
