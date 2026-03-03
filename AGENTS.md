@@ -62,7 +62,7 @@ include/                      # public API headers
     vmem.h                    # low-level virtual-memory primitives
   filesystem/                 # path manipulation and basic filesystem helpers
     archive.h                 # in-memory archive model with ZIP load/save helpers
-    directory.h               # directory creation, removal, and iteration helpers
+    directory.h               # directory creation, removal, iteration, and special-directory queries
     file.h                    # high-level whole-file operations
     file_map.h                # memory-mapped file views with optional write-back
     file_stream.h             # unified native-file and archive-entry stream wrapper
@@ -112,7 +112,7 @@ src/                          # module implementations
   memory/                     # implementations for memory/*
   filesystem/                 # implementations for filesystem/*
     archive.c                # in-memory archive model with ZIP load/save helpers
-    directory.c              # directory creation, removal, and iteration helpers
+    directory.c              # directory creation, removal, iteration, and special-directory queries
     file.c                   # high-level whole-file operations
     file_map.c               # memory-mapped file views with optional write-back
     file_stream.c            # unified native-file and archive-entry stream wrapper
@@ -135,10 +135,7 @@ src/                          # module implementations
   utils/                      # implementations for utils/*
   threads/                    # implementations for threads/*
 tests/                        # GoogleTest coverage
-  test_based.cpp             # umbrella include smoke test
-  test_filesystem.cpp        # filesystem metadata, copying, and stream helper coverage
-  test_input.cpp             # input header and type smoke test
-  test_path.cpp              # path manipulation coverage
+  test_based.cpp             # umbrella include smoke test plus lightweight directory path query coverage
 ```
 
 Names should remain descriptive enough that this section can stay compact; 

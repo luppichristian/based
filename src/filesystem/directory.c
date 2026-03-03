@@ -28,11 +28,54 @@ typedef struct directory_copy_state {
   b32 success;
 } directory_copy_state;
 
+func path directory_path_from_string(const c8* src) {
+  return path_from_cstr(src != NULL ? src : "");
+}
+
+func path directory_path_from_owned_string(c8* src) {
+  path result = directory_path_from_string(src);
+  if (src != NULL) {
+    SDL_free(src);
+  }
+  return result;
+}
+
 func const c8* directory_path_cstr(const path* src) {
   if (src == NULL) {
     return "";
   }
   return src->buf;
+}
+
+func SDL_Folder directory_system_path_to_sdl(directory_system_path location) {
+  switch (location) {
+    case DIRECTORY_SYSTEM_PATH_HOME:
+      return SDL_FOLDER_HOME;
+    case DIRECTORY_SYSTEM_PATH_DESKTOP:
+      return SDL_FOLDER_DESKTOP;
+    case DIRECTORY_SYSTEM_PATH_DOCUMENTS:
+      return SDL_FOLDER_DOCUMENTS;
+    case DIRECTORY_SYSTEM_PATH_DOWNLOADS:
+      return SDL_FOLDER_DOWNLOADS;
+    case DIRECTORY_SYSTEM_PATH_MUSIC:
+      return SDL_FOLDER_MUSIC;
+    case DIRECTORY_SYSTEM_PATH_PICTURES:
+      return SDL_FOLDER_PICTURES;
+    case DIRECTORY_SYSTEM_PATH_PUBLICSHARE:
+      return SDL_FOLDER_PUBLICSHARE;
+    case DIRECTORY_SYSTEM_PATH_SAVEDGAMES:
+      return SDL_FOLDER_SAVEDGAMES;
+    case DIRECTORY_SYSTEM_PATH_SCREENSHOTS:
+      return SDL_FOLDER_SCREENSHOTS;
+    case DIRECTORY_SYSTEM_PATH_TEMPLATES:
+      return SDL_FOLDER_TEMPLATES;
+    case DIRECTORY_SYSTEM_PATH_VIDEOS:
+      return SDL_FOLDER_VIDEOS;
+    case DIRECTORY_SYSTEM_PATH_COUNT:
+      break;
+  }
+
+  return SDL_FOLDER_COUNT;
 }
 
 func sz directory_root_length(const c8* src) {
@@ -226,6 +269,35 @@ func b32 directory_path_is_same_or_child(const path* root_path, const path* chil
   }
 
   return child_abs.buf[root_len] == '\0' || child_abs.buf[root_len] == '/' ? 1 : 0;
+}
+
+func path directory_get_base(void) {
+  return directory_path_from_string(SDL_GetBasePath());
+}
+
+func path directory_get_pref(const c8* org_name, const c8* app_name) {
+  const c8* org_value = org_name;
+  const c8* app_value = app_name;
+
+  if (org_value != NULL && org_value[0] == '\0') {
+    org_value = NULL;
+  }
+
+  if (app_value == NULL || app_value[0] == '\0') {
+    return path_from_cstr("");
+  }
+
+  return directory_path_from_owned_string(SDL_GetPrefPath(org_value, app_value));
+}
+
+func path directory_get_system(directory_system_path location) {
+  SDL_Folder folder = directory_system_path_to_sdl(location);
+
+  if (folder == SDL_FOLDER_COUNT) {
+    return path_from_cstr("");
+  }
+
+  return directory_path_from_string(SDL_GetUserFolder(folder));
 }
 
 func b32 directory_create(const path* src) {

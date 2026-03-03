@@ -11,8 +11,32 @@ typedef struct directory_entry {
   b32 is_directory;
 } directory_entry;
 
+typedef enum directory_system_path {
+  DIRECTORY_SYSTEM_PATH_HOME = 0,
+  DIRECTORY_SYSTEM_PATH_DESKTOP = 1,
+  DIRECTORY_SYSTEM_PATH_DOCUMENTS = 2,
+  DIRECTORY_SYSTEM_PATH_DOWNLOADS = 3,
+  DIRECTORY_SYSTEM_PATH_MUSIC = 4,
+  DIRECTORY_SYSTEM_PATH_PICTURES = 5,
+  DIRECTORY_SYSTEM_PATH_PUBLICSHARE = 6,
+  DIRECTORY_SYSTEM_PATH_SAVEDGAMES = 7,
+  DIRECTORY_SYSTEM_PATH_SCREENSHOTS = 8,
+  DIRECTORY_SYSTEM_PATH_TEMPLATES = 9,
+  DIRECTORY_SYSTEM_PATH_VIDEOS = 10,
+  DIRECTORY_SYSTEM_PATH_COUNT = 11,
+} directory_system_path;
+
 // Returns 1 to continue iterating, 0 to stop.
 typedef b32 directory_iterate_callback(const directory_entry* entry, void* user_data);
+
+// Returns the application base directory, or an empty path on failure.
+func path directory_get_base(void);
+
+// Returns the per-user application data directory for org_name/app_name, or an empty path on failure.
+func path directory_get_pref(const c8* org_name, const c8* app_name);
+
+// Returns the requested user-facing system directory, or an empty path when unavailable.
+func path directory_get_system(directory_system_path location);
 
 // Creates the directory at src. Returns 1 on success, 0 otherwise.
 func b32 directory_create(const path* src);
