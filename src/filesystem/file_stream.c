@@ -11,6 +11,14 @@
 #include <stdlib.h>
 #include <string.h>
 
+func file_stream_error file_stream_set_error(file_stream* stm, file_stream_error error_code) {
+  if (stm != NULL) {
+    stm->error_code = error_code;
+  }
+
+  return error_code;
+}
+
 func file_stream file_stream_empty(void) {
   file_stream stm;
   memset(&stm, 0, size_of(stm));
@@ -96,6 +104,7 @@ func b32 file_stream_reserve_memory(file_stream* stm, sz min_capacity) {
 
   new_ptr = (u8*)realloc(stm->memory_ptr, (size_t)new_capacity);
   if (new_ptr == NULL) {
+    file_stream_set_error(stm, FILE_STREAM_ERROR_ALLOC);
     return 0;
   }
 
@@ -124,6 +133,7 @@ func file_stream file_stream_open(const path* src, u32 mode_flags) {
   stm.kind = FILE_STREAM_KIND_NATIVE;
   stm.mode_flags = mode_flags;
   stm.native_handle = file_ptr;
+  stm.error_code = FILE_STREAM_ERROR_NONE;
   return stm;
 }
 
@@ -167,6 +177,38 @@ func file_stream file_stream_open_archive(archive* arc, const path* src, u32 mod
   return stm;
 }
 
+func b32 file_stream_flush(file_stream* stm) {
+  if (!file_stream_is_open(stm)) {
+    if (stm != NULL) {
+      file_stream_set_error(stm, FILE_STREAM_ERROR_NOT_OPEN);
+    }
+    return 0;
+  }
+
+  if (stm->kind == FILE_STREAM_KIND_NATIVE) {
+    if (!SDL_FlushIO((SDL_IOStream*)stm->native_handle)) {
+      file_stream_set_error(stm, FILE_STREAM_ERROR_IO);
+      return 0;
+    }
+
+    file_stream_set_error(stm, FILE_STREAM_ERROR_NONE);
+    return 1;
+  }
+
+  if (stm->dirty && stm->archive_ref != NULL) {
+    buffer data = buffer_from(stm->memory_ptr, stm->memory_size);
+    if (!archive_write_all(stm->archive_ref, &stm->archive_path, data)) {
+      file_stream_set_error(stm, FILE_STREAM_ERROR_IO);
+      return 0;
+    }
+
+    stm->dirty = 0;
+  }
+
+  file_stream_set_error(stm, FILE_STREAM_ERROR_NONE);
+  return 1;
+}
+
 func void file_stream_close(file_stream* stm) {
   SDL_IOStream* file_ptr = NULL;
 
@@ -177,14 +219,11 @@ func void file_stream_close(file_stream* stm) {
   if (stm->kind == FILE_STREAM_KIND_NATIVE) {
     file_ptr = (SDL_IOStream*)stm->native_handle;
     if (file_ptr != NULL) {
+      (void)file_stream_flush(stm);
       SDL_CloseIO(file_ptr);
     }
   } else if (stm->kind == FILE_STREAM_KIND_ARCHIVE) {
-    if (stm->dirty && stm->archive_ref != NULL) {
-      buffer data = buffer_from(stm->memory_ptr, stm->memory_size);
-      (void)archive_write_all(stm->archive_ref, &stm->archive_path, data);
-    }
-
+    (void)file_stream_flush(stm);
     free(stm->memory_ptr);
   }
 
@@ -212,18 +251,33 @@ func sz file_stream_read(file_stream* stm, void* dst, sz size) {
   sz read_size = 0;
 
   if (!file_stream_is_open(stm) || dst == NULL || size == 0) {
+    if (stm != NULL) {
+      file_stream_set_error(stm, FILE_STREAM_ERROR_NOT_OPEN);
+    }
     return 0;
   }
 
   if (stm->kind == FILE_STREAM_KIND_NATIVE) {
-    return (sz)SDL_ReadIO((SDL_IOStream*)stm->native_handle, dst, (size_t)size);
+    read_size = (sz)SDL_ReadIO((SDL_IOStream*)stm->native_handle, dst, (size_t)size);
+    if (read_size == 0 && size > 0) {
+      if (file_stream_eof(stm)) {
+        file_stream_set_error(stm, FILE_STREAM_ERROR_EOF);
+      } else {
+        file_stream_set_error(stm, FILE_STREAM_ERROR_IO);
+      }
+    } else {
+      file_stream_set_error(stm, FILE_STREAM_ERROR_NONE);
+    }
+    return read_size;
   }
 
   if ((stm->mode_flags & FILE_STREAM_OPEN_READ) == 0) {
+    file_stream_set_error(stm, FILE_STREAM_ERROR_ACCESS);
     return 0;
   }
 
   if (stm->cursor >= stm->memory_size) {
+    file_stream_set_error(stm, FILE_STREAM_ERROR_EOF);
     return 0;
   }
 
@@ -231,22 +285,49 @@ func sz file_stream_read(file_stream* stm, void* dst, sz size) {
   read_size = size < available ? size : available;
   memcpy(dst, stm->memory_ptr + stm->cursor, read_size);
   stm->cursor += read_size;
+  file_stream_set_error(stm, FILE_STREAM_ERROR_NONE);
   return read_size;
+}
+
+func b32 file_stream_read_exact(file_stream* stm, void* dst, sz size) {
+  sz total_read = 0;
+  u8* dst_ptr = (u8*)dst;
+
+  while (total_read < size) {
+    sz step_size = file_stream_read(stm, dst_ptr + total_read, size - total_read);
+    if (step_size == 0) {
+      return 0;
+    }
+
+    total_read += step_size;
+  }
+
+  return 1;
 }
 
 func sz file_stream_write(file_stream* stm, const void* src, sz size) {
   sz end_pos = 0;
 
   if (!file_stream_is_open(stm) || (src == NULL && size > 0) || size == 0) {
+    if (stm != NULL) {
+      file_stream_set_error(stm, FILE_STREAM_ERROR_NOT_OPEN);
+    }
     return 0;
   }
 
   if (stm->kind == FILE_STREAM_KIND_NATIVE) {
-    return (sz)SDL_WriteIO((SDL_IOStream*)stm->native_handle, src, (size_t)size);
+    end_pos = (sz)SDL_WriteIO((SDL_IOStream*)stm->native_handle, src, (size_t)size);
+    if (end_pos != size) {
+      file_stream_set_error(stm, FILE_STREAM_ERROR_IO);
+    } else {
+      file_stream_set_error(stm, FILE_STREAM_ERROR_NONE);
+    }
+    return end_pos;
   }
 
   if ((stm->mode_flags & FILE_STREAM_OPEN_WRITE) == 0 &&
       (stm->mode_flags & FILE_STREAM_OPEN_APPEND) == 0) {
+    file_stream_set_error(stm, FILE_STREAM_ERROR_ACCESS);
     return 0;
   }
 
@@ -265,7 +346,24 @@ func sz file_stream_write(file_stream* stm, const void* src, sz size) {
     stm->memory_size = end_pos;
   }
   stm->dirty = 1;
+  file_stream_set_error(stm, FILE_STREAM_ERROR_NONE);
   return size;
+}
+
+func b32 file_stream_write_exact(file_stream* stm, const void* src, sz size) {
+  sz total_write = 0;
+  const u8* src_ptr = (const u8*)src;
+
+  while (total_write < size) {
+    sz step_size = file_stream_write(stm, src_ptr + total_write, size - total_write);
+    if (step_size == 0) {
+      return 0;
+    }
+
+    total_write += step_size;
+  }
+
+  return 1;
 }
 
 func b32 file_stream_seek(file_stream* stm, i64 offset, file_stream_seek_basis basis) {
@@ -274,6 +372,9 @@ func b32 file_stream_seek(file_stream* stm, i64 offset, file_stream_seek_basis b
   SDL_IOWhence io_basis = SDL_IO_SEEK_SET;
 
   if (!file_stream_is_open(stm)) {
+    if (stm != NULL) {
+      file_stream_set_error(stm, FILE_STREAM_ERROR_NOT_OPEN);
+    }
     return 0;
   }
 
@@ -284,7 +385,13 @@ func b32 file_stream_seek(file_stream* stm, i64 offset, file_stream_seek_basis b
       io_basis = SDL_IO_SEEK_END;
     }
 
-    return SDL_SeekIO((SDL_IOStream*)stm->native_handle, (Sint64)offset, io_basis) >= 0 ? 1 : 0;
+    if (SDL_SeekIO((SDL_IOStream*)stm->native_handle, (Sint64)offset, io_basis) < 0) {
+      file_stream_set_error(stm, FILE_STREAM_ERROR_SEEK);
+      return 0;
+    }
+
+    file_stream_set_error(stm, FILE_STREAM_ERROR_NONE);
+    return 1;
   }
 
   if (basis == FILE_STREAM_SEEK_BASIS_CURRENT) {
@@ -295,10 +402,12 @@ func b32 file_stream_seek(file_stream* stm, i64 offset, file_stream_seek_basis b
 
   new_pos = base_pos + offset;
   if (new_pos < 0 || (sz)new_pos > stm->memory_size) {
+    file_stream_set_error(stm, FILE_STREAM_ERROR_SEEK);
     return 0;
   }
 
   stm->cursor = (sz)new_pos;
+  file_stream_set_error(stm, FILE_STREAM_ERROR_NONE);
   return 1;
 }
 
@@ -330,4 +439,24 @@ func sz file_stream_size(const file_stream* stm) {
   }
 
   return stm->memory_size;
+}
+
+func b32 file_stream_eof(const file_stream* stm) {
+  if (!file_stream_is_open(stm)) {
+    return 1;
+  }
+
+  if (stm->kind == FILE_STREAM_KIND_NATIVE) {
+    return file_stream_tell(stm) >= file_stream_size(stm) ? 1 : 0;
+  }
+
+  return stm->cursor >= stm->memory_size ? 1 : 0;
+}
+
+func file_stream_error file_stream_get_error(const file_stream* stm) {
+  if (stm == NULL) {
+    return FILE_STREAM_ERROR_NOT_OPEN;
+  }
+
+  return stm->error_code;
 }

@@ -3,7 +3,60 @@
 
 #include "filesystem/file.h"
 
+#include "basic/env_defines.h"
+
 #include "../sdl3_include.h"
+
+#include <stdio.h>
+
+#if defined(PLATFORM_WINDOWS)
+#  include <windows.h>
+#endif
+
+func b32 file_paths_equal(const path* lhs, const path* rhs) {
+  if (lhs == NULL || rhs == NULL) {
+    return 0;
+  }
+
+  return cstr8_cmp(lhs->buf, rhs->buf) == 0 ? 1 : 0;
+}
+
+func b32 file_replace_path(const path* src, const path* dst) {
+#if defined(PLATFORM_WINDOWS)
+  return MoveFileExA(src->buf, dst->buf, MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH) ? 1 : 0;
+#elif defined(PLATFORM_UNIX) || defined(PLATFORM_ANDROID) || defined(PLATFORM_IOS)
+  return rename(src->buf, dst->buf) == 0 ? 1 : 0;
+#else
+  if (path_exists(dst) && !path_remove(dst)) {
+    return 0;
+  }
+
+  return SDL_RenamePath(src->buf, dst->buf) ? 1 : 0;
+#endif
+}
+
+func b32 file_make_temp_path(const path* src, path* out_path) {
+  path tmp_path;
+  u32 attempt_idx = 0;
+
+  if (src == NULL || out_path == NULL) {
+    return 0;
+  }
+
+  for (attempt_idx = 0; attempt_idx < 32; attempt_idx += 1) {
+    tmp_path = *src;
+    if (!cstr8_append_format(tmp_path.buf, PATH_CAP, ".tmp.%u", attempt_idx)) {
+      return 0;
+    }
+
+    if (!path_exists(&tmp_path)) {
+      *out_path = tmp_path;
+      return 1;
+    }
+  }
+
+  return 0;
+}
 
 func const c8* file_path_cstr(const path* src) {
   if (src == NULL) {
@@ -36,6 +89,59 @@ func b32 file_rename(const path* old_src, const path* new_src) {
   }
 
   return SDL_RenamePath(file_path_cstr(old_src), file_path_cstr(new_src)) ? 1 : 0;
+}
+
+func b32 file_copy(const path* src, const path* dst, b32 overwrite_existing) {
+  SDL_IOStream* src_file = NULL;
+  SDL_IOStream* dst_file = NULL;
+  u8 copy_buf[16 * 1024];
+  sz read_size = 0;
+
+  if (!file_exists(src) || dst == NULL) {
+    return 0;
+  }
+
+  if (file_paths_equal(src, dst)) {
+    return 1;
+  }
+
+  if (path_exists(dst)) {
+    if (!overwrite_existing || !file_exists(dst)) {
+      return 0;
+    }
+  }
+
+  src_file = SDL_IOFromFile(file_path_cstr(src), "rb");
+  if (src_file == NULL) {
+    return 0;
+  }
+
+  dst_file = SDL_IOFromFile(file_path_cstr(dst), "wb");
+  if (dst_file == NULL) {
+    SDL_CloseIO(src_file);
+    return 0;
+  }
+
+  for (;;) {
+    read_size = (sz)SDL_ReadIO(src_file, copy_buf, size_of(copy_buf));
+    if (read_size == 0) {
+      break;
+    }
+
+    if ((sz)SDL_WriteIO(dst_file, copy_buf, (size_t)read_size) != read_size) {
+      SDL_CloseIO(dst_file);
+      SDL_CloseIO(src_file);
+      return 0;
+    }
+  }
+
+  if (!SDL_CloseIO(dst_file)) {
+    SDL_CloseIO(src_file);
+    return 0;
+  }
+
+  SDL_CloseIO(src_file);
+  return 1;
 }
 
 func b32 file_exists(const path* src) {
@@ -147,5 +253,29 @@ func b32 file_append_all(const path* src, buffer data) {
   if (!SDL_CloseIO(file_ptr)) {
     return 0;
   }
+  return 1;
+}
+
+func b32 file_write_all_atomic(const path* src, buffer data) {
+  path tmp_path;
+
+  if (src == NULL) {
+    return 0;
+  }
+
+  if (!file_make_temp_path(src, &tmp_path)) {
+    return 0;
+  }
+
+  if (!file_write_all(&tmp_path, data)) {
+    (void)path_remove(&tmp_path);
+    return 0;
+  }
+
+  if (!file_replace_path(&tmp_path, src)) {
+    (void)path_remove(&tmp_path);
+    return 0;
+  }
+
   return 1;
 }

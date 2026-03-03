@@ -42,6 +42,9 @@ func b32 path_ends_with(const path* src, const c8* suffix);
 // Returns 1 if src is absolute on the current platform style, 0 otherwise.
 func b32 path_is_absolute(const path* src);
 
+// Returns 1 if src is relative, 0 otherwise.
+func b32 path_is_relative(const path* src);
+
 // Removes the trailing file extension, if any.
 func void path_remove_extension(path* src);
 
@@ -68,6 +71,18 @@ func path path_get_directory(const path* src);
 
 // Returns the common directory prefix shared by src_list.
 func path path_get_common(const path* src_list, sz path_count);
+
+// Returns the current working directory, or an empty path on failure.
+func path path_get_current(void);
+
+// Sets the current working directory. Returns 1 on success, 0 otherwise.
+func b32 path_set_current(const path* src);
+
+// Resolves src against the current working directory when needed.
+func path path_resolve(const path* src);
+
+// Returns src relative to root when src lies under root; otherwise returns src unchanged.
+func path path_make_relative(const path* src, const path* root);
 
 // Returns 1 if a filesystem entry exists at src, 0 otherwise.
 func b32 path_exists(const path* src);

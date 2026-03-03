@@ -23,6 +23,9 @@ func b32 directory_remove(const path* src);
 // Renames the directory at old_src to new_src. Returns 1 on success, 0 otherwise.
 func b32 directory_rename(const path* old_src, const path* new_src);
 
+// Copies the directory tree rooted at src into dst. Returns 1 on success, 0 otherwise.
+func b32 directory_copy_recursive(const path* src, const path* dst, b32 overwrite_existing);
+
 // Returns 1 if src exists and is a directory, 0 otherwise.
 func b32 directory_exists(const path* src);
 

@@ -38,8 +38,10 @@
 #include "filesystem/archive.h"
 #include "filesystem/directory.h"
 #include "filesystem/file.h"
+#include "filesystem/file_map.h"
 #include "filesystem/file_stream.h"
 #include "filesystem/filewatch.h"
+#include "filesystem/info.h"
 #include "filesystem/path.h"
 
 // Include process modules.

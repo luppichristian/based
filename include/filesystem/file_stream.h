@@ -20,6 +20,16 @@ typedef enum file_stream_seek_basis {
   FILE_STREAM_SEEK_BASIS_END = 2,
 } file_stream_seek_basis;
 
+typedef enum file_stream_error {
+  FILE_STREAM_ERROR_NONE = 0,
+  FILE_STREAM_ERROR_NOT_OPEN = 1,
+  FILE_STREAM_ERROR_ACCESS = 2,
+  FILE_STREAM_ERROR_EOF = 3,
+  FILE_STREAM_ERROR_SEEK = 4,
+  FILE_STREAM_ERROR_IO = 5,
+  FILE_STREAM_ERROR_ALLOC = 6,
+} file_stream_error;
+
 enum {
   FILE_STREAM_OPEN_READ = bit(0),
   FILE_STREAM_OPEN_WRITE = bit(1),
@@ -39,6 +49,7 @@ typedef struct file_stream {
   sz memory_capacity;
   sz cursor;
   b32 dirty;
+  file_stream_error error_code;
 } file_stream;
 
 // Opens a native filesystem stream from src.
@@ -53,11 +64,20 @@ func void file_stream_close(file_stream* stm);
 // Returns 1 when stm currently references an open stream.
 func b32 file_stream_is_open(const file_stream* stm);
 
+// Flushes pending writes without closing the stream. Returns 1 on success, 0 otherwise.
+func b32 file_stream_flush(file_stream* stm);
+
 // Reads up to size bytes into dst. Returns the number of bytes read.
 func sz file_stream_read(file_stream* stm, void* dst, sz size);
 
+// Reads exactly size bytes into dst. Returns 1 on success, 0 otherwise.
+func b32 file_stream_read_exact(file_stream* stm, void* dst, sz size);
+
 // Writes up to size bytes from src. Returns the number of bytes written.
 func sz file_stream_write(file_stream* stm, const void* src, sz size);
+
+// Writes exactly size bytes from src. Returns 1 on success, 0 otherwise.
+func b32 file_stream_write_exact(file_stream* stm, const void* src, sz size);
 
 // Seeks the current cursor. Returns 1 on success, 0 otherwise.
 func b32 file_stream_seek(file_stream* stm, i64 offset, file_stream_seek_basis basis);
@@ -67,3 +87,9 @@ func sz file_stream_tell(const file_stream* stm);
 
 // Returns the logical byte size of the underlying stream.
 func sz file_stream_size(const file_stream* stm);
+
+// Returns 1 when no more bytes can be read, 0 otherwise.
+func b32 file_stream_eof(const file_stream* stm);
+
+// Returns the last stream error.
+func file_stream_error file_stream_get_error(const file_stream* stm);

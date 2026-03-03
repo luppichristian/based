@@ -2,12 +2,18 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "filesystem/path.h"
-
+#include "basic/env_defines.h"
 #include "../sdl3_include.h"
 
 #include "strings/char.h"
 
 #include <string.h>
+
+#if defined(PLATFORM_WINDOWS)
+#  include <direct.h>
+#elif defined(PLATFORM_UNIX) || defined(PLATFORM_ANDROID) || defined(PLATFORM_IOS)
+#  include <unistd.h>
+#endif
 
 func c8* path_mut_buf(path* value) {
   return value->buf;
@@ -205,6 +211,10 @@ func b32 path_is_absolute(const path* src) {
   return path_is_absolute_cstr(path_buf(src));
 }
 
+func b32 path_is_relative(const path* src) {
+  return !path_is_absolute(src) ? 1 : 0;
+}
+
 func void path_remove_extension(path* src) {
   sz dot_idx = path_extension_start_cstr(path_buf(src));
   if (dot_idx != SZ_MAX) {
@@ -294,6 +304,94 @@ func path path_get_common(const path* src_list, sz path_count) {
 
   path_remove_name(&result);
   return result;
+}
+
+func path path_get_current(void) {
+  path result = path_empty_value();
+
+#if defined(PLATFORM_WINDOWS)
+  if (_getcwd(result.buf, PATH_CAP) == NULL) {
+    return path_empty_value();
+  }
+#elif defined(PLATFORM_UNIX) || defined(PLATFORM_ANDROID) || defined(PLATFORM_IOS)
+  if (getcwd(result.buf, PATH_CAP) == NULL) {
+    return path_empty_value();
+  }
+#else
+  return path_empty_value();
+#endif
+
+  path_normalize(&result);
+  path_remove_trailing_slash(&result);
+  return result;
+}
+
+func b32 path_set_current(const path* src) {
+  if (src == NULL || src->buf[0] == '\0') {
+    return 0;
+  }
+
+#if defined(PLATFORM_WINDOWS)
+  return _chdir(src->buf) == 0 ? 1 : 0;
+#elif defined(PLATFORM_UNIX) || defined(PLATFORM_ANDROID) || defined(PLATFORM_IOS)
+  return chdir(src->buf) == 0 ? 1 : 0;
+#else
+  return 0;
+#endif
+}
+
+func path path_resolve(const path* src) {
+  path result;
+  path cwd_path;
+
+  if (src == NULL) {
+    return path_empty_value();
+  }
+
+  result = *src;
+  if (path_is_absolute(&result)) {
+    path_normalize(&result);
+    path_remove_trailing_slash(&result);
+    return result;
+  }
+
+  cwd_path = path_get_current();
+  result = path_join(&cwd_path, &result);
+  path_normalize(&result);
+  path_remove_trailing_slash(&result);
+  return result;
+}
+
+func path path_make_relative(const path* src, const path* root) {
+  path src_abs;
+  path root_abs;
+  sz root_len = 0;
+
+  if (src == NULL || root == NULL) {
+    return path_empty_value();
+  }
+
+  src_abs = path_resolve(src);
+  root_abs = path_resolve(root);
+  root_len = cstr8_len(root_abs.buf);
+
+  if (root_len == 0) {
+    return src_abs;
+  }
+
+  if (cstr8_cmp_n(src_abs.buf, root_abs.buf, root_len) != 0) {
+    return src_abs;
+  }
+
+  if (src_abs.buf[root_len] == '\0') {
+    return path_from_cstr("");
+  }
+
+  if (src_abs.buf[root_len] != '/') {
+    return src_abs;
+  }
+
+  return path_from_cstr(src_abs.buf + root_len + 1);
 }
 
 func b32 path_exists(const path* src) {

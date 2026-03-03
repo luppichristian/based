@@ -64,8 +64,10 @@ include/                      # public API headers
     archive.h                 # in-memory archive model with ZIP load/save helpers
     directory.h               # directory creation, removal, and iteration helpers
     file.h                    # high-level whole-file operations
+    file_map.h                # memory-mapped file views with optional write-back
     file_stream.h             # unified native-file and archive-entry stream wrapper
     filewatch.h               # efsw-backed directory watch wrapper
+    info.h                    # cross-platform filesystem metadata queries
     path.h                    # struct-backed fixed-capacity paths and path/file helpers
   processes/                  # process creation and lifecycle helpers
     pipe.h                    # process-owned stdio pipe handles and pipe I/O helpers
@@ -104,8 +106,10 @@ src/                          # module implementations
     archive.c                # in-memory archive model with ZIP load/save helpers
     directory.c              # directory creation, removal, and iteration helpers
     file.c                   # high-level whole-file operations
+    file_map.c               # memory-mapped file views with optional write-back
     file_stream.c            # unified native-file and archive-entry stream wrapper
     filewatch.c              # efsw-backed directory watch wrapper
+    info.c                   # cross-platform filesystem metadata queries
     path.c                   # struct-backed fixed-capacity paths and path/file helpers
   processes/                  # implementations for processes/*
     pipe.c                   # process-owned stdio pipe handles and pipe I/O helpers
@@ -116,6 +120,7 @@ src/                          # module implementations
   threads/                    # implementations for threads/*
 tests/                        # GoogleTest coverage
   test_based.cpp             # umbrella include smoke test
+  test_filesystem.cpp        # filesystem metadata, copying, and stream helper coverage
   test_path.cpp              # path manipulation coverage
 ```
 

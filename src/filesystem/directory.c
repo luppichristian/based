@@ -3,6 +3,8 @@
 
 #include "filesystem/directory.h"
 
+#include "filesystem/file.h"
+
 #include "../sdl3_include.h"
 
 #include <string.h>
@@ -19,6 +21,12 @@ typedef struct directory_iterate_state {
 typedef struct directory_remove_state {
   b32 success;
 } directory_remove_state;
+
+typedef struct directory_copy_state {
+  path dst_root;
+  b32 overwrite_existing;
+  b32 success;
+} directory_copy_state;
 
 func const c8* directory_path_cstr(const path* src) {
   if (src == NULL) {
@@ -183,6 +191,43 @@ func SDL_EnumerationResult SDLCALL directory_remove_callback(
   return SDL_ENUM_CONTINUE;
 }
 
+func b32 directory_copy_entry(const directory_entry* entry, void* user_data) {
+  directory_copy_state* state = (directory_copy_state*)user_data;
+  path dst_path;
+
+  if (state == NULL || entry == NULL) {
+    return 0;
+  }
+
+  dst_path = path_join(&state->dst_root, &entry->relative_path);
+  if (entry->is_directory) {
+    state->success = directory_copy_recursive(
+        &entry->full_path,
+        &dst_path,
+        state->overwrite_existing);
+  } else {
+    state->success = file_copy(&entry->full_path, &dst_path, state->overwrite_existing);
+  }
+
+  return state->success;
+}
+
+func b32 directory_path_is_same_or_child(const path* root_path, const path* child_path) {
+  path root_abs = path_resolve(root_path);
+  path child_abs = path_resolve(child_path);
+  sz root_len = cstr8_len(root_abs.buf);
+
+  if (root_len == 0) {
+    return 0;
+  }
+
+  if (cstr8_cmp_n(root_abs.buf, child_abs.buf, root_len) != 0) {
+    return 0;
+  }
+
+  return child_abs.buf[root_len] == '\0' || child_abs.buf[root_len] == '/' ? 1 : 0;
+}
+
 func b32 directory_create(const path* src) {
   if (SDL_CreateDirectory(directory_path_cstr(src))) {
     return 1;
@@ -205,6 +250,41 @@ func b32 directory_rename(const path* old_src, const path* new_src) {
   }
 
   return SDL_RenamePath(directory_path_cstr(old_src), directory_path_cstr(new_src)) ? 1 : 0;
+}
+
+func b32 directory_copy_recursive(const path* src, const path* dst, b32 overwrite_existing) {
+  directory_copy_state state;
+  path src_abs;
+  path dst_abs;
+
+  if (!directory_exists(src) || dst == NULL) {
+    return 0;
+  }
+
+  src_abs = path_resolve(src);
+  dst_abs = path_resolve(dst);
+  if (directory_path_is_same_or_child(&src_abs, &dst_abs)) {
+    return cstr8_cmp(src_abs.buf, dst_abs.buf) == 0 ? 1 : 0;
+  }
+
+  if (path_exists(dst)) {
+    if (!directory_exists(dst)) {
+      return 0;
+    }
+  } else if (!directory_create_recursive(dst)) {
+    return 0;
+  }
+
+  memset(&state, 0, size_of(state));
+  state.dst_root = *dst;
+  state.overwrite_existing = overwrite_existing;
+  state.success = 1;
+
+  if (!directory_iterate(src, directory_copy_entry, &state)) {
+    return 0;
+  }
+
+  return state.success;
 }
 
 func b32 directory_exists(const path* src) {
