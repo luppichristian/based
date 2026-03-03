@@ -18,7 +18,7 @@ Keeping this file up to date is mandatory. Any change that adds, removes, or mat
 - Use `#pragma once` in headers.
 - Respect `.clang-format` and `.clang-tidy`; warnings are treated as errors.
 - Use project primitive types (`i32`, `u64`, `sz`, `b32`, `c8`, etc.) instead of raw C types **always**.
-- Prefer project qualifiers and keywords (`func`, `global_var`, `local_persist`, `force_inline`, `no_inline`, `no_return`, `read_only`).
+- Prefer project qualifiers and keywords (`func`, `global_var`, `local_persist`, `force_inline`, `no_inline`, `no_return`, `read_only`, `const_var`).
 - You should never use the `static` keyword directly, use `func` even if functions are internal.
 - Naming is snake_case for functions, variables, typedefs, structs, and enums; macros and constants are UPPER_CASE.
 - Do not introduce project-defined `_t` types.
@@ -60,6 +60,13 @@ include/                      # public API headers
     ring.h                    # byte-oriented ring buffer
     scratch.h                 # arena checkpoint helper
     vmem.h                    # low-level virtual-memory primitives
+  filesystem/                 # path manipulation and basic filesystem helpers
+    archive.h                 # in-memory archive model with ZIP load/save helpers
+    directory.h               # directory creation, removal, and iteration helpers
+    file.h                    # high-level whole-file operations
+    file_stream.h             # unified native-file and archive-entry stream wrapper
+    filewatch.h               # efsw-backed directory watch wrapper
+    path.h                    # struct-backed fixed-capacity paths and path/file helpers
   processes/                  # process creation and lifecycle helpers
     pipe.h                    # process-owned stdio pipe handles and pipe I/O helpers
     process.h                 # subprocess spawning, waiting, and output capture helpers
@@ -93,6 +100,13 @@ src/                          # module implementations
   containers/                 # implementations for container modules with source files
     sort.c                   # array sorting helpers and typed sort entry points
   memory/                     # implementations for memory/*
+  filesystem/                 # implementations for filesystem/*
+    archive.c                # in-memory archive model with ZIP load/save helpers
+    directory.c              # directory creation, removal, and iteration helpers
+    file.c                   # high-level whole-file operations
+    file_stream.c            # unified native-file and archive-entry stream wrapper
+    filewatch.c              # efsw-backed directory watch wrapper
+    path.c                   # struct-backed fixed-capacity paths and path/file helpers
   processes/                  # implementations for processes/*
     pipe.c                   # process-owned stdio pipe handles and pipe I/O helpers
     process.c                # subprocess spawning, waiting, and output capture helpers
@@ -102,7 +116,7 @@ src/                          # module implementations
   threads/                    # implementations for threads/*
 tests/                        # GoogleTest coverage
   test_based.cpp             # umbrella include smoke test
-  test_cmdline.cpp           # cmdline wrapper and option lookup coverage
+  test_path.cpp              # path manipulation coverage
 ```
 
 Names should remain descriptive enough that this section can stay compact; 
@@ -112,6 +126,7 @@ Update this tree when files are added, removed, or materially repurposed.
 
 - `func`: function declaration alias; becomes `static` when `ALL_FUNCS_STATIC` is defined. Use this instead of writing `static` directly for functions.
 - `global_var`: cosmetic marker for global variables; becomes `static` when `ALL_GLOBAL_VARS_STATIC` is defined.
+- `const_var`: marker for constant variables that can be defined in headers. They use `read_only` internally.
 - `local_persist`: alias for `static` storage on local variables.
 - `read_only`: readonly global/file-scope storage qualifier; maps to `const` plus platform-specific readonly section placement when supported.
 - `thread_local`: thread-local storage qualifier; maps to the platform/compiler-specific thread-local keyword.

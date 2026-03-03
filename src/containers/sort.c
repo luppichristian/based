@@ -320,7 +320,7 @@ func sz sort_quick(
     return elem_count;
   }
 
-  allocator alc = allocator;
+  struct allocator alc = allocator;
   sz stack_size = elem_count * sizeof(sort_range);
   sort_range* stack_ptr = (sort_range*)allocator_alloc(&alc, stack_size);
   if (!stack_ptr) {
@@ -398,7 +398,7 @@ func sz sort_merge(
     return sort_quick(ptr, elem_count, elem_size, compare, user_data, allocator);
   }
 
-  allocator alc = allocator;
+  struct allocator alc = allocator;
   sz temp_size = elem_count * elem_size;
   u8* tmp_ptr = (u8*)allocator_alloc(&alc, temp_size);
   if (!tmp_ptr) {

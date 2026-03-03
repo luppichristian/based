@@ -33,6 +33,7 @@ Functional keywords:
 
 Purely cosmetic keywords:
 - 'func' as a shorthand for 'function' to improve readability.
+- 'const_var' for global constants
 - 'global_var' for global variables to make it clear they are global.
 - 'local_persist' for static variables that should persist across function calls.
 
@@ -198,6 +199,9 @@ If ALL_GLOBAL_VARS_STATIC is defined, all global variables will be declared as s
 
 // local_persist — static variable that retains its value across calls.
 #define local_persist static
+
+// const_var - constant variable
+#define const_var static read_only
 
 // global_var — global variable (purely cosmetic, improves readability).
 #if defined(ALL_GLOBAL_VARS_STATIC)

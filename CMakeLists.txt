@@ -9,6 +9,9 @@ cmake_minimum_required(VERSION 3.19)
 project(based C CXX)
 include(FetchContent)
 
+# Ensure third-party subprojects default to honoring pre-set option variables.
+set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
+
 set(CMAKE_C_STANDARD 23)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 20)
@@ -37,6 +40,46 @@ if(NOT SDL3_FOUND AND BASED_SDL3_FETCH)
         DOWNLOAD_EXTRACT_TIMESTAMP TRUE
     )
     FetchContent_MakeAvailable(SDL3)
+endif()
+
+# =========================================================================
+# efsw
+# =========================================================================
+
+option(BASED_EFSW_FETCH "Fetch efsw if not found" ON)
+find_package(efsw QUIET)
+
+if(NOT efsw_FOUND AND BASED_EFSW_FETCH)
+    set(BUILD_SHARED_LIBS OFF)
+    set(BUILD_STATIC_LIBS ON)
+    set(BUILD_TEST_APP OFF)
+
+    FetchContent_Declare(
+        efsw 
+        GIT_REPOSITORY https://github.com/SpartanJ/efsw 
+        GIT_TAG master
+    )
+    FetchContent_MakeAvailable(efsw)
+endif()
+
+# =========================================================================
+# miniz
+# =========================================================================
+
+option(BASED_MINIZ_FETCH "Fetch miniz if not found" ON)
+find_package(miniz QUIET)
+
+if(NOT miniz_FOUND AND BASED_MINIZ_FETCH)
+    set(BUILD_TESTS Off)
+    set(BUILD_SHARED_LIBS Off)
+    set(BUILD_EXAMPLES Off)
+
+    FetchContent_Declare(
+        miniz 
+        GIT_REPOSITORY https://github.com/richgel999/miniz 
+        DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+    )
+    FetchContent_MakeAvailable(miniz)
 endif()
 
 # =========================================================================
@@ -85,7 +128,8 @@ target_compile_definitions(libmath2 PUBLIC LM2_CUSTOM_ASSERT)
 file(GLOB_RECURSE BASED_SOURCES "src/**.c")
 add_library(based STATIC ${BASED_SOURCES})
 target_include_directories(based PUBLIC include)
-target_link_libraries(based PRIVATE SDL3::SDL3 PUBLIC olib::static libmath2)
+target_link_libraries(based PRIVATE SDL3::SDL3 efsw miniz PUBLIC olib::static libmath2)
+target_compile_definitions(based PRIVATE _CRT_SECURE_NO_WARNINGS)
 
 # =========================================================================
 # Tests

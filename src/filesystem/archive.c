@@ -1,0 +1,571 @@
+// MIT License
+// Copyright (c) 2026 Christian Luppi
+
+#include "filesystem/archive.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#if defined(__has_include)
+#  if __has_include(<miniz.h>)
+#    include <miniz.h>
+#    define BASED_ARCHIVE_HAS_MINIZ 1
+#  endif
+#endif
+
+#ifndef BASED_ARCHIVE_HAS_MINIZ
+#  define BASED_ARCHIVE_HAS_MINIZ 0
+#endif
+
+func void* archive_alloc_bytes(allocator* opt_alloc, sz size) {
+  if (size == 0) {
+    return NULL;
+  }
+
+  if (opt_alloc != NULL) {
+    return allocator_alloc(opt_alloc, size);
+  }
+
+  return malloc((size_t)size);
+}
+
+func void* archive_realloc_bytes(allocator* opt_alloc, void* ptr, sz old_size, sz new_size) {
+  if (new_size == 0) {
+    if (ptr != NULL) {
+      if (opt_alloc != NULL) {
+        allocator_dealloc(opt_alloc, ptr, old_size);
+      } else {
+        free(ptr);
+      }
+    }
+    return NULL;
+  }
+
+  if (opt_alloc != NULL) {
+    return allocator_realloc(opt_alloc, ptr, old_size, new_size);
+  }
+
+  return realloc(ptr, (size_t)new_size);
+}
+
+func void archive_dealloc_bytes(allocator* opt_alloc, void* ptr, sz size) {
+  if (ptr == NULL) {
+    return;
+  }
+
+  if (opt_alloc != NULL) {
+    allocator_dealloc(opt_alloc, ptr, size);
+    return;
+  }
+
+  free(ptr);
+}
+
+func path archive_normalize_entry_path(const path* src) {
+  path item_path = path_from_cstr(src != NULL ? src->buf : "");
+  path_normalize(&item_path);
+  path_remove_trailing_slash(&item_path);
+  return item_path;
+}
+
+func b32 archive_path_equals(const path* lhs, const path* rhs) {
+  path lhs_norm = archive_normalize_entry_path(lhs);
+  path rhs_norm = archive_normalize_entry_path(rhs);
+  return cstr8_cmp(lhs_norm.buf, rhs_norm.buf) == 0 ? 1 : 0;
+}
+
+func sz archive_find_index(const archive* arc, const path* src) {
+  sz item_idx = 0;
+
+  if (arc == NULL) {
+    return SZ_MAX;
+  }
+
+  for (item_idx = 0; item_idx < arc->entry_count; item_idx += 1) {
+    if (archive_path_equals(&arc->entries[item_idx].item_path, src)) {
+      return item_idx;
+    }
+  }
+
+  return SZ_MAX;
+}
+
+func b32 archive_reserve(archive* arc, sz min_capacity) {
+  archive_entry* new_entries = NULL;
+  sz new_capacity = 0;
+
+  if (arc->entry_capacity >= min_capacity) {
+    return 1;
+  }
+
+  new_capacity = arc->entry_capacity == 0 ? 8 : arc->entry_capacity;
+  while (new_capacity < min_capacity) {
+    if (new_capacity > SZ_MAX / 2) {
+      new_capacity = min_capacity;
+      break;
+    }
+    new_capacity *= 2;
+  }
+
+  new_entries = (archive_entry*)archive_realloc_bytes(
+      arc->opt_alloc,
+      arc->entries,
+      arc->entry_capacity * size_of(archive_entry),
+      new_capacity * size_of(archive_entry));
+  if (new_entries == NULL) {
+    return 0;
+  }
+
+  arc->entries = new_entries;
+  arc->entry_capacity = new_capacity;
+  return 1;
+}
+
+func void archive_reset_entry(archive* arc, archive_entry* ent) {
+  archive_dealloc_bytes(arc->opt_alloc, ent->data_ptr, ent->data_capacity);
+  ent->data_ptr = NULL;
+  ent->data_size = 0;
+  ent->data_capacity = 0;
+  ent->is_directory = 0;
+  ent->item_path = path_from_cstr("");
+}
+
+func b32 archive_assign_entry_bytes(archive* arc, archive_entry* ent, buffer data) {
+  void* data_ptr = NULL;
+
+  archive_dealloc_bytes(arc->opt_alloc, ent->data_ptr, ent->data_capacity);
+  ent->data_ptr = NULL;
+  ent->data_size = 0;
+  ent->data_capacity = 0;
+
+  if (data.size == 0) {
+    return 1;
+  }
+
+  data_ptr = archive_alloc_bytes(arc->opt_alloc, data.size);
+  if (data_ptr == NULL) {
+    return 0;
+  }
+
+  memcpy(data_ptr, data.ptr, data.size);
+  ent->data_ptr = (u8*)data_ptr;
+  ent->data_size = data.size;
+  ent->data_capacity = data.size;
+  return 1;
+}
+
+func b32 archive_add_empty_entry(archive* arc, const path* src, b32 is_directory, sz* out_index) {
+  archive_entry* ent = NULL;
+  sz item_idx = archive_find_index(arc, src);
+
+  if (item_idx != SZ_MAX) {
+    ent = &arc->entries[item_idx];
+    ent->item_path = archive_normalize_entry_path(src);
+    ent->is_directory = is_directory;
+    if (is_directory) {
+      archive_dealloc_bytes(arc->opt_alloc, ent->data_ptr, ent->data_capacity);
+      ent->data_ptr = NULL;
+      ent->data_size = 0;
+      ent->data_capacity = 0;
+    }
+    if (out_index != NULL) {
+      *out_index = item_idx;
+    }
+    return 1;
+  }
+
+  if (!archive_reserve(arc, arc->entry_count + 1)) {
+    return 0;
+  }
+
+  ent = &arc->entries[arc->entry_count];
+  memset(ent, 0, size_of(*ent));
+  ent->item_path = archive_normalize_entry_path(src);
+  ent->is_directory = is_directory;
+  if (out_index != NULL) {
+    *out_index = arc->entry_count;
+  }
+  arc->entry_count += 1;
+  return 1;
+}
+
+func b32 archive_read_disk_bytes(const path* src, void** out_ptr, sz* out_size) {
+  FILE* file_ptr = NULL;
+  void* data_ptr = NULL;
+  long file_size = 0;
+  size_t read_size = 0;
+
+  if (out_ptr == NULL || out_size == NULL) {
+    return 0;
+  }
+
+  *out_ptr = NULL;
+  *out_size = 0;
+
+  file_ptr = fopen(src != NULL ? src->buf : "", "rb");
+  if (file_ptr == NULL) {
+    return 0;
+  }
+
+  if (fseek(file_ptr, 0, SEEK_END) != 0) {
+    fclose(file_ptr);
+    return 0;
+  }
+
+  file_size = ftell(file_ptr);
+  if (file_size < 0) {
+    fclose(file_ptr);
+    return 0;
+  }
+
+  if (fseek(file_ptr, 0, SEEK_SET) != 0) {
+    fclose(file_ptr);
+    return 0;
+  }
+
+  if (file_size > 0) {
+    data_ptr = malloc((size_t)file_size);
+    if (data_ptr == NULL) {
+      fclose(file_ptr);
+      return 0;
+    }
+
+    read_size = fread(data_ptr, 1, (size_t)file_size, file_ptr);
+    if ((long)read_size != file_size) {
+      free(data_ptr);
+      fclose(file_ptr);
+      return 0;
+    }
+  }
+
+  fclose(file_ptr);
+  *out_ptr = data_ptr;
+  *out_size = (sz)file_size;
+  return 1;
+}
+
+func b32 archive_write_disk_bytes(const path* dst, const void* data_ptr, sz data_size) {
+  FILE* file_ptr = fopen(dst != NULL ? dst->buf : "", "wb");
+  size_t write_size = 0;
+
+  if (file_ptr == NULL) {
+    return 0;
+  }
+
+  if (data_size > 0) {
+    write_size = fwrite(data_ptr, 1, (size_t)data_size, file_ptr);
+    if ((sz)write_size != data_size) {
+      fclose(file_ptr);
+      return 0;
+    }
+  }
+
+  fclose(file_ptr);
+  return 1;
+}
+
+func archive archive_create(allocator* opt_alloc) {
+  archive arc;
+  memset(&arc, 0, size_of(arc));
+  arc.opt_alloc = opt_alloc;
+  return arc;
+}
+
+func void archive_clear(archive* arc) {
+  sz item_idx = 0;
+
+  if (arc == NULL) {
+    return;
+  }
+
+  for (item_idx = 0; item_idx < arc->entry_count; item_idx += 1) {
+    archive_reset_entry(arc, &arc->entries[item_idx]);
+  }
+
+  arc->entry_count = 0;
+}
+
+func void archive_destroy(archive* arc) {
+  if (arc == NULL) {
+    return;
+  }
+
+  archive_clear(arc);
+  archive_dealloc_bytes(
+      arc->opt_alloc,
+      arc->entries,
+      arc->entry_capacity * size_of(archive_entry));
+  arc->entries = NULL;
+  arc->entry_capacity = 0;
+}
+
+func sz archive_count(const archive* arc) {
+  if (arc == NULL) {
+    return 0;
+  }
+
+  return arc->entry_count;
+}
+
+func b32 archive_exists(const archive* arc, const path* src) {
+  return archive_find_index(arc, src) != SZ_MAX ? 1 : 0;
+}
+
+func b32 archive_write_all(archive* arc, const path* src, buffer data) {
+  sz item_idx = 0;
+  archive_entry* ent = NULL;
+
+  if (arc == NULL || src == NULL || (data.size > 0 && data.ptr == NULL)) {
+    return 0;
+  }
+
+  if (!archive_add_empty_entry(arc, src, 0, &item_idx)) {
+    return 0;
+  }
+
+  ent = &arc->entries[item_idx];
+  ent->is_directory = 0;
+  return archive_assign_entry_bytes(arc, ent, data);
+}
+
+func b32 archive_remove(archive* arc, const path* src) {
+  sz item_idx = archive_find_index(arc, src);
+
+  if (arc == NULL || item_idx == SZ_MAX) {
+    return 0;
+  }
+
+  archive_reset_entry(arc, &arc->entries[item_idx]);
+  if (item_idx + 1 < arc->entry_count) {
+    memmove(
+        &arc->entries[item_idx],
+        &arc->entries[item_idx + 1],
+        (arc->entry_count - item_idx - 1) * size_of(archive_entry));
+  }
+  arc->entry_count -= 1;
+  return 1;
+}
+
+func b32 archive_read_all(const archive* arc, const path* src, allocator* alloc, buffer* out_data) {
+  const archive_entry* ent = NULL;
+  void* data_ptr = NULL;
+  sz item_idx = 0;
+
+  if (arc == NULL || alloc == NULL || out_data == NULL) {
+    return 0;
+  }
+
+  out_data->ptr = NULL;
+  out_data->size = 0;
+
+  item_idx = archive_find_index(arc, src);
+  if (item_idx == SZ_MAX) {
+    return 0;
+  }
+
+  ent = &arc->entries[item_idx];
+  if (ent->is_directory) {
+    return 0;
+  }
+
+  if (ent->data_size > 0) {
+    data_ptr = allocator_alloc(alloc, ent->data_size);
+    if (data_ptr == NULL) {
+      return 0;
+    }
+    memcpy(data_ptr, ent->data_ptr, ent->data_size);
+  }
+
+  out_data->ptr = data_ptr;
+  out_data->size = ent->data_size;
+  return 1;
+}
+
+func b32 archive_add_file(archive* arc, const path* archive_path, const path* disk_path) {
+  void* data_ptr = NULL;
+  sz data_size = 0;
+  b32 result = 0;
+  buffer data = {0};
+
+  if (!archive_read_disk_bytes(disk_path, &data_ptr, &data_size)) {
+    return 0;
+  }
+
+  data.ptr = data_ptr;
+  data.size = data_size;
+  result = archive_write_all(arc, archive_path, data);
+  free(data_ptr);
+  return result;
+}
+
+func b32 archive_iterate(const archive* arc, archive_iterate_callback* callback, void* user_data) {
+  archive_entry_info info;
+  sz item_idx = 0;
+
+  if (arc == NULL || callback == NULL) {
+    return 0;
+  }
+
+  for (item_idx = 0; item_idx < arc->entry_count; item_idx += 1) {
+    info.item_path = arc->entries[item_idx].item_path;
+    info.data_size = arc->entries[item_idx].data_size;
+    info.is_directory = arc->entries[item_idx].is_directory;
+    if (!callback(&info, user_data)) {
+      return 0;
+    }
+  }
+
+  return 1;
+}
+
+func b32 archive_load_file(archive* arc, const path* src) {
+#if BASED_ARCHIVE_HAS_MINIZ
+  mz_zip_archive zip_archive;
+  void* zip_ptr = NULL;
+  sz zip_size = 0;
+  mz_uint file_count = 0;
+  mz_uint file_idx = 0;
+
+  if (arc == NULL) {
+    return 0;
+  }
+
+  archive_clear(arc);
+
+  if (!archive_read_disk_bytes(src, &zip_ptr, &zip_size)) {
+    return 0;
+  }
+
+  memset(&zip_archive, 0, size_of(zip_archive));
+  if (!mz_zip_reader_init_mem(&zip_archive, zip_ptr, (size_t)zip_size, 0)) {
+    free(zip_ptr);
+    return 0;
+  }
+
+  file_count = mz_zip_reader_get_num_files(&zip_archive);
+  for (file_idx = 0; file_idx < file_count; file_idx += 1) {
+    mz_zip_archive_file_stat file_stat;
+    path item_path;
+    sz item_idx = 0;
+
+    if (!mz_zip_reader_file_stat(&zip_archive, file_idx, &file_stat)) {
+      mz_zip_reader_end(&zip_archive);
+      free(zip_ptr);
+      archive_clear(arc);
+      return 0;
+    }
+
+    item_path = path_from_cstr(file_stat.m_filename);
+    path_normalize(&item_path);
+    if (mz_zip_reader_is_file_a_directory(&zip_archive, file_idx)) {
+      path_remove_trailing_slash(&item_path);
+      if (!archive_add_empty_entry(arc, &item_path, 1, &item_idx)) {
+        mz_zip_reader_end(&zip_archive);
+        free(zip_ptr);
+        archive_clear(arc);
+        return 0;
+      }
+      continue;
+    }
+
+    if (!archive_add_empty_entry(arc, &item_path, 0, &item_idx)) {
+      mz_zip_reader_end(&zip_archive);
+      free(zip_ptr);
+      archive_clear(arc);
+      return 0;
+    }
+
+    if (file_stat.m_uncomp_size > 0) {
+      size_t item_size = 0;
+      void* item_ptr = mz_zip_reader_extract_to_heap(&zip_archive, file_idx, &item_size, 0);
+      buffer data = {0};
+
+      if (item_ptr == NULL) {
+        mz_zip_reader_end(&zip_archive);
+        free(zip_ptr);
+        archive_clear(arc);
+        return 0;
+      }
+
+      data.ptr = item_ptr;
+      data.size = (sz)item_size;
+      if (!archive_assign_entry_bytes(arc, &arc->entries[item_idx], data)) {
+        mz_free(item_ptr);
+        mz_zip_reader_end(&zip_archive);
+        free(zip_ptr);
+        archive_clear(arc);
+        return 0;
+      }
+
+      mz_free(item_ptr);
+    }
+  }
+
+  mz_zip_reader_end(&zip_archive);
+  free(zip_ptr);
+  return 1;
+#else
+  (void)arc;
+  (void)src;
+  return 0;
+#endif
+}
+
+func b32 archive_save_file(const archive* arc, const path* dst) {
+#if BASED_ARCHIVE_HAS_MINIZ
+  mz_zip_archive zip_archive;
+  void* zip_ptr = NULL;
+  size_t zip_size = 0;
+  sz item_idx = 0;
+
+  if (arc == NULL || dst == NULL) {
+    return 0;
+  }
+
+  memset(&zip_archive, 0, size_of(zip_archive));
+  if (!mz_zip_writer_init_heap(&zip_archive, 0, 0)) {
+    return 0;
+  }
+
+  for (item_idx = 0; item_idx < arc->entry_count; item_idx += 1) {
+    const archive_entry* ent = &arc->entries[item_idx];
+    path item_path = ent->item_path;
+
+    if (ent->is_directory) {
+      if (!cstr8_is_empty(item_path.buf) && item_path.buf[cstr8_len(item_path.buf) - 1] != '/') {
+        cstr8_append_char(item_path.buf, PATH_CAP, '/');
+      }
+    }
+
+    if (!mz_zip_writer_add_mem(
+            &zip_archive,
+            item_path.buf,
+            ent->data_ptr,
+            (size_t)ent->data_size,
+            MZ_DEFAULT_COMPRESSION)) {
+      mz_zip_writer_end(&zip_archive);
+      return 0;
+    }
+  }
+
+  if (!mz_zip_writer_finalize_heap_archive(&zip_archive, &zip_ptr, &zip_size)) {
+    mz_zip_writer_end(&zip_archive);
+    return 0;
+  }
+
+  mz_zip_writer_end(&zip_archive);
+
+  if (!archive_write_disk_bytes(dst, zip_ptr, (sz)zip_size)) {
+    mz_free(zip_ptr);
+    return 0;
+  }
+
+  mz_free(zip_ptr);
+  return 1;
+#else
+  (void)arc;
+  (void)dst;
+  return 0;
+#endif
+}

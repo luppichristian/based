@@ -59,22 +59,22 @@ typedef uint32_t u32;
 typedef int64_t i64;
 typedef uint64_t u64;
 
-read_only global_var i8 I8_MIN = -128;
-read_only global_var i8 I8_MAX = 127;
-read_only global_var u8 U8_MIN = 0;
-read_only global_var u8 U8_MAX = 255;
-read_only global_var i16 I16_MIN = -32768;
-read_only global_var i16 I16_MAX = 32767;
-read_only global_var u16 U16_MIN = 0;
-read_only global_var u16 U16_MAX = 65535;
-read_only global_var i32 I32_MIN = -2147483647 - 1;
-read_only global_var i32 I32_MAX = 2147483647;
-read_only global_var u32 U32_MIN = 0;
-read_only global_var u32 U32_MAX = 4294967295U;
-read_only global_var i64 I64_MIN = -9223372036854775807LL - 1;
-read_only global_var i64 I64_MAX = 9223372036854775807LL;
-read_only global_var u64 U64_MIN = 0;
-read_only global_var u64 U64_MAX = 18446744073709551615ULL;
+const_var i8 I8_MIN = -128;
+const_var i8 I8_MAX = 127;
+const_var u8 U8_MIN = 0;
+const_var u8 U8_MAX = 255;
+const_var i16 I16_MIN = -32768;
+const_var i16 I16_MAX = 32767;
+const_var u16 U16_MIN = 0;
+const_var u16 U16_MAX = 65535;
+const_var i32 I32_MIN = -2147483647 - 1;
+const_var i32 I32_MAX = 2147483647;
+const_var u32 U32_MIN = 0;
+const_var u32 U32_MAX = 4294967295U;
+const_var i64 I64_MIN = -9223372036854775807LL - 1;
+const_var i64 I64_MAX = 9223372036854775807LL;
+const_var u64 U64_MIN = 0;
+const_var u64 U64_MAX = 18446744073709551615ULL;
 
 // =========================================================================
 // Floating-point types
@@ -83,10 +83,10 @@ read_only global_var u64 U64_MAX = 18446744073709551615ULL;
 typedef float f32;
 typedef double f64;
 
-read_only global_var f32 F32_MIN = -FLT_MAX;
-read_only global_var f32 F32_MAX = FLT_MAX;
-read_only global_var f64 F64_MIN = -DBL_MAX;
-read_only global_var f64 F64_MAX = DBL_MAX;
+const_var f32 F32_MIN = -FLT_MAX;
+const_var f32 F32_MAX = FLT_MAX;
+const_var f64 F64_MIN = -DBL_MAX;
+const_var f64 F64_MAX = DBL_MAX;
 
 // =========================================================================
 // Boolean types
@@ -97,14 +97,14 @@ typedef uint16_t b16;
 typedef uint32_t b32;
 typedef uint64_t b64;
 
-read_only global_var b8 B8_MIN = 0;
-read_only global_var b8 B8_MAX = 1;
-read_only global_var b16 B16_MIN = 0;
-read_only global_var b16 B16_MAX = 1;
-read_only global_var b32 B32_MIN = 0;
-read_only global_var b32 B32_MAX = 1;
-read_only global_var b64 B64_MIN = 0;
-read_only global_var b64 B64_MAX = 1;
+const_var b8 B8_MIN = 0;
+const_var b8 B8_MAX = 1;
+const_var b16 B16_MIN = 0;
+const_var b16 B16_MAX = 1;
+const_var b32 B32_MIN = 0;
+const_var b32 B32_MAX = 1;
+const_var b64 B64_MIN = 0;
+const_var b64 B64_MAX = 1;
 
 // =========================================================================
 // Character types
@@ -114,12 +114,12 @@ typedef char c8;
 typedef uint16_t c16;
 typedef uint32_t c32;
 
-read_only global_var c8 C8_MIN = 0;
-read_only global_var c8 C8_MAX = (c8)255;
-read_only global_var c16 C16_MIN = 0;
-read_only global_var c16 C16_MAX = 65535;
-read_only global_var c32 C32_MIN = 0;
-read_only global_var c32 C32_MAX = 4294967295U;
+const_var c8 C8_MIN = 0;
+const_var c8 C8_MAX = (c8)255;
+const_var c16 C16_MIN = 0;
+const_var c16 C16_MAX = 65535;
+const_var c32 C32_MIN = 0;
+const_var c32 C32_MAX = 4294967295U;
 
 // =========================================================================
 // Fast integer types (at least N bits, platform's fastest representation)
@@ -134,22 +134,22 @@ typedef uint_fast32_t u32x;
 typedef int_fast64_t i64x;
 typedef uint_fast64_t u64x;
 
-read_only global_var i8x I8X_MIN = -128;
-read_only global_var i8x I8X_MAX = 127;
-read_only global_var u8x U8X_MIN = 0;
-read_only global_var u8x U8X_MAX = 255;
-read_only global_var i16x I16X_MIN = -32768;
-read_only global_var i16x I16X_MAX = 32767;
-read_only global_var u16x U16X_MIN = 0;
-read_only global_var u16x U16X_MAX = 65535;
-read_only global_var i32x I32X_MIN = -2147483647 - 1;
-read_only global_var i32x I32X_MAX = 2147483647;
-read_only global_var u32x U32X_MIN = 0;
-read_only global_var u32x U32X_MAX = 4294967295U;
-read_only global_var i64x I64X_MIN = -9223372036854775807LL - 1;
-read_only global_var i64x I64X_MAX = 9223372036854775807LL;
-read_only global_var u64x U64X_MIN = 0;
-read_only global_var u64x U64X_MAX = 18446744073709551615ULL;
+const_var i8x I8X_MIN = -128;
+const_var i8x I8X_MAX = 127;
+const_var u8x U8X_MIN = 0;
+const_var u8x U8X_MAX = 255;
+const_var i16x I16X_MIN = -32768;
+const_var i16x I16X_MAX = 32767;
+const_var u16x U16X_MIN = 0;
+const_var u16x U16X_MAX = 65535;
+const_var i32x I32X_MIN = -2147483647 - 1;
+const_var i32x I32X_MAX = 2147483647;
+const_var u32x U32X_MIN = 0;
+const_var u32x U32X_MAX = 4294967295U;
+const_var i64x I64X_MIN = -9223372036854775807LL - 1;
+const_var i64x I64X_MAX = 9223372036854775807LL;
+const_var u64x U64X_MIN = 0;
+const_var u64x U64X_MAX = 18446744073709551615ULL;
 
 // =========================================================================
 // Pointer and size types
@@ -160,14 +160,14 @@ typedef uintptr_t up;
 typedef intptr_t sp;
 typedef ptrdiff_t dp;
 
-read_only global_var sz SZ_MIN = 0;
-read_only global_var sz SZ_MAX = SIZE_MAX;
-read_only global_var up UP_MIN = 0;
-read_only global_var up UP_MAX = UINTPTR_MAX;
-read_only global_var sp SP_MIN = INTPTR_MIN;
-read_only global_var sp SP_MAX = INTPTR_MAX;
-read_only global_var dp DP_MIN = PTRDIFF_MIN;
-read_only global_var dp DP_MAX = PTRDIFF_MAX;
+const_var sz SZ_MIN = 0;
+const_var sz SZ_MAX = SIZE_MAX;
+const_var up UP_MIN = 0;
+const_var up UP_MAX = UINTPTR_MAX;
+const_var sp SP_MIN = INTPTR_MIN;
+const_var sp SP_MAX = INTPTR_MAX;
+const_var dp DP_MIN = PTRDIFF_MIN;
+const_var dp DP_MAX = PTRDIFF_MAX;
 
 // =========================================================================
 // Compile-time size guarantees

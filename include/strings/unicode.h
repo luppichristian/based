@@ -10,7 +10,7 @@
 // =========================================================================
 
 // Returned by decode functions when an invalid or malformed sequence is encountered.
-read_only global_var c32 UNICODE_REPLACEMENT_CHAR = 0xFFFDU;
+const_var c32 UNICODE_REPLACEMENT_CHAR = 0xFFFDU;
 
 // =========================================================================
 // Validity

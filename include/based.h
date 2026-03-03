@@ -34,6 +34,14 @@
 #include "memory/scratch.h"
 #include "memory/vmem.h"
 
+// Include filesystem modules.
+#include "filesystem/archive.h"
+#include "filesystem/directory.h"
+#include "filesystem/file.h"
+#include "filesystem/file_stream.h"
+#include "filesystem/filewatch.h"
+#include "filesystem/path.h"
+
 // Include process modules.
 #include "processes/pipe.h"
 #include "processes/process.h"

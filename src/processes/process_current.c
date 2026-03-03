@@ -17,7 +17,7 @@
 
 #if defined(PLATFORM_WINDOWS)
 // Mapping of our process_priority enum to Win32 priority classes.
-read_only global_var DWORD win32_process_priorities[] = {
+const_var DWORD win32_process_priorities[] = {
     BELOW_NORMAL_PRIORITY_CLASS,
     NORMAL_PRIORITY_CLASS,
     HIGH_PRIORITY_CLASS,
