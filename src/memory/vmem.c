@@ -6,6 +6,37 @@
 #include "basic/utility_defines.h"
 #include <string.h>
 
+typedef struct vmem_stats_state {
+  u64 reserve_calls;
+  u64 commit_calls;
+  u64 decommit_calls;
+  u64 release_calls;
+
+  sz reserved_bytes;
+  sz committed_bytes;
+  sz decommitted_bytes;
+  sz released_bytes;
+
+  u64 alloc_calls;
+  u64 calloc_calls;
+  u64 realloc_calls;
+  u64 free_calls;
+
+  u64 live_allocations;
+  sz live_allocated_bytes;
+  sz peak_live_allocated_bytes;
+  sz total_allocated_bytes;
+  sz total_freed_bytes;
+} vmem_stats_state;
+
+global_var vmem_stats_state g_vmem_stats;
+
+func void vmem_update_peak_allocated_bytes(void) {
+  if (g_vmem_stats.live_allocated_bytes > g_vmem_stats.peak_live_allocated_bytes) {
+    g_vmem_stats.peak_live_allocated_bytes = g_vmem_stats.live_allocated_bytes;
+  }
+}
+
 // =========================================================================
 // Platform Implementations
 // =========================================================================
@@ -21,20 +52,39 @@ func sz vmem_page_size(void) {
 }
 
 func void* vmem_reserve(sz size) {
-  return VirtualAlloc(NULL, size, MEM_RESERVE, PAGE_NOACCESS);
+  g_vmem_stats.reserve_calls += 1;
+  void* ptr = VirtualAlloc(NULL, size, MEM_RESERVE, PAGE_NOACCESS);
+  if (ptr != NULL) {
+    g_vmem_stats.reserved_bytes += size;
+  }
+  return ptr;
 }
 
 func b32 vmem_commit(void* ptr, sz size) {
-  return VirtualAlloc(ptr, size, MEM_COMMIT, PAGE_READWRITE) != NULL ? 1 : 0;
+  g_vmem_stats.commit_calls += 1;
+  b32 success = VirtualAlloc(ptr, size, MEM_COMMIT, PAGE_READWRITE) != NULL ? 1 : 0;
+  if (success) {
+    g_vmem_stats.committed_bytes += size;
+  }
+  return success;
 }
 
 func b32 vmem_decommit(void* ptr, sz size) {
-  return VirtualFree(ptr, size, MEM_DECOMMIT) != 0 ? 1 : 0;
+  g_vmem_stats.decommit_calls += 1;
+  b32 success = VirtualFree(ptr, size, MEM_DECOMMIT) != 0 ? 1 : 0;
+  if (success) {
+    g_vmem_stats.decommitted_bytes += size;
+  }
+  return success;
 }
 
 func b32 vmem_release(void* ptr, sz size) {
-  (void)size;
-  return VirtualFree(ptr, 0, MEM_RELEASE) != 0 ? 1 : 0;
+  g_vmem_stats.release_calls += 1;
+  b32 success = VirtualFree(ptr, 0, MEM_RELEASE) != 0 ? 1 : 0;
+  if (success) {
+    g_vmem_stats.released_bytes += size;
+  }
+  return success;
 }
 
 func void* vmem_platform_alloc(sz size) {
@@ -56,28 +106,42 @@ func sz vmem_page_size(void) {
 }
 
 func void* vmem_reserve(sz size) {
+  g_vmem_stats.reserve_calls += 1;
   void* ptr = mmap(NULL, size, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
   if (ptr == MAP_FAILED) {
     return NULL;
   }
+  g_vmem_stats.reserved_bytes += size;
   return ptr;
 }
 
 func b32 vmem_commit(void* ptr, sz size) {
-  return mprotect(ptr, size, PROT_READ | PROT_WRITE) == 0 ? 1 : 0;
+  g_vmem_stats.commit_calls += 1;
+  b32 success = mprotect(ptr, size, PROT_READ | PROT_WRITE) == 0 ? 1 : 0;
+  if (success) {
+    g_vmem_stats.committed_bytes += size;
+  }
+  return success;
 }
 
 func b32 vmem_decommit(void* ptr, sz size) {
+  g_vmem_stats.decommit_calls += 1;
   if (mprotect(ptr, size, PROT_NONE) != 0) {
     return 0;
   }
   // Hint to the OS to release the physical pages; best-effort, not checked.
   (void)madvise(ptr, size, MADV_DONTNEED);
+  g_vmem_stats.decommitted_bytes += size;
   return 1;
 }
 
 func b32 vmem_release(void* ptr, sz size) {
-  return munmap(ptr, size) == 0 ? 1 : 0;
+  g_vmem_stats.release_calls += 1;
+  b32 success = munmap(ptr, size) == 0 ? 1 : 0;
+  if (success) {
+    g_vmem_stats.released_bytes += size;
+  }
+  return success;
 }
 
 func void* vmem_platform_alloc(sz size) {
@@ -106,23 +170,31 @@ func sz vmem_page_size(void) {
 }
 
 func void* vmem_reserve(sz size) {
-  return malloc(size);
+  g_vmem_stats.reserve_calls += 1;
+  void* ptr = malloc(size);
+  if (ptr != NULL) {
+    g_vmem_stats.reserved_bytes += size;
+  }
+  return ptr;
 }
 
 func b32 vmem_commit(void* ptr, sz size) {
+  g_vmem_stats.commit_calls += 1;
   (void)ptr;
-  (void)size;
+  g_vmem_stats.committed_bytes += size;
   return 1;
 }
 
 func b32 vmem_decommit(void* ptr, sz size) {
+  g_vmem_stats.decommit_calls += 1;
   (void)ptr;
-  (void)size;
+  g_vmem_stats.decommitted_bytes += size;
   return 1;
 }
 
 func b32 vmem_release(void* ptr, sz size) {
-  (void)size;
+  g_vmem_stats.release_calls += 1;
+  g_vmem_stats.released_bytes += size;
   free(ptr);
   return 1;
 }
@@ -170,6 +242,7 @@ func sz vmem_get_alloc_align(void) {
 }
 
 func void* vmem_alloc(sz size) {
+  g_vmem_stats.alloc_calls += 1;
   if (size == 0) {
     return NULL;
   }
@@ -192,10 +265,15 @@ func void* vmem_alloc(sz size) {
   header->info.mapping_size = total_size;
   header->info.prefix_size = prefix_size;
   header->info.user_size = size;
+  g_vmem_stats.live_allocations += 1;
+  g_vmem_stats.live_allocated_bytes += size;
+  g_vmem_stats.total_allocated_bytes += size;
+  vmem_update_peak_allocated_bytes();
   return user_ptr;
 }
 
 func void* vmem_calloc(sz count, sz size) {
+  g_vmem_stats.calloc_calls += 1;
   if (count == 0 || size == 0) {
     return NULL;
   }
@@ -213,6 +291,7 @@ func void* vmem_calloc(sz count, sz size) {
 }
 
 func void* vmem_realloc(void* ptr, sz old_size, sz new_size) {
+  g_vmem_stats.realloc_calls += 1;
   (void)old_size;
   if (!ptr) {
     return vmem_alloc(new_size);
@@ -240,13 +319,30 @@ func void* vmem_realloc(void* ptr, sz old_size, sz new_size) {
 }
 
 func b32 vmem_free(void* ptr, sz size) {
+  g_vmem_stats.free_calls += 1;
   (void)size;
   if (!ptr) {
     return 1;
   }
 
   vmem_alloc_header* header = vmem_get_alloc_header(ptr);
-  return vmem_platform_free(vmem_get_alloc_base(ptr), header->info.mapping_size);
+  sz mapping_size = header->info.mapping_size;
+  sz user_size = header->info.user_size;
+  void* base_ptr = vmem_get_alloc_base(ptr);
+  b32 success = vmem_platform_free(base_ptr, mapping_size);
+  if (success) {
+    if (g_vmem_stats.live_allocations > 0) {
+      g_vmem_stats.live_allocations -= 1;
+    }
+
+    if (g_vmem_stats.live_allocated_bytes >= user_size) {
+      g_vmem_stats.live_allocated_bytes -= user_size;
+    } else {
+      g_vmem_stats.live_allocated_bytes = 0;
+    }
+    g_vmem_stats.total_freed_bytes += user_size;
+  }
+  return success;
 }
 
 // =========================================================================
@@ -283,4 +379,31 @@ func allocator vmem_get_allocator(void) {
   alloc.dealloc_fn = vmem_dealloc_callback;
   alloc.realloc_fn = vmem_realloc_callback;
   return alloc;
+}
+
+func vmem_stats vmem_get_stats(void) {
+  vmem_stats stats;
+  stats.page_size = vmem_page_size();
+
+  stats.reserve_calls = g_vmem_stats.reserve_calls;
+  stats.commit_calls = g_vmem_stats.commit_calls;
+  stats.decommit_calls = g_vmem_stats.decommit_calls;
+  stats.release_calls = g_vmem_stats.release_calls;
+
+  stats.reserved_bytes = g_vmem_stats.reserved_bytes;
+  stats.committed_bytes = g_vmem_stats.committed_bytes;
+  stats.decommitted_bytes = g_vmem_stats.decommitted_bytes;
+  stats.released_bytes = g_vmem_stats.released_bytes;
+
+  stats.alloc_calls = g_vmem_stats.alloc_calls;
+  stats.calloc_calls = g_vmem_stats.calloc_calls;
+  stats.realloc_calls = g_vmem_stats.realloc_calls;
+  stats.free_calls = g_vmem_stats.free_calls;
+
+  stats.live_allocations = g_vmem_stats.live_allocations;
+  stats.live_allocated_bytes = g_vmem_stats.live_allocated_bytes;
+  stats.peak_live_allocated_bytes = g_vmem_stats.peak_live_allocated_bytes;
+  stats.total_allocated_bytes = g_vmem_stats.total_allocated_bytes;
+  stats.total_freed_bytes = g_vmem_stats.total_freed_bytes;
+  return stats;
 }

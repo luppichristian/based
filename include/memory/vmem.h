@@ -19,6 +19,31 @@
 // reserve/commit/decommit are collapsed into a single allocation and the
 // distinction between reserved and committed memory does not exist.
 
+typedef struct vmem_stats {
+  sz page_size;
+
+  u64 reserve_calls;
+  u64 commit_calls;
+  u64 decommit_calls;
+  u64 release_calls;
+
+  sz reserved_bytes;
+  sz committed_bytes;
+  sz decommitted_bytes;
+  sz released_bytes;
+
+  u64 alloc_calls;
+  u64 calloc_calls;
+  u64 realloc_calls;
+  u64 free_calls;
+
+  u64 live_allocations;
+  sz live_allocated_bytes;
+  sz peak_live_allocated_bytes;
+  sz total_allocated_bytes;
+  sz total_freed_bytes;
+} vmem_stats;
+
 // Returns the OS memory page size in bytes.
 func sz vmem_page_size(void);
 
@@ -71,3 +96,7 @@ func b32 vmem_free(void* ptr, sz size);
 // The returned allocator has no user data and is valid for the lifetime of the
 // program.
 func allocator vmem_get_allocator(void);
+
+// Returns best-effort process-local virtual-memory counters tracked by this
+// module.
+func vmem_stats vmem_get_stats(void);
