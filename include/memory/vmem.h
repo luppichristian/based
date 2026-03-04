@@ -4,6 +4,7 @@
 #pragma once
 
 #include "../basic/primitive_types.h"
+#include "allocator.h"
 
 // =========================================================================
 // Virtual Memory
@@ -50,6 +51,23 @@ func b32 vmem_release(void* ptr, sz size);
 // Returns NULL on failure.
 func void* vmem_alloc(sz size);
 
-// Releases memory obtained from vmem_alloc.
+// Allocates count * size bytes of committed virtual memory and zero-initialises
+// the returned range.
+// Returns NULL on failure or on size overflow.
+func void* vmem_calloc(sz count, sz size);
+
+// Resizes memory obtained from vmem_alloc/vmem_calloc/vmem_realloc, preserving
+// up to min(previous_size, new_size) bytes.
+// old_size is accepted for allocator-interface symmetry and may be ignored.
+// Returns NULL if the new allocation cannot be satisfied; the old pointer stays
+// valid in that case.
+func void* vmem_realloc(void* ptr, sz old_size, sz new_size);
+
+// Releases memory obtained from vmem_alloc/vmem_calloc/vmem_realloc.
 // Returns non-zero on success, zero on failure.
 func b32 vmem_free(void* ptr, sz size);
+
+// Returns an allocator backed by vmem_alloc/vmem_free/vmem_realloc.
+// The returned allocator has no user data and is valid for the lifetime of the
+// program.
+func allocator vmem_get_allocator(void);

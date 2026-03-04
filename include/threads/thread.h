@@ -4,6 +4,7 @@
 #pragma once
 
 #include "../basic/codespace.h"
+#include "../memory/allocator.h"
 
 // =========================================================================
 // Thread
@@ -16,17 +17,25 @@ typedef void* thread;
 typedef i32 (*thread_func)(void* arg);
 
 // Creates a new thread that executes entry(arg) and returns a handle to it.
-func thread _thread_create(thread_func entry, void* arg, callsite site);
+// If main_allocator is valid, the new thread automatically initializes/quits
+// its own thread_ctx around the user entry-point using that allocator.
+func thread _thread_create(thread_func entry, void* arg, allocator main_allocator, callsite site);
 
 // Creates a new named thread that executes entry(arg) and returns a handle to it.
 // The name is used only for debugging purposes (e.g. visible in debuggers/profilers).
-func thread _thread_create_named(thread_func entry, void* arg, const c8* name, callsite site);
+// thread_ctx automatic lifecycle matches thread_create.
+func thread _thread_create_named(
+    thread_func entry,
+    void* arg,
+    const c8* name,
+    allocator main_allocator,
+    callsite site);
 
 // Convenience macros that automatically capture the callsite information for debugging purposes.
-#define thread_create(entry, arg) \
-  _thread_create(entry, arg, CALLSITE_HERE)
-#define thread_create_named(entry, arg, name) \
-  _thread_create_named(entry, arg, name, CALLSITE_HERE)
+#define thread_create(entry, arg, main_allocator) \
+  _thread_create(entry, arg, main_allocator, CALLSITE_HERE)
+#define thread_create_named(entry, arg, name, main_allocator) \
+  _thread_create_named(entry, arg, name, main_allocator, CALLSITE_HERE)
 
 // Returns true if the given thread handle is valid, false otherwise.
 func b32 thread_is_valid(thread thd);

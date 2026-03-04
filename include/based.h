@@ -87,6 +87,7 @@
 #include "threads/semaphore.h"
 #include "threads/spinlock.h"
 #include "threads/thread.h"
+#include "threads/thread_ctx.h"
 #include "threads/thread_current.h"
 #include "threads/thread_group.h"
 

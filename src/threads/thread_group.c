@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "threads/thread_group.h"
+#include "threads/thread_ctx.h"
 #include "../sdl3_include.h"
 
 // SDL thread wrapper — bridges thread_func into thread_group_func.
@@ -15,6 +16,12 @@ static thread_group create_impl(u32 count, thread_group_func entry, void* arg, c
   thread_group empty = {0};
   if (!count || !entry) {
     return empty;
+  }
+
+  allocator main_allocator = {0};
+  thread_ctx* ctx = thread_ctx_get();
+  if (ctx) {
+    main_allocator = ctx->main_allocator;
   }
 
   thread_group group = {0};
@@ -35,9 +42,9 @@ static thread_group create_impl(u32 count, thread_group_func entry, void* arg, c
     if (base_name) {
       c8 name_buf[256];
       SDL_snprintf(name_buf, sizeof(name_buf), "%s[%u]", base_name, i);
-      group.threads[i] = thread_create_named(thread_group_wrapper, &group.slots[i], name_buf);
+      group.threads[i] = thread_create_named(thread_group_wrapper, &group.slots[i], name_buf, main_allocator);
     } else {
-      group.threads[i] = thread_create(thread_group_wrapper, &group.slots[i]);
+      group.threads[i] = thread_create(thread_group_wrapper, &group.slots[i], main_allocator);
     }
 
     if (!group.threads[i]) {

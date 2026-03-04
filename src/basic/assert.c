@@ -2,7 +2,8 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "basic/assert.h"
-#include "basic/log.h"
+#include "threads/atomics.h"
+#include "threads/thread_ctx.h"
 #include "../sdl3_include.h"
 
 #include <stdlib.h>
@@ -13,13 +14,35 @@
 
 global_var assert_mode assert_mode_current = ASSERT_MODE_DEFAULT;
 global_var assert_callback assert_callback_current = NULL;
+global_var mutex assert_mutex = NULL;
+global_var atomic_i32 assert_mutex_init = {0};
 
 // =========================================================================
 // Internal helpers
 // =========================================================================
 
+func mutex assert_lock_get(void) {
+  if (atomic_i32_get(&assert_mutex_init) == 2) {
+    return assert_mutex;
+  }
+
+  i32 expected = 0;
+  if (atomic_i32_cmpex(&assert_mutex_init, &expected, 1)) {
+    assert_mutex = mutex_create();
+    atomic_fence_release();
+    atomic_i32_set(&assert_mutex_init, 2);
+    return assert_mutex;
+  }
+
+  while (atomic_i32_get(&assert_mutex_init) != 2) {
+    atomic_pause();
+  }
+  atomic_fence_acquire();
+  return assert_mutex;
+}
+
 func void assert_log_msg(const c8* msg, callsite site) {
-  _log(LOG_LEVEL_FATAL, site, "Assertion failed: %s", msg);
+  _log(thread_ctx_get_log_state(), LOG_LEVEL_FATAL, site, "Assertion failed: %s", msg);
 }
 
 // Returns: 0 = ignore, 1 = breakpoint, 2 = quit.
@@ -56,11 +79,25 @@ func i32 assert_dialog(const c8* msg, callsite site) {
 // =========================================================================
 
 func void assert_set_mode(assert_mode mode) {
+  mutex lock = assert_lock_get();
+  if (lock) {
+    mutex_lock(lock);
+  }
   assert_mode_current = mode;
+  if (lock) {
+    mutex_unlock(lock);
+  }
 }
 
 func void assert_set_callback(assert_callback callback) {
+  mutex lock = assert_lock_get();
+  if (lock) {
+    mutex_lock(lock);
+  }
   assert_callback_current = callback;
+  if (lock) {
+    mutex_unlock(lock);
+  }
 }
 
 func void _assert(b32 condition, const c8* msg, callsite site) {
@@ -68,14 +105,26 @@ func void _assert(b32 condition, const c8* msg, callsite site) {
     return;
   }
 
-  if (assert_callback_current != NULL) {
-    b32 should_continue = assert_callback_current(msg, site);
+  assert_mode mode = ASSERT_MODE_DEFAULT;
+  assert_callback callback = NULL;
+  mutex lock = assert_lock_get();
+  if (lock) {
+    mutex_lock(lock);
+  }
+  mode = assert_mode_current;
+  callback = assert_callback_current;
+  if (lock) {
+    mutex_unlock(lock);
+  }
+
+  if (callback != NULL) {
+    b32 should_continue = callback(msg, site);
     if (!should_continue) {
       return;
     }
   }
 
-  switch (assert_mode_current) {
+  switch (mode) {
     case ASSERT_MODE_DEBUG: {
       assert_log_msg(msg, site);
       i32 action = assert_dialog(msg, site);

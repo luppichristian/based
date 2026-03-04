@@ -109,38 +109,17 @@ include/                      # public API headers
     semaphore.h               # counting semaphore API
     spinlock.h                # spinlock API
     thread.h                  # thread creation and lifecycle
+    thread_ctx.h              # per-thread allocator bundle and generic thread-local context storage
     thread_current.h          # current-thread helpers
     thread_group.h            # fixed-size thread group helpers
 src/                          # module implementations
   basic/                      # implementations for basic/*
   containers/                 # implementations for container modules with source files
-    sort.c                   # array sorting helpers and typed sort entry points
   memory/                     # implementations for memory/*
   filesystem/                 # implementations for filesystem/*
-    archive.c                # in-memory archive model with ZIP load/save helpers
-    directory.c              # directory creation, removal, iteration, and special-directory queries
-    file.c                   # high-level whole-file operations
-    filemap.c               # memory-mapped file views with optional write-back
-    filestream.c            # unified native-file and archive-entry stream wrapper
-    pathinfo.c               # cross-platform filesystem metadata queries
-    pathwatch.c              # efsw-backed directory watch wrapper
-    path.c                   # struct-backed fixed-capacity paths and path/file helpers
   input/                      # implementations for input/*
-    devices.c               # device enumeration and metadata queries
-    gamepads.c              # four-slot SDL gamepad state cache
-    keyboard.c              # keyboard presence and state queries
-    mouse.c                 # mouse state and coordinate conversion helpers
-    msg.c                   # SDL event translation and custom message posting
-    tablet.c                # HID-backed tablet enumeration and cached pen state
-    touch.c                 # touch-device and finger queries
   processes/                  # implementations for processes/*
-    pipe.c                   # process-owned stdio pipe handles and pipe I/O helpers
-    process.c                # subprocess spawning, waiting, and output capture helpers
-    process_current.c        # current-process identifier, priority, and termination helpers
   system/                     # implementations for system/*
-    cpu_info.c               # CPU identity, logical core count, and instruction-set support queries
-    system_info.c            # OS, machine, and active-user information queries
-    system_runtime.c         # current CPU and memory usage snapshots for the host and process
   strings/                    # implementations for strings/*
   utils/                      # implementations for utils/*
   threads/                    # implementations for threads/*
