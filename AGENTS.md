@@ -72,6 +72,7 @@ include/                      # public API headers
     pathwatch.h               # efsw-backed directory watch wrapper
     path.h                    # struct-backed fixed-capacity paths and path/file helpers
   input/                      # SDL-backed input APIs without exposing SDL in public headers
+    clipboard.h               # clipboard text query and transfer helpers
     devices.h                 # device enumeration and shared input-device identifiers
     gamepads.h                # four-slot gamepad query helpers
     keyboard.h                # keyboard presence and key-state queries

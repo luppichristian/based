@@ -45,6 +45,7 @@
 #include "filesystem/path.h"
 
 // Include input modules.
+#include "input/clipboard.h"
 #include "input/devices.h"
 #include "input/gamepads.h"
 #include "input/keyboard.h"
