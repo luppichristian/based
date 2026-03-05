@@ -88,10 +88,6 @@ func void log_state_begin_frame(log_state* state);
 // Returns NULL when there is no active frame or when no messages matched.
 func log_frame* log_state_end_frame(log_state* state, u32 severity_mask);
 
-// Global-state wrappers for log frames.
-func void log_begin_frame(void);
-func log_frame* log_end_frame(u32 severity_mask);
-
 // Frame helpers.
 func void log_frame_destroy(log_frame* frame);
 func b32 log_frame_has_messages(log_frame* frame);
@@ -107,12 +103,7 @@ func cstr8 log_message_text(log_msg* message);
 #define LOG_FRAME_FOREACH(frame, it) \
   for (log_msg* it = log_frame_first(frame); (it) != NULL; (it) = log_message_next(it))
 
-// Returns the process-global fallback log state.
-// It is created lazily on first use and is safe to use from any thread.
-func log_state* log_get_global_state(void);
-
 // Log function called by the logging macros.
-// Passing NULL falls back to log_get_global_state().
 func void _log(log_state* state, log_level level, callsite site, const char* msg, ...);
 
 // Convenience macros for logging with an explicit state.
@@ -123,15 +114,6 @@ func void _log(log_state* state, log_level level, callsite site, const char* msg
 #define log_state_debug(state, ...)   _log((state), LOG_LEVEL_DEBUG, CALLSITE_HERE, __VA_ARGS__)
 #define log_state_verbose(state, ...) _log((state), LOG_LEVEL_VERBOSE, CALLSITE_HERE, __VA_ARGS__)
 #define log_state_trace(state, ...)   _log((state), LOG_LEVEL_TRACE, CALLSITE_HERE, __VA_ARGS__)
-
-// Convenience macros for logging to the process-global main log state.
-#define log_fatal(...)   _log(NULL, LOG_LEVEL_FATAL, CALLSITE_HERE, __VA_ARGS__)
-#define log_error(...)   _log(NULL, LOG_LEVEL_ERROR, CALLSITE_HERE, __VA_ARGS__)
-#define log_warn(...)    _log(NULL, LOG_LEVEL_WARN, CALLSITE_HERE, __VA_ARGS__)
-#define log_info(...)    _log(NULL, LOG_LEVEL_INFO, CALLSITE_HERE, __VA_ARGS__)
-#define log_debug(...)   _log(NULL, LOG_LEVEL_DEBUG, CALLSITE_HERE, __VA_ARGS__)
-#define log_verbose(...) _log(NULL, LOG_LEVEL_VERBOSE, CALLSITE_HERE, __VA_ARGS__)
-#define log_trace(...)   _log(NULL, LOG_LEVEL_TRACE, CALLSITE_HERE, __VA_ARGS__)
 
 // Define default log level if not defined by the user.
 #ifndef LOG_LEVEL_DEFAULT

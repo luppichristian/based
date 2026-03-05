@@ -84,6 +84,11 @@
 #include "utils/uuid.h"
 #include "utils/version.h"
 
+// Include context modules.
+#include "context/ctx.h"
+#include "context/global_ctx.h"
+#include "context/thread_ctx.h"
+
 // Include threading modules.
 #include "threads/atomics.h"
 #include "threads/condvar.h"
@@ -92,7 +97,6 @@
 #include "threads/semaphore.h"
 #include "threads/spinlock.h"
 #include "threads/thread.h"
-#include "threads/thread_ctx.h"
 #include "threads/thread_current.h"
 #include "threads/thread_group.h"
 

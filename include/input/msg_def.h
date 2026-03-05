@@ -156,6 +156,7 @@ typedef enum msg_object_type {
   MSG_OBJECT_TYPE_FILEMAP = 16,
   MSG_OBJECT_TYPE_FILESTREAM = 17,
   MSG_OBJECT_TYPE_PIPE = 18,
+  MSG_OBJECT_TYPE_GLOBAL_CTX = 19,
 } msg_object_type;
 
 typedef enum msg_thread_ctx_event_kind {

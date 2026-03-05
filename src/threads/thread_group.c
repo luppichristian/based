@@ -2,8 +2,8 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "threads/thread_group.h"
+#include "context/thread_ctx.h"
 #include "input/msg.h"
-#include "threads/thread_ctx.h"
 #include "../sdl3_include.h"
 
 // SDL thread wrapper — bridges thread_func into thread_group_func.
@@ -20,9 +20,9 @@ func thread_group create_impl(u32 count, thread_group_func entry, void* arg, cst
   }
 
   allocator main_allocator = {0};
-  thread_ctx* ctx = thread_ctx_get();
-  if (ctx) {
-    main_allocator = ctx->main_allocator;
+  ctx* context = thread_ctx_get();
+  if (context) {
+    main_allocator = context->main_allocator;
   }
 
   thread_group group = {0};

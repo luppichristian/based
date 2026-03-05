@@ -2,8 +2,8 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "threads/thread.h"
+#include "context/thread_ctx.h"
 #include "input/msg.h"
-#include "threads/thread_ctx.h"
 #include "../sdl3_include.h"
 
 // SDL_ThreadFunction is `int (SDLCALL *)(void*)`.

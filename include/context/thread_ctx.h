@@ -3,62 +3,23 @@
 
 #pragma once
 
-#include "../basic/log.h"
-#include "../memory/arena.h"
-#include "../memory/heap.h"
+#include "ctx.h"
 
-// =========================================================================
-// Thread Context
-// =========================================================================
-
-// Fixed number of generic user-data slots available in each thread-local context.
-const_var sz THREAD_CTX_USER_DATA_COUNT = 32;
-
-typedef struct thread_ctx {
-  // Set to true after thread_ctx_init succeeds for the current thread.
-  b32 is_init;
-
-  // Parent allocator used to grow all context-owned allocators.
-  allocator main_allocator;
-
-  // Long-lived bump allocator for thread-affine scratch that is reclaimed in bulk.
-  arena perm_arena;
-
-  // Short-lived bump allocator that should be reset frequently with thread_clear_temp.
-  arena temp_arena;
-
-  // Long-lived general-purpose allocator for thread-local allocations.
-  heap perm_heap;
-
-  // Short-lived general-purpose allocator that should be reset frequently.
-  heap temp_heap;
-
-  // Per-thread logging configuration.
-  log_state log;
-
-  // Opaque per-thread user storage for higher-level systems.
-  void* user_data[THREAD_CTX_USER_DATA_COUNT];
-} thread_ctx;
+// Backward-compatible alias for the context user-data slot count.
+#define THREAD_CTX_USER_DATA_COUNT CTX_USER_DATA_COUNT
 
 // Returns the current thread's context, or NULL when this thread has not been initialized.
-func thread_ctx* thread_ctx_get(void);
+func ctx* thread_ctx_get(void);
 
 // Returns true when the current thread has an initialized context.
 func b32 thread_ctx_is_init(void);
 
 // Initializes the current thread's context. This is thread-local: each thread
-// that wants a context must call it for itself. Returns false if the allocator
-// is invalid, if this thread has already been initialized, or if the internal
-// log state could not be created.
+// that wants a context must call it for itself.
 func b32 thread_ctx_init(allocator main_allocator);
 
-// Destroys the current thread's context and releases any blocks owned by its allocators.
-// Safe to call even if the current thread was never initialized.
+// Destroys the current thread's context and releases owned resources.
 func void thread_ctx_quit(void);
-
-// =========================================================================
-// Thread context related ops
-// =========================================================================
 
 // Returns an allocator backed by the current thread's permanent heap.
 // If the context is not initialized, a zeroed allocator is returned.
@@ -85,10 +46,9 @@ func void thread_clear_temp(void);
 // Convenience wrapper for configuring the current thread's effective log state.
 func void thread_log_set_level(log_level level);
 
-// Moves the process-global retained root-frame messages into the current
-// thread_ctx log state. The current thread's severity level is
-// left unchanged.
-// Returns false if the current thread has no initialized thread_ctx.
+// Moves retained root-frame messages from the global context log state into
+// the current thread context log state. Returns false if the current thread has
+// no initialized context.
 func b32 thread_log_sync(void);
 
 // Thread-context wrappers for nested log frames.

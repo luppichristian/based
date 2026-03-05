@@ -2,9 +2,9 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "basic/assert.h"
+#include "context/thread_ctx.h"
 #include "input/msg.h"
 #include "threads/atomics.h"
-#include "threads/thread_ctx.h"
 #include "../sdl3_include.h"
 
 #include <stdlib.h>

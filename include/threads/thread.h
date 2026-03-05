@@ -18,12 +18,12 @@ typedef i32 (*thread_func)(void* arg);
 
 // Creates a new thread that executes entry(arg) and returns a handle to it.
 // If main_allocator is valid, the new thread automatically initializes/quits
-// its own thread_ctx around the user entry-point using that allocator.
+// its own thread-local context around the user entry-point using that allocator.
 func thread _thread_create(thread_func entry, void* arg, allocator main_allocator, callsite site);
 
 // Creates a new named thread that executes entry(arg) and returns a handle to it.
 // The name is used only for debugging purposes (e.g. visible in debuggers/profilers).
-// thread_ctx automatic lifecycle matches thread_create.
+// Thread-context automatic lifecycle matches thread_create.
 func thread _thread_create_named(
     thread_func entry,
     void* arg,

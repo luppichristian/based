@@ -43,6 +43,10 @@ include/                      # public API headers
     log.h                     # logging levels, macros, retained frames, and message-system interception
     primitive_types.h         # primitive type aliases and min/max constants
     utility_defines.h         # general-purpose utility macros
+  context/                    # shared context payload plus thread/global wrappers
+    ctx.h                     # shared allocator/log/user-data context payload used across wrappers
+    global_ctx.h              # process-global context singleton and helper accessors
+    thread_ctx.h              # thread-local context lifecycle and convenience wrappers
   containers/                 # intrusive containers and container utilities
     binary_tree.h             # intrusive binary tree macros
     bitset.h                  # bitset macros over u64 arrays
@@ -116,11 +120,11 @@ include/                      # public API headers
     semaphore.h               # counting semaphore API
     spinlock.h                # spinlock API
     thread.h                  # thread creation and lifecycle
-    thread_ctx.h              # per-thread allocator bundle and generic thread-local context storage
     thread_current.h          # current-thread helpers
     thread_group.h            # fixed-size thread group helpers
 src/                          # module implementations
   basic/                      # implementations for basic/*
+  context/                    # implementations for context/*
   containers/                 # implementations for container modules with source files
   memory/                     # implementations for memory/*
   filesystem/                 # implementations for filesystem/*
@@ -161,7 +165,8 @@ Related core helper macros from `include/basic/` that are used pervasively:
 
 - `CALLSITE_HERE`: expands to a `callsite` with the current file, function, and line.
 - `assert(condition)`: project assert wrapper that forwards through `_assert(..., CALLSITE_HERE)`.
-- `log_fatal(...)`, `log_error(...)`, `log_warn(...)`, `log_info(...)`, `log_debug(...)`, `log_verbose(...)`, `log_trace(...)`: logging wrappers that forward through `_log(..., CALLSITE_HERE)`.
+- `log_state_fatal(state, ...)`, `log_state_error(state, ...)`, `log_state_warn(state, ...)`, `log_state_info(state, ...)`, `log_state_debug(state, ...)`, `log_state_verbose(state, ...)`, `log_state_trace(state, ...)`: state-explicit logging wrappers from `include/basic/log.h` that forward through `_log(..., CALLSITE_HERE)`.
+- `global_log_fatal(...)`, `global_log_error(...)`, `global_log_warn(...)`, `global_log_info(...)`, `global_log_debug(...)`, `global_log_verbose(...)`, `global_log_trace(...)`: process-global logging wrappers from `include/context/global_ctx.h` that forward through `_log(global_get_log_state(), ..., CALLSITE_HERE)`.
 
 Common utility macros from `include/basic/utility_defines.h`:
 

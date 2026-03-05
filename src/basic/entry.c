@@ -6,9 +6,10 @@
 #endif
 
 #include "basic/entry.h"
+#include "context/global_ctx.h"
+#include "context/thread_ctx.h"
 #include "input/msg.h"
 #include "memory/vmem.h"
-#include "threads/thread_ctx.h"
 #include "../sdl3_include.h"
 
 #include <stdlib.h>
@@ -23,6 +24,8 @@ func b32 entry_main(cmdline cmdl);
 
 global_var sz entry_sdl_init_depth = 0;
 global_var b32 entry_owns_sdl = false;
+global_var sz entry_global_ctx_init_depth = 0;
+global_var b32 entry_owns_global_ctx = false;
 
 thread_local global_var sz entry_thread_ctx_init_depth = 0;
 thread_local global_var b32 entry_owns_thread_ctx = false;
@@ -46,9 +49,33 @@ func b32 entry_init(cmdline cmdline) {
   }
   entry_sdl_init_depth += 1;
 
+  if (entry_global_ctx_init_depth == 0) {
+    if (!global_ctx_is_init()) {
+      if (!global_ctx_init(vmem_get_allocator())) {
+        entry_sdl_init_depth -= 1;
+        if (entry_sdl_init_depth == 0 && entry_owns_sdl) {
+          SDL_Quit();
+          entry_owns_sdl = false;
+        }
+        return false;
+      }
+      entry_owns_global_ctx = true;
+    } else {
+      entry_owns_global_ctx = false;
+    }
+  }
+  entry_global_ctx_init_depth += 1;
+
   if (entry_thread_ctx_init_depth == 0) {
     if (!thread_ctx_is_init()) {
       if (!thread_ctx_init(vmem_get_allocator())) {
+        if (entry_global_ctx_init_depth > 0) {
+          entry_global_ctx_init_depth -= 1;
+          if (entry_global_ctx_init_depth == 0 && entry_owns_global_ctx) {
+            global_ctx_quit();
+            entry_owns_global_ctx = false;
+          }
+        }
         entry_sdl_init_depth -= 1;
         if (entry_sdl_init_depth == 0 && entry_owns_sdl) {
           SDL_Quit();
@@ -74,6 +101,14 @@ func void entry_quit(void) {
     if (entry_thread_ctx_init_depth == 0 && entry_owns_thread_ctx) {
       thread_ctx_quit();
       entry_owns_thread_ctx = false;
+    }
+  }
+
+  if (entry_global_ctx_init_depth > 0) {
+    entry_global_ctx_init_depth -= 1;
+    if (entry_global_ctx_init_depth == 0 && entry_owns_global_ctx) {
+      global_ctx_quit();
+      entry_owns_global_ctx = false;
     }
   }
 

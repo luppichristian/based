@@ -10,13 +10,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-// =========================================================================
-// Internal state
-// =========================================================================
-
-global_var log_state global_log_state = {0};
-global_var atomic_i32 global_log_state_init = {0};
-
 global_var mutex log_emit_mutex = NULL;
 global_var atomic_i32 log_emit_mutex_init = {0};
 
@@ -45,10 +38,7 @@ func mutex log_shared_mutex_get(atomic_i32* init_state, mutex* out_mutex) {
 }
 
 func log_state* log_state_resolve(log_state* state) {
-  if (state) {
-    return state->is_init ? state : NULL;
-  }
-  return log_get_global_state();
+  return (state && state->is_init) ? state : NULL;
 }
 
 func void log_state_lock(log_state* state) {
@@ -447,14 +437,6 @@ func log_frame* log_state_end_frame(log_state* state, u32 severity_mask) {
   return frame;
 }
 
-func void log_begin_frame(void) {
-  log_state_begin_frame(NULL);
-}
-
-func log_frame* log_end_frame(u32 severity_mask) {
-  return log_state_end_frame(NULL, severity_mask);
-}
-
 func void log_frame_destroy(log_frame* frame) {
   if (!frame) {
     return;
@@ -494,28 +476,6 @@ func callsite log_message_site(log_msg* message) {
 
 func cstr8 log_message_text(log_msg* message) {
   return message ? message->text : NULL;
-}
-
-func log_state* log_get_global_state(void) {
-  if (atomic_i32_get(&global_log_state_init) != 2) {
-    i32 expected = 0;
-    if (atomic_i32_cmpex(&global_log_state_init, &expected, 1)) {
-      if (!log_state_init(&global_log_state, true) &&
-          !log_state_init(&global_log_state, false)) {
-        memset(&global_log_state, 0, sizeof(global_log_state));
-        global_log_state.is_init = true;
-        global_log_state.level = LOG_LEVEL_DEFAULT;
-      }
-      atomic_fence_release();
-      atomic_i32_set(&global_log_state_init, 2);
-    } else {
-      while (atomic_i32_get(&global_log_state_init) != 2) {
-        atomic_pause();
-      }
-      atomic_fence_acquire();
-    }
-  }
-  return &global_log_state;
 }
 
 func void _log(log_state* state, log_level level, callsite site, cstr8 fmt, ...) {
