@@ -42,7 +42,7 @@ func mutex assert_lock_get(void) {
 }
 
 func void assert_log_msg(cstr8 msg, callsite site) {
-  _log(thread_ctx_get_log_state(), LOG_LEVEL_FATAL, site, "Assertion failed: %s", msg);
+  _log(thread_get_log_state(), LOG_LEVEL_FATAL, site, "Assertion failed: %s", msg);
 }
 
 // Returns: 0 = ignore, 1 = breakpoint, 2 = quit.
@@ -106,7 +106,7 @@ func void _assert(b32 condition, cstr8 cond_msg, callsite site) {
 
   msg assert_msg = {0};
   assert_msg.type = MSG_TYPE_ASSERT;
-  assert_msg.assert_data.mode = (u32)mode;
+  assert_msg.assert_data.mode = mode;
   assert_msg.assert_data.source_site = site;
   SDL_strlcpy(assert_msg.assert_data.text, cond_msg != NULL ? cond_msg : "", MSG_ASSERT_TEXT_CAP);
   if (!msg_post(&assert_msg)) {

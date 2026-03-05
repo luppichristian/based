@@ -159,12 +159,14 @@ func void tablet_internal_on_msg(const msg* src) {
 
   switch (src->type) {
     case MSG_TYPE_PEN_PROXIMITY_IN:
+      tablet_cached_pen_state.id = src->pen_proximity.device;
       tablet_cached_pen_state.pen_id = src->pen_proximity.pen_id;
       tablet_cached_pen_state.in_proximity = 1;
       tablet_cached_pen_state.window_id = src->pen_proximity.window_id;
       break;
 
     case MSG_TYPE_PEN_PROXIMITY_OUT:
+      tablet_cached_pen_state.id = src->pen_proximity.device;
       tablet_cached_pen_state.pen_id = src->pen_proximity.pen_id;
       tablet_cached_pen_state.in_proximity = 0;
       tablet_cached_pen_state.touching = 0;
@@ -172,6 +174,7 @@ func void tablet_internal_on_msg(const msg* src) {
       break;
 
     case MSG_TYPE_PEN_MOTION:
+      tablet_cached_pen_state.id = src->pen_motion.device;
       tablet_cached_pen_state.pen_id = src->pen_motion.pen_id;
       tablet_cached_pen_state.in_proximity = 1;
       tablet_cached_pen_state.input_mask = src->pen_motion.pen_state;
@@ -182,6 +185,7 @@ func void tablet_internal_on_msg(const msg* src) {
 
     case MSG_TYPE_PEN_DOWN:
     case MSG_TYPE_PEN_UP:
+      tablet_cached_pen_state.id = src->pen_touch.device;
       tablet_cached_pen_state.pen_id = src->pen_touch.pen_id;
       tablet_cached_pen_state.in_proximity = 1;
       tablet_cached_pen_state.touching = src->pen_touch.down;
@@ -194,6 +198,7 @@ func void tablet_internal_on_msg(const msg* src) {
 
     case MSG_TYPE_PEN_BUTTON_DOWN:
     case MSG_TYPE_PEN_BUTTON_UP:
+      tablet_cached_pen_state.id = src->pen_button.device;
       tablet_cached_pen_state.pen_id = src->pen_button.pen_id;
       tablet_cached_pen_state.in_proximity = 1;
       tablet_cached_pen_state.input_mask = src->pen_button.pen_state;
@@ -203,6 +208,7 @@ func void tablet_internal_on_msg(const msg* src) {
       break;
 
     case MSG_TYPE_PEN_AXIS:
+      tablet_cached_pen_state.id = src->pen_axis.device;
       tablet_cached_pen_state.pen_id = src->pen_axis.pen_id;
       tablet_cached_pen_state.in_proximity = 1;
       tablet_cached_pen_state.input_mask = src->pen_axis.pen_state;

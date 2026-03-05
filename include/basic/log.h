@@ -28,26 +28,26 @@ typedef enum log_level {
 #define log_level_mask(level) (1u << (level))
 
 // One retained log message stored in a linked list owned by a log_state or log_frame.
-typedef struct log_message {
-  struct log_message* next;
+typedef struct log_msg {
+  struct log_msg* next;
   log_level level;
   callsite site;
   cstr8 text;
-} log_message;
+} log_msg;
 
 // One log frame. log_state owns a persistent root frame for retained history,
 // and may also hold a stack of active nested frames.
 typedef struct log_frame {
   struct log_frame* prev_active;
-  log_message* messages_head;
-  log_message* messages_tail;
+  log_msg* messages_head;
+  log_msg* messages_tail;
   sz message_count;
 } log_frame;
 
 // Per-thread (or caller-owned) log configuration.
 // The mutex is optional. When present, it serializes access to level.
 typedef struct log_state {
-  b32 is_initialized;
+  b32 is_init;
   mutex mutex_handle;
   log_level level;
   log_frame* root_frame;
@@ -66,7 +66,7 @@ func b32 log_state_init(log_state* state, b32 use_mutex);
 func void log_state_quit(log_state* state);
 
 // Returns true if the state is non-NULL and has been initialized.
-func b32 log_state_is_initialized(log_state* state);
+func b32 log_state_is_init(log_state* state);
 
 // Sets the minimum enabled level for the given state.
 func void log_state_set_level(log_state* state, log_level level);
@@ -96,16 +96,16 @@ func log_frame* log_end_frame(u32 severity_mask);
 func void log_frame_destroy(log_frame* frame);
 func b32 log_frame_has_messages(log_frame* frame);
 func sz log_frame_message_count(log_frame* frame);
-func log_message* log_frame_first(log_frame* frame);
-func log_message* log_frame_last(log_frame* frame);
-func log_message* log_message_next(log_message* message);
-func log_level log_message_level(log_message* message);
-func callsite log_message_site(log_message* message);
-func cstr8 log_message_text(log_message* message);
+func log_msg* log_frame_first(log_frame* frame);
+func log_msg* log_frame_last(log_frame* frame);
+func log_msg* log_message_next(log_msg* message);
+func log_level log_message_level(log_msg* message);
+func callsite log_message_site(log_msg* message);
+func cstr8 log_message_text(log_msg* message);
 
 // Iterates over every message in a log frame from first to last.
 #define LOG_FRAME_FOREACH(frame, it) \
-  for (log_message* it = log_frame_first(frame); (it) != NULL; (it) = log_message_next(it))
+  for (log_msg* it = log_frame_first(frame); (it) != NULL; (it) = log_message_next(it))
 
 // Returns the process-global fallback log state.
 // It is created lazily on first use and is safe to use from any thread.

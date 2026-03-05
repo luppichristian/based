@@ -213,7 +213,7 @@ func void pathwatch_dispatch(
   event_msg.pathwatch.event_kind = MSG_PATHWATCH_EVENT_ITEM;
   event_msg.pathwatch.pathwatch_id = binding->pathwatch_id;
   event_msg.pathwatch.watch_id = watch_binding->watch_id;
-  event_msg.pathwatch.action = (u32)pathwatch_map_action(action);
+  event_msg.pathwatch.action = pathwatch_map_action(action);
   (void)msg_post(&event_msg);
 }
 
@@ -236,7 +236,7 @@ func void pathwatch_dispatch_missed(
   event_msg.pathwatch.event_kind = MSG_PATHWATCH_EVENT_MISSED;
   event_msg.pathwatch.pathwatch_id = binding->pathwatch_id;
   event_msg.pathwatch.watch_id = watch_binding != NULL ? watch_binding->watch_id : 0;
-  event_msg.pathwatch.action = 0;
+  event_msg.pathwatch.action = (pathwatch_action)0;
   (void)msg_post(&event_msg);
 }
 

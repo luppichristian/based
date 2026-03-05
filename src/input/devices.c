@@ -166,6 +166,8 @@ func cstr8 devices_get_type_name(device_type type) {
       return "mouse";
     case DEVICE_TYPE_GAMEPAD:
       return "gamepad";
+    case DEVICE_TYPE_JOYSTICK:
+      return "joystick";
     case DEVICE_TYPE_TABLET:
       return "tablet";
     case DEVICE_TYPE_TOUCH:
@@ -196,6 +198,13 @@ func sz devices_get_count(device_type type) {
     }
     case DEVICE_TYPE_GAMEPAD: {
       SDL_JoystickID* ids = SDL_GetGamepads(&count);
+      if (ids) {
+        SDL_free(ids);
+      }
+      return count > 0 ? (sz)count : 0;
+    }
+    case DEVICE_TYPE_JOYSTICK: {
+      SDL_JoystickID* ids = SDL_GetJoysticks(&count);
       if (ids) {
         SDL_free(ids);
       }
@@ -270,6 +279,18 @@ func b32 devices_get_device(device_type type, sz index, device_id* out_id) {
 
       if (found && out_id) {
         *out_id = devices_make_id(DEVICE_TYPE_GAMEPAD, (u64)ids[index]);
+      }
+      if (ids) {
+        SDL_free(ids);
+      }
+      return found;
+    }
+    case DEVICE_TYPE_JOYSTICK: {
+      SDL_JoystickID* ids = SDL_GetJoysticks(&count);
+      b32 found = ids && index < (sz)count;
+
+      if (found && out_id) {
+        *out_id = devices_make_id(DEVICE_TYPE_JOYSTICK, (u64)ids[index]);
       }
       if (ids) {
         SDL_free(ids);
@@ -365,6 +386,27 @@ func b32 devices_get_info(device_id id, device_info* out_info) {
           if (out_info) {
             out_info->connected = 1;
             devices_copy_cstring(out_info->name, size_of(out_info->name), SDL_GetGamepadNameForID(ids[index]));
+          }
+          break;
+        }
+      }
+
+      if (ids) {
+        SDL_free(ids);
+      }
+
+      return found;
+    }
+    case DEVICE_TYPE_JOYSTICK: {
+      SDL_JoystickID* ids = SDL_GetJoysticks(&count);
+      b32 found = 0;
+
+      for (int index = 0; ids && index < count; index += 1) {
+        if ((u64)ids[index] == id.instance) {
+          found = 1;
+          if (out_info) {
+            out_info->connected = 1;
+            devices_copy_cstring(out_info->name, size_of(out_info->name), SDL_GetJoystickNameForID(ids[index]));
           }
           break;
         }

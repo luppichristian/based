@@ -12,19 +12,19 @@ typedef struct cmdline {
 } cmdline;
 
 // Normalizes argc/argv into a command-line view. Negative counts or NULL argv yield an empty view.
-func cmdline cmdline_make(sz count, c8** args);
+func cmdline cmdline_build(sz count, c8** args);
 
 // Returns the number of entries in the command line.
-func sz cmdline_count(cmdline cmdl);
+func sz cmdline_get_count(cmdline cmdl);
 
 // Returns 1 if the command line contains no entries, 0 otherwise.
 func b32 cmdline_is_empty(cmdline cmdl);
 
 // Returns argv[index], or NULL if index is out of range.
-func cstr8 cmdline_arg(cmdline cmdl, sz index);
+func cstr8 cmdline_get_arg(cmdline cmdl, sz index);
 
 // Returns argv[0], or NULL if no entries are present.
-func cstr8 cmdline_program(cmdline cmdl);
+func cstr8 cmdline_get_program(cmdline cmdl);
 
 // Searches for an exact argument match. Writes the index on success when out_index is non-NULL.
 func b32 cmdline_find(cmdline cmdl, cstr8 arg, sz* out_index);

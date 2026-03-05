@@ -4,6 +4,7 @@
 #pragma once
 
 #include "../utils/cmdline.h"
+#include "env_defines.h"
 #include "primitive_types.h"
 
 // =========================================================================
@@ -25,40 +26,41 @@ typedef enum app_result {
 
 // Called once before the main loop starts.
 // Implementations can allocate and store user state through state.
-func app_result init(cmdline cmdl, void** state);
+func app_result app_init(cmdline cmdl, void** state);
 
 // Called repeatedly until it returns APP_RESULT_SUCCESS or APP_RESULT_FAIL.
-func app_result update(void* state);
+func app_result app_update(void* state);
 
 // Called once during shutdown, even after a failed init().
-func void quit(void* state);
+func void app_quit(void* state);
 
 #elif defined(ENTRY_TYPE_MAIN)
 
 // Simple command-line entry point wrapper.
 // Returns true on success, false on failure.
-func b32 entry_main(cmdline cmdl);
+func b32 main(cmdline cmdl);
 
-#elif defined(ENTRY_TYPE_MODULE)
+#elif defined(ENTRY_TYPE_MOD)
 
 // Module lifecycle used by the custom dynamic-module loader.
-// module_init() runs when the module is loaded and module_quit() runs when it
+// mod_init() runs when the module is loaded and mod_quit() runs when it
 // is unloaded.
 
 // Exported wrapper used by the module loader.
-func dll_export b32 module_init(void);
+func dll_export b32 mod_init(void);
 
 // Exported wrapper used by the module loader.
-func dll_export void module_quit(void);
+func dll_export void mod_quit(void);
 
-// User callback invoked after entry_init() succeeds.
-// Returns true on success, false on failure.
-func b32 entry_module_init(void);
+#endif
 
-// User callback invoked before entry_quit().
-// Safe to call even if initialization failed.
-func void entry_module_quit(void);
+// Entry mode and binary-kind consistency.
+#if defined(ENTRY_TYPE_MOD) && !defined(BIN_DYNAMIC_LIB)
+#  error "entry.h: ENTRY_TYPE_MOD requires BIN_DYNAMIC_LIB."
+#endif
 
+#if (defined(ENTRY_TYPE_APP) || defined(ENTRY_TYPE_MAIN)) && !defined(BIN_RUNNABLE)
+#  error "entry.h: ENTRY_TYPE_APP and ENTRY_TYPE_MAIN require BIN_RUNNABLE."
 #endif
 
 // =========================================================================

@@ -13,8 +13,8 @@
 #  include <dlfcn.h>
 #endif
 
-#define MODULE_INIT_SYMBOL "module_init"
-#define MODULE_QUIT_SYMBOL "module_quit"
+#define MODULE_INIT_SYMBOL "mod_init"
+#define MODULE_QUIT_SYMBOL "mod_quit"
 
 func mod module_empty(void) {
   mod module_value;

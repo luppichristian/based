@@ -4,7 +4,7 @@
 #include "utils/cmdline.h"
 #include "strings/cstrings.h"
 
-func cmdline cmdline_make(sz count, c8** args) {
+func cmdline cmdline_build(sz count, c8** args) {
   if (count <= 0 || args == NULL) {
     cmdline empty = {.count = 0, .args = NULL};
     return empty;
@@ -14,7 +14,7 @@ func cmdline cmdline_make(sz count, c8** args) {
   return cmdl;
 }
 
-func sz cmdline_count(cmdline cmdl) {
+func sz cmdline_get_count(cmdline cmdl) {
   return cmdl.count;
 }
 
@@ -22,15 +22,15 @@ func b32 cmdline_is_empty(cmdline cmdl) {
   return cmdl.count == 0 ? 1 : 0;
 }
 
-func cstr8 cmdline_arg(cmdline cmdl, sz index) {
+func cstr8 cmdline_get_arg(cmdline cmdl, sz index) {
   if (index >= cmdl.count || cmdl.args == NULL) {
     return NULL;
   }
   return cmdl.args[index];
 }
 
-func cstr8 cmdline_program(cmdline cmdl) {
-  return cmdline_arg(cmdl, 0);
+func cstr8 cmdline_get_program(cmdline cmdl) {
+  return cmdline_get_arg(cmdl, 0);
 }
 
 func b32 cmdline_find(cmdline cmdl, cstr8 arg, sz* out_index) {
@@ -39,7 +39,7 @@ func b32 cmdline_find(cmdline cmdl, cstr8 arg, sz* out_index) {
   }
 
   for (sz index = 0; index < cmdl.count; index++) {
-    cstr8 value = cmdline_arg(cmdl, index);
+    cstr8 value = cmdline_get_arg(cmdl, index);
     if (value != NULL && cstr8_cmp(value, arg) == 0) {
       if (out_index != NULL) {
         *out_index = index;
@@ -66,13 +66,13 @@ func cstr8 cmdline_get_option(cmdline cmdl, cstr8 name) {
   }
 
   for (sz index = 1; index < cmdl.count; index++) {
-    cstr8 value = cmdline_arg(cmdl, index);
+    cstr8 value = cmdline_get_arg(cmdl, index);
     if (value == NULL) {
       continue;
     }
 
     if (cstr8_cmp(value, name) == 0) {
-      return cmdline_arg(cmdl, index + 1);
+      return cmdline_get_arg(cmdl, index + 1);
     }
 
     if (cstr8_cmp_n(value, name, name_len) == 0 && value[name_len] == '=') {

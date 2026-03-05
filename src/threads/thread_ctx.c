@@ -14,17 +14,17 @@ const_var sz THREAD_CTX_DEFAULT_BLOCK_SIZE = kb(64);
 thread_local global_var thread_ctx tls_thread_ctx = {0};
 
 func thread_ctx* thread_ctx_get(void) {
-  if (!tls_thread_ctx.is_initialized) {
+  if (!tls_thread_ctx.is_init) {
     return NULL;
   }
   return &tls_thread_ctx;
 }
 
-func b32 thread_ctx_is_initialized(void) {
-  return tls_thread_ctx.is_initialized;
+func b32 thread_ctx_is_init(void) {
+  return tls_thread_ctx.is_init;
 }
 
-func allocator thread_ctx_get_allocator(void) {
+func allocator thread_get_allocator(void) {
   thread_ctx* ctx = thread_ctx_get();
   if (!ctx) {
     allocator alloc;
@@ -34,7 +34,7 @@ func allocator thread_ctx_get_allocator(void) {
   return heap_get_allocator(&ctx->perm_heap);
 }
 
-func log_state* thread_ctx_get_log_state(void) {
+func log_state* thread_get_log_state(void) {
   thread_ctx* ctx = thread_ctx_get();
   if (!ctx) {
     return log_get_global_state();
@@ -42,27 +42,27 @@ func log_state* thread_ctx_get_log_state(void) {
   return &ctx->log;
 }
 
-func arena* thread_ctx_get_perm_arena(void) {
+func arena* thread_get_perm_arena(void) {
   thread_ctx* ctx = thread_ctx_get();
   return ctx ? &ctx->perm_arena : NULL;
 }
 
-func arena* thread_ctx_get_temp_arena(void) {
+func arena* thread_get_temp_arena(void) {
   thread_ctx* ctx = thread_ctx_get();
   return ctx ? &ctx->temp_arena : NULL;
 }
 
-func heap* thread_ctx_get_perm_heap(void) {
+func heap* thread_get_perm_heap(void) {
   thread_ctx* ctx = thread_ctx_get();
   return ctx ? &ctx->perm_heap : NULL;
 }
 
-func heap* thread_ctx_get_temp_heap(void) {
+func heap* thread_get_temp_heap(void) {
   thread_ctx* ctx = thread_ctx_get();
   return ctx ? &ctx->temp_heap : NULL;
 }
 
-func void* thread_ctx_get_user_data(sz index) {
+func void* thread_get_user_data(sz index) {
   thread_ctx* ctx = thread_ctx_get();
   if (!ctx || index >= THREAD_CTX_USER_DATA_COUNT) {
     return NULL;
@@ -70,7 +70,7 @@ func void* thread_ctx_get_user_data(sz index) {
   return ctx->user_data[index];
 }
 
-func b32 thread_ctx_set_user_data(sz index, void* user_data) {
+func b32 thread_set_user_data(sz index, void* user_data) {
   thread_ctx* ctx = thread_ctx_get();
   if (!ctx || index >= THREAD_CTX_USER_DATA_COUNT) {
     return false;
@@ -80,7 +80,7 @@ func b32 thread_ctx_set_user_data(sz index, void* user_data) {
   return true;
 }
 
-func void thread_ctx_clear_temp(void) {
+func void thread_clear_temp(void) {
   thread_ctx* ctx = thread_ctx_get();
   if (!ctx) {
     return;
@@ -90,11 +90,11 @@ func void thread_ctx_clear_temp(void) {
   heap_clear(&ctx->temp_heap);
 }
 
-func void thread_ctx_log_set_level(log_level level) {
-  log_state_set_level(thread_ctx_get_log_state(), level);
+func void thread_log_set_level(log_level level) {
+  log_state_set_level(thread_get_log_state(), level);
 }
 
-func b32 thread_ctx_log_sync_from_main(void) {
+func b32 thread_log_sync(void) {
   thread_ctx* ctx = thread_ctx_get();
   if (!ctx) {
     return false;
@@ -104,16 +104,16 @@ func b32 thread_ctx_log_sync_from_main(void) {
   return true;
 }
 
-func void thread_ctx_log_begin_frame(void) {
-  log_state_begin_frame(thread_ctx_get_log_state());
+func void thread_log_begin_frame(void) {
+  log_state_begin_frame(thread_get_log_state());
 }
 
-func log_frame* thread_ctx_log_end_frame(u32 severity_mask) {
-  return log_state_end_frame(thread_ctx_get_log_state(), severity_mask);
+func log_frame* thread_log_end_frame(u32 severity_mask) {
+  return log_state_end_frame(thread_get_log_state(), severity_mask);
 }
 
 func b32 thread_ctx_init(allocator main_allocator) {
-  if (!main_allocator.alloc_fn || tls_thread_ctx.is_initialized) {
+  if (!main_allocator.alloc_fn || tls_thread_ctx.is_init) {
     return false;
   }
 
@@ -137,12 +137,12 @@ func b32 thread_ctx_init(allocator main_allocator) {
   tls_thread_ctx.temp_arena = arena_create(main_allocator, NULL, THREAD_CTX_DEFAULT_BLOCK_SIZE);
   tls_thread_ctx.perm_heap = heap_create(main_allocator, NULL, THREAD_CTX_DEFAULT_BLOCK_SIZE);
   tls_thread_ctx.temp_heap = heap_create(main_allocator, NULL, THREAD_CTX_DEFAULT_BLOCK_SIZE);
-  tls_thread_ctx.is_initialized = true;
+  tls_thread_ctx.is_init = true;
   return true;
 }
 
 func void thread_ctx_quit(void) {
-  if (!tls_thread_ctx.is_initialized) {
+  if (!tls_thread_ctx.is_init) {
     return;
   }
 

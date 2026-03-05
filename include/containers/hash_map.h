@@ -52,22 +52,6 @@ typedef struct hash_map {
 typedef sz hash_map_iter;
 
 // =========================================================================
-// Hash Utilities
-// =========================================================================
-
-// hash_u64  — mix a 64-bit integer key (splitmix64 finalizer).
-func u64 hash_u64(u64 val);
-
-// hash_ptr  — hash a pointer value.
-func u64 hash_ptr(const void* ptr);
-
-// hash_bytes — FNV-1a 64-bit hash over an arbitrary byte buffer.
-func u64 hash_bytes(const void* ptr, sz len);
-
-// hash_str  — FNV-1a 64-bit hash over a null-terminated string.
-func u64 hash_str(cstr8 str);
-
-// =========================================================================
 // Lifecycle
 // =========================================================================
 

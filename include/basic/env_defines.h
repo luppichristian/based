@@ -207,6 +207,23 @@ Below you can find the actual definitions: */
 #endif
 
 // =========================================================================
+// Binary Type
+// =========================================================================
+
+// Expected binary-kind definitions:
+// - BIN_RUNNABLE   : executable target
+// - BIN_DYNAMIC_LIB: shared/module library target
+// - BIN_STATIC_LIB : static library target
+// - BIN_OBJ_LIB    : object library target
+//
+// These are expected to be provided by the build system.
+#if (defined(BIN_RUNNABLE) + defined(BIN_DYNAMIC_LIB) + defined(BIN_STATIC_LIB) + defined(BIN_OBJ_LIB)) == 0
+#  error "env_defines.h: no binary kind detected. Define one of BIN_RUNNABLE, BIN_DYNAMIC_LIB, BIN_STATIC_LIB, BIN_OBJ_LIB."
+#elif (defined(BIN_RUNNABLE) + defined(BIN_DYNAMIC_LIB) + defined(BIN_STATIC_LIB) + defined(BIN_OBJ_LIB)) > 1
+#  error "env_defines.h: multiple binary kinds detected. Define exactly one of BIN_RUNNABLE, BIN_DYNAMIC_LIB, BIN_STATIC_LIB, BIN_OBJ_LIB."
+#endif
+
+// =========================================================================
 // Sanity Checks
 // =========================================================================
 

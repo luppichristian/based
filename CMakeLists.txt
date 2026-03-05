@@ -128,6 +128,26 @@ set(
     $<$<COMPILE_LANG_AND_ID:CXX,Clang,AppleClang>:-Wno-gnu-folding-constant>
 )
 
+# Binary-kind compile definitions by target type.
+function(based_apply_binary_type_defines target_name)
+    get_target_property(target_type ${target_name} TYPE)
+    if(NOT target_type)
+        message(FATAL_ERROR "based_apply_binary_type_defines: target '${target_name}' has no TYPE")
+    endif()
+
+    if(target_type STREQUAL "EXECUTABLE")
+        target_compile_definitions(${target_name} PRIVATE BIN_RUNNABLE)
+    elseif(target_type STREQUAL "SHARED_LIBRARY" OR target_type STREQUAL "MODULE_LIBRARY")
+        target_compile_definitions(${target_name} PRIVATE BIN_DYNAMIC_LIB)
+    elseif(target_type STREQUAL "STATIC_LIBRARY")
+        target_compile_definitions(${target_name} PRIVATE BIN_STATIC_LIB)
+    elseif(target_type STREQUAL "OBJECT_LIBRARY")
+        target_compile_definitions(${target_name} PRIVATE BIN_OBJ_LIB)
+    else()
+        message(FATAL_ERROR "based_apply_binary_type_defines: unsupported target type '${target_type}' for target '${target_name}'")
+    endif()
+endfunction()
+
 # =========================================================================
 # Library (always static for now)
 # =========================================================================
@@ -138,6 +158,15 @@ target_include_directories(based PUBLIC include)
 target_link_libraries(based PRIVATE SDL3::SDL3 efsw miniz PUBLIC olib::static libmath2)
 target_compile_definitions(based PRIVATE _CRT_SECURE_NO_WARNINGS)
 target_compile_options(based PRIVATE ${BASED_CLANG_FOLDING_CONSTANT_WARNING})
+based_apply_binary_type_defines(based)
+target_compile_definitions(
+    based
+    INTERFACE
+        $<$<STREQUAL:$<TARGET_PROPERTY:TYPE>,EXECUTABLE>:BIN_RUNNABLE>
+        $<$<OR:$<STREQUAL:$<TARGET_PROPERTY:TYPE>,SHARED_LIBRARY>,$<STREQUAL:$<TARGET_PROPERTY:TYPE>,MODULE_LIBRARY>>:BIN_DYNAMIC_LIB>
+        $<$<STREQUAL:$<TARGET_PROPERTY:TYPE>,STATIC_LIBRARY>:BIN_STATIC_LIB>
+        $<$<STREQUAL:$<TARGET_PROPERTY:TYPE>,OBJECT_LIBRARY>:BIN_OBJ_LIB>
+)
 
 # =========================================================================
 # Tests
@@ -162,6 +191,7 @@ if(BASED_BUILD_TESTS)
     add_executable(based-tests ${TEST_SOURCES})
     target_link_libraries(based-tests PRIVATE based GTest::gtest_main)
     target_compile_options(based-tests PRIVATE ${BASED_CLANG_FOLDING_CONSTANT_WARNING})
+    based_apply_binary_type_defines(based-tests)
 
     include(GoogleTest)
     gtest_discover_tests(based-tests)

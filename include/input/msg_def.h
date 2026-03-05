@@ -3,8 +3,14 @@
 
 #pragma once
 
+#include "../basic/assert.h"
 #include "../basic/codespace.h"
+#include "../basic/log.h"
 #include "../basic/primitive_types.h"
+#include "../filesystem/pathwatch.h"
+#include "devices.h"
+#include "gamepads.h"
+#include "mouse.h"
 
 // Event types mirrored from the backend event system.
 typedef enum msg_type {
@@ -120,6 +126,10 @@ typedef enum msg_type {
   MSG_TYPE_PATHWATCH = MSG_TYPE_USER + 3,
   MSG_TYPE_LOG = MSG_TYPE_USER + 4,
   MSG_TYPE_ASSERT = MSG_TYPE_USER + 5,
+  MSG_TYPE_TOUCH_ADDED = MSG_TYPE_USER + 6,
+  MSG_TYPE_TOUCH_REMOVED = MSG_TYPE_USER + 7,
+  MSG_TYPE_TABLET_ADDED = MSG_TYPE_USER + 8,
+  MSG_TYPE_TABLET_REMOVED = MSG_TYPE_USER + 9,
 } msg_type;
 
 typedef enum msg_object_event_kind {
@@ -177,13 +187,13 @@ typedef struct msg_window_data {
 
 // Keyboard device connection payload.
 typedef struct msg_keyboard_device_data {
-  u32 keyboard_id;
+  device_id device;
 } msg_keyboard_device_data;
 
 // Key press and release payload.
 typedef struct msg_keyboard_data {
   u32 window_id;
-  u32 keyboard_id;
+  device_id device;
   u32 scancode;
   i32 keycode;
   u16 modifiers;
@@ -217,13 +227,13 @@ typedef struct msg_text_input_data {
 
 // Mouse device connection payload.
 typedef struct msg_mouse_device_data {
-  u32 mouse_id;
+  device_id device;
 } msg_mouse_device_data;
 
 // Mouse motion payload.
 typedef struct msg_mouse_motion_data {
   u32 window_id;
-  u32 mouse_id;
+  device_id device;
   u32 button_mask;
   f32 x;
   f32 y;
@@ -234,8 +244,8 @@ typedef struct msg_mouse_motion_data {
 // Mouse button payload.
 typedef struct msg_mouse_button_data {
   u32 window_id;
-  u32 mouse_id;
-  u8 button;
+  device_id device;
+  mouse_button button;
   b32 down;
   u8 clicks;
   f32 x;
@@ -245,7 +255,7 @@ typedef struct msg_mouse_button_data {
 // Mouse wheel payload.
 typedef struct msg_mouse_wheel_data {
   u32 window_id;
-  u32 mouse_id;
+  device_id device;
   f32 x;
   f32 y;
   u32 direction;
@@ -255,19 +265,19 @@ typedef struct msg_mouse_wheel_data {
 
 // Joystick device connection payload.
 typedef struct msg_joystick_device_data {
-  u32 joystick_id;
+  device_id device;
 } msg_joystick_device_data;
 
 // Joystick axis payload.
 typedef struct msg_joystick_axis_data {
-  u32 joystick_id;
+  device_id device;
   u8 axis;
   i16 value;
 } msg_joystick_axis_data;
 
 // Joystick trackball payload.
 typedef struct msg_joystick_ball_data {
-  u32 joystick_id;
+  device_id device;
   u8 ball;
   i16 xrel;
   i16 yrel;
@@ -275,47 +285,47 @@ typedef struct msg_joystick_ball_data {
 
 // Joystick hat payload.
 typedef struct msg_joystick_hat_data {
-  u32 joystick_id;
+  device_id device;
   u8 hat;
   u8 value;
 } msg_joystick_hat_data;
 
 // Joystick button payload.
 typedef struct msg_joystick_button_data {
-  u32 joystick_id;
+  device_id device;
   u8 button;
   b32 down;
 } msg_joystick_button_data;
 
 // Joystick battery payload.
 typedef struct msg_joystick_battery_data {
-  u32 joystick_id;
+  device_id device;
   i32 state;
   i32 percent;
 } msg_joystick_battery_data;
 
 // Gamepad device connection payload.
 typedef struct msg_gamepad_device_data {
-  u32 gamepad_id;
+  device_id device;
 } msg_gamepad_device_data;
 
 // Gamepad axis payload.
 typedef struct msg_gamepad_axis_data {
-  u32 gamepad_id;
-  u8 axis;
+  device_id device;
+  gamepad_axis axis;
   i16 value;
 } msg_gamepad_axis_data;
 
 // Gamepad button payload.
 typedef struct msg_gamepad_button_data {
-  u32 gamepad_id;
-  u8 button;
+  device_id device;
+  gamepad_button button;
   b32 down;
 } msg_gamepad_button_data;
 
 // Gamepad touchpad payload.
 typedef struct msg_gamepad_touchpad_data {
-  u32 gamepad_id;
+  device_id device;
   i32 touchpad;
   i32 finger;
   f32 x;
@@ -325,7 +335,7 @@ typedef struct msg_gamepad_touchpad_data {
 
 // Gamepad sensor payload.
 typedef struct msg_gamepad_sensor_data {
-  u32 gamepad_id;
+  device_id device;
   i32 sensor;
   f32 data[3];
   u64 sensor_timestamp;
@@ -347,9 +357,19 @@ typedef struct msg_render_data {
   u32 window_id;
 } msg_render_data;
 
-// Touch event payload.
+// Touch device connection payload.
+typedef struct msg_touch_device_data {
+  device_id device;
+} msg_touch_device_data;
+
+// Tablet device connection payload.
+typedef struct msg_tablet_device_data {
+  device_id device;
+} msg_tablet_device_data;
+
+// Touch contact payload.
 typedef struct msg_touch_data {
-  u64 touch_id;
+  device_id device;
   u64 finger_id;
   f32 x;
   f32 y;
@@ -362,12 +382,14 @@ typedef struct msg_touch_data {
 // Pen proximity payload.
 typedef struct msg_pen_proximity_data {
   u32 window_id;
+  device_id device;
   u32 pen_id;
 } msg_pen_proximity_data;
 
 // Pen motion payload.
 typedef struct msg_pen_motion_data {
   u32 window_id;
+  device_id device;
   u32 pen_id;
   u32 pen_state;
   f32 x;
@@ -377,6 +399,7 @@ typedef struct msg_pen_motion_data {
 // Pen touch payload.
 typedef struct msg_pen_touch_data {
   u32 window_id;
+  device_id device;
   u32 pen_id;
   u32 pen_state;
   f32 x;
@@ -388,6 +411,7 @@ typedef struct msg_pen_touch_data {
 // Pen button payload.
 typedef struct msg_pen_button_data {
   u32 window_id;
+  device_id device;
   u32 pen_id;
   u32 pen_state;
   f32 x;
@@ -399,6 +423,7 @@ typedef struct msg_pen_button_data {
 // Pen axis payload.
 typedef struct msg_pen_axis_data {
   u32 window_id;
+  device_id device;
   u32 pen_id;
   u32 pen_state;
   f32 x;
@@ -454,18 +479,18 @@ typedef struct msg_pathwatch_data {
   u32 event_kind;
   i64 pathwatch_id;
   i64 watch_id;
-  u32 action;
+  pathwatch_action action;
 } msg_pathwatch_data;
 
 typedef struct msg_log_data {
   void* state_ptr;
-  u32 level;
+  log_level level;
   callsite source_site;
   c8 text[MSG_LOG_TEXT_CAP];
 } msg_log_data;
 
 typedef struct msg_assert_data {
-  u32 mode;
+  assert_mode mode;
   callsite source_site;
   c8 text[MSG_ASSERT_TEXT_CAP];
 } msg_assert_data;
@@ -501,7 +526,9 @@ typedef struct msg {
     msg_audio_device_data audio_device;
     msg_camera_device_data camera_device;
     msg_render_data render;
+    msg_touch_device_data touch_device;
     msg_touch_data touch;
+    msg_tablet_device_data tablet_device;
     msg_pen_proximity_data pen_proximity;
     msg_pen_motion_data pen_motion;
     msg_pen_touch_data pen_touch;

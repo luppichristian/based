@@ -16,8 +16,9 @@ typedef enum device_type {
   DEVICE_TYPE_KEYBOARD = 1,
   DEVICE_TYPE_MOUSE = 2,
   DEVICE_TYPE_GAMEPAD = 3,
-  DEVICE_TYPE_TABLET = 4,
-  DEVICE_TYPE_TOUCH = 5,
+  DEVICE_TYPE_JOYSTICK = 4,
+  DEVICE_TYPE_TABLET = 5,
+  DEVICE_TYPE_TOUCH = 6,
 } device_type;
 
 // Backend-defined device identifier.

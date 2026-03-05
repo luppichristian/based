@@ -19,7 +19,7 @@ typedef struct mod {
   b32 initialized;
 } mod;
 
-// Loads src as a dynamic module and calls module_init(). Returns an empty
+// Loads src as a dynamic module and calls mod_init(). Returns an empty
 // module on failure.
 func mod module_open(const path* src);
 
@@ -29,5 +29,5 @@ func b32 module_is_open(const mod* mod_ptr);
 // Returns the named symbol as a generic function pointer, or NULL on failure.
 func module_func* module_get_func(const mod* mod_ptr, cstr8 name);
 
-// Calls module_quit() when needed, unloads the module, and resets mod.
+// Calls mod_quit() when needed, unloads the module, and resets mod.
 func void module_close(mod* mod_ptr);

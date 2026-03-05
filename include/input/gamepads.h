@@ -74,6 +74,12 @@ func b32 gamepads_has_button(sz slot_index, gamepad_button button);
 // Returns the cached pressed state for button.
 func b32 gamepads_get_button(sz slot_index, gamepad_button button);
 
+// Returns 1 if button was pressed since last query, 0 otherwise.
+func b32 gamepads_is_button_pressed(sz slot_index, gamepad_button button);
+
+// Returns 1 if button was released since last query, 0 otherwise.
+func b32 gamepads_is_button_released(sz slot_index, gamepad_button button);
+
 // Returns 1 if the connected gamepad exposes axis, 0 otherwise.
 func b32 gamepads_has_axis(sz slot_index, gamepad_axis axis);
 

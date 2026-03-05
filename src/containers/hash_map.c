@@ -2,39 +2,8 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "containers/hash_map.h"
+#include "based.h"
 #include <string.h>
-
-// =========================================================================
-// Hash Utilities
-// =========================================================================
-
-func u64 hash_u64(u64 val) {
-  val = (val ^ (val >> 30)) * 0xbf58476d1ce4e5b9ULL;
-  val = (val ^ (val >> 27)) * 0x94d049bb133111ebULL;
-  return val ^ (val >> 31);
-}
-
-func u64 hash_ptr(const void* ptr) {
-  return hash_u64((u64)(up)ptr);
-}
-
-func u64 hash_bytes(const void* ptr, sz len) {
-  u64 hash = 14695981039346656037ULL;
-  const u8* data = (const u8*)ptr;
-  for (sz idx = 0; idx < len; idx++) {
-    hash ^= (u64)data[idx];
-    hash *= 1099511628211ULL;
-  }
-  return hash;
-}
-
-func u64 hash_str(cstr8 str) {
-  sz len = 0;
-  while (str[len]) {
-    len++;
-  }
-  return hash_bytes(str, len);
-}
 
 // =========================================================================
 // Internal Helpers
@@ -43,12 +12,12 @@ func u64 hash_str(cstr8 str) {
 // Insert key/value into a raw slot array without touching a hash_map struct.
 // Used both by hash_map_set and during rehashing.
 // Returns 1 if a new key was inserted, 0 if an existing key was updated.
-static b32 hash_map_raw_insert(
+func b32 hash_map_raw_insert(
     hash_map_slot* slots,
     sz cap,
     u64 key,
     void* value) {
-  sz pos = (sz)(hash_u64(key) & (u64)(cap - 1));
+  sz pos = (sz)(lm2_hash_u64(key) & (u64)(cap - 1));
   u32 dist = 0;
 
   hash_map_slot incoming;
@@ -86,7 +55,7 @@ static b32 hash_map_raw_insert(
 
 // Grow the backing array to new_cap slots and re-insert all entries.
 // Returns 1 on success, 0 on allocation failure.
-static b32 hash_map_rehash(hash_map* map, sz new_cap) {
+func b32 hash_map_rehash(hash_map* map, sz new_cap) {
   hash_map_slot* new_slots =
       (hash_map_slot*)allocator_calloc(&map->alloc, new_cap, sizeof(hash_map_slot));
   if (!new_slots) {
@@ -109,7 +78,7 @@ static b32 hash_map_rehash(hash_map* map, sz new_cap) {
 }
 
 // Find the slot for key in map->slots; returns a pointer to the slot or NULL.
-static hash_map_slot* hash_map_find_slot(hash_map* map, u64 key) {
+func hash_map_slot* hash_map_find_slot(hash_map* map, u64 key) {
   sz pos = (sz)(hash_u64(key) & (u64)(map->cap - 1));
   u32 dist = 0;
 

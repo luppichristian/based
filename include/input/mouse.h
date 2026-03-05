@@ -42,3 +42,9 @@ func mouse_state mouse_get_relative_state(void);
 
 // Returns 1 if button is currently pressed, 0 otherwise.
 func b32 mouse_is_button_down(u8 button);
+
+// Returns 1 if button was pressed since last query, 0 otherwise.
+func b32 mouse_is_button_pressed(u8 button);
+
+// Returns 1 if button was released since last query, 0 otherwise.
+func b32 mouse_is_button_released(u8 button);

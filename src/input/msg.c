@@ -4,10 +4,22 @@
 #include "input/msg.h"
 #include "../sdl3_include.h"
 #include "basic/utility_defines.h"
+#include <SDL3/SDL_hidapi.h>
 
 func void tablet_internal_on_msg(const msg* src);
+func void keyboard_internal_on_msg(const msg* src);
+func void mouse_internal_on_msg(const msg* src);
+func void gamepads_internal_on_msg(const msg* src);
+
+func void msg_notify_internal_listeners(const msg* src) {
+  keyboard_internal_on_msg(src);
+  mouse_internal_on_msg(src);
+  gamepads_internal_on_msg(src);
+  tablet_internal_on_msg(src);
+}
 
 const_var i32 MSG_PAYLOAD_CODE = 0x42415345;
+const_var sz MSG_DEVICE_TRACK_CAP = 128;
 #define MSG_HANDLER_CAP 64u
 
 typedef struct msg_handler_entry {
@@ -25,6 +37,152 @@ global_var u32 msg_handler_count = 0;
 global_var u64 msg_handler_next_id = 1;
 
 func b32 msg_remove_handler(u64 handler_id);
+
+func u64 msg_hash_path(cstr8 src) {
+  u64 hash_value = 1469598103934665603ULL;
+  sz index = 0;
+
+  if (!src) {
+    return 0;
+  }
+
+  while (src[index]) {
+    hash_value ^= (u8)src[index];
+    hash_value *= 1099511628211ULL;
+    index += 1;
+  }
+
+  return hash_value;
+}
+
+func b32 msg_device_id_equal(device_id lhs, device_id rhs) {
+  return lhs.type == rhs.type && lhs.instance == rhs.instance;
+}
+
+func b32 msg_device_list_contains(const device_id* list, sz count, device_id src) {
+  if (!list) {
+    return 0;
+  }
+
+  for (sz item_idx = 0; item_idx < count; item_idx += 1) {
+    if (msg_device_id_equal(list[item_idx], src)) {
+      return 1;
+    }
+  }
+
+  return 0;
+}
+
+func sz msg_collect_touch_devices(device_id* out_ids, sz cap) {
+  int count = 0;
+  SDL_TouchID* ids = SDL_GetTouchDevices(&count);
+  sz out_count = 0;
+
+  for (int item_idx = 0; ids && item_idx < count && out_count < cap; item_idx += 1) {
+    if (ids[item_idx] == 0) {
+      continue;
+    }
+
+    out_ids[out_count].type = DEVICE_TYPE_TOUCH;
+    out_ids[out_count].instance = (u64)ids[item_idx];
+    out_count += 1;
+  }
+
+  if (ids) {
+    SDL_free(ids);
+  }
+
+  return out_count;
+}
+
+func sz msg_collect_tablet_devices(device_id* out_ids, sz cap) {
+  SDL_hid_device_info* head = SDL_hid_enumerate(0, 0);
+  SDL_hid_device_info* entry = head;
+  sz out_count = 0;
+
+  while (entry && out_count < cap) {
+    if (entry->usage_page == 0x0D && entry->path != NULL) {
+      out_ids[out_count].type = DEVICE_TYPE_TABLET;
+      out_ids[out_count].instance = msg_hash_path(entry->path);
+      out_count += 1;
+    }
+
+    entry = entry->next;
+  }
+
+  if (head) {
+    SDL_hid_free_enumeration(head);
+  }
+
+  return out_count;
+}
+
+func void msg_post_touch_device_event(u32 type, device_id device) {
+  msg device_msg = {0};
+  device_msg.type = type;
+  device_msg.touch_device.device = device;
+  (void)_msg_post(&device_msg, CALLSITE_HERE);
+}
+
+func void msg_post_tablet_device_event(u32 type, device_id device) {
+  msg device_msg = {0};
+  device_msg.type = type;
+  device_msg.tablet_device.device = device;
+  (void)_msg_post(&device_msg, CALLSITE_HERE);
+}
+
+func void msg_refresh_touch_devices(void) {
+  local_persist device_id previous_ids[MSG_DEVICE_TRACK_CAP] = {0};
+  local_persist sz previous_count = 0;
+  device_id current_ids[MSG_DEVICE_TRACK_CAP] = {0};
+  sz current_count = msg_collect_touch_devices(current_ids, count_of(current_ids));
+
+  for (sz item_idx = 0; item_idx < current_count; item_idx += 1) {
+    if (!msg_device_list_contains(previous_ids, previous_count, current_ids[item_idx])) {
+      msg_post_touch_device_event(MSG_TYPE_TOUCH_ADDED, current_ids[item_idx]);
+    }
+  }
+
+  for (sz item_idx = 0; item_idx < previous_count; item_idx += 1) {
+    if (!msg_device_list_contains(current_ids, current_count, previous_ids[item_idx])) {
+      msg_post_touch_device_event(MSG_TYPE_TOUCH_REMOVED, previous_ids[item_idx]);
+    }
+  }
+
+  previous_count = current_count;
+  for (sz item_idx = 0; item_idx < previous_count; item_idx += 1) {
+    previous_ids[item_idx] = current_ids[item_idx];
+  }
+}
+
+func void msg_refresh_tablet_devices(void) {
+  local_persist device_id previous_ids[MSG_DEVICE_TRACK_CAP] = {0};
+  local_persist sz previous_count = 0;
+  device_id current_ids[MSG_DEVICE_TRACK_CAP] = {0};
+  sz current_count = msg_collect_tablet_devices(current_ids, count_of(current_ids));
+
+  for (sz item_idx = 0; item_idx < current_count; item_idx += 1) {
+    if (!msg_device_list_contains(previous_ids, previous_count, current_ids[item_idx])) {
+      msg_post_tablet_device_event(MSG_TYPE_TABLET_ADDED, current_ids[item_idx]);
+    }
+  }
+
+  for (sz item_idx = 0; item_idx < previous_count; item_idx += 1) {
+    if (!msg_device_list_contains(current_ids, current_count, previous_ids[item_idx])) {
+      msg_post_tablet_device_event(MSG_TYPE_TABLET_REMOVED, previous_ids[item_idx]);
+    }
+  }
+
+  previous_count = current_count;
+  for (sz item_idx = 0; item_idx < previous_count; item_idx += 1) {
+    previous_ids[item_idx] = current_ids[item_idx];
+  }
+}
+
+func void msg_refresh_synthetic_device_messages(void) {
+  msg_refresh_touch_devices();
+  msg_refresh_tablet_devices();
+}
 
 // NOTE:
 // SDL uses one process-global event queue. This module intentionally mirrors
@@ -205,13 +363,15 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
 
     case SDL_EVENT_KEYBOARD_ADDED:
     case SDL_EVENT_KEYBOARD_REMOVED:
-      out_msg->keyboard_device.keyboard_id = (u32)src->kdevice.which;
+      out_msg->keyboard_device.device.type = DEVICE_TYPE_KEYBOARD;
+      out_msg->keyboard_device.device.instance = (u64)src->kdevice.which;
       return 1;
 
     case SDL_EVENT_KEY_DOWN:
     case SDL_EVENT_KEY_UP:
       out_msg->keyboard.window_id = (u32)src->key.windowID;
-      out_msg->keyboard.keyboard_id = (u32)src->key.which;
+      out_msg->keyboard.device.type = DEVICE_TYPE_KEYBOARD;
+      out_msg->keyboard.device.instance = (u64)src->key.which;
       out_msg->keyboard.scancode = (u32)src->key.scancode;
       out_msg->keyboard.keycode = (i32)src->key.key;
       out_msg->keyboard.modifiers = (u16)src->key.mod;
@@ -242,12 +402,14 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
 
     case SDL_EVENT_MOUSE_ADDED:
     case SDL_EVENT_MOUSE_REMOVED:
-      out_msg->mouse_device.mouse_id = (u32)src->mdevice.which;
+      out_msg->mouse_device.device.type = DEVICE_TYPE_MOUSE;
+      out_msg->mouse_device.device.instance = (u64)src->mdevice.which;
       return 1;
 
     case SDL_EVENT_MOUSE_MOTION:
       out_msg->mouse_motion.window_id = (u32)src->motion.windowID;
-      out_msg->mouse_motion.mouse_id = (u32)src->motion.which;
+      out_msg->mouse_motion.device.type = DEVICE_TYPE_MOUSE;
+      out_msg->mouse_motion.device.instance = (u64)src->motion.which;
       out_msg->mouse_motion.button_mask = (u32)src->motion.state;
       out_msg->mouse_motion.x = src->motion.x;
       out_msg->mouse_motion.y = src->motion.y;
@@ -258,8 +420,9 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
     case SDL_EVENT_MOUSE_BUTTON_DOWN:
     case SDL_EVENT_MOUSE_BUTTON_UP:
       out_msg->mouse_button.window_id = (u32)src->button.windowID;
-      out_msg->mouse_button.mouse_id = (u32)src->button.which;
-      out_msg->mouse_button.button = (u8)src->button.button;
+      out_msg->mouse_button.device.type = DEVICE_TYPE_MOUSE;
+      out_msg->mouse_button.device.instance = (u64)src->button.which;
+      out_msg->mouse_button.button = (mouse_button)src->button.button;
       out_msg->mouse_button.down = src->button.down ? 1 : 0;
       out_msg->mouse_button.clicks = (u8)src->button.clicks;
       out_msg->mouse_button.x = src->button.x;
@@ -268,7 +431,8 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
 
     case SDL_EVENT_MOUSE_WHEEL:
       out_msg->mouse_wheel.window_id = (u32)src->wheel.windowID;
-      out_msg->mouse_wheel.mouse_id = (u32)src->wheel.which;
+      out_msg->mouse_wheel.device.type = DEVICE_TYPE_MOUSE;
+      out_msg->mouse_wheel.device.instance = (u64)src->wheel.which;
       out_msg->mouse_wheel.x = src->wheel.x;
       out_msg->mouse_wheel.y = src->wheel.y;
       out_msg->mouse_wheel.direction = (u32)src->wheel.direction;
@@ -279,37 +443,43 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
     case SDL_EVENT_JOYSTICK_ADDED:
     case SDL_EVENT_JOYSTICK_REMOVED:
     case SDL_EVENT_JOYSTICK_UPDATE_COMPLETE:
-      out_msg->joystick_device.joystick_id = (u32)src->jdevice.which;
+      out_msg->joystick_device.device.type = DEVICE_TYPE_JOYSTICK;
+      out_msg->joystick_device.device.instance = (u64)src->jdevice.which;
       return 1;
 
     case SDL_EVENT_JOYSTICK_AXIS_MOTION:
-      out_msg->joystick_axis.joystick_id = (u32)src->jaxis.which;
+      out_msg->joystick_axis.device.type = DEVICE_TYPE_JOYSTICK;
+      out_msg->joystick_axis.device.instance = (u64)src->jaxis.which;
       out_msg->joystick_axis.axis = (u8)src->jaxis.axis;
       out_msg->joystick_axis.value = (i16)src->jaxis.value;
       return 1;
 
     case SDL_EVENT_JOYSTICK_BALL_MOTION:
-      out_msg->joystick_ball.joystick_id = (u32)src->jball.which;
+      out_msg->joystick_ball.device.type = DEVICE_TYPE_JOYSTICK;
+      out_msg->joystick_ball.device.instance = (u64)src->jball.which;
       out_msg->joystick_ball.ball = (u8)src->jball.ball;
       out_msg->joystick_ball.xrel = (i16)src->jball.xrel;
       out_msg->joystick_ball.yrel = (i16)src->jball.yrel;
       return 1;
 
     case SDL_EVENT_JOYSTICK_HAT_MOTION:
-      out_msg->joystick_hat.joystick_id = (u32)src->jhat.which;
+      out_msg->joystick_hat.device.type = DEVICE_TYPE_JOYSTICK;
+      out_msg->joystick_hat.device.instance = (u64)src->jhat.which;
       out_msg->joystick_hat.hat = (u8)src->jhat.hat;
       out_msg->joystick_hat.value = (u8)src->jhat.value;
       return 1;
 
     case SDL_EVENT_JOYSTICK_BUTTON_DOWN:
     case SDL_EVENT_JOYSTICK_BUTTON_UP:
-      out_msg->joystick_button.joystick_id = (u32)src->jbutton.which;
+      out_msg->joystick_button.device.type = DEVICE_TYPE_JOYSTICK;
+      out_msg->joystick_button.device.instance = (u64)src->jbutton.which;
       out_msg->joystick_button.button = (u8)src->jbutton.button;
       out_msg->joystick_button.down = src->jbutton.down ? 1 : 0;
       return 1;
 
     case SDL_EVENT_JOYSTICK_BATTERY_UPDATED:
-      out_msg->joystick_battery.joystick_id = (u32)src->jbattery.which;
+      out_msg->joystick_battery.device.type = DEVICE_TYPE_JOYSTICK;
+      out_msg->joystick_battery.device.instance = (u64)src->jbattery.which;
       out_msg->joystick_battery.state = (i32)src->jbattery.state;
       out_msg->joystick_battery.percent = (i32)src->jbattery.percent;
       return 1;
@@ -319,19 +489,22 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
     case SDL_EVENT_GAMEPAD_REMAPPED:
     case SDL_EVENT_GAMEPAD_UPDATE_COMPLETE:
     case SDL_EVENT_GAMEPAD_STEAM_HANDLE_UPDATED:
-      out_msg->gamepad_device.gamepad_id = (u32)src->gdevice.which;
+      out_msg->gamepad_device.device.type = DEVICE_TYPE_GAMEPAD;
+      out_msg->gamepad_device.device.instance = (u64)src->gdevice.which;
       return 1;
 
     case SDL_EVENT_GAMEPAD_AXIS_MOTION:
-      out_msg->gamepad_axis.gamepad_id = (u32)src->gaxis.which;
-      out_msg->gamepad_axis.axis = (u8)src->gaxis.axis;
+      out_msg->gamepad_axis.device.type = DEVICE_TYPE_GAMEPAD;
+      out_msg->gamepad_axis.device.instance = (u64)src->gaxis.which;
+      out_msg->gamepad_axis.axis = (gamepad_axis)src->gaxis.axis;
       out_msg->gamepad_axis.value = (i16)src->gaxis.value;
       return 1;
 
     case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
     case SDL_EVENT_GAMEPAD_BUTTON_UP:
-      out_msg->gamepad_button.gamepad_id = (u32)src->gbutton.which;
-      out_msg->gamepad_button.button = (u8)src->gbutton.button;
+      out_msg->gamepad_button.device.type = DEVICE_TYPE_GAMEPAD;
+      out_msg->gamepad_button.device.instance = (u64)src->gbutton.which;
+      out_msg->gamepad_button.button = (gamepad_button)src->gbutton.button;
       out_msg->gamepad_button.down = src->gbutton.down ? 1 : 0;
       return 1;
 
@@ -343,7 +516,8 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
     case SDL_EVENT_GAMEPAD_TOUCHPAD_DOWN:
     case SDL_EVENT_GAMEPAD_TOUCHPAD_MOTION:
     case SDL_EVENT_GAMEPAD_TOUCHPAD_UP:
-      out_msg->gamepad_touchpad.gamepad_id = (u32)src->gtouchpad.which;
+      out_msg->gamepad_touchpad.device.type = DEVICE_TYPE_GAMEPAD;
+      out_msg->gamepad_touchpad.device.instance = (u64)src->gtouchpad.which;
       out_msg->gamepad_touchpad.touchpad = (i32)src->gtouchpad.touchpad;
       out_msg->gamepad_touchpad.finger = (i32)src->gtouchpad.finger;
       out_msg->gamepad_touchpad.x = src->gtouchpad.x;
@@ -352,7 +526,8 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
       return 1;
 
     case SDL_EVENT_GAMEPAD_SENSOR_UPDATE:
-      out_msg->gamepad_sensor.gamepad_id = (u32)src->gsensor.which;
+      out_msg->gamepad_sensor.device.type = DEVICE_TYPE_GAMEPAD;
+      out_msg->gamepad_sensor.device.instance = (u64)src->gsensor.which;
       out_msg->gamepad_sensor.sensor = (i32)src->gsensor.sensor;
       out_msg->gamepad_sensor.data[0] = src->gsensor.data[0];
       out_msg->gamepad_sensor.data[1] = src->gsensor.data[1];
@@ -384,7 +559,8 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
     case SDL_EVENT_FINGER_UP:
     case SDL_EVENT_FINGER_MOTION:
     case SDL_EVENT_FINGER_CANCELED:
-      out_msg->touch.touch_id = (u64)src->tfinger.touchID;
+      out_msg->touch.device.type = DEVICE_TYPE_TOUCH;
+      out_msg->touch.device.instance = (u64)src->tfinger.touchID;
       out_msg->touch.finger_id = (u64)src->tfinger.fingerID;
       out_msg->touch.x = src->tfinger.x;
       out_msg->touch.y = src->tfinger.y;
@@ -397,11 +573,15 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
     case SDL_EVENT_PEN_PROXIMITY_IN:
     case SDL_EVENT_PEN_PROXIMITY_OUT:
       out_msg->pen_proximity.window_id = (u32)src->pproximity.windowID;
+      out_msg->pen_proximity.device.type = DEVICE_TYPE_TABLET;
+      out_msg->pen_proximity.device.instance = (u64)src->pproximity.which;
       out_msg->pen_proximity.pen_id = (u32)src->pproximity.which;
       return 1;
 
     case SDL_EVENT_PEN_MOTION:
       out_msg->pen_motion.window_id = (u32)src->pmotion.windowID;
+      out_msg->pen_motion.device.type = DEVICE_TYPE_TABLET;
+      out_msg->pen_motion.device.instance = (u64)src->pmotion.which;
       out_msg->pen_motion.pen_id = (u32)src->pmotion.which;
       out_msg->pen_motion.pen_state = (u32)src->pmotion.pen_state;
       out_msg->pen_motion.x = src->pmotion.x;
@@ -411,6 +591,8 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
     case SDL_EVENT_PEN_DOWN:
     case SDL_EVENT_PEN_UP:
       out_msg->pen_touch.window_id = (u32)src->ptouch.windowID;
+      out_msg->pen_touch.device.type = DEVICE_TYPE_TABLET;
+      out_msg->pen_touch.device.instance = (u64)src->ptouch.which;
       out_msg->pen_touch.pen_id = (u32)src->ptouch.which;
       out_msg->pen_touch.pen_state = (u32)src->ptouch.pen_state;
       out_msg->pen_touch.x = src->ptouch.x;
@@ -422,6 +604,8 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
     case SDL_EVENT_PEN_BUTTON_DOWN:
     case SDL_EVENT_PEN_BUTTON_UP:
       out_msg->pen_button.window_id = (u32)src->pbutton.windowID;
+      out_msg->pen_button.device.type = DEVICE_TYPE_TABLET;
+      out_msg->pen_button.device.instance = (u64)src->pbutton.which;
       out_msg->pen_button.pen_id = (u32)src->pbutton.which;
       out_msg->pen_button.pen_state = (u32)src->pbutton.pen_state;
       out_msg->pen_button.x = src->pbutton.x;
@@ -432,6 +616,8 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
 
     case SDL_EVENT_PEN_AXIS:
       out_msg->pen_axis.window_id = (u32)src->paxis.windowID;
+      out_msg->pen_axis.device.type = DEVICE_TYPE_TABLET;
+      out_msg->pen_axis.device.instance = (u64)src->paxis.which;
       out_msg->pen_axis.pen_id = (u32)src->paxis.which;
       out_msg->pen_axis.pen_state = (u32)src->paxis.pen_state;
       out_msg->pen_axis.x = src->paxis.x;
@@ -553,7 +739,7 @@ func b32 msg_to_sdl_event(const msg* src, SDL_Event* out_event) {
     case SDL_EVENT_KEYBOARD_REMOVED:
       out_event->kdevice.type = (SDL_EventType)src->type;
       out_event->kdevice.timestamp = (Uint64)src->timestamp;
-      out_event->kdevice.which = (SDL_KeyboardID)src->keyboard_device.keyboard_id;
+      out_event->kdevice.which = (SDL_KeyboardID)src->keyboard_device.device.instance;
       return 1;
 
     case SDL_EVENT_KEY_DOWN:
@@ -561,7 +747,7 @@ func b32 msg_to_sdl_event(const msg* src, SDL_Event* out_event) {
       out_event->key.type = (SDL_EventType)src->type;
       out_event->key.timestamp = (Uint64)src->timestamp;
       out_event->key.windowID = (SDL_WindowID)src->keyboard.window_id;
-      out_event->key.which = (SDL_KeyboardID)src->keyboard.keyboard_id;
+      out_event->key.which = (SDL_KeyboardID)src->keyboard.device.instance;
       out_event->key.scancode = (SDL_Scancode)src->keyboard.scancode;
       out_event->key.key = (SDL_Keycode)src->keyboard.keycode;
       out_event->key.mod = (SDL_Keymod)src->keyboard.modifiers;
@@ -605,14 +791,14 @@ func b32 msg_to_sdl_event(const msg* src, SDL_Event* out_event) {
     case SDL_EVENT_MOUSE_REMOVED:
       out_event->mdevice.type = (SDL_EventType)src->type;
       out_event->mdevice.timestamp = (Uint64)src->timestamp;
-      out_event->mdevice.which = (SDL_MouseID)src->mouse_device.mouse_id;
+      out_event->mdevice.which = (SDL_MouseID)src->mouse_device.device.instance;
       return 1;
 
     case SDL_EVENT_MOUSE_MOTION:
       out_event->motion.type = (SDL_EventType)src->type;
       out_event->motion.timestamp = (Uint64)src->timestamp;
       out_event->motion.windowID = (SDL_WindowID)src->mouse_motion.window_id;
-      out_event->motion.which = (SDL_MouseID)src->mouse_motion.mouse_id;
+      out_event->motion.which = (SDL_MouseID)src->mouse_motion.device.instance;
       out_event->motion.state = (SDL_MouseButtonFlags)src->mouse_motion.button_mask;
       out_event->motion.x = src->mouse_motion.x;
       out_event->motion.y = src->mouse_motion.y;
@@ -625,7 +811,7 @@ func b32 msg_to_sdl_event(const msg* src, SDL_Event* out_event) {
       out_event->button.type = (SDL_EventType)src->type;
       out_event->button.timestamp = (Uint64)src->timestamp;
       out_event->button.windowID = (SDL_WindowID)src->mouse_button.window_id;
-      out_event->button.which = (SDL_MouseID)src->mouse_button.mouse_id;
+      out_event->button.which = (SDL_MouseID)src->mouse_button.device.instance;
       out_event->button.button = (Uint8)src->mouse_button.button;
       out_event->button.down = src->mouse_button.down != 0;
       out_event->button.clicks = (Uint8)src->mouse_button.clicks;
@@ -637,7 +823,7 @@ func b32 msg_to_sdl_event(const msg* src, SDL_Event* out_event) {
       out_event->wheel.type = (SDL_EventType)src->type;
       out_event->wheel.timestamp = (Uint64)src->timestamp;
       out_event->wheel.windowID = (SDL_WindowID)src->mouse_wheel.window_id;
-      out_event->wheel.which = (SDL_MouseID)src->mouse_wheel.mouse_id;
+      out_event->wheel.which = (SDL_MouseID)src->mouse_wheel.device.instance;
       out_event->wheel.x = src->mouse_wheel.x;
       out_event->wheel.y = src->mouse_wheel.y;
       out_event->wheel.direction = (SDL_MouseWheelDirection)src->mouse_wheel.direction;
@@ -650,13 +836,13 @@ func b32 msg_to_sdl_event(const msg* src, SDL_Event* out_event) {
     case SDL_EVENT_JOYSTICK_UPDATE_COMPLETE:
       out_event->jdevice.type = (SDL_EventType)src->type;
       out_event->jdevice.timestamp = (Uint64)src->timestamp;
-      out_event->jdevice.which = (SDL_JoystickID)src->joystick_device.joystick_id;
+      out_event->jdevice.which = (SDL_JoystickID)src->joystick_device.device.instance;
       return 1;
 
     case SDL_EVENT_JOYSTICK_AXIS_MOTION:
       out_event->jaxis.type = (SDL_EventType)src->type;
       out_event->jaxis.timestamp = (Uint64)src->timestamp;
-      out_event->jaxis.which = (SDL_JoystickID)src->joystick_axis.joystick_id;
+      out_event->jaxis.which = (SDL_JoystickID)src->joystick_axis.device.instance;
       out_event->jaxis.axis = (Uint8)src->joystick_axis.axis;
       out_event->jaxis.value = (Sint16)src->joystick_axis.value;
       return 1;
@@ -664,7 +850,7 @@ func b32 msg_to_sdl_event(const msg* src, SDL_Event* out_event) {
     case SDL_EVENT_JOYSTICK_BALL_MOTION:
       out_event->jball.type = (SDL_EventType)src->type;
       out_event->jball.timestamp = (Uint64)src->timestamp;
-      out_event->jball.which = (SDL_JoystickID)src->joystick_ball.joystick_id;
+      out_event->jball.which = (SDL_JoystickID)src->joystick_ball.device.instance;
       out_event->jball.ball = (Uint8)src->joystick_ball.ball;
       out_event->jball.xrel = (Sint16)src->joystick_ball.xrel;
       out_event->jball.yrel = (Sint16)src->joystick_ball.yrel;
@@ -675,7 +861,7 @@ func b32 msg_to_sdl_event(const msg* src, SDL_Event* out_event) {
     case SDL_EVENT_JOYSTICK_HAT_MOTION:
       out_event->jhat.type = (SDL_EventType)src->type;
       out_event->jhat.timestamp = (Uint64)src->timestamp;
-      out_event->jhat.which = (SDL_JoystickID)src->joystick_hat.joystick_id;
+      out_event->jhat.which = (SDL_JoystickID)src->joystick_hat.device.instance;
       out_event->jhat.hat = (Uint8)src->joystick_hat.hat;
       out_event->jhat.value = (Uint8)src->joystick_hat.value;
       return 1;
@@ -684,7 +870,7 @@ func b32 msg_to_sdl_event(const msg* src, SDL_Event* out_event) {
     case SDL_EVENT_JOYSTICK_BUTTON_UP:
       out_event->jbutton.type = (SDL_EventType)src->type;
       out_event->jbutton.timestamp = (Uint64)src->timestamp;
-      out_event->jbutton.which = (SDL_JoystickID)src->joystick_button.joystick_id;
+      out_event->jbutton.which = (SDL_JoystickID)src->joystick_button.device.instance;
       out_event->jbutton.button = (Uint8)src->joystick_button.button;
       out_event->jbutton.down = src->joystick_button.down != 0;
       return 1;
@@ -692,7 +878,7 @@ func b32 msg_to_sdl_event(const msg* src, SDL_Event* out_event) {
     case SDL_EVENT_JOYSTICK_BATTERY_UPDATED:
       out_event->jbattery.type = (SDL_EventType)src->type;
       out_event->jbattery.timestamp = (Uint64)src->timestamp;
-      out_event->jbattery.which = (SDL_JoystickID)src->joystick_battery.joystick_id;
+      out_event->jbattery.which = (SDL_JoystickID)src->joystick_battery.device.instance;
       out_event->jbattery.state = (SDL_PowerState)src->joystick_battery.state;
       out_event->jbattery.percent = (int)src->joystick_battery.percent;
       return 1;
@@ -704,13 +890,13 @@ func b32 msg_to_sdl_event(const msg* src, SDL_Event* out_event) {
     case SDL_EVENT_GAMEPAD_STEAM_HANDLE_UPDATED:
       out_event->gdevice.type = (SDL_EventType)src->type;
       out_event->gdevice.timestamp = (Uint64)src->timestamp;
-      out_event->gdevice.which = (SDL_JoystickID)src->gamepad_device.gamepad_id;
+      out_event->gdevice.which = (SDL_JoystickID)src->gamepad_device.device.instance;
       return 1;
 
     case SDL_EVENT_GAMEPAD_AXIS_MOTION:
       out_event->gaxis.type = (SDL_EventType)src->type;
       out_event->gaxis.timestamp = (Uint64)src->timestamp;
-      out_event->gaxis.which = (SDL_JoystickID)src->gamepad_axis.gamepad_id;
+      out_event->gaxis.which = (SDL_JoystickID)src->gamepad_axis.device.instance;
       out_event->gaxis.axis = (Uint8)src->gamepad_axis.axis;
       out_event->gaxis.value = (Sint16)src->gamepad_axis.value;
       return 1;
@@ -719,7 +905,7 @@ func b32 msg_to_sdl_event(const msg* src, SDL_Event* out_event) {
     case SDL_EVENT_GAMEPAD_BUTTON_UP:
       out_event->gbutton.type = (SDL_EventType)src->type;
       out_event->gbutton.timestamp = (Uint64)src->timestamp;
-      out_event->gbutton.which = (SDL_JoystickID)src->gamepad_button.gamepad_id;
+      out_event->gbutton.which = (SDL_JoystickID)src->gamepad_button.device.instance;
       out_event->gbutton.button = (Uint8)src->gamepad_button.button;
       out_event->gbutton.down = src->gamepad_button.down != 0;
       return 1;
@@ -729,7 +915,7 @@ func b32 msg_to_sdl_event(const msg* src, SDL_Event* out_event) {
     case SDL_EVENT_GAMEPAD_TOUCHPAD_UP:
       out_event->gtouchpad.type = (SDL_EventType)src->type;
       out_event->gtouchpad.timestamp = (Uint64)src->timestamp;
-      out_event->gtouchpad.which = (SDL_JoystickID)src->gamepad_touchpad.gamepad_id;
+      out_event->gtouchpad.which = (SDL_JoystickID)src->gamepad_touchpad.device.instance;
       out_event->gtouchpad.touchpad = (Sint32)src->gamepad_touchpad.touchpad;
       out_event->gtouchpad.finger = (Sint32)src->gamepad_touchpad.finger;
       out_event->gtouchpad.x = src->gamepad_touchpad.x;
@@ -740,7 +926,7 @@ func b32 msg_to_sdl_event(const msg* src, SDL_Event* out_event) {
     case SDL_EVENT_GAMEPAD_SENSOR_UPDATE:
       out_event->gsensor.type = (SDL_EventType)src->type;
       out_event->gsensor.timestamp = (Uint64)src->timestamp;
-      out_event->gsensor.which = (SDL_JoystickID)src->gamepad_sensor.gamepad_id;
+      out_event->gsensor.which = (SDL_JoystickID)src->gamepad_sensor.device.instance;
       out_event->gsensor.sensor = (Sint32)src->gamepad_sensor.sensor;
       out_event->gsensor.data[0] = src->gamepad_sensor.data[0];
       out_event->gsensor.data[1] = src->gamepad_sensor.data[1];
@@ -785,7 +971,7 @@ func b32 msg_to_sdl_event(const msg* src, SDL_Event* out_event) {
     case SDL_EVENT_FINGER_CANCELED:
       out_event->tfinger.type = (SDL_EventType)src->type;
       out_event->tfinger.timestamp = (Uint64)src->timestamp;
-      out_event->tfinger.touchID = (SDL_TouchID)src->touch.touch_id;
+      out_event->tfinger.touchID = (SDL_TouchID)src->touch.device.instance;
       out_event->tfinger.fingerID = (SDL_FingerID)src->touch.finger_id;
       out_event->tfinger.x = src->touch.x;
       out_event->tfinger.y = src->touch.y;
@@ -898,38 +1084,60 @@ func b32 msg_to_sdl_event(const msg* src, SDL_Event* out_event) {
 func void msg_pump(void) {
   // Pumps the process-global queue.
   SDL_PumpEvents();
+  msg_refresh_synthetic_device_messages();
 }
 
 func b32 msg_poll(msg* out_msg) {
   SDL_Event native_event;
 
+  msg_refresh_synthetic_device_messages();
   if (!out_msg || !SDL_PollEvent(&native_event) || !msg_from_sdl(&native_event, out_msg)) {
     return 0;
   }
 
-  tablet_internal_on_msg(out_msg);
+  msg_notify_internal_listeners(out_msg);
   return 1;
 }
 
 func b32 msg_wait(msg* out_msg) {
   SDL_Event native_event;
 
-  if (!out_msg || !SDL_WaitEvent(&native_event) || !msg_from_sdl(&native_event, out_msg)) {
+  if (!out_msg) {
     return 0;
   }
 
-  tablet_internal_on_msg(out_msg);
+  msg_refresh_synthetic_device_messages();
+  if (SDL_PollEvent(&native_event) && msg_from_sdl(&native_event, out_msg)) {
+    msg_notify_internal_listeners(out_msg);
+    return 1;
+  }
+
+  if (!SDL_WaitEvent(&native_event) || !msg_from_sdl(&native_event, out_msg)) {
+    return 0;
+  }
+
+  msg_notify_internal_listeners(out_msg);
   return 1;
 }
 
 func b32 msg_wait_timeout(msg* out_msg, i32 timeout_ms) {
   SDL_Event native_event;
 
-  if (!out_msg || !SDL_WaitEventTimeout(&native_event, (Sint32)timeout_ms) || !msg_from_sdl(&native_event, out_msg)) {
+  if (!out_msg) {
     return 0;
   }
 
-  tablet_internal_on_msg(out_msg);
+  msg_refresh_synthetic_device_messages();
+  if (SDL_PollEvent(&native_event) && msg_from_sdl(&native_event, out_msg)) {
+    msg_notify_internal_listeners(out_msg);
+    return 1;
+  }
+
+  if (!SDL_WaitEventTimeout(&native_event, (Sint32)timeout_ms) || !msg_from_sdl(&native_event, out_msg)) {
+    return 0;
+  }
+
+  msg_notify_internal_listeners(out_msg);
   return 1;
 }
 
@@ -977,7 +1185,7 @@ func b32 _msg_post(const msg* src, callsite site) {
   }
 
   (void)msg_dispatch_handlers(&posted_msg, MSG_HANDLER_STAGE_AFTER_POST);
-  tablet_internal_on_msg(&posted_msg);
+  msg_notify_internal_listeners(&posted_msg);
   return 1;
 }
 
