@@ -23,7 +23,7 @@ func mod module_empty(void) {
   return module_value;
 }
 
-func b32 module_is_open(const mod* mod_ptr) {
+func b32 mod_is_open(const mod* mod_ptr) {
   if (mod_ptr == NULL) {
     return 0;
   }
@@ -31,8 +31,8 @@ func b32 module_is_open(const mod* mod_ptr) {
   return mod_ptr->native_handle != NULL ? 1 : 0;
 }
 
-func module_func* module_get_func(const mod* mod_ptr, cstr8 name) {
-  if (!module_is_open(mod_ptr) || name == NULL || name[0] == '\0') {
+func void* mod_get_func(const mod* mod_ptr, cstr8 name) {
+  if (!mod_is_open(mod_ptr) || name == NULL || name[0] == '\0') {
     return NULL;
   }
 
@@ -40,7 +40,7 @@ func module_func* module_get_func(const mod* mod_ptr, cstr8 name) {
   FARPROC raw_symbol = GetProcAddress((HMODULE)mod_ptr->native_handle, name);
   union {
     FARPROC raw_symbol;
-    module_func* resolved_func;
+    void* resolved_func;
   } cast_value;
   cast_value.raw_symbol = raw_symbol;
   return cast_value.resolved_func;
@@ -48,7 +48,7 @@ func module_func* module_get_func(const mod* mod_ptr, cstr8 name) {
   void* raw_symbol = dlsym(mod_ptr->native_handle, name);
   union {
     void* raw_symbol;
-    module_func* resolved_func;
+    void* resolved_func;
   } cast_value;
   cast_value.raw_symbol = raw_symbol;
   return cast_value.resolved_func;
@@ -58,8 +58,20 @@ func module_func* module_get_func(const mod* mod_ptr, cstr8 name) {
 #endif
 }
 
-func void module_close(mod* mod_ptr) {
-  if (!module_is_open(mod_ptr)) {
+func cstr8 mod_get_extension(void) {
+#if defined(PLATFORM_WINDOWS)
+  return ".dll";
+#elif defined(PLATFORM_MACOS) || defined(PLATFORM_IOS)
+  return ".dylib";
+#elif defined(PLATFORM_UNIX) || defined(PLATFORM_ANDROID)
+  return ".so";
+#else
+  return "";
+#endif
+}
+
+func void mod_close(mod* mod_ptr) {
+  if (!mod_is_open(mod_ptr)) {
     return;
   }
 
@@ -77,11 +89,10 @@ func void module_close(mod* mod_ptr) {
   *mod_ptr = module_empty();
 }
 
-func mod module_open(const path* src) {
+func mod mod_open(const path* src) {
   mod module_value = module_empty();
-  module_init_func* init_func = NULL;
-  module_func* init_symbol = NULL;
-  module_func* quit_symbol = NULL;
+  void* init_symbol = NULL;
+  void* quit_symbol = NULL;
 
   if (src == NULL || src->buf[0] == '\0') {
     return module_value;
@@ -105,25 +116,25 @@ func mod module_open(const path* src) {
 
   module_value.source_path = *src;
 
-  init_symbol = module_get_func(&module_value, MODULE_INIT_SYMBOL);
-  quit_symbol = module_get_func(&module_value, MODULE_QUIT_SYMBOL);
+  init_symbol = mod_get_func(&module_value, MODULE_INIT_SYMBOL);
+  quit_symbol = mod_get_func(&module_value, MODULE_QUIT_SYMBOL);
   union {
-    module_func* generic_func;
-    module_init_func* init_func;
-    module_quit_func* quit_func;
+    void* generic_func;
+    mod_init_func* init_func;
+    mod_quit_func* quit_func;
   } cast_value;
   cast_value.generic_func = init_symbol;
-  init_func = cast_value.init_func;
+  module_value.init_func = cast_value.init_func;
   cast_value.generic_func = quit_symbol;
   module_value.quit_func = cast_value.quit_func;
 
-  if (init_func == NULL || module_value.quit_func == NULL) {
-    module_close(&module_value);
+  if (module_value.init_func == NULL || module_value.quit_func == NULL) {
+    mod_close(&module_value);
     return module_empty();
   }
 
-  if (!init_func()) {
-    module_close(&module_value);
+  if (!module_value.init_func()) {
+    mod_close(&module_value);
     return module_empty();
   }
 
