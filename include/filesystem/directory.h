@@ -33,7 +33,7 @@ typedef b32 dir_iterate_callback(const dir_entry* entry, void* user_data);
 func path dir_get_base(void);
 
 // Returns the per-user application data directory for org_name/app_name, or an empty path on failure.
-func path dir_get_pref(const c8* org_name, const c8* app_name);
+func path dir_get_pref(cstr8 org_name, cstr8 app_name);
 
 // Returns the requested user-facing system directory, or an empty path when unavailable.
 func path dir_get_system(dir_system_path location);

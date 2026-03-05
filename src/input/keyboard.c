@@ -27,6 +27,6 @@ func u32 keyboard_get_keycode(u32 scancode, u16 modifiers, b32 key_event) {
   return (u32)SDL_GetKeyFromScancode((SDL_Scancode)scancode, (SDL_Keymod)modifiers, key_event != 0);
 }
 
-func const c8* keyboard_get_scancode_name(u32 scancode) {
+func cstr8 keyboard_get_scancode_name(u32 scancode) {
   return SDL_GetScancodeName((SDL_Scancode)scancode);
 }

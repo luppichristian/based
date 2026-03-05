@@ -13,7 +13,7 @@ func i32 thread_group_wrapper(void* raw) {
 }
 
 // Shared creation path. base_name may be NULL for unnamed threads.
-func thread_group create_impl(u32 count, thread_group_func entry, void* arg, const c8* base_name) {
+func thread_group create_impl(u32 count, thread_group_func entry, void* arg, cstr8 base_name) {
   thread_group empty = {0};
   if (!count || !entry) {
     return empty;
@@ -80,7 +80,7 @@ func thread_group _thread_group_create_named(
     u32 count,
     thread_group_func entry,
     void* arg,
-    const c8* base_name,
+    cstr8 base_name,
     callsite site) {
   (void)site;
   msg lifecycle_msg = {0};

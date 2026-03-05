@@ -122,6 +122,14 @@ const_var c32 C32_MIN = 0;
 const_var c32 C32_MAX = 4294967295U;
 
 // =========================================================================
+// C String definitions
+// =========================================================================
+
+typedef const c8* cstr8;    // Null terminated UTF-8 C String
+typedef const c16* cstr16;  // Null terminated UTF-16 C String
+typedef const c32* cstr32;  // Null terminated UTF-32 C String
+
+// =========================================================================
 // Fast integer types (at least N bits, platform's fastest representation)
 // =========================================================================
 

@@ -28,7 +28,7 @@ func u64 hash_bytes(const void* ptr, sz len) {
   return hash;
 }
 
-func u64 hash_str(const c8* str) {
+func u64 hash_str(cstr8 str) {
   sz len = 0;
   while (str[len]) {
     len++;

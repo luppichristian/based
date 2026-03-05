@@ -3,9 +3,9 @@
 
 #pragma once
 
+#include "../threads/mutex.h"
 #include "codespace.h"
 #include "primitive_types.h"
-#include "../threads/mutex.h"
 
 // =========================================================================
 // Log function
@@ -32,7 +32,7 @@ typedef struct log_message {
   struct log_message* next;
   log_level level;
   callsite site;
-  const c8* text;
+  cstr8 text;
 } log_message;
 
 // One log frame. log_state owns a persistent root frame for retained history,
@@ -55,7 +55,7 @@ typedef struct log_state {
 } log_state;
 
 // Returns label string for the given log level.
-func const c8* log_level_to_str(log_level level);
+func cstr8 log_level_to_str(log_level level);
 
 // Initializes a log state with LOG_LEVEL_DEFAULT and no callback.
 // When use_mutex is true the state creates and owns a mutex; otherwise it is lock-free.
@@ -101,7 +101,7 @@ func log_message* log_frame_last(log_frame* frame);
 func log_message* log_message_next(log_message* message);
 func log_level log_message_level(log_message* message);
 func callsite log_message_site(log_message* message);
-func const c8* log_message_text(log_message* message);
+func cstr8 log_message_text(log_message* message);
 
 // Iterates over every message in a log frame from first to last.
 #define LOG_FRAME_FOREACH(frame, it) \

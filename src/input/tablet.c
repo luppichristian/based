@@ -8,7 +8,7 @@
 
 local_persist tablet_pen_state tablet_cached_pen_state;
 
-func u64 tablet_hash_path(const c8* src) {
+func u64 tablet_hash_path(cstr8 src) {
   u64 hash_value = 1469598103934665603ULL;
   sz index = 0;
 

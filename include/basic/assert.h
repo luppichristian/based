@@ -47,4 +47,3 @@ typedef enum assert_mode {
 
 // Set the desired assert mode at runtime. By default, it is set to ASSERT_MODE_DEFAULT.
 func void assert_set_mode(assert_mode mode);
-

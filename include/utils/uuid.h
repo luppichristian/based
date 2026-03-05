@@ -50,7 +50,7 @@ func u8 uuid_get_variant(uuid value);
 func sz uuid_string_length(void);
 
 // Parses a canonical lowercase/uppercase UUID string with hyphens.
-func b32 uuid_parse_cstr8(const c8* src, uuid* out);
+func b32 uuid_parse_cstr8(cstr8 src, uuid* out);
 
 // Formats the UUID into canonical lowercase text. Returns 1 on success.
 func b32 uuid_to_cstr8(uuid value, c8* dst, sz cap);

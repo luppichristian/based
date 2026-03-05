@@ -23,11 +23,11 @@ func process_options process_options_captured(void) {
   return options;
 }
 
-func process _process_create(const c8* const* args, callsite site) {
+func process _process_create(cstr8 const* args, callsite site) {
   return _process_create_with(args, process_options_default(), site);
 }
 
-func process _process_create_with(const c8* const* args, process_options options, callsite site) {
+func process _process_create_with(cstr8 const* args, process_options options, callsite site) {
   (void)site;
 
   if (!args || !args[0]) {

@@ -22,4 +22,4 @@ func b32 keyboard_is_key_down(u32 scancode);
 func u32 keyboard_get_keycode(u32 scancode, u16 modifiers, b32 key_event);
 
 // Returns a backend-defined readable name for scancode.
-func const c8* keyboard_get_scancode_name(u32 scancode);
+func cstr8 keyboard_get_scancode_name(u32 scancode);

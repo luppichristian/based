@@ -110,7 +110,7 @@ func log_frame* log_frame_create(void) {
   return frame;
 }
 
-func log_message* log_message_create(log_level level, callsite site, const c8* msg) {
+func log_message* log_message_create(log_level level, callsite site, cstr8 msg) {
   sz text_len = strlen(msg);
   sz total_size = sizeof(log_message) + text_len + 1;
   log_message* message = (log_message*)malloc(total_size);
@@ -121,7 +121,7 @@ func log_message* log_message_create(log_level level, callsite site, const c8* m
   memset(message, 0, sizeof(*message));
   message->level = level;
   message->site = site;
-  message->text = (const c8*)(message + 1);
+  message->text = (cstr8)(message + 1);
   memcpy((void*)message->text, msg, text_len + 1);
   return message;
 }
@@ -173,7 +173,7 @@ func void log_frame_destroy_unsafe(log_frame* frame) {
   free(frame);
 }
 
-func void log_state_store_message(log_state* state, log_level level, callsite site, const c8* msg) {
+func void log_state_store_message(log_state* state, log_level level, callsite site, cstr8 msg) {
   if (!state || !state->is_initialized || !state->root_frame) {
     return;
   }
@@ -216,7 +216,7 @@ func b32 log_level_matches_mask(log_level level, u32 severity_mask) {
 }
 
 // Returns the ANSI foreground-color escape sequence for the given log level.
-func const c8* log_level_to_color(log_level level) {
+func cstr8 log_level_to_color(log_level level) {
   switch (level) {
     case LOG_LEVEL_FATAL:
       return "\033[1;31m";  // bold red
@@ -239,14 +239,14 @@ func const c8* log_level_to_color(log_level level) {
 }
 
 // Emits a single formatted log line to stderr.
-func void log_emit(log_level level, callsite site, const c8* msg) {
+func void log_emit(log_level level, callsite site, cstr8 msg) {
   mutex emit_lock = log_shared_mutex_get(&log_emit_mutex_init, &log_emit_mutex);
   if (emit_lock) {
     mutex_lock(emit_lock);
   }
 
-  const c8* color = log_level_to_color(level);
-  const c8* label = log_level_to_str(level);
+  cstr8 color = log_level_to_color(level);
+  cstr8 label = log_level_to_str(level);
   fprintf(stderr, "%s[%s]\033[0m %s  \033[0;90m(%s() %s:%u)\033[0m\n", color, label, msg, site.function, site.filename, site.line);
   fflush(stderr);
 
@@ -259,7 +259,7 @@ func void log_emit(log_level level, callsite site, const c8* msg) {
 // Public API
 // =========================================================================
 
-func const c8* log_level_to_str(log_level level) {
+func cstr8 log_level_to_str(log_level level) {
   switch (level) {
     case LOG_LEVEL_FATAL:
       return "FATAL";
@@ -492,7 +492,7 @@ func callsite log_message_site(log_message* message) {
   return message ? message->site : empty_site;
 }
 
-func const c8* log_message_text(log_message* message) {
+func cstr8 log_message_text(log_message* message) {
   return message ? message->text : NULL;
 }
 
@@ -518,7 +518,7 @@ func log_state* log_get_global_state(void) {
   return &global_log_state;
 }
 
-func void _log(log_state* state, log_level level, callsite site, const c8* fmt, ...) {
+func void _log(log_state* state, log_level level, callsite site, cstr8 fmt, ...) {
   log_state* resolved = log_state_resolve(state);
   if (!resolved) {
     return;

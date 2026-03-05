@@ -12,7 +12,7 @@ typedef struct path {
 } path;
 
 // Copies src into a new path value.
-func path path_from_cstr(const c8* src);
+func path path_from_cstr(cstr8 src);
 
 // Copies src into a new path value.
 func path path_from_str8(str8 src);
@@ -22,19 +22,19 @@ func path path_from_str8(str8 src);
 func path path_join(const path* lhs, const path* rhs);
 
 // Joins lhs with a c-string rhs using a single '/' separator when needed.
-func path path_join_cstr(const path* lhs, const c8* rhs);
+func path path_join_cstr(const path* lhs, cstr8 rhs);
 
 // Appends src to dst as a path segment.
 func sz path_append(path* dst, const path* src);
 
 // Appends a c-string path segment to dst.
-func sz path_append_cstr(path* dst, const c8* src);
+func sz path_append_cstr(path* dst, cstr8 src);
 
 // Normalizes separators to '/' and collapses duplicate separators.
 func void path_normalize(path* src);
 
 // Returns 1 if src ends with suffix, 0 otherwise.
-func b32 path_ends_with(const path* src, const c8* suffix);
+func b32 path_ends_with(const path* src, cstr8 suffix);
 
 // Returns 1 if src is absolute on the current platform style, 0 otherwise.
 func b32 path_is_absolute(const path* src);

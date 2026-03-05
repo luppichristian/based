@@ -78,7 +78,7 @@ func sz uuid_string_length(void) {
   return 36;
 }
 
-func b32 uuid_parse_cstr8(const c8* src, uuid* out) {
+func b32 uuid_parse_cstr8(cstr8 src, uuid* out) {
   if (cstr8_len(src) != uuid_string_length()) {
     return 0;
   }

@@ -66,7 +66,7 @@ func b32 gamepads_is_connected(sz slot_index);
 func b32 gamepads_get_device_id(sz slot_index, device_id* out_id);
 
 // Returns the cached gamepad name for slot_index, or NULL when unavailable.
-func const c8* gamepads_get_name(sz slot_index);
+func cstr8 gamepads_get_name(sz slot_index);
 
 // Returns 1 if the connected gamepad exposes button, 0 otherwise.
 func b32 gamepads_has_button(sz slot_index, gamepad_button button);

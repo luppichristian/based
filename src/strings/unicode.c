@@ -52,7 +52,7 @@ func sz utf8_byte_count(c8 first_byte) {
   return 0;
 }
 
-func c32 utf8_decode(const c8* ptr, sz* consumed) {
+func c32 utf8_decode(cstr8 ptr, sz* consumed) {
   u8 first = (u8)*ptr;
   sz byte_cnt = utf8_byte_count((c8)first);
 
@@ -114,7 +114,7 @@ func sz utf8_encode(c32 codepoint, c8* out) {
   return size;
 }
 
-func sz utf8_codepoint_count(const c8* src, sz src_size) {
+func sz utf8_codepoint_count(cstr8 src, sz src_size) {
   sz count = 0;
   sz idx = 0;
   while (idx < src_size) {
@@ -137,7 +137,7 @@ func sz utf16_encode_size(c32 codepoint) {
   return codepoint <= 0xFFFFU ? 1 : 2;
 }
 
-func c32 utf16_decode(const c16* ptr, sz* consumed) {
+func c32 utf16_decode(cstr16 ptr, sz* consumed) {
   c32 first = (c32)(u16)ptr[0];
 
   // BMP character (no surrogate).
@@ -178,7 +178,7 @@ func sz utf16_encode(c32 codepoint, c16* out) {
   return size;
 }
 
-func sz utf16_codepoint_count(const c16* src, sz src_size) {
+func sz utf16_codepoint_count(cstr16 src, sz src_size) {
   sz count = 0;
   sz idx = 0;
   while (idx < src_size) {
@@ -196,7 +196,7 @@ func sz utf16_codepoint_count(const c16* src, sz src_size) {
 
 // Writes unit_cnt units from units[] into dst at position *out_cnt, if space allows.
 // When dst is NULL the write is skipped (count-only mode).
-static void emit_c8(c8* dst, sz dst_cap, sz* out_cnt, const c8* units, sz unit_cnt) {
+static void emit_c8(c8* dst, sz dst_cap, sz* out_cnt, cstr8 units, sz unit_cnt) {
   if (dst != NULL && *out_cnt + unit_cnt <= dst_cap) {
     for (sz idx = 0; idx < unit_cnt; idx++) {
       dst[*out_cnt + idx] = units[idx];
@@ -205,7 +205,7 @@ static void emit_c8(c8* dst, sz dst_cap, sz* out_cnt, const c8* units, sz unit_c
   *out_cnt += unit_cnt;
 }
 
-static void emit_c16(c16* dst, sz dst_cap, sz* out_cnt, const c16* units, sz unit_cnt) {
+static void emit_c16(c16* dst, sz dst_cap, sz* out_cnt, cstr16 units, sz unit_cnt) {
   if (dst != NULL && *out_cnt + unit_cnt <= dst_cap) {
     for (sz idx = 0; idx < unit_cnt; idx++) {
       dst[*out_cnt + idx] = units[idx];
@@ -225,7 +225,7 @@ static void emit_c32(c32* dst, sz dst_cap, sz* out_cnt, c32 unit) {
 // Conversion — UTF-8 source
 // =========================================================================
 
-func sz utf8_to_utf16(const c8* src, sz src_size, c16* dst, sz dst_cap) {
+func sz utf8_to_utf16(cstr8 src, sz src_size, c16* dst, sz dst_cap) {
   sz out_cnt = 0;
   sz idx = 0;
   while (idx < src_size) {
@@ -240,7 +240,7 @@ func sz utf8_to_utf16(const c8* src, sz src_size, c16* dst, sz dst_cap) {
   return out_cnt;
 }
 
-func sz utf8_to_utf32(const c8* src, sz src_size, c32* dst, sz dst_cap) {
+func sz utf8_to_utf32(cstr8 src, sz src_size, c32* dst, sz dst_cap) {
   sz out_cnt = 0;
   sz idx = 0;
   while (idx < src_size) {
@@ -256,7 +256,7 @@ func sz utf8_to_utf32(const c8* src, sz src_size, c32* dst, sz dst_cap) {
 // Conversion — UTF-16 source
 // =========================================================================
 
-func sz utf16_to_utf8(const c16* src, sz src_size, c8* dst, sz dst_cap) {
+func sz utf16_to_utf8(cstr16 src, sz src_size, c8* dst, sz dst_cap) {
   sz out_cnt = 0;
   sz idx = 0;
   while (idx < src_size) {
@@ -271,7 +271,7 @@ func sz utf16_to_utf8(const c16* src, sz src_size, c8* dst, sz dst_cap) {
   return out_cnt;
 }
 
-func sz utf16_to_utf32(const c16* src, sz src_size, c32* dst, sz dst_cap) {
+func sz utf16_to_utf32(cstr16 src, sz src_size, c32* dst, sz dst_cap) {
   sz out_cnt = 0;
   sz idx = 0;
   while (idx < src_size) {
@@ -287,7 +287,7 @@ func sz utf16_to_utf32(const c16* src, sz src_size, c32* dst, sz dst_cap) {
 // Conversion — UTF-32 source
 // =========================================================================
 
-func sz utf32_to_utf8(const c32* src, sz src_size, c8* dst, sz dst_cap) {
+func sz utf32_to_utf8(cstr32 src, sz src_size, c8* dst, sz dst_cap) {
   sz out_cnt = 0;
   for (sz idx = 0; idx < src_size; idx++) {
     c32 codepoint = unicode_is_valid(src[idx]) ? src[idx] : UNICODE_REPLACEMENT_CHAR;
@@ -298,7 +298,7 @@ func sz utf32_to_utf8(const c32* src, sz src_size, c8* dst, sz dst_cap) {
   return out_cnt;
 }
 
-func sz utf32_to_utf16(const c32* src, sz src_size, c16* dst, sz dst_cap) {
+func sz utf32_to_utf16(cstr32 src, sz src_size, c16* dst, sz dst_cap) {
   sz out_cnt = 0;
   for (sz idx = 0; idx < src_size; idx++) {
     c32 codepoint = unicode_is_valid(src[idx]) ? src[idx] : UNICODE_REPLACEMENT_CHAR;

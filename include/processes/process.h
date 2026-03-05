@@ -31,11 +31,11 @@ func process_options process_options_captured(void);
 
 // Creates a new process with default options.
 // args[0] must be the executable path and the array must be NULL-terminated.
-func process _process_create(const c8* const* args, callsite site);
+func process _process_create(cstr8 const* args, callsite site);
 
 // Creates a new process with explicit options.
 // args[0] must be the executable path and the array must be NULL-terminated.
-func process _process_create_with(const c8* const* args, process_options options, callsite site);
+func process _process_create_with(cstr8 const* args, process_options options, callsite site);
 
 #define process_create(args) \
   _process_create(args, CALLSITE_HERE)

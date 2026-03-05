@@ -11,8 +11,8 @@
 
 // Represent a callsite in the source code (filename, function name, and line number).
 typedef struct callsite {
-  const c8* filename;
-  const c8* function;
+  cstr8 filename;
+  cstr8 function;
   u32 line;
 } callsite;
 
@@ -25,6 +25,6 @@ typedef struct callsite {
 
 // Represent a source code location (filename and line number).
 typedef struct source_location {
-  const c8* filename;
+  cstr8 filename;
   u32 line;
 } source_location;

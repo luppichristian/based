@@ -13,7 +13,7 @@ func void devices_clear_name(c8* dst, sz capacity) {
   dst[0] = '\0';
 }
 
-func void devices_copy_cstring(c8* dst, sz capacity, const c8* src) {
+func void devices_copy_cstring(c8* dst, sz capacity, cstr8 src) {
   sz index = 0;
 
   if (!dst || !capacity) {
@@ -54,7 +54,7 @@ func void devices_copy_wide_ascii(c8* dst, sz capacity, const wchar_t* src) {
   dst[index] = '\0';
 }
 
-func u64 devices_hash_path(const c8* src) {
+func u64 devices_hash_path(cstr8 src) {
   u64 hash_value = 1469598103934665603ULL;
   sz index = 0;
 
@@ -158,7 +158,7 @@ func b32 device_id_is_valid(device_id src) {
   return src.type != DEVICE_TYPE_UNKNOWN && src.instance != 0;
 }
 
-func const c8* devices_get_type_name(device_type type) {
+func cstr8 devices_get_type_name(device_type type) {
   switch (type) {
     case DEVICE_TYPE_KEYBOARD:
       return "keyboard";

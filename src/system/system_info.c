@@ -27,7 +27,7 @@
 typedef LONG(WINAPI* rtl_get_version_fn)(void* version_info);
 #endif
 
-func void system_copy_string(c8* dst_ptr, sz dst_cap, const c8* src_ptr) {
+func void system_copy_string(c8* dst_ptr, sz dst_cap, cstr8 src_ptr) {
   if (dst_ptr == NULL || dst_cap == 0) {
     return;
   }
@@ -46,7 +46,7 @@ func void system_copy_string(c8* dst_ptr, sz dst_cap, const c8* src_ptr) {
   dst_ptr[src_len] = '\0';
 }
 
-func const c8* system_architecture_name(void) {
+func cstr8 system_architecture_name(void) {
 #if defined(ARCH_X86_64)
   return "x86_64";
 #elif defined(ARCH_X86)
@@ -134,10 +134,10 @@ func b32 system_info_query(system_info* out_info) {
     out_info->user_name[user_size - 1] = '\0';
   }
 
-  const c8* home_path = getenv("USERPROFILE");
+  cstr8 home_path = getenv("USERPROFILE");
   if (home_path == NULL) {
-    const c8* home_drive = getenv("HOMEDRIVE");
-    const c8* home_part = getenv("HOMEPATH");
+    cstr8 home_drive = getenv("HOMEDRIVE");
+    cstr8 home_part = getenv("HOMEPATH");
     if (home_drive != NULL && home_part != NULL) {
       snprintf(out_info->user_home, size_of(out_info->user_home), "%s%s", home_drive, home_part);
     }
@@ -164,8 +164,8 @@ func b32 system_info_query(system_info* out_info) {
     out_info->allocation_granularity = (sz)page_size;
   }
 
-  const c8* user_name = getenv("USER");
-  const c8* home_path = getenv("HOME");
+  cstr8 user_name = getenv("USER");
+  cstr8 home_path = getenv("HOME");
   if (user_name != NULL) {
     system_copy_string(out_info->user_name, size_of(out_info->user_name), user_name);
   }

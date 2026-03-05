@@ -51,8 +51,8 @@ func void filesystem_info_set_windows_flags(pathinfo* info, DWORD attributes) {
 #  include <sys/stat.h>
 #  include <unistd.h>
 
-func const c8* filesystem_name_ptr(const c8* src) {
-  const c8* last_sep = src;
+func cstr8 filesystem_name_ptr(cstr8 src) {
+  cstr8 last_sep = src;
   sz item_idx = 0;
 
   if (src == NULL) {
@@ -92,8 +92,8 @@ func timestamp filesystem_timestamp_from_timespec(struct timespec value) {
 
 #else
 
-func const c8* filesystem_name_ptr(const c8* src) {
-  const c8* last_sep = src;
+func cstr8 filesystem_name_ptr(cstr8 src) {
+  cstr8 last_sep = src;
   sz item_idx = 0;
 
   if (src == NULL) {
@@ -127,7 +127,7 @@ func pathinfo filesystem_info_empty(void) {
 
 func b32 path_get_info(const path* src, pathinfo* out_info) {
   pathinfo info = filesystem_info_empty();
-  const c8* src_str = src != NULL ? src->buf : "";
+  cstr8 src_str = src != NULL ? src->buf : "";
 
   if (out_info == NULL || src == NULL || src->buf[0] == '\0') {
     return 0;
@@ -149,7 +149,7 @@ func b32 path_get_info(const path* src, pathinfo* out_info) {
   filesystem_info_set_windows_flags(&info, attr_data.dwFileAttributes);
 #elif defined(PLATFORM_UNIX) || defined(PLATFORM_ANDROID) || defined(PLATFORM_IOS)
   struct stat stat_info;
-  const c8* name_ptr = NULL;
+  cstr8 name_ptr = NULL;
 
   if (lstat(src_str, &stat_info) != 0) {
     return 0;

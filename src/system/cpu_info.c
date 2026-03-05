@@ -21,7 +21,7 @@
 #  include <cpuid.h>
 #endif
 
-func void cpu_copy_string(c8* dst_ptr, sz dst_cap, const c8* src_ptr) {
+func void cpu_copy_string(c8* dst_ptr, sz dst_cap, cstr8 src_ptr) {
   if (dst_ptr == NULL || dst_cap == 0) {
     return;
   }

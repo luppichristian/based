@@ -35,7 +35,7 @@ func i32 thread_entry_wrapper(void* raw) {
   return exit_code;
 }
 
-func thread thread_create_impl(thread_func entry, void* arg, const c8* name, allocator main_allocator) {
+func thread thread_create_impl(thread_func entry, void* arg, cstr8 name, allocator main_allocator) {
   if (!entry) {
     return NULL;
   }
@@ -77,7 +77,7 @@ func thread _thread_create(thread_func entry, void* arg, allocator main_allocato
 func thread _thread_create_named(
     thread_func entry,
     void* arg,
-    const c8* name,
+    cstr8 name,
     allocator main_allocator,
     callsite site) {
   (void)site;
@@ -121,6 +121,6 @@ func u64 thread_get_id(thread thd) {
   return (u64)SDL_GetThreadID((SDL_Thread*)thd);
 }
 
-func const c8* thread_get_name(thread thd) {
+func cstr8 thread_get_name(thread thd) {
   return SDL_GetThreadName((SDL_Thread*)thd);
 }

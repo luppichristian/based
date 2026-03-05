@@ -55,4 +55,4 @@ func b32 pathwatch_follow_symlinks(pathwatch* watcher, b32 enabled);
 func b32 pathwatch_allow_out_of_scope_links(pathwatch* watcher, b32 enabled);
 
 // Returns the last efsw error string.
-func const c8* pathwatch_get_last_error(void);
+func cstr8 pathwatch_get_last_error(void);

@@ -58,7 +58,7 @@ func b32 file_make_temp_path(const path* src, path* out_path) {
   return 0;
 }
 
-func const c8* file_path_cstr(const path* src) {
+func cstr8 file_path_cstr(const path* src) {
   if (src == NULL) {
     return "";
   }

@@ -28,7 +28,7 @@ typedef struct dir_copy_state {
   b32 success;
 } dir_copy_state;
 
-func path dir_path_from_string(const c8* src) {
+func path dir_path_from_string(cstr8 src) {
   return path_from_cstr(src != NULL ? src : "");
 }
 
@@ -40,7 +40,7 @@ func path dir_path_from_owned_string(c8* src) {
   return result;
 }
 
-func const c8* dir_path_cstr(const path* src) {
+func cstr8 dir_path_cstr(const path* src) {
   if (src == NULL) {
     return "";
   }
@@ -78,7 +78,7 @@ func SDL_Folder dir_system_path_to_sdl(dir_system_path location) {
   return SDL_FOLDER_COUNT;
 }
 
-func sz dir_root_length(const c8* src) {
+func sz dir_root_length(cstr8 src) {
   if (src == NULL || src[0] == '\0') {
     return 0;
   }
@@ -275,9 +275,9 @@ func path dir_get_base(void) {
   return dir_path_from_string(SDL_GetBasePath());
 }
 
-func path dir_get_pref(const c8* org_name, const c8* app_name) {
-  const c8* org_value = org_name;
-  const c8* app_value = app_name;
+func path dir_get_pref(cstr8 org_name, cstr8 app_name) {
+  cstr8 org_value = org_name;
+  cstr8 app_value = app_name;
 
   if (org_value != NULL && org_value[0] == '\0') {
     org_value = NULL;

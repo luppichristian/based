@@ -41,7 +41,7 @@ func thread_group _thread_group_create_named(
     u32 count,
     thread_group_func entry,
     void* arg,
-    const c8* base_name,
+    cstr8 base_name,
     callsite site);
 
 // Frees internal resources and zeroes the group.

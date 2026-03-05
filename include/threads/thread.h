@@ -27,7 +27,7 @@ func thread _thread_create(thread_func entry, void* arg, allocator main_allocato
 func thread _thread_create_named(
     thread_func entry,
     void* arg,
-    const c8* name,
+    cstr8 name,
     allocator main_allocator,
     callsite site);
 
@@ -52,4 +52,4 @@ func void thread_detach(thread thd);
 func u64 thread_get_id(thread thd);
 
 // Returns the debug name of the given thread, or NULL if none was set.
-func const c8* thread_get_name(thread thd);
+func cstr8 thread_get_name(thread thd);

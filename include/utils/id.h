@@ -41,7 +41,7 @@ func i32 id8_cmp(id8 lhs, id8 rhs);
 func sz id8_string_length(id8 ident);
 
 // Parses an unsigned base-10 ID. Returns 1 on success.
-func b32 id8_parse_cstr8(const c8* src, id8* out);
+func b32 id8_parse_cstr8(cstr8 src, id8* out);
 
 // Formats the ID as unsigned base-10 text. Returns 1 on success.
 func b32 id8_to_cstr8(id8 ident, c8* dst, sz cap);
@@ -84,7 +84,7 @@ func i32 id16_cmp(id16 lhs, id16 rhs);
 func sz id16_string_length(id16 ident);
 
 // Parses an unsigned base-10 ID. Returns 1 on success.
-func b32 id16_parse_cstr8(const c8* src, id16* out);
+func b32 id16_parse_cstr8(cstr8 src, id16* out);
 
 // Formats the ID as unsigned base-10 text. Returns 1 on success.
 func b32 id16_to_cstr8(id16 ident, c8* dst, sz cap);
@@ -127,7 +127,7 @@ func i32 id32_cmp(id32 lhs, id32 rhs);
 func sz id32_string_length(id32 ident);
 
 // Parses an unsigned base-10 ID. Returns 1 on success.
-func b32 id32_parse_cstr8(const c8* src, id32* out);
+func b32 id32_parse_cstr8(cstr8 src, id32* out);
 
 // Formats the ID as unsigned base-10 text. Returns 1 on success.
 func b32 id32_to_cstr8(id32 ident, c8* dst, sz cap);
@@ -170,7 +170,7 @@ func i32 id64_cmp(id64 lhs, id64 rhs);
 func sz id64_string_length(id64 ident);
 
 // Parses an unsigned base-10 ID. Returns 1 on success.
-func b32 id64_parse_cstr8(const c8* src, id64* out);
+func b32 id64_parse_cstr8(cstr8 src, id64* out);
 
 // Formats the ID as unsigned base-10 text. Returns 1 on success.
 func b32 id64_to_cstr8(id64 ident, c8* dst, sz cap);

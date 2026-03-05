@@ -229,7 +229,7 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
 
     case SDL_EVENT_TEXT_EDITING_CANDIDATES:
       out_msg->text_editing_candidates.window_id = (u32)src->edit_candidates.windowID;
-      out_msg->text_editing_candidates.candidates = (const c8* const*)src->edit_candidates.candidates;
+      out_msg->text_editing_candidates.candidates = (cstr8 const*)src->edit_candidates.candidates;
       out_msg->text_editing_candidates.num_candidates = (i32)src->edit_candidates.num_candidates;
       out_msg->text_editing_candidates.selected_candidate = (i32)src->edit_candidates.selected_candidate;
       out_msg->text_editing_candidates.horizontal = src->edit_candidates.horizontal ? 1 : 0;
@@ -455,7 +455,7 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
     case SDL_EVENT_CLIPBOARD_UPDATE:
       out_msg->clipboard.owner = src->clipboard.owner ? 1 : 0;
       out_msg->clipboard.num_mime_types = (i32)src->clipboard.num_mime_types;
-      out_msg->clipboard.mime_types = (const c8* const*)src->clipboard.mime_types;
+      out_msg->clipboard.mime_types = (cstr8 const*)src->clipboard.mime_types;
       return 1;
 
     case SDL_EVENT_SENSOR_UPDATE:

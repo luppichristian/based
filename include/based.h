@@ -38,11 +38,11 @@
 #include "filesystem/archive.h"
 #include "filesystem/directory.h"
 #include "filesystem/file.h"
-#include "filesystem/pathinfo.h"
 #include "filesystem/filemap.h"
 #include "filesystem/filestream.h"
-#include "filesystem/pathwatch.h"
 #include "filesystem/path.h"
+#include "filesystem/pathinfo.h"
+#include "filesystem/pathwatch.h"
 
 // Include input modules.
 #include "input/clipboard.h"

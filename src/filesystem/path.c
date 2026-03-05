@@ -19,7 +19,7 @@ func c8* path_mut_buf(path* value) {
   return value->buf;
 }
 
-func const c8* path_buf(const path* value) {
+func cstr8 path_buf(const path* value) {
   return value->buf;
 }
 
@@ -33,7 +33,7 @@ func b32 path_is_separator(c8 chr) {
   return chr == '/' || chr == '\\';
 }
 
-func sz path_root_length_cstr(const c8* src) {
+func sz path_root_length_cstr(cstr8 src) {
   if (src[0] == '\0') {
     return 0;
   }
@@ -53,7 +53,7 @@ func sz path_root_length_cstr(const c8* src) {
   return 0;
 }
 
-func sz path_trimmed_length_cstr(const c8* src) {
+func sz path_trimmed_length_cstr(cstr8 src) {
   sz root_len = path_root_length_cstr(src);
   sz src_len = cstr8_len(src);
 
@@ -64,7 +64,7 @@ func sz path_trimmed_length_cstr(const c8* src) {
   return src_len;
 }
 
-func sz path_name_start_cstr(const c8* src) {
+func sz path_name_start_cstr(cstr8 src) {
   sz root_len = path_root_length_cstr(src);
   sz src_len = path_trimmed_length_cstr(src);
 
@@ -82,7 +82,7 @@ func sz path_name_start_cstr(const c8* src) {
   return src_len;
 }
 
-func sz path_extension_start_cstr(const c8* src) {
+func sz path_extension_start_cstr(cstr8 src) {
   sz name_idx = path_name_start_cstr(src);
   sz src_len = path_trimmed_length_cstr(src);
 
@@ -104,7 +104,7 @@ func sz path_extension_start_cstr(const c8* src) {
   return SZ_MAX;
 }
 
-func b32 path_is_absolute_cstr(const c8* src) {
+func b32 path_is_absolute_cstr(cstr8 src) {
   if (src[0] == '\0') {
     return 0;
   }
@@ -121,7 +121,7 @@ func b32 path_is_absolute_cstr(const c8* src) {
   return 0;
 }
 
-func path path_from_cstr(const c8* src) {
+func path path_from_cstr(cstr8 src) {
   path value;
   str8_from_cstr(value.buf, size_of(value.buf), src);
   return value;
@@ -133,7 +133,7 @@ func path path_from_str8(str8 src) {
   return value;
 }
 
-func path path_join_cstr(const path* lhs, const c8* rhs) {
+func path path_join_cstr(const path* lhs, cstr8 rhs) {
   path result;
 
   if (path_is_absolute_cstr(rhs) || cstr8_is_empty(path_buf(lhs))) {
@@ -164,7 +164,7 @@ func path path_join(const path* lhs, const path* rhs) {
   return path_join_cstr(lhs, path_buf(rhs));
 }
 
-func sz path_append_cstr(path* dst, const c8* src) {
+func sz path_append_cstr(path* dst, cstr8 src) {
   *dst = path_join_cstr(dst, src);
   return cstr8_len(path_mut_buf(dst));
 }
@@ -204,7 +204,7 @@ func void path_normalize(path* src) {
   src->buf[write_idx] = '\0';
 }
 
-func b32 path_ends_with(const path* src, const c8* suffix) {
+func b32 path_ends_with(const path* src, cstr8 suffix) {
   return cstr8_ends_with(path_buf(src), suffix);
 }
 

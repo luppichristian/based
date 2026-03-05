@@ -24,7 +24,7 @@ func str8 str8_empty(c8* ptr, sz cap) {
   return str;
 }
 
-func str8 str8_from_cstr(c8* ptr, sz cap, const c8* src) {
+func str8 str8_from_cstr(c8* ptr, sz cap, cstr8 src) {
   str8 str;
   str.ptr = ptr;
   str.cap = cap;
@@ -44,19 +44,19 @@ func i32 str8_cmp_nocase(str8 lhs, str8 rhs) {
   return cstr8_cmp_nocase(lhs.ptr, rhs.ptr);
 }
 
-func const c8* str8_find(str8 str, const c8* sub) {
+func cstr8 str8_find(str8 str, cstr8 sub) {
   return cstr8_find(str.ptr, sub);
 }
 
-func const c8* str8_find_char(str8 str, c8 chr) {
+func cstr8 str8_find_char(str8 str, c8 chr) {
   return cstr8_find_char(str.ptr, chr);
 }
 
-func const c8* str8_find_last(str8 str, const c8* sub) {
+func cstr8 str8_find_last(str8 str, cstr8 sub) {
   return cstr8_find_last(str.ptr, sub);
 }
 
-func const c8* str8_find_last_char(str8 str, c8 chr) {
+func cstr8 str8_find_last_char(str8 str, c8 chr) {
   return cstr8_find_last_char(str.ptr, chr);
 }
 
@@ -64,11 +64,11 @@ func sz str8_count_char(str8 str, c8 chr) {
   return cstr8_count_char(str.ptr, chr);
 }
 
-func b32 str8_starts_with(str8 str, const c8* prefix) {
+func b32 str8_starts_with(str8 str, cstr8 prefix) {
   return cstr8_starts_with(str.ptr, prefix);
 }
 
-func b32 str8_ends_with(str8 str, const c8* suffix) {
+func b32 str8_ends_with(str8 str, cstr8 suffix) {
   return cstr8_ends_with(str.ptr, suffix);
 }
 
@@ -85,12 +85,12 @@ func void str8_clear(str8* str) {
   str->size = 0;
 }
 
-func sz str8_copy(str8* str, const c8* src) {
+func sz str8_copy(str8* str, cstr8 src) {
   str->size = cstr8_copy(str->ptr, str->cap, src);
   return str->size;
 }
 
-func sz str8_concat(str8* str, const c8* src) {
+func sz str8_concat(str8* str, cstr8 src) {
   str->size = cstr8_concat(str->ptr, str->cap, src);
   return str->size;
 }
@@ -107,7 +107,7 @@ func void str8_truncate(str8* str, sz length) {
   }
 }
 
-func b32 str8_format(str8* str, const c8* fmt, ...) {
+func b32 str8_format(str8* str, cstr8 fmt, ...) {
   va_list args;
   va_start(args, fmt);
   b32 result = cstr8_vformat(str->ptr, str->cap, fmt, args);
@@ -116,13 +116,13 @@ func b32 str8_format(str8* str, const c8* fmt, ...) {
   return result;
 }
 
-func b32 str8_vformat(str8* str, const c8* fmt, va_list args) {
+func b32 str8_vformat(str8* str, cstr8 fmt, va_list args) {
   b32 result = cstr8_vformat(str->ptr, str->cap, fmt, args);
   str->size = cstr8_len(str->ptr);
   return result;
 }
 
-func b32 str8_append_format(str8* str, const c8* fmt, ...) {
+func b32 str8_append_format(str8* str, cstr8 fmt, ...) {
   va_list args;
   va_start(args, fmt);
   b32 result = cstr8_append_vformat(str->ptr, str->cap, fmt, args);
@@ -131,7 +131,7 @@ func b32 str8_append_format(str8* str, const c8* fmt, ...) {
   return result;
 }
 
-func b32 str8_append_vformat(str8* str, const c8* fmt, va_list args) {
+func b32 str8_append_vformat(str8* str, cstr8 fmt, va_list args) {
   b32 result = cstr8_append_vformat(str->ptr, str->cap, fmt, args);
   str->size = cstr8_len(str->ptr);
   return result;
@@ -166,7 +166,7 @@ func sz str8_remove_whitespace(str8* str) {
   return removed;
 }
 
-func b32 str8_remove_prefix(str8* str, const c8* prefix) {
+func b32 str8_remove_prefix(str8* str, cstr8 prefix) {
   b32 result = cstr8_remove_prefix(str->ptr, prefix);
   if (result) {
     str->size = cstr8_len(str->ptr);
@@ -174,7 +174,7 @@ func b32 str8_remove_prefix(str8* str, const c8* prefix) {
   return result;
 }
 
-func b32 str8_remove_suffix(str8* str, const c8* suffix) {
+func b32 str8_remove_suffix(str8* str, cstr8 suffix) {
   b32 result = cstr8_remove_suffix(str->ptr, suffix);
   if (result) {
     str->size = cstr8_len(str->ptr);
@@ -182,7 +182,7 @@ func b32 str8_remove_suffix(str8* str, const c8* suffix) {
   return result;
 }
 
-func sz str8_replace(str8* str, const c8* from, const c8* rep) {
+func sz str8_replace(str8* str, cstr8 from, cstr8 rep) {
   sz count = cstr8_replace(str->ptr, str->cap, from, rep);
   str->size = cstr8_len(str->ptr);
   return count;
@@ -213,7 +213,7 @@ func str16 str16_empty(c16* ptr, sz cap) {
   return str;
 }
 
-func str16 str16_from_cstr(c16* ptr, sz cap, const c16* src) {
+func str16 str16_from_cstr(c16* ptr, sz cap, cstr16 src) {
   str16 str;
   str.ptr = ptr;
   str.cap = cap;
@@ -233,19 +233,19 @@ func i32 str16_cmp_nocase(str16 lhs, str16 rhs) {
   return cstr16_cmp_nocase(lhs.ptr, rhs.ptr);
 }
 
-func const c16* str16_find(str16 str, const c16* sub) {
+func cstr16 str16_find(str16 str, cstr16 sub) {
   return cstr16_find(str.ptr, sub);
 }
 
-func const c16* str16_find_char(str16 str, c16 chr) {
+func cstr16 str16_find_char(str16 str, c16 chr) {
   return cstr16_find_char(str.ptr, chr);
 }
 
-func const c16* str16_find_last(str16 str, const c16* sub) {
+func cstr16 str16_find_last(str16 str, cstr16 sub) {
   return cstr16_find_last(str.ptr, sub);
 }
 
-func const c16* str16_find_last_char(str16 str, c16 chr) {
+func cstr16 str16_find_last_char(str16 str, c16 chr) {
   return cstr16_find_last_char(str.ptr, chr);
 }
 
@@ -253,11 +253,11 @@ func sz str16_count_char(str16 str, c16 chr) {
   return cstr16_count_char(str.ptr, chr);
 }
 
-func b32 str16_starts_with(str16 str, const c16* prefix) {
+func b32 str16_starts_with(str16 str, cstr16 prefix) {
   return cstr16_starts_with(str.ptr, prefix);
 }
 
-func b32 str16_ends_with(str16 str, const c16* suffix) {
+func b32 str16_ends_with(str16 str, cstr16 suffix) {
   return cstr16_ends_with(str.ptr, suffix);
 }
 
@@ -274,12 +274,12 @@ func void str16_clear(str16* str) {
   str->size = 0;
 }
 
-func sz str16_copy(str16* str, const c16* src) {
+func sz str16_copy(str16* str, cstr16 src) {
   str->size = cstr16_copy(str->ptr, str->cap, src);
   return str->size;
 }
 
-func sz str16_concat(str16* str, const c16* src) {
+func sz str16_concat(str16* str, cstr16 src) {
   str->size = cstr16_concat(str->ptr, str->cap, src);
   return str->size;
 }
@@ -325,7 +325,7 @@ func sz str16_remove_whitespace(str16* str) {
   return removed;
 }
 
-func b32 str16_remove_prefix(str16* str, const c16* prefix) {
+func b32 str16_remove_prefix(str16* str, cstr16 prefix) {
   b32 result = cstr16_remove_prefix(str->ptr, prefix);
   if (result) {
     str->size = cstr16_len(str->ptr);
@@ -333,7 +333,7 @@ func b32 str16_remove_prefix(str16* str, const c16* prefix) {
   return result;
 }
 
-func b32 str16_remove_suffix(str16* str, const c16* suffix) {
+func b32 str16_remove_suffix(str16* str, cstr16 suffix) {
   b32 result = cstr16_remove_suffix(str->ptr, suffix);
   if (result) {
     str->size = cstr16_len(str->ptr);
@@ -341,7 +341,7 @@ func b32 str16_remove_suffix(str16* str, const c16* suffix) {
   return result;
 }
 
-func sz str16_replace(str16* str, const c16* from, const c16* rep) {
+func sz str16_replace(str16* str, cstr16 from, cstr16 rep) {
   sz count = cstr16_replace(str->ptr, str->cap, from, rep);
   str->size = cstr16_len(str->ptr);
   return count;
@@ -372,7 +372,7 @@ func str32 str32_empty(c32* ptr, sz cap) {
   return str;
 }
 
-func str32 str32_from_cstr(c32* ptr, sz cap, const c32* src) {
+func str32 str32_from_cstr(c32* ptr, sz cap, cstr32 src) {
   str32 str;
   str.ptr = ptr;
   str.cap = cap;
@@ -392,19 +392,19 @@ func i32 str32_cmp_nocase(str32 lhs, str32 rhs) {
   return cstr32_cmp_nocase(lhs.ptr, rhs.ptr);
 }
 
-func const c32* str32_find(str32 str, const c32* sub) {
+func cstr32 str32_find(str32 str, cstr32 sub) {
   return cstr32_find(str.ptr, sub);
 }
 
-func const c32* str32_find_char(str32 str, c32 chr) {
+func cstr32 str32_find_char(str32 str, c32 chr) {
   return cstr32_find_char(str.ptr, chr);
 }
 
-func const c32* str32_find_last(str32 str, const c32* sub) {
+func cstr32 str32_find_last(str32 str, cstr32 sub) {
   return cstr32_find_last(str.ptr, sub);
 }
 
-func const c32* str32_find_last_char(str32 str, c32 chr) {
+func cstr32 str32_find_last_char(str32 str, c32 chr) {
   return cstr32_find_last_char(str.ptr, chr);
 }
 
@@ -412,11 +412,11 @@ func sz str32_count_char(str32 str, c32 chr) {
   return cstr32_count_char(str.ptr, chr);
 }
 
-func b32 str32_starts_with(str32 str, const c32* prefix) {
+func b32 str32_starts_with(str32 str, cstr32 prefix) {
   return cstr32_starts_with(str.ptr, prefix);
 }
 
-func b32 str32_ends_with(str32 str, const c32* suffix) {
+func b32 str32_ends_with(str32 str, cstr32 suffix) {
   return cstr32_ends_with(str.ptr, suffix);
 }
 
@@ -433,12 +433,12 @@ func void str32_clear(str32* str) {
   str->size = 0;
 }
 
-func sz str32_copy(str32* str, const c32* src) {
+func sz str32_copy(str32* str, cstr32 src) {
   str->size = cstr32_copy(str->ptr, str->cap, src);
   return str->size;
 }
 
-func sz str32_concat(str32* str, const c32* src) {
+func sz str32_concat(str32* str, cstr32 src) {
   str->size = cstr32_concat(str->ptr, str->cap, src);
   return str->size;
 }
@@ -484,7 +484,7 @@ func sz str32_remove_whitespace(str32* str) {
   return removed;
 }
 
-func b32 str32_remove_prefix(str32* str, const c32* prefix) {
+func b32 str32_remove_prefix(str32* str, cstr32 prefix) {
   b32 result = cstr32_remove_prefix(str->ptr, prefix);
   if (result) {
     str->size = cstr32_len(str->ptr);
@@ -492,7 +492,7 @@ func b32 str32_remove_prefix(str32* str, const c32* prefix) {
   return result;
 }
 
-func b32 str32_remove_suffix(str32* str, const c32* suffix) {
+func b32 str32_remove_suffix(str32* str, cstr32 suffix) {
   b32 result = cstr32_remove_suffix(str->ptr, suffix);
   if (result) {
     str->size = cstr32_len(str->ptr);
@@ -500,7 +500,7 @@ func b32 str32_remove_suffix(str32* str, const c32* suffix) {
   return result;
 }
 
-func sz str32_replace(str32* str, const c32* from, const c32* rep) {
+func sz str32_replace(str32* str, cstr32 from, cstr32 rep) {
   sz count = cstr32_replace(str->ptr, str->cap, from, rep);
   str->size = cstr32_len(str->ptr);
   return count;

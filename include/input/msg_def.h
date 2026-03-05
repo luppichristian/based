@@ -195,7 +195,7 @@ typedef struct msg_keyboard_data {
 // IME editing payload.
 typedef struct msg_text_editing_data {
   u32 window_id;
-  const c8* text;
+  cstr8 text;
   i32 start;
   i32 length;
 } msg_text_editing_data;
@@ -203,7 +203,7 @@ typedef struct msg_text_editing_data {
 // IME candidate list payload.
 typedef struct msg_text_editing_candidates_data {
   u32 window_id;
-  const c8* const* candidates;
+  cstr8 const* candidates;
   i32 num_candidates;
   i32 selected_candidate;
   b32 horizontal;
@@ -212,7 +212,7 @@ typedef struct msg_text_editing_candidates_data {
 // Text input payload.
 typedef struct msg_text_input_data {
   u32 window_id;
-  const c8* text;
+  cstr8 text;
 } msg_text_input_data;
 
 // Mouse device connection payload.
@@ -412,15 +412,15 @@ typedef struct msg_drop_data {
   u32 window_id;
   f32 x;
   f32 y;
-  const c8* source;
-  const c8* data;
+  cstr8 source;
+  cstr8 data;
 } msg_drop_data;
 
 // Clipboard update payload.
 typedef struct msg_clipboard_data {
   b32 owner;
   i32 num_mime_types;
-  const c8* const* mime_types;
+  cstr8 const* mime_types;
 } msg_clipboard_data;
 
 // Generic sensor payload.

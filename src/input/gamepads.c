@@ -89,7 +89,7 @@ func b32 gamepads_get_device_id(sz slot_index, device_id* out_id) {
   return 1;
 }
 
-func const c8* gamepads_get_name(sz slot_index) {
+func cstr8 gamepads_get_name(sz slot_index) {
   gamepads_sync_slots();
 
   if (slot_index >= GAMEPADS_MAX_COUNT || !gamepad_slots[slot_index].handle) {

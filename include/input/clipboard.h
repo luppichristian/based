@@ -13,7 +13,7 @@
 func b32 clipboard_has_text(void);
 
 // Replaces clipboard text with src. Returns 1 on success, 0 otherwise.
-func b32 clipboard_set_text(const c8* src);
+func b32 clipboard_set_text(cstr8 src);
 
 // Copies clipboard text into out_text and always null-terminates when out_capacity > 0.
 // Returns 1 on success, 0 otherwise.

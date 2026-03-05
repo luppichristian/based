@@ -27,7 +27,7 @@ func filestream filestream_empty(void) {
   return stm;
 }
 
-func const c8* filestream_mode_string(u32 mode_flags) {
+func cstr8 filestream_mode_string(u32 mode_flags) {
   if ((mode_flags & FILESTREAM_OPEN_APPEND) != 0) {
     return (mode_flags & FILESTREAM_OPEN_READ) != 0 ? "a+b" : "ab";
   }
@@ -117,7 +117,7 @@ func b32 filestream_reserve_memory(filestream* stm, sz min_capacity) {
 func filestream filestream_open(const path* src, u32 mode_flags) {
   filestream stm = filestream_empty();
   SDL_IOStream* file_ptr = NULL;
-  const c8* mode_str = filestream_mode_string(mode_flags);
+  cstr8 mode_str = filestream_mode_string(mode_flags);
 
   file_ptr = SDL_IOFromFile(src != NULL ? src->buf : "", mode_str);
   if (file_ptr == NULL && (mode_flags & FILESTREAM_OPEN_CREATE) != 0 &&

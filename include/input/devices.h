@@ -41,7 +41,7 @@ typedef struct device_info {
 func b32 device_id_is_valid(device_id src);
 
 // Returns a stable display name for type.
-func const c8* devices_get_type_name(device_type type);
+func cstr8 devices_get_type_name(device_type type);
 
 // Returns the number of devices of type currently known to the backend.
 func sz devices_get_count(device_type type);

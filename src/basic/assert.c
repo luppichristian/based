@@ -41,13 +41,13 @@ func mutex assert_lock_get(void) {
   return assert_mutex;
 }
 
-func void assert_log_msg(const c8* msg, callsite site) {
+func void assert_log_msg(cstr8 msg, callsite site) {
   _log(thread_ctx_get_log_state(), LOG_LEVEL_FATAL, site, "Assertion failed: %s", msg);
 }
 
 // Returns: 0 = ignore, 1 = breakpoint, 2 = quit.
 // Defaults to quit if the message box cannot be displayed.
-func i32 assert_dialog(const c8* msg, callsite site) {
+func i32 assert_dialog(cstr8 msg, callsite site) {
   // TODO: Only do this if on desktop...
   // TODO: Proper message.
   c8 buf[1024];
@@ -89,7 +89,7 @@ func void assert_set_mode(assert_mode mode) {
   }
 }
 
-func void _assert(b32 condition, const c8* cond_msg, callsite site) {
+func void _assert(b32 condition, cstr8 cond_msg, callsite site) {
   if (condition) {
     return;
   }

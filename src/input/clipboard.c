@@ -17,7 +17,7 @@ func b32 clipboard_has_text(void) {
   return SDL_HasClipboardText() ? 1 : 0;
 }
 
-func b32 clipboard_set_text(const c8* src) {
+func b32 clipboard_set_text(cstr8 src) {
   if (!src) {
     return 0;
   }

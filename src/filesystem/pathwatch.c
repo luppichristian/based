@@ -187,10 +187,10 @@ func pathwatch_action pathwatch_map_action(enum efsw_action action) {
 func void pathwatch_dispatch(
     efsw_watcher native_handle,
     efsw_watchid native_watch_id,
-    const c8* dir_ptr,
-    const c8* file_ptr,
+    cstr8 dir_ptr,
+    cstr8 file_ptr,
     enum efsw_action action,
-    const c8* old_file_ptr,
+    cstr8 old_file_ptr,
     void* user_data) {
   (void)dir_ptr;
   (void)file_ptr;
@@ -220,7 +220,7 @@ func void pathwatch_dispatch(
 func void pathwatch_dispatch_missed(
     efsw_watcher native_handle,
     efsw_watchid native_watch_id,
-    const c8* dir_ptr) {
+    cstr8 dir_ptr) {
   (void)dir_ptr;
 
   pathwatch_binding* binding = pathwatch_find_binding(native_handle);
@@ -382,6 +382,6 @@ func b32 pathwatch_allow_out_of_scope_links(pathwatch* watcher, b32 enabled) {
   return 1;
 }
 
-func const c8* pathwatch_get_last_error(void) {
+func cstr8 pathwatch_get_last_error(void) {
   return efsw_getlasterror();
 }
