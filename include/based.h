@@ -40,6 +40,7 @@
 #include "filesystem/file.h"
 #include "filesystem/filemap.h"
 #include "filesystem/filestream.h"
+#include "filesystem/module.h"
 #include "filesystem/path.h"
 #include "filesystem/pathinfo.h"
 #include "filesystem/pathwatch.h"
@@ -102,5 +103,8 @@
 #endif
 #ifndef LM2_CUSTOM_ASSERT
 #  define LM2_CUSTOM_ASSERT
+#endif
+#ifndef LM2_NO_GENERICS
+#  define LM2_NO_GENERICS
 #endif
 #include <lm2.h>

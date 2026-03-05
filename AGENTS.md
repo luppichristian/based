@@ -66,11 +66,14 @@ include/                      # public API headers
     archive.h                 # in-memory archive model with ZIP load/save helpers
     directory.h               # directory creation, removal, iteration, and special-directory queries
     file.h                    # high-level whole-file operations
-    filemap.h                # memory-mapped file views with optional write-back
-    filestream.h             # unified native-file and archive-entry stream wrapper
+    filemap.h                 # memory-mapped file views with optional write-back
+    filestream.h              # unified native-file and archive-entry stream wrapper
+    module.h                  # dynamic-module loader and symbol lookup wrapper
+                              # that calls module_init/module_quit entry hooks
+                              # when loading/unloading
+    path.h                    # struct-backed fixed-capacity paths and path/file helpers
     pathinfo.h                # cross-platform filesystem metadata queries
     pathwatch.h               # efsw-backed directory watch wrapper that emits pathwatch messages
-    path.h                    # struct-backed fixed-capacity paths and path/file helpers
   input/                      # SDL-backed input APIs without exposing SDL in public headers
     clipboard.h               # clipboard text query and transfer helpers
     devices.h                 # device enumeration and shared input-device identifiers

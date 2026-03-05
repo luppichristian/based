@@ -16,7 +16,7 @@ Stringification and token-pasting:
 - 'expression(x)'                   evaluates x as an expression.
 
 Array utilities:
-- 'countof(x)'                      number of elements in a fixed-size array.
+- 'count_of(x)'                      number of elements in a fixed-size array.
 - 'sizeof_each(x)'                  size in bytes of a single element of a fixed-size array.
 - 'multiline_literal'               converts a multi-line token sequence into a string literal.
 
@@ -38,6 +38,7 @@ Range / bounds utilities:
 
 Swap utility:
 - 'swap(type, a, b)'                swaps the values of a and b using a temporary of the given type.
+- 'refswap(type, a_ptr, b_ptr)'     swaps values pointed to by a_ptr and b_ptr using a temporary of the given type.
 
 Alignment utilities (n must be a power of two):
 - 'is_pow2(x)'                      non-zero if x is a non-zero power of two.
@@ -138,12 +139,19 @@ Big numeric utilities (powers of 1000):
 
 // swap — swaps the values of a and b using a temporary of the given type.
 // Note: type must be provided explicitly; a and b must not have side effects.
-#define swap(type, a, b)  \
-  do {                    \
-    type _swap_tmp = (a); \
-    (a) = (b);            \
-    (b) = _swap_tmp;      \
-  } while (0)
+#define swap(type, a, b) expression({ \
+  type _swap_tmp = (a);               \
+  (a) = (b);                          \
+  (b) = _swap_tmp;                    \
+})
+
+// refswap — swaps the values pointed to by a_ptr and b_ptr using a temporary of the given type.
+// Note: type must be provided explicitly; pointers must be valid and non-null.
+#define refswap(type, a_ptr, b_ptr) expression({ \
+  type _refswap_tmp = *(a_ptr);                  \
+  *(a_ptr) = *(b_ptr);                           \
+  *(b_ptr) = _refswap_tmp;                       \
+})
 
 // =========================================================================
 // Alignment Utilities

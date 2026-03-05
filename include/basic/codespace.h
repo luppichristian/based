@@ -24,7 +24,7 @@ typedef struct callsite {
 // =========================================================================
 
 // Represent a source code location (filename and line number).
-typedef struct source_location {
+typedef struct src_loc {
   cstr8 filename;
   u32 line;
-} source_location;
+} src_loc;
