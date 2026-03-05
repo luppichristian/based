@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "threads/thread.h"
+#include "input/msg.h"
 #include "threads/thread_ctx.h"
 #include "../sdl3_include.h"
 
@@ -36,6 +37,10 @@ func i32 thread_entry_wrapper(void* raw) {
 
 func thread thread_create_impl(thread_func entry, void* arg, const c8* name, allocator main_allocator) {
   if (!entry) {
+    return NULL;
+  }
+
+  if (!msg_post_object_event(MSG_OBJECT_EVENT_CREATE, MSG_OBJECT_TYPE_THREAD, NULL)) {
     return NULL;
   }
 
@@ -80,11 +85,20 @@ func b32 thread_is_valid(thread thd) {
 
 func b32 thread_join(thread thd, i32* out_exit_code) {
   if (!thd) return 0;
+  if (!msg_post_object_event(MSG_OBJECT_EVENT_DESTROY, MSG_OBJECT_TYPE_THREAD, thd)) {
+    return 0;
+  }
   SDL_WaitThread((SDL_Thread*)thd, (int*)out_exit_code);
   return 1;
 }
 
 func void thread_detach(thread thd) {
+  if (!thd) {
+    return;
+  }
+  if (!msg_post_object_event(MSG_OBJECT_EVENT_DESTROY, MSG_OBJECT_TYPE_THREAD, thd)) {
+    return;
+  }
   SDL_DetachThread((SDL_Thread*)thd);
 }
 

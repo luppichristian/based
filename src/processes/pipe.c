@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "processes/pipe.h"
+#include "input/msg.h"
 #include "../sdl3_include.h"
 
 func pipe pipe_stdin(process prc) {
@@ -9,7 +10,11 @@ func pipe pipe_stdin(process prc) {
     return NULL;
   }
 
-  return (pipe)SDL_GetProcessInput((SDL_Process*)prc);
+  pipe pip = (pipe)SDL_GetProcessInput((SDL_Process*)prc);
+  if (pip != NULL && !msg_post_object_event(MSG_OBJECT_EVENT_CREATE, MSG_OBJECT_TYPE_PIPE, pip)) {
+    return NULL;
+  }
+  return pip;
 }
 
 func pipe pipe_stdout(process prc) {
@@ -17,7 +22,11 @@ func pipe pipe_stdout(process prc) {
     return NULL;
   }
 
-  return (pipe)SDL_GetProcessOutput((SDL_Process*)prc);
+  pipe pip = (pipe)SDL_GetProcessOutput((SDL_Process*)prc);
+  if (pip != NULL && !msg_post_object_event(MSG_OBJECT_EVENT_CREATE, MSG_OBJECT_TYPE_PIPE, pip)) {
+    return NULL;
+  }
+  return pip;
 }
 
 func pipe pipe_stderr(process prc) {
@@ -30,7 +39,11 @@ func pipe pipe_stderr(process prc) {
     return NULL;
   }
 
-  return (pipe)SDL_GetPointerProperty(props, SDL_PROP_PROCESS_STDERR_POINTER, NULL);
+  pipe pip = (pipe)SDL_GetPointerProperty(props, SDL_PROP_PROCESS_STDERR_POINTER, NULL);
+  if (pip != NULL && !msg_post_object_event(MSG_OBJECT_EVENT_CREATE, MSG_OBJECT_TYPE_PIPE, pip)) {
+    return NULL;
+  }
+  return pip;
 }
 
 func b32 pipe_is_valid(pipe pip) {
@@ -63,6 +76,10 @@ func b32 pipe_flush(pipe pip) {
 
 func void pipe_close(pipe pip) {
   if (!pip) {
+    return;
+  }
+
+  if (!msg_post_object_event(MSG_OBJECT_EVENT_DESTROY, MSG_OBJECT_TYPE_PIPE, pip)) {
     return;
   }
 

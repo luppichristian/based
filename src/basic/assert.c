@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "basic/assert.h"
+#include "input/msg.h"
 #include "threads/atomics.h"
 #include "threads/thread_ctx.h"
 #include "../sdl3_include.h"
@@ -13,7 +14,6 @@
 // =========================================================================
 
 global_var assert_mode assert_mode_current = ASSERT_MODE_DEFAULT;
-global_var assert_callback assert_callback_current = NULL;
 global_var mutex assert_mutex = NULL;
 global_var atomic_i32 assert_mutex_init = {0};
 
@@ -89,45 +89,34 @@ func void assert_set_mode(assert_mode mode) {
   }
 }
 
-func void assert_set_callback(assert_callback callback) {
-  mutex lock = assert_lock_get();
-  if (lock) {
-    mutex_lock(lock);
-  }
-  assert_callback_current = callback;
-  if (lock) {
-    mutex_unlock(lock);
-  }
-}
-
-func void _assert(b32 condition, const c8* msg, callsite site) {
+func void _assert(b32 condition, const c8* cond_msg, callsite site) {
   if (condition) {
     return;
   }
 
   assert_mode mode = ASSERT_MODE_DEFAULT;
-  assert_callback callback = NULL;
   mutex lock = assert_lock_get();
   if (lock) {
     mutex_lock(lock);
   }
   mode = assert_mode_current;
-  callback = assert_callback_current;
   if (lock) {
     mutex_unlock(lock);
   }
 
-  if (callback != NULL) {
-    b32 should_continue = callback(msg, site);
-    if (!should_continue) {
-      return;
-    }
+  msg assert_msg = {0};
+  assert_msg.type = MSG_TYPE_ASSERT;
+  assert_msg.assert_data.mode = (u32)mode;
+  assert_msg.assert_data.source_site = site;
+  SDL_strlcpy(assert_msg.assert_data.text, cond_msg != NULL ? cond_msg : "", MSG_ASSERT_TEXT_CAP);
+  if (!msg_post(&assert_msg)) {
+    return;
   }
 
   switch (mode) {
     case ASSERT_MODE_DEBUG: {
-      assert_log_msg(msg, site);
-      i32 action = assert_dialog(msg, site);
+      assert_log_msg(cond_msg, site);
+      i32 action = assert_dialog(cond_msg, site);
       if (action == 1) {
         SDL_TriggerBreakpoint();
       } else if (action == 2) {
@@ -136,10 +125,10 @@ func void _assert(b32 condition, const c8* msg, callsite site) {
       break;
     }
     case ASSERT_MODE_QUIT:
-      assert_log_msg(msg, site);
+      assert_log_msg(cond_msg, site);
       exit(1);
     case ASSERT_MODE_LOG:
-      assert_log_msg(msg, site);
+      assert_log_msg(cond_msg, site);
       break;
     case ASSERT_MODE_IGNORE:
       break;

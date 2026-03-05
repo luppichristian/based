@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "basic/log.h"
+#include "input/msg.h"
 #include "threads/atomics.h"
 
 #include <stdarg.h>
@@ -287,7 +288,6 @@ func b32 log_state_init(log_state* state, b32 use_mutex) {
 
   memset(state, 0, sizeof(*state));
   state->level = LOG_LEVEL_DEFAULT;
-  state->callback = NULL;
   state->root_frame = log_frame_create();
   if (!state->root_frame) {
     return false;
@@ -301,11 +301,19 @@ func b32 log_state_init(log_state* state, b32 use_mutex) {
     }
   }
   state->is_initialized = true;
+  if (!msg_post_object_event(MSG_OBJECT_EVENT_CREATE, MSG_OBJECT_TYPE_LOG_STATE, state)) {
+    log_state_quit(state);
+    return false;
+  }
   return true;
 }
 
 func void log_state_quit(log_state* state) {
   if (!state) {
+    return;
+  }
+
+  if (!msg_post_object_event(MSG_OBJECT_EVENT_DESTROY, MSG_OBJECT_TYPE_LOG_STATE, state)) {
     return;
   }
 
@@ -335,17 +343,6 @@ func void log_state_set_level(log_state* state, log_level level) {
 
   log_state_lock(resolved);
   resolved->level = level;
-  log_state_unlock(resolved);
-}
-
-func void log_state_set_callback(log_state* state, log_callback callback) {
-  log_state* resolved = log_state_resolve(state);
-  if (!resolved) {
-    return;
-  }
-
-  log_state_lock(resolved);
-  resolved->callback = callback;
   log_state_unlock(resolved);
 }
 
@@ -511,18 +508,16 @@ func log_state* log_get_global_state(void) {
   return &global_log_state;
 }
 
-func void _log(log_state* state, log_level level, callsite site, const c8* msg, ...) {
+func void _log(log_state* state, log_level level, callsite site, const c8* fmt, ...) {
   log_state* resolved = log_state_resolve(state);
   if (!resolved) {
     return;
   }
 
   log_level active_level = LOG_LEVEL_DEFAULT;
-  log_callback callback = NULL;
 
   log_state_lock(resolved);
   active_level = resolved->level;
-  callback = resolved->callback;
   log_state_unlock(resolved);
 
   if (level > active_level) {
@@ -531,18 +526,20 @@ func void _log(log_state* state, log_level level, callsite site, const c8* msg, 
 
   c8 buf[1024];
   va_list args;
-  va_start(args, msg);
-  vsnprintf(buf, sizeof(buf), msg, args);
+  va_start(args, fmt);
+  vsnprintf(buf, sizeof(buf), fmt, args);
   va_end(args);
 
-  log_state_store_message(resolved, level, site, buf);
-
-  if (callback != NULL) {
-    b32 should_continue = callback(level, buf, site);
-    if (!should_continue) {
-      return;
-    }
+  msg log_msg = {0};
+  log_msg.type = MSG_TYPE_LOG;
+  log_msg.log.state_ptr = resolved;
+  log_msg.log.level = (u32)level;
+  log_msg.log.source_site = site;
+  snprintf(log_msg.log.text, sizeof(log_msg.log.text), "%s", buf);
+  if (!msg_post(&log_msg)) {
+    return;
   }
 
+  log_state_store_message(resolved, level, site, buf);
   log_emit(level, site, buf);
 }

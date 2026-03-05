@@ -68,12 +68,11 @@ func b32 thread_ctx_set_user_data(sz index, void* user_data);
 // Clears the temporary allocators for the current thread.
 func void thread_ctx_clear_temp(void);
 
-// Convenience wrappers for configuring the current thread's effective log state.
+// Convenience wrapper for configuring the current thread's effective log state.
 func void thread_ctx_log_set_level(log_level level);
-func void thread_ctx_log_set_callback(log_callback callback);
 
 // Moves the process-global retained root-frame messages into the current
-// thread_ctx log state. The current thread's callback and severity level are
+// thread_ctx log state. The current thread's severity level is
 // left unchanged.
 // Returns false if the current thread has no initialized thread_ctx.
 func b32 thread_ctx_log_sync_from_main(void);

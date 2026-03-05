@@ -48,15 +48,3 @@ typedef enum assert_mode {
 // Set the desired assert mode at runtime. By default, it is set to ASSERT_MODE_DEFAULT.
 func void assert_set_mode(assert_mode mode);
 
-// =========================================================================
-// Assert callback
-// =========================================================================
-
-// Function prototype for the assert callback.
-// This callback can be set by the user to handle assertions in a custom way.
-// If 'true' is returned, the default assert handling will be called,
-// otherwise it will be ignored.
-typedef b32 (*assert_callback)(const char* msg, callsite site);
-
-// Set the assert callback function. This allows the user to handle assertions in a custom way.
-func void assert_set_callback(assert_callback callback);

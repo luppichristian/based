@@ -2,16 +2,26 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "threads/condvar.h"
+#include "input/msg.h"
 #include "../sdl3_include.h"
 
 func condvar _condvar_create(callsite site) {
   (void)site;
-  return (condvar)SDL_CreateCondition();
+  condvar handle = (condvar)SDL_CreateCondition();
+  if (handle != NULL && !msg_post_object_event(MSG_OBJECT_EVENT_CREATE, MSG_OBJECT_TYPE_CONDVAR, handle)) {
+    SDL_DestroyCondition((SDL_Condition*)handle);
+    return NULL;
+  }
+  return handle;
 }
 
 func b32 _condvar_destroy(condvar cond, callsite site) {
   (void)site;
   if (!cond) {
+    return 0;
+  }
+
+  if (!msg_post_object_event(MSG_OBJECT_EVENT_DESTROY, MSG_OBJECT_TYPE_CONDVAR, cond)) {
     return 0;
   }
   SDL_DestroyCondition((SDL_Condition*)cond);

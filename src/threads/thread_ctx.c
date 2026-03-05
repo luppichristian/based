@@ -2,6 +2,8 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "threads/thread_ctx.h"
+#include "input/msg.h"
+#include "threads/thread_current.h"
 #include "basic/utility_defines.h"
 #include <string.h>
 
@@ -92,10 +94,6 @@ func void thread_ctx_log_set_level(log_level level) {
   log_state_set_level(thread_ctx_get_log_state(), level);
 }
 
-func void thread_ctx_log_set_callback(log_callback callback) {
-  log_state_set_callback(thread_ctx_get_log_state(), callback);
-}
-
 func b32 thread_ctx_log_sync_from_main(void) {
   thread_ctx* ctx = thread_ctx_get();
   if (!ctx) {
@@ -119,6 +117,10 @@ func b32 thread_ctx_init(allocator main_allocator) {
     return false;
   }
 
+  if (!msg_post_thread_ctx_event(MSG_THREAD_CTX_EVENT_INIT, &tls_thread_ctx, thread_id())) {
+    return false;
+  }
+
   memset(&tls_thread_ctx, 0, sizeof(tls_thread_ctx));
   if (!log_state_init(&tls_thread_ctx.log, false)) {
     memset(&tls_thread_ctx, 0, sizeof(tls_thread_ctx));
@@ -136,6 +138,10 @@ func b32 thread_ctx_init(allocator main_allocator) {
 
 func void thread_ctx_quit(void) {
   if (!tls_thread_ctx.is_initialized) {
+    return;
+  }
+
+  if (!msg_post_thread_ctx_event(MSG_THREAD_CTX_EVENT_QUIT, &tls_thread_ctx, thread_id())) {
     return;
   }
 

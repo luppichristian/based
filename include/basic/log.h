@@ -24,12 +24,6 @@ typedef enum log_level {
   LOG_LEVEL_MAX,
 } log_level;
 
-// Function prototype for the log callback.
-// This callback can be set by the user to handle logs in a custom way.
-// If 'true' is returned, the default log handling will be called,
-// otherwise it will be ignored.
-typedef b32 (*log_callback)(log_level level, const char* msg, callsite site);
-
 // Bitmask helper for filtering one or more severities.
 #define log_level_mask(level) (1u << (level))
 
@@ -51,12 +45,11 @@ typedef struct log_frame {
 } log_frame;
 
 // Per-thread (or caller-owned) log configuration.
-// The mutex is optional. When present, it serializes access to callback/level.
+// The mutex is optional. When present, it serializes access to level.
 typedef struct log_state {
   b32 is_initialized;
   mutex mutex_handle;
   log_level level;
-  log_callback callback;
   log_frame* root_frame;
   log_frame* active_frame;
 } log_state;
@@ -78,13 +71,10 @@ func b32 log_state_is_initialized(log_state* state);
 // Sets the minimum enabled level for the given state.
 func void log_state_set_level(log_state* state, log_level level);
 
-// Sets the callback for the given state.
-func void log_state_set_callback(log_state* state, log_callback callback);
-
 // Moves the retained root-frame messages from src into dst by splicing the
 // linked list nodes directly. Messages are appended to dst->root_frame and
 // removed from src->root_frame.
-// This does not modify either state's level, callback, mutex ownership,
+// This does not modify either state's level, mutex ownership,
 // or active nested frame stack.
 func void log_state_sync(log_state* dst, log_state* src);
 

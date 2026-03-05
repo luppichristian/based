@@ -2,17 +2,18 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "threads/thread_group.h"
+#include "input/msg.h"
 #include "threads/thread_ctx.h"
 #include "../sdl3_include.h"
 
 // SDL thread wrapper — bridges thread_func into thread_group_func.
-static i32 thread_group_wrapper(void* raw) {
+func i32 thread_group_wrapper(void* raw) {
   thread_group_slot* slot = (thread_group_slot*)raw;
   return slot->entry(slot->index, slot->arg);
 }
 
 // Shared creation path. base_name may be NULL for unnamed threads.
-static thread_group create_impl(u32 count, thread_group_func entry, void* arg, const c8* base_name) {
+func thread_group create_impl(u32 count, thread_group_func entry, void* arg, const c8* base_name) {
   thread_group empty = {0};
   if (!count || !entry) {
     return empty;
@@ -63,6 +64,10 @@ static thread_group create_impl(u32 count, thread_group_func entry, void* arg, c
 
 func thread_group _thread_group_create(u32 count, thread_group_func entry, void* arg, callsite site) {
   (void)site;
+  if (!msg_post_object_event(MSG_OBJECT_EVENT_CREATE, MSG_OBJECT_TYPE_THREAD_GROUP, NULL)) {
+    thread_group empty = {0};
+    return empty;
+  }
   return create_impl(count, entry, arg, NULL);
 }
 
@@ -73,12 +78,19 @@ func thread_group _thread_group_create_named(
     const c8* base_name,
     callsite site) {
   (void)site;
+  if (!msg_post_object_event(MSG_OBJECT_EVENT_CREATE, MSG_OBJECT_TYPE_THREAD_GROUP, NULL)) {
+    thread_group empty = {0};
+    return empty;
+  }
   return create_impl(count, entry, arg, base_name);
 }
 
 func void _thread_group_destroy(thread_group* group, callsite site) {
   (void)site;
   if (!group) {
+    return;
+  }
+  if (!msg_post_object_event(MSG_OBJECT_EVENT_DESTROY, MSG_OBJECT_TYPE_THREAD_GROUP, group)) {
     return;
   }
   SDL_free(group->threads);

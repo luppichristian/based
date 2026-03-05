@@ -3,6 +3,7 @@
 
 #include "filesystem/archive.h"
 #include "basic/utility_defines.h"
+#include "input/msg.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -270,6 +271,9 @@ func archive archive_create(allocator* opt_alloc) {
   archive arc;
   memset(&arc, 0, size_of(arc));
   arc.opt_alloc = opt_alloc;
+  if (!msg_post_object_event(MSG_OBJECT_EVENT_CREATE, MSG_OBJECT_TYPE_ARCHIVE, &arc)) {
+    memset(&arc, 0, size_of(arc));
+  }
   return arc;
 }
 
@@ -289,6 +293,10 @@ func void archive_clear(archive* arc) {
 
 func void archive_destroy(archive* arc) {
   if (arc == NULL) {
+    return;
+  }
+
+  if (!msg_post_object_event(MSG_OBJECT_EVENT_DESTROY, MSG_OBJECT_TYPE_ARCHIVE, arc)) {
     return;
   }
 

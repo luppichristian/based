@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "memory/heap.h"
+#include "input/msg.h"
 #include "basic/utility_defines.h"
 #include <string.h>
 
@@ -173,6 +174,9 @@ func heap heap_create(allocator parent_alloc, mutex opt_mutex, sz default_block_
   hep.parent = parent_alloc;
   hep.opt_mutex = opt_mutex;
   hep.default_block_sz = default_block_sz;
+  if (!msg_post_object_event(MSG_OBJECT_EVENT_CREATE, MSG_OBJECT_TYPE_HEAP, &hep)) {
+    memset(&hep, 0, sizeof(hep));
+  }
   return hep;
 }
 
@@ -183,6 +187,14 @@ func heap heap_create_mutexed(allocator parent_alloc, sz default_block_sz) {
 }
 
 func void heap_destroy(heap* hep) {
+  if (hep == NULL) {
+    return;
+  }
+
+  if (!msg_post_object_event(MSG_OBJECT_EVENT_DESTROY, MSG_OBJECT_TYPE_HEAP, hep)) {
+    return;
+  }
+
   if (hep->opt_mutex) {
     mutex_lock(hep->opt_mutex);
   }

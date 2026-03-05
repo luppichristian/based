@@ -6,6 +6,7 @@
 #endif
 
 #include "basic/entry.h"
+#include "input/msg.h"
 #include "memory/vmem.h"
 #include "threads/thread_ctx.h"
 #include "../sdl3_include.h"
@@ -142,10 +143,16 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
 }
 
 SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
+  msg based_msg = {0};
+
   (void)appstate;
 
-  if (event->type == SDL_EVENT_QUIT)
+  if (event->type == SDL_EVENT_QUIT) {
+    if (msg_from_native(event, &based_msg)) {
+      (void)msg_post(&based_msg);
+    }
     return SDL_APP_SUCCESS;
+  }
   return SDL_APP_CONTINUE;
 }
 

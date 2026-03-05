@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "memory/arena.h"
+#include "input/msg.h"
 #include "basic/utility_defines.h"
 #include <string.h>
 
@@ -75,6 +76,9 @@ func arena arena_create(allocator parent_alloc, mutex opt_mutex, sz default_bloc
   arn.parent = parent_alloc;
   arn.opt_mutex = opt_mutex;
   arn.default_block_sz = default_block_sz;
+  if (!msg_post_object_event(MSG_OBJECT_EVENT_CREATE, MSG_OBJECT_TYPE_ARENA, &arn)) {
+    memset(&arn, 0, sizeof(arn));
+  }
   return arn;
 }
 
@@ -85,6 +89,14 @@ func arena arena_create_mutexed(allocator parent_alloc, sz default_block_sz) {
 }
 
 func void arena_destroy(arena* arn) {
+  if (arn == NULL) {
+    return;
+  }
+
+  if (!msg_post_object_event(MSG_OBJECT_EVENT_DESTROY, MSG_OBJECT_TYPE_ARENA, arn)) {
+    return;
+  }
+
   if (arn->opt_mutex) {
     mutex_lock(arn->opt_mutex);
   }

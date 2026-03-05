@@ -4,6 +4,7 @@
 #include "filesystem/filestream.h"
 
 #include "filesystem/archive.h"
+#include "input/msg.h"
 #include "memory/buffer.h"
 
 #include "../sdl3_include.h"
@@ -134,6 +135,10 @@ func filestream filestream_open(const path* src, u32 mode_flags) {
   stm.mode_flags = mode_flags;
   stm.native_handle = file_ptr;
   stm.error_code = FILESTREAM_ERROR_NONE;
+  if (!msg_post_object_event(MSG_OBJECT_EVENT_CREATE, MSG_OBJECT_TYPE_FILESTREAM, &stm)) {
+    filestream_close(&stm);
+    return filestream_empty();
+  }
   return stm;
 }
 
@@ -172,6 +177,11 @@ func filestream filestream_open_archive(archive* arc, const path* src, u32 mode_
 
   if ((mode_flags & FILESTREAM_OPEN_APPEND) != 0) {
     stm.cursor = stm.memory_size;
+  }
+
+  if (!msg_post_object_event(MSG_OBJECT_EVENT_CREATE, MSG_OBJECT_TYPE_FILESTREAM, &stm)) {
+    filestream_close(&stm);
+    return filestream_empty();
   }
 
   return stm;
@@ -213,6 +223,10 @@ func void filestream_close(filestream* stm) {
   SDL_IOStream* file_ptr = NULL;
 
   if (stm == NULL) {
+    return;
+  }
+
+  if (!msg_post_object_event(MSG_OBJECT_EVENT_DESTROY, MSG_OBJECT_TYPE_FILESTREAM, stm)) {
     return;
   }
 

@@ -5,6 +5,7 @@
 
 #include "basic/env_defines.h"
 #include "filesystem/file.h"
+#include "input/msg.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -83,6 +84,10 @@ func b32 filemap_flush(filemap* map) {
 
 func void filemap_close(filemap* map) {
   if (map == NULL) {
+    return;
+  }
+
+  if (!msg_post_object_event(MSG_OBJECT_EVENT_DESTROY, MSG_OBJECT_TYPE_FILEMAP, map)) {
     return;
   }
 
@@ -191,6 +196,10 @@ func filemap filemap_open(const path* src, filemap_access access) {
     return filemap_empty();
   }
 
+  if (!msg_post_object_event(MSG_OBJECT_EVENT_CREATE, MSG_OBJECT_TYPE_FILEMAP, &map)) {
+    filemap_close(&map);
+    return filemap_empty();
+  }
   return map;
 #elif defined(PLATFORM_UNIX) || defined(PLATFORM_ANDROID) || defined(PLATFORM_IOS)
   i32 open_flags = O_RDONLY;
@@ -231,6 +240,10 @@ func filemap filemap_open(const path* src, filemap_access access) {
   }
 
   map.native_mapping = (void*)(up)map_flags;
+  if (!msg_post_object_event(MSG_OBJECT_EVENT_CREATE, MSG_OBJECT_TYPE_FILEMAP, &map)) {
+    filemap_close(&map);
+    return filemap_empty();
+  }
   return map;
 #else
   FILE* file_ptr = NULL;
@@ -274,6 +287,10 @@ func filemap filemap_open(const path* src, filemap_access access) {
 
   fclose(file_ptr);
   map.uses_fallback_copy = 1;
+  if (!msg_post_object_event(MSG_OBJECT_EVENT_CREATE, MSG_OBJECT_TYPE_FILEMAP, &map)) {
+    filemap_close(&map);
+    return filemap_empty();
+  }
   return map;
 #endif
 }

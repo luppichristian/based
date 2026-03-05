@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "threads/spinlock.h"
+#include "input/msg.h"
 #include "../sdl3_include.h"
 
 func spinlock _spinlock_create(callsite site) {
@@ -10,11 +11,22 @@ func spinlock _spinlock_create(callsite site) {
   if (spl) {
     *spl = 0;
   }
+  if (spl != NULL && !msg_post_object_event(MSG_OBJECT_EVENT_CREATE, MSG_OBJECT_TYPE_SPINLOCK, spl)) {
+    SDL_free(spl);
+    return NULL;
+  }
   return (spinlock)spl;
 }
 
 func void _spinlock_destroy(spinlock sl, callsite site) {
   (void)site;
+  if (!sl) {
+    return;
+  }
+
+  if (!msg_post_object_event(MSG_OBJECT_EVENT_DESTROY, MSG_OBJECT_TYPE_SPINLOCK, sl)) {
+    return;
+  }
   SDL_free(sl);
 }
 

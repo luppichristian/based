@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "memory/ring.h"
+#include "input/msg.h"
 #include <string.h>
 
 // =========================================================================
@@ -14,6 +15,9 @@ func ring ring_create(void* ptr, sz capacity, mutex opt_mutex) {
   rng.ptr = (u8*)ptr;
   rng.capacity = capacity;
   rng.opt_mutex = opt_mutex;
+  if (!msg_post_object_event(MSG_OBJECT_EVENT_CREATE, MSG_OBJECT_TYPE_RING, &rng)) {
+    memset(&rng, 0, sizeof(rng));
+  }
   return rng;
 }
 
@@ -33,6 +37,12 @@ func ring ring_create_alloc(allocator parent_alloc, sz capacity, mutex opt_mutex
     rng.ptr = (u8*)_allocator_alloc(&parent_alloc, capacity, CALLSITE_HERE);
     rng.buf_owned = rng.ptr != NULL ? 1 : 0;
   }
+  if (!msg_post_object_event(MSG_OBJECT_EVENT_CREATE, MSG_OBJECT_TYPE_RING, &rng)) {
+    if (rng.buf_owned && rng.parent.alloc_fn) {
+      _allocator_dealloc(&rng.parent, rng.ptr, rng.capacity, CALLSITE_HERE);
+    }
+    memset(&rng, 0, sizeof(rng));
+  }
   return rng;
 }
 
@@ -43,6 +53,14 @@ func ring ring_create_alloc_mutexed(allocator parent_alloc, sz capacity) {
 }
 
 func void ring_destroy(ring* rng) {
+  if (rng == NULL) {
+    return;
+  }
+
+  if (!msg_post_object_event(MSG_OBJECT_EVENT_DESTROY, MSG_OBJECT_TYPE_RING, rng)) {
+    return;
+  }
+
   if (rng->opt_mutex) {
     mutex_lock(rng->opt_mutex);
   }

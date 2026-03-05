@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "memory/pool.h"
+#include "input/msg.h"
 #include "basic/utility_defines.h"
 #include <string.h>
 
@@ -116,6 +117,9 @@ func pool pool_create(
   pol.default_block_sz = default_block_sz;
   pol.object_size = object_size;
   pol.object_align = object_align;
+  if (!msg_post_object_event(MSG_OBJECT_EVENT_CREATE, MSG_OBJECT_TYPE_POOL, &pol)) {
+    memset(&pol, 0, sizeof(pol));
+  }
   return pol;
 }
 
@@ -131,6 +135,14 @@ func pool pool_create_mutexed(
 }
 
 func void pool_destroy(pool* pol) {
+  if (pol == NULL) {
+    return;
+  }
+
+  if (!msg_post_object_event(MSG_OBJECT_EVENT_DESTROY, MSG_OBJECT_TYPE_POOL, pol)) {
+    return;
+  }
+
   if (pol->opt_mutex) {
     mutex_lock(pol->opt_mutex);
   }

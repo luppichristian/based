@@ -9,10 +9,12 @@ func void tablet_internal_on_msg(const msg* src);
 
 global_var msg_post_callback msg_post_callback_fn = NULL;
 global_var void* msg_post_callback_user_data = NULL;
+const_var i32 MSG_PAYLOAD_CODE = 0x42415345;
 
 func void msg_apply_common(msg* dst, const SDL_Event* src) {
   dst->type = src->type;
   dst->timestamp = src->common.timestamp;
+  dst->post_site = (callsite) {0};
 }
 
 func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
@@ -330,6 +332,13 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
       return 1;
 
     default:
+      if (src->type >= SDL_EVENT_USER && src->user.code == (Sint32)MSG_PAYLOAD_CODE && src->user.data1 != NULL) {
+        msg* payload = (msg*)src->user.data1;
+        *out_msg = *payload;
+        SDL_free(payload);
+        return 1;
+      }
+
       if (src->type >= SDL_EVENT_USER) {
         out_msg->custom.window_id = (u32)src->user.windowID;
         out_msg->custom.code = (i32)src->user.code;
@@ -788,19 +797,48 @@ func b32 msg_wait_timeout(msg* out_msg, i32 timeout_ms) {
   return 1;
 }
 
-func b32 msg_post(const msg* src) {
+func b32 _msg_post(const msg* src, callsite site) {
   SDL_Event native_event;
+  msg posted_msg;
+  msg* payload = NULL;
 
-  if (!src || !msg_to_sdl_event(src, &native_event) || !SDL_PushEvent(&native_event)) {
+  if (!src) {
     return 0;
   }
 
-  tablet_internal_on_msg(src);
+  posted_msg = *src;
+  posted_msg.post_site = site;
 
-  if (msg_post_callback_fn) {
-    msg_post_callback_fn(src, msg_post_callback_user_data);
+  if (msg_post_callback_fn && !msg_post_callback_fn(&posted_msg, msg_post_callback_user_data)) {
+    return 0;
   }
 
+  if (posted_msg.type >= MSG_TYPE_USER) {
+    payload = (msg*)SDL_malloc(sizeof(*payload));
+    if (!payload) {
+      return 0;
+    }
+    *payload = posted_msg;
+
+    native_event = (SDL_Event) {0};
+    native_event.user.type = posted_msg.type;
+    native_event.user.timestamp = (Uint64)posted_msg.timestamp;
+    native_event.user.windowID = (SDL_WindowID)posted_msg.custom.window_id;
+    native_event.user.code = (Sint32)MSG_PAYLOAD_CODE;
+    native_event.user.data1 = payload;
+    native_event.user.data2 = NULL;
+  } else if (!msg_to_sdl_event(&posted_msg, &native_event)) {
+    return 0;
+  }
+
+  if (!SDL_PushEvent(&native_event)) {
+    if (payload != NULL) {
+      SDL_free(payload);
+    }
+    return 0;
+  }
+
+  tablet_internal_on_msg(&posted_msg);
   return 1;
 }
 
@@ -815,6 +853,32 @@ func u32 msg_register_custom_range(sz count) {
 func void msg_set_post_callback(msg_post_callback callback, void* user_data) {
   msg_post_callback_fn = callback;
   msg_post_callback_user_data = user_data;
+}
+
+func b32 _msg_post_object_event(
+    msg_object_event_kind event_kind,
+    msg_object_type object_type,
+    void* object_ptr,
+    callsite site) {
+  msg event_msg = {0};
+  event_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
+  event_msg.object_lifecycle.event_kind = (u32)event_kind;
+  event_msg.object_lifecycle.object_type = (u32)object_type;
+  event_msg.object_lifecycle.object_ptr = object_ptr;
+  return _msg_post(&event_msg, site);
+}
+
+func b32 _msg_post_thread_ctx_event(
+    msg_thread_ctx_event_kind event_kind,
+    void* ctx_ptr,
+    u64 thread_id,
+    callsite site) {
+  msg event_msg = {0};
+  event_msg.type = MSG_TYPE_THREAD_CTX;
+  event_msg.thread_ctx.event_kind = (u32)event_kind;
+  event_msg.thread_ctx.ctx_ptr = ctx_ptr;
+  event_msg.thread_ctx.thread_id = thread_id;
+  return _msg_post(&event_msg, site);
 }
 
 func b32 msg_from_native(const void* native_event, msg* out_msg) {

@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "processes/process.h"
+#include "input/msg.h"
 #include "../sdl3_include.h"
 
 // Returns true if options matches process_options_default().
@@ -30,6 +31,10 @@ func process _process_create_with(const c8* const* args, process_options options
   (void)site;
 
   if (!args || !args[0]) {
+    return NULL;
+  }
+
+  if (!msg_post_object_event(MSG_OBJECT_EVENT_CREATE, MSG_OBJECT_TYPE_PROCESS, NULL)) {
     return NULL;
   }
 
@@ -134,6 +139,10 @@ func b32 process_kill(process prc, b32 force) {
 
 func void process_destroy(process prc) {
   if (!prc) {
+    return;
+  }
+
+  if (!msg_post_object_event(MSG_OBJECT_EVENT_DESTROY, MSG_OBJECT_TYPE_PROCESS, prc)) {
     return;
   }
 

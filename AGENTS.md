@@ -34,13 +34,13 @@ NOTE: For now you can skip tests
 include/                      # public API headers
   based.h                     # umbrella include for most public modules
   basic/                      # core types, macros, asserts, logging, environment helpers
-    assert.h                  # runtime assertions and assert callbacks
+    assert.h                  # runtime assertions and assertion-mode controls (message-system interception)
     codespace.h               # callsite/source location helpers
     entry.h                   # entry-point abstraction hooks
     env_defines.h             # platform, arch, compiler, build macros
     intrinsics.h              # popcount, bit scans, byte swap, rotates
     keyword_defines.h         # project keyword and attribute macros
-    log.h                     # logging levels, macros, and callbacks
+    log.h                     # logging levels, macros, retained frames, and message-system interception
     primitive_types.h         # primitive type aliases and min/max constants
     utility_defines.h         # general-purpose utility macros
   containers/                 # intrusive containers and container utilities
@@ -69,7 +69,7 @@ include/                      # public API headers
     filemap.h                # memory-mapped file views with optional write-back
     filestream.h             # unified native-file and archive-entry stream wrapper
     pathinfo.h                # cross-platform filesystem metadata queries
-    pathwatch.h               # efsw-backed directory watch wrapper
+    pathwatch.h               # efsw-backed directory watch wrapper that emits pathwatch messages
     path.h                    # struct-backed fixed-capacity paths and path/file helpers
   input/                      # SDL-backed input APIs without exposing SDL in public headers
     clipboard.h               # clipboard text query and transfer helpers
@@ -77,7 +77,7 @@ include/                      # public API headers
     gamepads.h                # four-slot gamepad query helpers
     keyboard.h                # keyboard presence and key-state queries
     mouse.h                   # mouse state queries and coordinate conversion helpers
-    msg.h                     # SDL event wrapper, queue polling, and custom message posting
+    msg.h                     # unified event/message system, queue polling, and custom message posting callbacks
     tablet.h                  # graphics-tablet enumeration and pen-state helpers
     touch.h                   # touch-device and finger query helpers
   processes/                  # process creation and lifecycle helpers
