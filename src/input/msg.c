@@ -224,10 +224,10 @@ func b32 msg_handler_should_run_for_type(const msg_handler_entry* entry, u32 typ
 }
 
 func void msg_handler_sort_entries(void) {
-  for (u32 outer_index = 0; outer_index < msg_handler_count; outer_index += 1) {
-    for (u32 inner_index = outer_index + 1; inner_index < msg_handler_count; inner_index += 1) {
-      msg_handler_entry* lhs = &msg_handler_entries[outer_index];
-      msg_handler_entry* rhs = &msg_handler_entries[inner_index];
+  for (u32 outer_idx = 0; outer_idx < msg_handler_count; outer_idx += 1) {
+    for (u32 inner_idx = outer_idx + 1; inner_idx < msg_handler_count; inner_idx += 1) {
+      msg_handler_entry* lhs = &msg_handler_entries[outer_idx];
+      msg_handler_entry* rhs = &msg_handler_entries[inner_idx];
       b32 swap_needed = 0;
 
       if (lhs->priority < rhs->priority) {
@@ -292,15 +292,15 @@ func b32 msg_dispatch_handlers(msg* posted_msg, msg_handler_stage stage) {
     }
 
     if (stage == MSG_HANDLER_STAGE_BEFORE_POST && result == MSG_HANDLER_RESULT_CANCEL_POST) {
-      for (u32 once_index = 0; once_index < once_handler_count; once_index += 1) {
-        (void)msg_remove_handler(once_handler_ids[once_index]);
+      for (u32 once_idx = 0; once_idx < once_handler_count; once_idx += 1) {
+        (void)msg_remove_handler(once_handler_ids[once_idx]);
       }
       return 0;
     }
   }
 
-  for (u32 once_index = 0; once_index < once_handler_count; once_index += 1) {
-    (void)msg_remove_handler(once_handler_ids[once_index]);
+  for (u32 once_idx = 0; once_idx < once_handler_count; once_idx += 1) {
+    (void)msg_remove_handler(once_handler_ids[once_idx]);
   }
 
   return 1;
@@ -1235,8 +1235,8 @@ func b32 msg_remove_handler(u64 handler_id) {
       continue;
     }
 
-    for (u32 move_index = index + 1; move_index < msg_handler_count; move_index += 1) {
-      msg_handler_entries[move_index - 1] = msg_handler_entries[move_index];
+    for (u32 move_idx = index + 1; move_idx < msg_handler_count; move_idx += 1) {
+      msg_handler_entries[move_idx - 1] = msg_handler_entries[move_idx];
     }
 
     msg_handler_count -= 1;

@@ -26,4 +26,4 @@ typedef struct pathinfo {
 } pathinfo;
 
 // Queries metadata for src. Returns 1 on success, 0 otherwise.
-func b32 path_get_info(const path* src, pathinfo* out_info);
+func b32 pathinfo_get(const path* src, pathinfo* out_info);

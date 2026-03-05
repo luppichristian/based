@@ -28,7 +28,7 @@ func void semaphore_wait(semaphore sem);
 
 // Tries to decrement the semaphore without blocking.
 // Returns true if the count was positive and was decremented, false if the count is zero.
-func b32 semaphore_trywait(semaphore sem);
+func b32 semaphore_try_wait(semaphore sem);
 
 // Waits up to millis milliseconds for the semaphore count to become positive, then decrements it.
 // Returns true if the semaphore was decremented, false if the timeout elapsed.

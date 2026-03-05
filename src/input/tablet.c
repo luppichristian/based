@@ -51,7 +51,7 @@ func sz tablet_get_count(void) {
 func b32 tablet_get_device_id(sz index, device_id* out_id) {
   SDL_hid_device_info* head = SDL_hid_enumerate(0, 0);
   SDL_hid_device_info* entry = head;
-  sz current_index = 0;
+  sz current_idx = 0;
   b32 found = 0;
 
   if (out_id) {
@@ -60,7 +60,7 @@ func b32 tablet_get_device_id(sz index, device_id* out_id) {
 
   while (entry) {
     if (entry->usage_page == 0x0D) {
-      if (current_index == index) {
+      if (current_idx == index) {
         if (out_id) {
           out_id->type = DEVICE_TYPE_TABLET;
           out_id->instance = tablet_hash_path(entry->path);
@@ -69,7 +69,7 @@ func b32 tablet_get_device_id(sz index, device_id* out_id) {
         break;
       }
 
-      current_index += 1;
+      current_idx += 1;
     }
 
     entry = entry->next;
@@ -111,14 +111,14 @@ func b32 tablet_read_hid_report(device_id id, void* dst, sz capacity, sz* out_si
 
   while (entry) {
     if (entry->usage_page == 0x0D && tablet_hash_path(entry->path) == id.instance) {
-      sz copy_index = 0;
+      sz copy_idx = 0;
 
-      while (entry->path && entry->path[copy_index] && (copy_index + 1) < size_of(path_buf)) {
-        path_buf[copy_index] = entry->path[copy_index];
-        copy_index += 1;
+      while (entry->path && entry->path[copy_idx] && (copy_idx + 1) < size_of(path_buf)) {
+        path_buf[copy_idx] = entry->path[copy_idx];
+        copy_idx += 1;
       }
 
-      path_buf[copy_index] = '\0';
+      path_buf[copy_idx] = '\0';
       break;
     }
 

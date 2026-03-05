@@ -24,9 +24,9 @@ func void input_capture_ensure_default_slot(void) {
 }
 
 func sz input_capture_find_slot(input_key key) {
-  for (sz slot_index = 0; slot_index < INPUT_CAPTURE_MAX_KEYS; slot_index += 1) {
-    if (input_capture_used[slot_index] && input_capture_keys[slot_index] == key) {
-      return slot_index;
+  for (sz slot_idx = 0; slot_idx < INPUT_CAPTURE_MAX_KEYS; slot_idx += 1) {
+    if (input_capture_used[slot_idx] && input_capture_keys[slot_idx] == key) {
+      return slot_idx;
     }
   }
 
@@ -36,17 +36,17 @@ func sz input_capture_find_slot(input_key key) {
 func sz input_capture_get_slot(input_key key) {
   input_capture_ensure_default_slot();
 
-  sz found_index = input_capture_find_slot(key);
-  if (found_index < INPUT_CAPTURE_MAX_KEYS) {
-    return found_index;
+  sz found_idx = input_capture_find_slot(key);
+  if (found_idx < INPUT_CAPTURE_MAX_KEYS) {
+    return found_idx;
   }
 
-  for (sz slot_index = 1; slot_index < INPUT_CAPTURE_MAX_KEYS; slot_index += 1) {
-    if (!input_capture_used[slot_index]) {
-      input_capture_keys[slot_index] = key;
-      input_capture_used[slot_index] = 1;
-      input_capture_slot_epoch[slot_index] = input_capture_next_epoch(input_capture_slot_epoch[slot_index]);
-      return slot_index;
+  for (sz slot_idx = 1; slot_idx < INPUT_CAPTURE_MAX_KEYS; slot_idx += 1) {
+    if (!input_capture_used[slot_idx]) {
+      input_capture_keys[slot_idx] = key;
+      input_capture_used[slot_idx] = 1;
+      input_capture_slot_epoch[slot_idx] = input_capture_next_epoch(input_capture_slot_epoch[slot_idx]);
+      return slot_idx;
     }
   }
 
@@ -64,28 +64,28 @@ func void input_capture_release_key(input_key key) {
     return;
   }
 
-  sz slot_index = input_capture_find_slot(key);
-  if (slot_index >= INPUT_CAPTURE_MAX_KEYS) {
+  sz slot_idx = input_capture_find_slot(key);
+  if (slot_idx >= INPUT_CAPTURE_MAX_KEYS) {
     return;
   }
 
-  input_capture_keys[slot_index] = 0;
-  input_capture_used[slot_index] = 0;
+  input_capture_keys[slot_idx] = 0;
+  input_capture_used[slot_idx] = 0;
 }
 
 func void input_capture_release_all_keys(void) {
   input_capture_ensure_default_slot();
 
-  for (sz slot_index = 1; slot_index < INPUT_CAPTURE_MAX_KEYS; slot_index += 1) {
-    input_capture_keys[slot_index] = 0;
-    input_capture_used[slot_index] = 0;
+  for (sz slot_idx = 1; slot_idx < INPUT_CAPTURE_MAX_KEYS; slot_idx += 1) {
+    input_capture_keys[slot_idx] = 0;
+    input_capture_used[slot_idx] = 0;
   }
 }
 
-func u32 input_capture_get_slot_epoch(sz slot_index) {
-  if (slot_index >= INPUT_CAPTURE_MAX_KEYS) {
+func u32 input_capture_get_slot_epoch(sz slot_idx) {
+  if (slot_idx >= INPUT_CAPTURE_MAX_KEYS) {
     return 0;
   }
 
-  return input_capture_slot_epoch[slot_index];
+  return input_capture_slot_epoch[slot_idx];
 }

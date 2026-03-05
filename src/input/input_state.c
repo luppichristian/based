@@ -20,14 +20,14 @@ func sz input_state_find_gamepad_slot(device_id device) {
     return GAMEPADS_MAX_COUNT;
   }
 
-  for (sz slot_index = 0; slot_index < GAMEPADS_MAX_COUNT; slot_index += 1) {
+  for (sz slot_idx = 0; slot_idx < GAMEPADS_MAX_COUNT; slot_idx += 1) {
     device_id slot_id = {0};
-    if (!gamepads_get_device_id(slot_index, &slot_id)) {
+    if (!gamepads_get_device_id(slot_idx, &slot_id)) {
       continue;
     }
 
     if (slot_id.instance == device.instance) {
-      return slot_index;
+      return slot_idx;
     }
   }
 
@@ -35,30 +35,30 @@ func sz input_state_find_gamepad_slot(device_id device) {
 }
 
 func void input_state_sync_gamepads(input_state* src, input_key key) {
-  for (sz slot_index = 0; slot_index < GAMEPADS_MAX_COUNT; slot_index += 1) {
-    b32 connected = gamepads_is_connected(slot_index);
-    src->gamepad_connected[slot_index] = connected;
+  for (sz slot_idx = 0; slot_idx < GAMEPADS_MAX_COUNT; slot_idx += 1) {
+    b32 connected = gamepads_is_connected(slot_idx);
+    src->gamepad_connected[slot_idx] = connected;
 
-    for (sz button_index = 0; button_index < GAMEPAD_BUTTON_COUNT; button_index += 1) {
-      src->gamepad_button_down[slot_index][button_index] =
-        connected ? gamepads_get_button(key, slot_index, (gamepad_button)button_index) : 0;
+    for (sz button_idx = 0; button_idx < GAMEPAD_BUTTON_COUNT; button_idx += 1) {
+      src->gamepad_button_down[slot_idx][button_idx] =
+          connected ? gamepads_get_button(key, slot_idx, (gamepad_button)button_idx) : 0;
     }
 
-    for (sz axis_index = 0; axis_index < GAMEPAD_AXIS_COUNT; axis_index += 1) {
-      src->gamepad_axis[slot_index][axis_index] =
-        connected ? gamepads_get_axis(key, slot_index, (gamepad_axis)axis_index) : 0;
+    for (sz axis_idx = 0; axis_idx < GAMEPAD_AXIS_COUNT; axis_idx += 1) {
+      src->gamepad_axis[slot_idx][axis_idx] =
+          connected ? gamepads_get_axis(key, slot_idx, (gamepad_axis)axis_idx) : 0;
     }
   }
 }
 
 func void input_state_sync_mouse_buttons_from_mask(input_state* src) {
-  for (sz button_index = 0; button_index < INPUT_STATE_MOUSE_BUTTON_CAP; button_index += 1) {
-    if (button_index == 0) {
-      src->mouse_button_down[button_index] = 0;
+  for (sz button_idx = 0; button_idx < INPUT_STATE_MOUSE_BUTTON_CAP; button_idx += 1) {
+    if (button_idx == 0) {
+      src->mouse_button_down[button_idx] = 0;
       continue;
     }
 
-    src->mouse_button_down[button_index] = (src->mouse_button_mask & (1u << (button_index - 1))) != 0 ? 1 : 0;
+    src->mouse_button_down[button_idx] = (src->mouse_button_mask & (1u << (button_idx - 1))) != 0 ? 1 : 0;
   }
 }
 
@@ -81,9 +81,9 @@ func b32 input_state_capture(input_key key, input_state* out_state) {
   out_state->mouse_available = mouse_is_available();
   out_state->keyboard_mods = keyboard_get_mods();
 
-  for (sz scancode_index = 0; scancode_index < INPUT_STATE_KEY_CAP; scancode_index += 1) {
-    out_state->keyboard_down[scancode_index] = keyboard_is_key_down(key, (u32)scancode_index);
-    out_state->keyboard_repeat[scancode_index] = keyboard_get_key_repeat_count(key, (u32)scancode_index);
+  for (sz scancode_idx = 0; scancode_idx < INPUT_STATE_KEY_CAP; scancode_idx += 1) {
+    out_state->keyboard_down[scancode_idx] = keyboard_is_key_down(key, (u32)scancode_idx);
+    out_state->keyboard_repeat[scancode_idx] = keyboard_get_key_repeat_count(key, (u32)scancode_idx);
   }
 
   mouse_state local_state = mouse_get_state(key);
@@ -112,20 +112,20 @@ func void input_state_apply_keyboard_msg(input_state* src, const msg* event_msg)
     return;
   }
 
-  sz scancode_index = (sz)event_msg->keyboard.scancode;
+  sz scancode_idx = (sz)event_msg->keyboard.scancode;
   src->keyboard_available = 1;
   src->keyboard_mods = event_msg->keyboard.modifiers;
 
   if (event_msg->type == MSG_TYPE_KEY_DOWN) {
-    src->keyboard_down[scancode_index] = 1;
+    src->keyboard_down[scancode_idx] = 1;
     if (event_msg->keyboard.repeat) {
-      src->keyboard_repeat[scancode_index] += 1;
+      src->keyboard_repeat[scancode_idx] += 1;
     } else {
-      src->keyboard_repeat[scancode_index] = 0;
+      src->keyboard_repeat[scancode_idx] = 0;
     }
   } else {
-    src->keyboard_down[scancode_index] = 0;
-    src->keyboard_repeat[scancode_index] = 0;
+    src->keyboard_down[scancode_idx] = 0;
+    src->keyboard_repeat[scancode_idx] = 0;
   }
 }
 
@@ -160,14 +160,14 @@ func void input_state_apply_mouse_msg(input_state* src, const msg* event_msg) {
   src->mouse_available = 1;
   i32 button_value = (i32)event_msg->mouse_button.button;
   if (button_value > 0 && (sz)button_value < INPUT_STATE_MOUSE_BUTTON_CAP) {
-    sz button_index = (sz)button_value;
+    sz button_idx = (sz)button_value;
     b32 down_state = event_msg->type == MSG_TYPE_MOUSE_BUTTON_DOWN ? 1 : 0;
-    src->mouse_button_down[button_index] = down_state;
+    src->mouse_button_down[button_idx] = down_state;
 
     if (down_state) {
-      src->mouse_button_mask |= (1u << (button_index - 1));
+      src->mouse_button_mask |= (1u << (button_idx - 1));
     } else {
-      src->mouse_button_mask &= ~(1u << (button_index - 1));
+      src->mouse_button_mask &= ~(1u << (button_idx - 1));
     }
   }
 
@@ -183,26 +183,26 @@ func void input_state_apply_gamepad_msg(input_state* src, const msg* event_msg) 
   }
 
   if (event_msg->type == MSG_TYPE_GAMEPAD_BUTTON_DOWN || event_msg->type == MSG_TYPE_GAMEPAD_BUTTON_UP) {
-    sz slot_index = input_state_find_gamepad_slot(event_msg->gamepad_button.device);
+    sz slot_idx = input_state_find_gamepad_slot(event_msg->gamepad_button.device);
     i32 button_value = (i32)event_msg->gamepad_button.button;
-    if (slot_index >= GAMEPADS_MAX_COUNT || button_value < 0 || button_value >= GAMEPAD_BUTTON_COUNT) {
+    if (slot_idx >= GAMEPADS_MAX_COUNT || button_value < 0 || button_value >= GAMEPAD_BUTTON_COUNT) {
       return;
     }
 
-    src->gamepad_connected[slot_index] = 1;
-    src->gamepad_button_down[slot_index][(sz)button_value] = event_msg->type == MSG_TYPE_GAMEPAD_BUTTON_DOWN ? 1 : 0;
+    src->gamepad_connected[slot_idx] = 1;
+    src->gamepad_button_down[slot_idx][(sz)button_value] = event_msg->type == MSG_TYPE_GAMEPAD_BUTTON_DOWN ? 1 : 0;
     return;
   }
 
   if (event_msg->type == MSG_TYPE_GAMEPAD_AXIS_MOTION) {
-    sz slot_index = input_state_find_gamepad_slot(event_msg->gamepad_axis.device);
+    sz slot_idx = input_state_find_gamepad_slot(event_msg->gamepad_axis.device);
     i32 axis_value = (i32)event_msg->gamepad_axis.axis;
-    if (slot_index >= GAMEPADS_MAX_COUNT || axis_value < 0 || axis_value >= GAMEPAD_AXIS_COUNT) {
+    if (slot_idx >= GAMEPADS_MAX_COUNT || axis_value < 0 || axis_value >= GAMEPAD_AXIS_COUNT) {
       return;
     }
 
-    src->gamepad_connected[slot_index] = 1;
-    src->gamepad_axis[slot_index][(sz)axis_value] = event_msg->gamepad_axis.value;
+    src->gamepad_connected[slot_idx] = 1;
+    src->gamepad_axis[slot_idx][(sz)axis_value] = event_msg->gamepad_axis.value;
   }
 }
 

@@ -33,4 +33,4 @@ func void input_capture_release_all_keys(void);
 func sz input_capture_get_slot(input_key key);
 
 // Returns a monotonically increasing slot epoch used to detect slot reuse.
-func u32 input_capture_get_slot_epoch(sz slot_index);
+func u32 input_capture_get_slot_epoch(sz slot_idx);

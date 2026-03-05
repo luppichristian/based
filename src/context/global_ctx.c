@@ -161,7 +161,7 @@ func heap* global_get_temp_heap(void) {
   return ctx_get_temp_heap(global_ctx_get_shared());
 }
 
-func void* global_get_user_data(ctx_user_data_index index) {
+func void* global_get_user_data(ctx_user_data_idx index) {
   global_ctx* wrapper = global_ctx_get();
   if (!wrapper || index >= CTX_USER_DATA_COUNT) {
     return NULL;
@@ -181,7 +181,7 @@ func void* global_get_user_data(ctx_user_data_index index) {
   return user_data;
 }
 
-func b32 global_set_user_data(ctx_user_data_index index, void* user_data) {
+func b32 global_set_user_data(ctx_user_data_idx index, void* user_data) {
   global_ctx* wrapper = global_ctx_get();
   if (!wrapper || index >= CTX_USER_DATA_COUNT) {
     return false;
@@ -203,14 +203,14 @@ func b32 global_set_user_data(ctx_user_data_index index, void* user_data) {
   return has_access;
 }
 
-func b32 global_has_user_data_access(ctx_user_data_index index) {
+func b32 global_has_user_data_access(ctx_user_data_idx index) {
   if (!global_ctx_get() || index >= CTX_USER_DATA_COUNT) {
     return false;
   }
   return global_user_data_access[index] != 0;
 }
 
-func b32 global_set_user_data_access(ctx_user_data_index index, b8 has_access) {
+func b32 global_set_user_data_access(ctx_user_data_idx index, b8 has_access) {
   if (!global_ctx_get() || index >= CTX_USER_DATA_COUNT) {
     return false;
   }

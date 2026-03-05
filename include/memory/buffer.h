@@ -14,10 +14,10 @@ typedef struct buffer {
 func buffer buffer_from(void* ptr, sz size);
 
 // Returns a new buffer that is a slice of the original buffer from the specified offset to the end.
-func buffer subbuffer_from(buffer buff, sz offset);
+func buffer buffer_sub_from(buffer buff, sz offset);
 
 // Returns a new buffer that is a slice of the original buffer from the specified offset and size.
-func buffer subbuffer_from_sized(buffer buff, sz offset, sz size);
+func buffer buffer_sub_from_sized(buffer buff, sz offset, sz size);
 
 // Returns a new buffer that is a slice of the original buffer from start to end.
 func buffer buffer_slice(buffer buff, sz start, sz end);

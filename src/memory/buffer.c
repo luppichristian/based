@@ -13,7 +13,7 @@ func buffer buffer_from(void* ptr, sz size) {
   return result;
 }
 
-func buffer subbuffer_from(buffer buff, sz offset) {
+func buffer buffer_sub_from(buffer buff, sz offset) {
   if (offset >= buff.size) {
     buffer result = {.size = 0, .ptr = NULL};
     return result;
@@ -22,7 +22,7 @@ func buffer subbuffer_from(buffer buff, sz offset) {
   return buffer_from((u8*)buff.ptr + offset, buff.size - offset);
 }
 
-func buffer subbuffer_from_sized(buffer buff, sz offset, sz size) {
+func buffer buffer_sub_from_sized(buffer buff, sz offset, sz size) {
   if (offset >= buff.size || size > buff.size - offset) {
     buffer result = {0};
     return result;

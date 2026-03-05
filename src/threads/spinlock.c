@@ -54,6 +54,6 @@ func void spinlock_unlock(spinlock sl) {
   SDL_UnlockSpinlock((SDL_SpinLock*)sl);
 }
 
-func b32 spinlock_trylock(spinlock sl) {
+func b32 spinlock_try_lock(spinlock sl) {
   return SDL_TryLockSpinlock((SDL_SpinLock*)sl);
 }

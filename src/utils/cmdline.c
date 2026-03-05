@@ -33,7 +33,7 @@ func cstr8 cmdline_get_program(cmdline cmdl) {
   return cmdline_get_arg(cmdl, 0);
 }
 
-func b32 cmdline_find(cmdline cmdl, cstr8 arg, sz* out_index) {
+func b32 cmdline_find(cmdline cmdl, cstr8 arg, sz* out_idx) {
   if (arg == NULL || cmdl.args == NULL) {
     return 0;
   }
@@ -41,8 +41,8 @@ func b32 cmdline_find(cmdline cmdl, cstr8 arg, sz* out_index) {
   for (sz index = 0; index < cmdl.count; index++) {
     cstr8 value = cmdline_get_arg(cmdl, index);
     if (value != NULL && cstr8_cmp(value, arg) == 0) {
-      if (out_index != NULL) {
-        *out_index = index;
+      if (out_idx != NULL) {
+        *out_idx = index;
       }
       return 1;
     }

@@ -50,24 +50,24 @@ func b32 keyboard_is_key_pressed(input_key key, u32 scancode) {
     return 0;
   }
 
-  sz slot_index = input_capture_get_slot(key);
-  if (slot_index >= INPUT_CAPTURE_MAX_KEYS) {
+  sz slot_idx = input_capture_get_slot(key);
+  if (slot_idx >= INPUT_CAPTURE_MAX_KEYS) {
     return 0;
   }
 
-  u32 slot_epoch = input_capture_get_slot_epoch(slot_index);
-  if (keyboard_pressed_seen_epoch[slot_index][scancode] != slot_epoch) {
-    keyboard_pressed_seen_epoch[slot_index][scancode] = slot_epoch;
-    keyboard_pressed_seen[slot_index][scancode] = keyboard_pressed_generation[scancode];
+  u32 slot_epoch = input_capture_get_slot_epoch(slot_idx);
+  if (keyboard_pressed_seen_epoch[slot_idx][scancode] != slot_epoch) {
+    keyboard_pressed_seen_epoch[slot_idx][scancode] = slot_epoch;
+    keyboard_pressed_seen[slot_idx][scancode] = keyboard_pressed_generation[scancode];
     return 0;
   }
 
   u32 generation = keyboard_pressed_generation[scancode];
-  if (generation == 0 || keyboard_pressed_seen[slot_index][scancode] == generation) {
+  if (generation == 0 || keyboard_pressed_seen[slot_idx][scancode] == generation) {
     return 0;
   }
 
-  keyboard_pressed_seen[slot_index][scancode] = generation;
+  keyboard_pressed_seen[slot_idx][scancode] = generation;
   return 1;
 }
 
@@ -76,24 +76,24 @@ func b32 keyboard_is_key_released(input_key key, u32 scancode) {
     return 0;
   }
 
-  sz slot_index = input_capture_get_slot(key);
-  if (slot_index >= INPUT_CAPTURE_MAX_KEYS) {
+  sz slot_idx = input_capture_get_slot(key);
+  if (slot_idx >= INPUT_CAPTURE_MAX_KEYS) {
     return 0;
   }
 
-  u32 slot_epoch = input_capture_get_slot_epoch(slot_index);
-  if (keyboard_released_seen_epoch[slot_index][scancode] != slot_epoch) {
-    keyboard_released_seen_epoch[slot_index][scancode] = slot_epoch;
-    keyboard_released_seen[slot_index][scancode] = keyboard_released_generation[scancode];
+  u32 slot_epoch = input_capture_get_slot_epoch(slot_idx);
+  if (keyboard_released_seen_epoch[slot_idx][scancode] != slot_epoch) {
+    keyboard_released_seen_epoch[slot_idx][scancode] = slot_epoch;
+    keyboard_released_seen[slot_idx][scancode] = keyboard_released_generation[scancode];
     return 0;
   }
 
   u32 generation = keyboard_released_generation[scancode];
-  if (generation == 0 || keyboard_released_seen[slot_index][scancode] == generation) {
+  if (generation == 0 || keyboard_released_seen[slot_idx][scancode] == generation) {
     return 0;
   }
 
-  keyboard_released_seen[slot_index][scancode] = generation;
+  keyboard_released_seen[slot_idx][scancode] = generation;
   return 1;
 }
 

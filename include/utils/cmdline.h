@@ -26,8 +26,8 @@ func cstr8 cmdline_get_arg(cmdline cmdl, sz index);
 // Returns argv[0], or NULL if no entries are present.
 func cstr8 cmdline_get_program(cmdline cmdl);
 
-// Searches for an exact argument match. Writes the index on success when out_index is non-NULL.
-func b32 cmdline_find(cmdline cmdl, cstr8 arg, sz* out_index);
+// Searches for an exact argument match. Writes the index on success when out_idx is non-NULL.
+func b32 cmdline_find(cmdline cmdl, cstr8 arg, sz* out_idx);
 
 // Returns 1 if any argument exactly matches arg, 0 otherwise.
 func b32 cmdline_has(cmdline cmdl, cstr8 arg);

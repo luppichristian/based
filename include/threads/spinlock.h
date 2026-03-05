@@ -32,4 +32,4 @@ func void spinlock_unlock(spinlock sl);
 
 // Tries to acquire the spinlock without spinning.
 // Returns true if the lock was acquired, false if it is already held.
-func b32 spinlock_trylock(spinlock sl);
+func b32 spinlock_try_lock(spinlock sl);

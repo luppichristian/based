@@ -100,15 +100,15 @@ func b32 devices_try_fill_tablet_info(SDL_hid_device_info* entry, device_info* o
   return 1;
 }
 
-func b32 devices_find_tablet_by_index(sz index, device_id* out_id) {
+func b32 devices_find_tablet_by_idx(sz index, device_id* out_id) {
   SDL_hid_device_info* head = SDL_hid_enumerate(0, 0);
   SDL_hid_device_info* entry = head;
-  sz current_index = 0;
+  sz current_idx = 0;
   b32 found = 0;
 
   while (entry) {
     if (entry->usage_page == 0x0D) {
-      if (current_index == index) {
+      if (current_idx == index) {
         if (out_id) {
           *out_id = devices_make_id(DEVICE_TYPE_TABLET, devices_hash_path(entry->path));
         }
@@ -116,7 +116,7 @@ func b32 devices_find_tablet_by_index(sz index, device_id* out_id) {
         break;
       }
 
-      current_index += 1;
+      current_idx += 1;
     }
 
     entry = entry->next;
@@ -310,7 +310,7 @@ func b32 devices_get_device(device_type type, sz index, device_id* out_id) {
       return found;
     }
     case DEVICE_TYPE_TABLET:
-      return devices_find_tablet_by_index(index, out_id);
+      return devices_find_tablet_by_idx(index, out_id);
     case DEVICE_TYPE_UNKNOWN:
     default:
       return 0;

@@ -34,7 +34,7 @@ typedef struct binding_gamepad_combo {
   sz count;
   gamepad_button buttons[BINDING_MAX_GAMEPAD_BUTTONS];
   b32 any_slot;
-  sz slot_index;
+  sz slot_idx;
 } binding_gamepad_combo;
 
 typedef struct binding_desc {

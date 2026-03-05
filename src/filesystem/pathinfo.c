@@ -125,7 +125,7 @@ func pathinfo filesystem_info_empty(void) {
   return info;
 }
 
-func b32 path_get_info(const path* src, pathinfo* out_info) {
+func b32 pathinfo_get(const path* src, pathinfo* out_info) {
   pathinfo info = filesystem_info_empty();
   cstr8 src_str = src != NULL ? src->buf : "";
 

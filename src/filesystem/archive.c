@@ -77,7 +77,7 @@ func b32 archive_path_equals(const path* lhs, const path* rhs) {
   return cstr8_cmp(lhs_norm.buf, rhs_norm.buf) == 0 ? 1 : 0;
 }
 
-func sz archive_find_index(const archive* arc, const path* src) {
+func sz archive_find_idx(const archive* arc, const path* src) {
   sz item_idx = 0;
 
   if (arc == NULL) {
@@ -157,9 +157,9 @@ func b32 archive_assign_entry_bytes(archive* arc, archive_entry* ent, buffer dat
   return 1;
 }
 
-func b32 archive_add_empty_entry(archive* arc, const path* src, b32 is_directory, sz* out_index) {
+func b32 archive_add_empty_entry(archive* arc, const path* src, b32 is_directory, sz* out_idx) {
   archive_entry* ent = NULL;
-  sz item_idx = archive_find_index(arc, src);
+  sz item_idx = archive_find_idx(arc, src);
 
   if (item_idx != SZ_MAX) {
     ent = &arc->entries[item_idx];
@@ -171,8 +171,8 @@ func b32 archive_add_empty_entry(archive* arc, const path* src, b32 is_directory
       ent->data_size = 0;
       ent->data_capacity = 0;
     }
-    if (out_index != NULL) {
-      *out_index = item_idx;
+    if (out_idx != NULL) {
+      *out_idx = item_idx;
     }
     return 1;
   }
@@ -185,8 +185,8 @@ func b32 archive_add_empty_entry(archive* arc, const path* src, b32 is_directory
   memset(ent, 0, size_of(*ent));
   ent->item_path = archive_normalize_entry_path(src);
   ent->is_directory = is_directory;
-  if (out_index != NULL) {
-    *out_index = arc->entry_count;
+  if (out_idx != NULL) {
+    *out_idx = arc->entry_count;
   }
   arc->entry_count += 1;
   return 1;
@@ -328,7 +328,7 @@ func sz archive_count(const archive* arc) {
 }
 
 func b32 archive_exists(const archive* arc, const path* src) {
-  return archive_find_index(arc, src) != SZ_MAX ? 1 : 0;
+  return archive_find_idx(arc, src) != SZ_MAX ? 1 : 0;
 }
 
 func b32 archive_write_all(archive* arc, const path* src, buffer data) {
@@ -349,7 +349,7 @@ func b32 archive_write_all(archive* arc, const path* src, buffer data) {
 }
 
 func b32 archive_remove(archive* arc, const path* src) {
-  sz item_idx = archive_find_index(arc, src);
+  sz item_idx = archive_find_idx(arc, src);
 
   if (arc == NULL || item_idx == SZ_MAX) {
     return 0;
@@ -378,7 +378,7 @@ func b32 archive_read_all(const archive* arc, const path* src, allocator* alloc,
   out_data->ptr = NULL;
   out_data->size = 0;
 
-  item_idx = archive_find_index(arc, src);
+  item_idx = archive_find_idx(arc, src);
   if (item_idx == SZ_MAX) {
     return 0;
   }

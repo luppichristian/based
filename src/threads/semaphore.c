@@ -48,7 +48,7 @@ func void semaphore_wait(semaphore sem) {
   SDL_WaitSemaphore((SDL_Semaphore*)sem);
 }
 
-func b32 semaphore_trywait(semaphore sem) {
+func b32 semaphore_try_wait(semaphore sem) {
   return SDL_TryWaitSemaphore((SDL_Semaphore*)sem);
 }
 

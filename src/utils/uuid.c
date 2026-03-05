@@ -84,26 +84,26 @@ func b32 uuid_parse_cstr8(cstr8 src, uuid* out) {
   }
 
   uuid value = {0};
-  sz src_index = 0;
-  sz byte_index = 0;
-  while (src_index < uuid_string_length()) {
-    if (src_index == 8 || src_index == 13 || src_index == 18 || src_index == 23) {
-      if (src[src_index] != '-') {
+  sz src_idx = 0;
+  sz byte_idx = 0;
+  while (src_idx < uuid_string_length()) {
+    if (src_idx == 8 || src_idx == 13 || src_idx == 18 || src_idx == 23) {
+      if (src[src_idx] != '-') {
         return 0;
       }
-      src_index++;
+      src_idx++;
       continue;
     }
 
-    i32 high = c8_hex_to_nibble(src[src_index]);
-    i32 low = c8_hex_to_nibble(src[src_index + 1]);
+    i32 high = c8_hex_to_nibble(src[src_idx]);
+    i32 low = c8_hex_to_nibble(src[src_idx + 1]);
     if (high < 0 || low < 0) {
       return 0;
     }
 
-    value.bytes[byte_index] = (u8)((high << 4) | low);
-    byte_index++;
-    src_index += 2;
+    value.bytes[byte_idx] = (u8)((high << 4) | low);
+    byte_idx++;
+    src_idx += 2;
   }
 
   *out = value;
@@ -119,18 +119,18 @@ func b32 uuid_to_cstr8(uuid value, c8* dst, sz cap) {
     return 0;
   }
 
-  sz dst_index = 0;
-  for (sz byte_index = 0; byte_index < count_of(value.bytes); byte_index++) {
-    if (dst_index == 8 || dst_index == 13 || dst_index == 18 || dst_index == 23) {
-      dst[dst_index++] = '-';
+  sz dst_idx = 0;
+  for (sz byte_idx = 0; byte_idx < count_of(value.bytes); byte_idx++) {
+    if (dst_idx == 8 || dst_idx == 13 || dst_idx == 18 || dst_idx == 23) {
+      dst[dst_idx++] = '-';
     }
 
-    u8 byte_value = value.bytes[byte_index];
-    dst[dst_index++] = c8_nibble_to_hex((u8)(byte_value >> 4U));
-    dst[dst_index++] = c8_nibble_to_hex((u8)(byte_value & 0x0FU));
+    u8 byte_value = value.bytes[byte_idx];
+    dst[dst_idx++] = c8_nibble_to_hex((u8)(byte_value >> 4U));
+    dst[dst_idx++] = c8_nibble_to_hex((u8)(byte_value & 0x0FU));
   }
 
-  dst[dst_index] = '\0';
+  dst[dst_idx] = '\0';
   return 1;
 }
 

@@ -76,24 +76,24 @@ func b32 mouse_is_button_pressed(input_key key, u8 button) {
     return 0;
   }
 
-  sz slot_index = input_capture_get_slot(key);
-  if (slot_index >= INPUT_CAPTURE_MAX_KEYS) {
+  sz slot_idx = input_capture_get_slot(key);
+  if (slot_idx >= INPUT_CAPTURE_MAX_KEYS) {
     return 0;
   }
 
-  u32 slot_epoch = input_capture_get_slot_epoch(slot_index);
-  if (mouse_pressed_seen_epoch[slot_index][button] != slot_epoch) {
-    mouse_pressed_seen_epoch[slot_index][button] = slot_epoch;
-    mouse_pressed_seen[slot_index][button] = mouse_pressed_generation[button];
+  u32 slot_epoch = input_capture_get_slot_epoch(slot_idx);
+  if (mouse_pressed_seen_epoch[slot_idx][button] != slot_epoch) {
+    mouse_pressed_seen_epoch[slot_idx][button] = slot_epoch;
+    mouse_pressed_seen[slot_idx][button] = mouse_pressed_generation[button];
     return 0;
   }
 
   u32 generation = mouse_pressed_generation[button];
-  if (generation == 0 || mouse_pressed_seen[slot_index][button] == generation) {
+  if (generation == 0 || mouse_pressed_seen[slot_idx][button] == generation) {
     return 0;
   }
 
-  mouse_pressed_seen[slot_index][button] = generation;
+  mouse_pressed_seen[slot_idx][button] = generation;
   return 1;
 }
 
@@ -102,24 +102,24 @@ func b32 mouse_is_button_released(input_key key, u8 button) {
     return 0;
   }
 
-  sz slot_index = input_capture_get_slot(key);
-  if (slot_index >= INPUT_CAPTURE_MAX_KEYS) {
+  sz slot_idx = input_capture_get_slot(key);
+  if (slot_idx >= INPUT_CAPTURE_MAX_KEYS) {
     return 0;
   }
 
-  u32 slot_epoch = input_capture_get_slot_epoch(slot_index);
-  if (mouse_released_seen_epoch[slot_index][button] != slot_epoch) {
-    mouse_released_seen_epoch[slot_index][button] = slot_epoch;
-    mouse_released_seen[slot_index][button] = mouse_released_generation[button];
+  u32 slot_epoch = input_capture_get_slot_epoch(slot_idx);
+  if (mouse_released_seen_epoch[slot_idx][button] != slot_epoch) {
+    mouse_released_seen_epoch[slot_idx][button] = slot_epoch;
+    mouse_released_seen[slot_idx][button] = mouse_released_generation[button];
     return 0;
   }
 
   u32 generation = mouse_released_generation[button];
-  if (generation == 0 || mouse_released_seen[slot_index][button] == generation) {
+  if (generation == 0 || mouse_released_seen[slot_idx][button] == generation) {
     return 0;
   }
 
-  mouse_released_seen[slot_index][button] = generation;
+  mouse_released_seen[slot_idx][button] = generation;
   return 1;
 }
 
