@@ -77,7 +77,7 @@ include/                      # public API headers
     gamepads.h                # four-slot gamepad query helpers
     keyboard.h                # keyboard presence and key-state queries
     mouse.h                   # mouse state queries and coordinate conversion helpers
-    msg.h                     # unified event/message system, queue polling, and custom message posting callbacks
+    msg.h                     # unified event/message system, queue polling, and prioritized post-handler registration
     tablet.h                  # graphics-tablet enumeration and pen-state helpers
     touch.h                   # touch-device and finger query helpers
   processes/                  # process creation and lifecycle helpers

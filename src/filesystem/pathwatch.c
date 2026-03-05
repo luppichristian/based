@@ -254,7 +254,12 @@ func pathwatch pathwatch_create(b32 use_generic_mode) {
     return watcher;
   }
 
-  if (!msg_post_object_event(MSG_OBJECT_EVENT_CREATE, MSG_OBJECT_TYPE_PATHWATCH, watcher.native_handle)) {
+  msg lifecycle_msg = {0};
+  lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
+  lifecycle_msg.object_lifecycle.event_kind = (u32)MSG_OBJECT_EVENT_CREATE;
+  lifecycle_msg.object_lifecycle.object_type = (u32)MSG_OBJECT_TYPE_PATHWATCH;
+  lifecycle_msg.object_lifecycle.object_ptr = watcher.native_handle;
+  if (!msg_post(&lifecycle_msg)) {
     pathwatch_bind_remove(watcher.native_handle);
     efsw_release((efsw_watcher)watcher.native_handle);
     watcher.id = 0;
@@ -269,7 +274,12 @@ func void pathwatch_destroy(pathwatch* watcher) {
     return;
   }
 
-  if (!msg_post_object_event(MSG_OBJECT_EVENT_DESTROY, MSG_OBJECT_TYPE_PATHWATCH, watcher->native_handle)) {
+  msg lifecycle_msg = {0};
+  lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
+  lifecycle_msg.object_lifecycle.event_kind = (u32)MSG_OBJECT_EVENT_DESTROY;
+  lifecycle_msg.object_lifecycle.object_type = (u32)MSG_OBJECT_TYPE_PATHWATCH;
+  lifecycle_msg.object_lifecycle.object_ptr = watcher->native_handle;
+  if (!msg_post(&lifecycle_msg)) {
     return;
   }
 

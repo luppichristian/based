@@ -8,9 +8,16 @@
 func mutex _mutex_create(callsite site) {
   (void)site;
   mutex handle = (mutex)SDL_CreateMutex();
-  if (handle != NULL && !msg_post_object_event(MSG_OBJECT_EVENT_CREATE, MSG_OBJECT_TYPE_MUTEX, handle)) {
-    SDL_DestroyMutex((SDL_Mutex*)handle);
-    return NULL;
+  if (handle != NULL) {
+    msg lifecycle_msg = {0};
+    lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
+    lifecycle_msg.object_lifecycle.event_kind = (u32)MSG_OBJECT_EVENT_CREATE;
+    lifecycle_msg.object_lifecycle.object_type = (u32)MSG_OBJECT_TYPE_MUTEX;
+    lifecycle_msg.object_lifecycle.object_ptr = handle;
+    if (!msg_post(&lifecycle_msg)) {
+      SDL_DestroyMutex((SDL_Mutex*)handle);
+      return NULL;
+    }
   }
   return handle;
 }
@@ -21,7 +28,12 @@ func b32 _mutex_destroy(mutex mtx, callsite site) {
     return 0;
   }
 
-  if (!msg_post_object_event(MSG_OBJECT_EVENT_DESTROY, MSG_OBJECT_TYPE_MUTEX, mtx)) {
+  msg lifecycle_msg = {0};
+  lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
+  lifecycle_msg.object_lifecycle.event_kind = (u32)MSG_OBJECT_EVENT_DESTROY;
+  lifecycle_msg.object_lifecycle.object_type = (u32)MSG_OBJECT_TYPE_MUTEX;
+  lifecycle_msg.object_lifecycle.object_ptr = mtx;
+  if (!msg_post(&lifecycle_msg)) {
     return 0;
   }
   SDL_DestroyMutex((SDL_Mutex*)mtx);

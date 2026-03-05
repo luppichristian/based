@@ -8,9 +8,16 @@
 func semaphore _semaphore_create(u32 initial_count, callsite site) {
   (void)site;
   semaphore handle = (semaphore)SDL_CreateSemaphore((Uint32)initial_count);
-  if (handle != NULL && !msg_post_object_event(MSG_OBJECT_EVENT_CREATE, MSG_OBJECT_TYPE_SEMAPHORE, handle)) {
-    SDL_DestroySemaphore((SDL_Semaphore*)handle);
-    return NULL;
+  if (handle != NULL) {
+    msg lifecycle_msg = {0};
+    lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
+    lifecycle_msg.object_lifecycle.event_kind = (u32)MSG_OBJECT_EVENT_CREATE;
+    lifecycle_msg.object_lifecycle.object_type = (u32)MSG_OBJECT_TYPE_SEMAPHORE;
+    lifecycle_msg.object_lifecycle.object_ptr = handle;
+    if (!msg_post(&lifecycle_msg)) {
+      SDL_DestroySemaphore((SDL_Semaphore*)handle);
+      return NULL;
+    }
   }
   return handle;
 }
@@ -21,7 +28,12 @@ func b32 _semaphore_destroy(semaphore sem, callsite site) {
     return 0;
   }
 
-  if (!msg_post_object_event(MSG_OBJECT_EVENT_DESTROY, MSG_OBJECT_TYPE_SEMAPHORE, sem)) {
+  msg lifecycle_msg = {0};
+  lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
+  lifecycle_msg.object_lifecycle.event_kind = (u32)MSG_OBJECT_EVENT_DESTROY;
+  lifecycle_msg.object_lifecycle.object_type = (u32)MSG_OBJECT_TYPE_SEMAPHORE;
+  lifecycle_msg.object_lifecycle.object_ptr = sem;
+  if (!msg_post(&lifecycle_msg)) {
     return 0;
   }
   SDL_DestroySemaphore((SDL_Semaphore*)sem);

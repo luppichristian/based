@@ -7,9 +7,144 @@
 
 func void tablet_internal_on_msg(const msg* src);
 
-global_var msg_post_callback msg_post_callback_fn = NULL;
-global_var void* msg_post_callback_user_data = NULL;
 const_var i32 MSG_PAYLOAD_CODE = 0x42415345;
+#define MSG_HANDLER_CAP 64u
+
+typedef struct msg_handler_entry {
+  u64 handler_id;
+  msg_handler_fn handler_fn;
+  void* user_data;
+  i32 priority;
+  u32 options;
+  u32 type_min;
+  u32 type_max;
+} msg_handler_entry;
+
+global_var msg_handler_entry msg_handler_entries[MSG_HANDLER_CAP] = {0};
+global_var u32 msg_handler_count = 0;
+global_var u64 msg_handler_next_id = 1;
+
+func b32 msg_remove_handler(u64 handler_id);
+
+// NOTE:
+// SDL uses one process-global event queue. This module intentionally mirrors
+// that model: any thread may post, while one designated thread should pump/poll/wait.
+
+func b32 msg_handler_should_run_for_stage(u32 options, msg_handler_stage stage) {
+  u32 stage_options = options &
+                      (MSG_HANDLER_OPTION_STAGE_BEFORE_POST | MSG_HANDLER_OPTION_STAGE_AFTER_POST |
+                       MSG_HANDLER_OPTION_STAGE_POST_FAILED);
+
+  if (stage_options == 0) {
+    stage_options = MSG_HANDLER_OPTION_STAGE_BEFORE_POST;
+  }
+
+  switch (stage) {
+    case MSG_HANDLER_STAGE_BEFORE_POST:
+      return (stage_options & MSG_HANDLER_OPTION_STAGE_BEFORE_POST) != 0;
+    case MSG_HANDLER_STAGE_AFTER_POST:
+      return (stage_options & MSG_HANDLER_OPTION_STAGE_AFTER_POST) != 0;
+    case MSG_HANDLER_STAGE_POST_FAILED:
+      return (stage_options & MSG_HANDLER_OPTION_STAGE_POST_FAILED) != 0;
+    default:
+      return 0;
+  }
+}
+
+func b32 msg_handler_should_run_for_type(const msg_handler_entry* entry, u32 type) {
+  if (entry->type_min == 0 && entry->type_max == 0) {
+    return 1;
+  }
+
+  if (entry->type_min <= entry->type_max) {
+    return in_range(type, entry->type_min, entry->type_max);
+  }
+
+  return in_range(type, entry->type_max, entry->type_min);
+}
+
+func void msg_handler_sort_entries(void) {
+  for (u32 outer_index = 0; outer_index < msg_handler_count; outer_index += 1) {
+    for (u32 inner_index = outer_index + 1; inner_index < msg_handler_count; inner_index += 1) {
+      msg_handler_entry* lhs = &msg_handler_entries[outer_index];
+      msg_handler_entry* rhs = &msg_handler_entries[inner_index];
+      b32 swap_needed = 0;
+
+      if (lhs->priority < rhs->priority) {
+        swap_needed = 1;
+      } else if (lhs->priority == rhs->priority && lhs->handler_id > rhs->handler_id) {
+        swap_needed = 1;
+      }
+
+      if (swap_needed) {
+        msg_handler_entry temp = *lhs;
+        *lhs = *rhs;
+        *rhs = temp;
+      }
+    }
+  }
+}
+
+func b32 msg_dispatch_handlers(msg* posted_msg, msg_handler_stage stage) {
+  msg_handler_entry dispatch_entries[MSG_HANDLER_CAP] = {0};
+  u64 once_handler_ids[MSG_HANDLER_CAP] = {0};
+  u32 dispatch_cap = (u32)count_of(dispatch_entries);
+  u32 once_handler_cap = (u32)count_of(once_handler_ids);
+  u32 dispatch_count = msg_handler_count;
+  u32 once_handler_count = 0;
+
+  if (dispatch_count > dispatch_cap) {
+    dispatch_count = dispatch_cap;
+  }
+
+  for (u32 index = 0; index < dispatch_count; index += 1) {
+    dispatch_entries[index] = msg_handler_entries[index];
+  }
+
+  for (u32 index = 0; index < dispatch_count; index += 1) {
+    msg_handler_entry* entry = &dispatch_entries[index];
+
+    if (entry->handler_fn == NULL) {
+      continue;
+    }
+
+    if ((entry->options & MSG_HANDLER_OPTION_DISABLED) != 0) {
+      continue;
+    }
+
+    if (!msg_handler_should_run_for_stage(entry->options, stage)) {
+      continue;
+    }
+
+    if (!msg_handler_should_run_for_type(entry, posted_msg->type)) {
+      continue;
+    }
+
+    msg_handler_result result = entry->handler_fn(posted_msg, stage, entry->user_data);
+
+    if ((entry->options & MSG_HANDLER_OPTION_ONCE) != 0 && once_handler_count < once_handler_cap) {
+      once_handler_ids[once_handler_count] = entry->handler_id;
+      once_handler_count += 1;
+    }
+
+    if (result == MSG_HANDLER_RESULT_STOP_DISPATCH) {
+      break;
+    }
+
+    if (stage == MSG_HANDLER_STAGE_BEFORE_POST && result == MSG_HANDLER_RESULT_CANCEL_POST) {
+      for (u32 once_index = 0; once_index < once_handler_count; once_index += 1) {
+        (void)msg_remove_handler(once_handler_ids[once_index]);
+      }
+      return 0;
+    }
+  }
+
+  for (u32 once_index = 0; once_index < once_handler_count; once_index += 1) {
+    (void)msg_remove_handler(once_handler_ids[once_index]);
+  }
+
+  return 1;
+}
 
 func void msg_apply_common(msg* dst, const SDL_Event* src) {
   dst->type = src->type;
@@ -761,6 +896,7 @@ func b32 msg_to_sdl_event(const msg* src, SDL_Event* out_event) {
 }
 
 func void msg_pump(void) {
+  // Pumps the process-global queue.
   SDL_PumpEvents();
 }
 
@@ -809,7 +945,7 @@ func b32 _msg_post(const msg* src, callsite site) {
   posted_msg = *src;
   posted_msg.post_site = site;
 
-  if (msg_post_callback_fn && !msg_post_callback_fn(&posted_msg, msg_post_callback_user_data)) {
+  if (!msg_dispatch_handlers(&posted_msg, MSG_HANDLER_STAGE_BEFORE_POST)) {
     return 0;
   }
 
@@ -831,13 +967,16 @@ func b32 _msg_post(const msg* src, callsite site) {
     return 0;
   }
 
+  // Push into SDL's process-global queue.
   if (!SDL_PushEvent(&native_event)) {
     if (payload != NULL) {
       SDL_free(payload);
     }
+    (void)msg_dispatch_handlers(&posted_msg, MSG_HANDLER_STAGE_POST_FAILED);
     return 0;
   }
 
+  (void)msg_dispatch_handlers(&posted_msg, MSG_HANDLER_STAGE_AFTER_POST);
   tablet_internal_on_msg(&posted_msg);
   return 1;
 }
@@ -850,35 +989,61 @@ func u32 msg_register_custom_range(sz count) {
   return (u32)SDL_RegisterEvents((int)count);
 }
 
-func void msg_set_post_callback(msg_post_callback callback, void* user_data) {
-  msg_post_callback_fn = callback;
-  msg_post_callback_user_data = user_data;
+func u64 msg_add_handler(const msg_handler_desc* desc) {
+  if (desc == NULL || desc->handler_fn == NULL || msg_handler_count >= MSG_HANDLER_CAP) {
+    return 0;
+  }
+
+  u64 handler_id = msg_handler_next_id;
+  msg_handler_next_id += 1;
+  if (msg_handler_next_id == 0) {
+    msg_handler_next_id = 1;
+  }
+
+  msg_handler_entry* entry = &msg_handler_entries[msg_handler_count];
+  *entry = (msg_handler_entry) {
+      .handler_id = handler_id,
+      .handler_fn = desc->handler_fn,
+      .user_data = desc->user_data,
+      .priority = desc->priority,
+      .options = desc->options,
+      .type_min = desc->type_min,
+      .type_max = desc->type_max,
+  };
+  msg_handler_count += 1;
+  msg_handler_sort_entries();
+  return handler_id;
 }
 
-func b32 _msg_post_object_event(
-    msg_object_event_kind event_kind,
-    msg_object_type object_type,
-    void* object_ptr,
-    callsite site) {
-  msg event_msg = {0};
-  event_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
-  event_msg.object_lifecycle.event_kind = (u32)event_kind;
-  event_msg.object_lifecycle.object_type = (u32)object_type;
-  event_msg.object_lifecycle.object_ptr = object_ptr;
-  return _msg_post(&event_msg, site);
+func b32 msg_remove_handler(u64 handler_id) {
+  if (handler_id == 0) {
+    return 0;
+  }
+
+  for (u32 index = 0; index < msg_handler_count; index += 1) {
+    if (msg_handler_entries[index].handler_id != handler_id) {
+      continue;
+    }
+
+    for (u32 move_index = index + 1; move_index < msg_handler_count; move_index += 1) {
+      msg_handler_entries[move_index - 1] = msg_handler_entries[move_index];
+    }
+
+    msg_handler_count -= 1;
+    msg_handler_entries[msg_handler_count] = (msg_handler_entry) {0};
+    return 1;
+  }
+
+  return 0;
 }
 
-func b32 _msg_post_thread_ctx_event(
-    msg_thread_ctx_event_kind event_kind,
-    void* ctx_ptr,
-    u64 thread_id,
-    callsite site) {
-  msg event_msg = {0};
-  event_msg.type = MSG_TYPE_THREAD_CTX;
-  event_msg.thread_ctx.event_kind = (u32)event_kind;
-  event_msg.thread_ctx.ctx_ptr = ctx_ptr;
-  event_msg.thread_ctx.thread_id = thread_id;
-  return _msg_post(&event_msg, site);
+func void msg_clear_handlers(void) {
+  for (u32 index = 0; index < msg_handler_count; index += 1) {
+    msg_handler_entries[index] = (msg_handler_entry) {0};
+  }
+
+  msg_handler_count = 0;
+  msg_handler_next_id = 1;
 }
 
 func b32 msg_from_native(const void* native_event, msg* out_msg) {

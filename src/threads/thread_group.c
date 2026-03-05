@@ -64,7 +64,12 @@ func thread_group create_impl(u32 count, thread_group_func entry, void* arg, con
 
 func thread_group _thread_group_create(u32 count, thread_group_func entry, void* arg, callsite site) {
   (void)site;
-  if (!msg_post_object_event(MSG_OBJECT_EVENT_CREATE, MSG_OBJECT_TYPE_THREAD_GROUP, NULL)) {
+  msg lifecycle_msg = {0};
+  lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
+  lifecycle_msg.object_lifecycle.event_kind = (u32)MSG_OBJECT_EVENT_CREATE;
+  lifecycle_msg.object_lifecycle.object_type = (u32)MSG_OBJECT_TYPE_THREAD_GROUP;
+  lifecycle_msg.object_lifecycle.object_ptr = NULL;
+  if (!msg_post(&lifecycle_msg)) {
     thread_group empty = {0};
     return empty;
   }
@@ -78,7 +83,12 @@ func thread_group _thread_group_create_named(
     const c8* base_name,
     callsite site) {
   (void)site;
-  if (!msg_post_object_event(MSG_OBJECT_EVENT_CREATE, MSG_OBJECT_TYPE_THREAD_GROUP, NULL)) {
+  msg lifecycle_msg = {0};
+  lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
+  lifecycle_msg.object_lifecycle.event_kind = (u32)MSG_OBJECT_EVENT_CREATE;
+  lifecycle_msg.object_lifecycle.object_type = (u32)MSG_OBJECT_TYPE_THREAD_GROUP;
+  lifecycle_msg.object_lifecycle.object_ptr = NULL;
+  if (!msg_post(&lifecycle_msg)) {
     thread_group empty = {0};
     return empty;
   }
@@ -90,7 +100,12 @@ func void _thread_group_destroy(thread_group* group, callsite site) {
   if (!group) {
     return;
   }
-  if (!msg_post_object_event(MSG_OBJECT_EVENT_DESTROY, MSG_OBJECT_TYPE_THREAD_GROUP, group)) {
+  msg lifecycle_msg = {0};
+  lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
+  lifecycle_msg.object_lifecycle.event_kind = (u32)MSG_OBJECT_EVENT_DESTROY;
+  lifecycle_msg.object_lifecycle.object_type = (u32)MSG_OBJECT_TYPE_THREAD_GROUP;
+  lifecycle_msg.object_lifecycle.object_ptr = group;
+  if (!msg_post(&lifecycle_msg)) {
     return;
   }
   SDL_free(group->threads);

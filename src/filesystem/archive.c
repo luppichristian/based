@@ -271,7 +271,12 @@ func archive archive_create(allocator* opt_alloc) {
   archive arc;
   memset(&arc, 0, size_of(arc));
   arc.opt_alloc = opt_alloc;
-  if (!msg_post_object_event(MSG_OBJECT_EVENT_CREATE, MSG_OBJECT_TYPE_ARCHIVE, &arc)) {
+  msg lifecycle_msg = {0};
+  lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
+  lifecycle_msg.object_lifecycle.event_kind = (u32)MSG_OBJECT_EVENT_CREATE;
+  lifecycle_msg.object_lifecycle.object_type = (u32)MSG_OBJECT_TYPE_ARCHIVE;
+  lifecycle_msg.object_lifecycle.object_ptr = &arc;
+  if (!msg_post(&lifecycle_msg)) {
     memset(&arc, 0, size_of(arc));
   }
   return arc;
@@ -296,7 +301,12 @@ func void archive_destroy(archive* arc) {
     return;
   }
 
-  if (!msg_post_object_event(MSG_OBJECT_EVENT_DESTROY, MSG_OBJECT_TYPE_ARCHIVE, arc)) {
+  msg lifecycle_msg = {0};
+  lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
+  lifecycle_msg.object_lifecycle.event_kind = (u32)MSG_OBJECT_EVENT_DESTROY;
+  lifecycle_msg.object_lifecycle.object_type = (u32)MSG_OBJECT_TYPE_ARCHIVE;
+  lifecycle_msg.object_lifecycle.object_ptr = arc;
+  if (!msg_post(&lifecycle_msg)) {
     return;
   }
 

@@ -8,9 +8,16 @@
 func rwlock _rwlock_create(callsite site) {
   (void)site;
   rwlock handle = (rwlock)SDL_CreateRWLock();
-  if (handle != NULL && !msg_post_object_event(MSG_OBJECT_EVENT_CREATE, MSG_OBJECT_TYPE_RWLOCK, handle)) {
-    SDL_DestroyRWLock((SDL_RWLock*)handle);
-    return NULL;
+  if (handle != NULL) {
+    msg lifecycle_msg = {0};
+    lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
+    lifecycle_msg.object_lifecycle.event_kind = (u32)MSG_OBJECT_EVENT_CREATE;
+    lifecycle_msg.object_lifecycle.object_type = (u32)MSG_OBJECT_TYPE_RWLOCK;
+    lifecycle_msg.object_lifecycle.object_ptr = handle;
+    if (!msg_post(&lifecycle_msg)) {
+      SDL_DestroyRWLock((SDL_RWLock*)handle);
+      return NULL;
+    }
   }
   return handle;
 }
@@ -21,7 +28,12 @@ func b32 _rwlock_destroy(rwlock rw, callsite site) {
     return 0;
   }
 
-  if (!msg_post_object_event(MSG_OBJECT_EVENT_DESTROY, MSG_OBJECT_TYPE_RWLOCK, rw)) {
+  msg lifecycle_msg = {0};
+  lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
+  lifecycle_msg.object_lifecycle.event_kind = (u32)MSG_OBJECT_EVENT_DESTROY;
+  lifecycle_msg.object_lifecycle.object_type = (u32)MSG_OBJECT_TYPE_RWLOCK;
+  lifecycle_msg.object_lifecycle.object_ptr = rw;
+  if (!msg_post(&lifecycle_msg)) {
     return 0;
   }
   SDL_DestroyRWLock((SDL_RWLock*)rw);

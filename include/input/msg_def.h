@@ -158,7 +158,7 @@ typedef enum msg_pathwatch_event_kind {
   MSG_PATHWATCH_EVENT_MISSED = 2,
 } msg_pathwatch_event_kind;
 
-#define MSG_LOG_TEXT_CAP 512
+#define MSG_LOG_TEXT_CAP    512
 #define MSG_ASSERT_TEXT_CAP 512
 
 // Display event payload.

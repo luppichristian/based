@@ -8,9 +8,16 @@
 func condvar _condvar_create(callsite site) {
   (void)site;
   condvar handle = (condvar)SDL_CreateCondition();
-  if (handle != NULL && !msg_post_object_event(MSG_OBJECT_EVENT_CREATE, MSG_OBJECT_TYPE_CONDVAR, handle)) {
-    SDL_DestroyCondition((SDL_Condition*)handle);
-    return NULL;
+  if (handle != NULL) {
+    msg lifecycle_msg = {0};
+    lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
+    lifecycle_msg.object_lifecycle.event_kind = (u32)MSG_OBJECT_EVENT_CREATE;
+    lifecycle_msg.object_lifecycle.object_type = (u32)MSG_OBJECT_TYPE_CONDVAR;
+    lifecycle_msg.object_lifecycle.object_ptr = handle;
+    if (!msg_post(&lifecycle_msg)) {
+      SDL_DestroyCondition((SDL_Condition*)handle);
+      return NULL;
+    }
   }
   return handle;
 }
@@ -21,7 +28,12 @@ func b32 _condvar_destroy(condvar cond, callsite site) {
     return 0;
   }
 
-  if (!msg_post_object_event(MSG_OBJECT_EVENT_DESTROY, MSG_OBJECT_TYPE_CONDVAR, cond)) {
+  msg lifecycle_msg = {0};
+  lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
+  lifecycle_msg.object_lifecycle.event_kind = (u32)MSG_OBJECT_EVENT_DESTROY;
+  lifecycle_msg.object_lifecycle.object_type = (u32)MSG_OBJECT_TYPE_CONDVAR;
+  lifecycle_msg.object_lifecycle.object_ptr = cond;
+  if (!msg_post(&lifecycle_msg)) {
     return 0;
   }
   SDL_DestroyCondition((SDL_Condition*)cond);

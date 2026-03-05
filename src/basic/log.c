@@ -301,7 +301,12 @@ func b32 log_state_init(log_state* state, b32 use_mutex) {
     }
   }
   state->is_initialized = true;
-  if (!msg_post_object_event(MSG_OBJECT_EVENT_CREATE, MSG_OBJECT_TYPE_LOG_STATE, state)) {
+  msg lifecycle_msg = {0};
+  lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
+  lifecycle_msg.object_lifecycle.event_kind = (u32)MSG_OBJECT_EVENT_CREATE;
+  lifecycle_msg.object_lifecycle.object_type = (u32)MSG_OBJECT_TYPE_LOG_STATE;
+  lifecycle_msg.object_lifecycle.object_ptr = state;
+  if (!msg_post(&lifecycle_msg)) {
     log_state_quit(state);
     return false;
   }
@@ -313,7 +318,12 @@ func void log_state_quit(log_state* state) {
     return;
   }
 
-  if (!msg_post_object_event(MSG_OBJECT_EVENT_DESTROY, MSG_OBJECT_TYPE_LOG_STATE, state)) {
+  msg lifecycle_msg = {0};
+  lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
+  lifecycle_msg.object_lifecycle.event_kind = (u32)MSG_OBJECT_EVENT_DESTROY;
+  lifecycle_msg.object_lifecycle.object_type = (u32)MSG_OBJECT_TYPE_LOG_STATE;
+  lifecycle_msg.object_lifecycle.object_ptr = state;
+  if (!msg_post(&lifecycle_msg)) {
     return;
   }
 

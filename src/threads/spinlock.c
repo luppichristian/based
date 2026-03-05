@@ -11,9 +11,16 @@ func spinlock _spinlock_create(callsite site) {
   if (spl) {
     *spl = 0;
   }
-  if (spl != NULL && !msg_post_object_event(MSG_OBJECT_EVENT_CREATE, MSG_OBJECT_TYPE_SPINLOCK, spl)) {
-    SDL_free(spl);
-    return NULL;
+  if (spl != NULL) {
+    msg lifecycle_msg = {0};
+    lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
+    lifecycle_msg.object_lifecycle.event_kind = (u32)MSG_OBJECT_EVENT_CREATE;
+    lifecycle_msg.object_lifecycle.object_type = (u32)MSG_OBJECT_TYPE_SPINLOCK;
+    lifecycle_msg.object_lifecycle.object_ptr = spl;
+    if (!msg_post(&lifecycle_msg)) {
+      SDL_free(spl);
+      return NULL;
+    }
   }
   return (spinlock)spl;
 }
@@ -24,7 +31,12 @@ func void _spinlock_destroy(spinlock sl, callsite site) {
     return;
   }
 
-  if (!msg_post_object_event(MSG_OBJECT_EVENT_DESTROY, MSG_OBJECT_TYPE_SPINLOCK, sl)) {
+  msg lifecycle_msg = {0};
+  lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
+  lifecycle_msg.object_lifecycle.event_kind = (u32)MSG_OBJECT_EVENT_DESTROY;
+  lifecycle_msg.object_lifecycle.object_type = (u32)MSG_OBJECT_TYPE_SPINLOCK;
+  lifecycle_msg.object_lifecycle.object_ptr = sl;
+  if (!msg_post(&lifecycle_msg)) {
     return;
   }
   SDL_free(sl);

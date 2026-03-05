@@ -117,7 +117,12 @@ func pool pool_create(
   pol.default_block_sz = default_block_sz;
   pol.object_size = object_size;
   pol.object_align = object_align;
-  if (!msg_post_object_event(MSG_OBJECT_EVENT_CREATE, MSG_OBJECT_TYPE_POOL, &pol)) {
+  msg lifecycle_msg = {0};
+  lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
+  lifecycle_msg.object_lifecycle.event_kind = (u32)MSG_OBJECT_EVENT_CREATE;
+  lifecycle_msg.object_lifecycle.object_type = (u32)MSG_OBJECT_TYPE_POOL;
+  lifecycle_msg.object_lifecycle.object_ptr = &pol;
+  if (!msg_post(&lifecycle_msg)) {
     memset(&pol, 0, sizeof(pol));
   }
   return pol;
@@ -139,7 +144,12 @@ func void pool_destroy(pool* pol) {
     return;
   }
 
-  if (!msg_post_object_event(MSG_OBJECT_EVENT_DESTROY, MSG_OBJECT_TYPE_POOL, pol)) {
+  msg lifecycle_msg = {0};
+  lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
+  lifecycle_msg.object_lifecycle.event_kind = (u32)MSG_OBJECT_EVENT_DESTROY;
+  lifecycle_msg.object_lifecycle.object_type = (u32)MSG_OBJECT_TYPE_POOL;
+  lifecycle_msg.object_lifecycle.object_ptr = pol;
+  if (!msg_post(&lifecycle_msg)) {
     return;
   }
 

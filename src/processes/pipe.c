@@ -11,8 +11,15 @@ func pipe pipe_stdin(process prc) {
   }
 
   pipe pip = (pipe)SDL_GetProcessInput((SDL_Process*)prc);
-  if (pip != NULL && !msg_post_object_event(MSG_OBJECT_EVENT_CREATE, MSG_OBJECT_TYPE_PIPE, pip)) {
-    return NULL;
+  if (pip != NULL) {
+    msg lifecycle_msg = {0};
+    lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
+    lifecycle_msg.object_lifecycle.event_kind = (u32)MSG_OBJECT_EVENT_CREATE;
+    lifecycle_msg.object_lifecycle.object_type = (u32)MSG_OBJECT_TYPE_PIPE;
+    lifecycle_msg.object_lifecycle.object_ptr = pip;
+    if (!msg_post(&lifecycle_msg)) {
+      return NULL;
+    }
   }
   return pip;
 }
@@ -23,8 +30,15 @@ func pipe pipe_stdout(process prc) {
   }
 
   pipe pip = (pipe)SDL_GetProcessOutput((SDL_Process*)prc);
-  if (pip != NULL && !msg_post_object_event(MSG_OBJECT_EVENT_CREATE, MSG_OBJECT_TYPE_PIPE, pip)) {
-    return NULL;
+  if (pip != NULL) {
+    msg lifecycle_msg = {0};
+    lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
+    lifecycle_msg.object_lifecycle.event_kind = (u32)MSG_OBJECT_EVENT_CREATE;
+    lifecycle_msg.object_lifecycle.object_type = (u32)MSG_OBJECT_TYPE_PIPE;
+    lifecycle_msg.object_lifecycle.object_ptr = pip;
+    if (!msg_post(&lifecycle_msg)) {
+      return NULL;
+    }
   }
   return pip;
 }
@@ -40,8 +54,15 @@ func pipe pipe_stderr(process prc) {
   }
 
   pipe pip = (pipe)SDL_GetPointerProperty(props, SDL_PROP_PROCESS_STDERR_POINTER, NULL);
-  if (pip != NULL && !msg_post_object_event(MSG_OBJECT_EVENT_CREATE, MSG_OBJECT_TYPE_PIPE, pip)) {
-    return NULL;
+  if (pip != NULL) {
+    msg lifecycle_msg = {0};
+    lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
+    lifecycle_msg.object_lifecycle.event_kind = (u32)MSG_OBJECT_EVENT_CREATE;
+    lifecycle_msg.object_lifecycle.object_type = (u32)MSG_OBJECT_TYPE_PIPE;
+    lifecycle_msg.object_lifecycle.object_ptr = pip;
+    if (!msg_post(&lifecycle_msg)) {
+      return NULL;
+    }
   }
   return pip;
 }
@@ -79,7 +100,12 @@ func void pipe_close(pipe pip) {
     return;
   }
 
-  if (!msg_post_object_event(MSG_OBJECT_EVENT_DESTROY, MSG_OBJECT_TYPE_PIPE, pip)) {
+  msg lifecycle_msg = {0};
+  lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
+  lifecycle_msg.object_lifecycle.event_kind = (u32)MSG_OBJECT_EVENT_DESTROY;
+  lifecycle_msg.object_lifecycle.object_type = (u32)MSG_OBJECT_TYPE_PIPE;
+  lifecycle_msg.object_lifecycle.object_ptr = pip;
+  if (!msg_post(&lifecycle_msg)) {
     return;
   }
 

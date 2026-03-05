@@ -117,7 +117,12 @@ func b32 thread_ctx_init(allocator main_allocator) {
     return false;
   }
 
-  if (!msg_post_thread_ctx_event(MSG_THREAD_CTX_EVENT_INIT, &tls_thread_ctx, thread_id())) {
+  msg thread_ctx_msg = {0};
+  thread_ctx_msg.type = MSG_TYPE_THREAD_CTX;
+  thread_ctx_msg.thread_ctx.event_kind = (u32)MSG_THREAD_CTX_EVENT_INIT;
+  thread_ctx_msg.thread_ctx.ctx_ptr = &tls_thread_ctx;
+  thread_ctx_msg.thread_ctx.thread_id = thread_id();
+  if (!msg_post(&thread_ctx_msg)) {
     return false;
   }
 
@@ -141,7 +146,12 @@ func void thread_ctx_quit(void) {
     return;
   }
 
-  if (!msg_post_thread_ctx_event(MSG_THREAD_CTX_EVENT_QUIT, &tls_thread_ctx, thread_id())) {
+  msg thread_ctx_msg = {0};
+  thread_ctx_msg.type = MSG_TYPE_THREAD_CTX;
+  thread_ctx_msg.thread_ctx.event_kind = (u32)MSG_THREAD_CTX_EVENT_QUIT;
+  thread_ctx_msg.thread_ctx.ctx_ptr = &tls_thread_ctx;
+  thread_ctx_msg.thread_ctx.thread_id = thread_id();
+  if (!msg_post(&thread_ctx_msg)) {
     return;
   }
 

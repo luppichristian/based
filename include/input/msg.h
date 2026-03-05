@@ -9,51 +9,84 @@
 // =========================================================================
 // Input Messages
 // =========================================================================
+//
+// Threading model:
+// - SDL's event queue is process-global, not per-thread.
+// - msg_post enqueues into that global queue.
+// - msg_pump/msg_poll/msg_wait/msg_wait_timeout all consume from the same queue.
+// - In practice these pump/poll/wait calls should be centralized on one thread
+//   (typically the main thread) to avoid event-consumption races.
+// - Message handlers run on the posting thread (inside msg_post), ordered by
+//   descending priority.
 
-// Callback invoked when a message is posted through msg_post.
-// Return 1 to allow posting, 0 to cancel.
-typedef b32 (*msg_post_callback)(const msg* src, void* user_data);
+typedef enum msg_handler_stage {
+  MSG_HANDLER_STAGE_BEFORE_POST = 1,
+  MSG_HANDLER_STAGE_AFTER_POST = 2,
+  MSG_HANDLER_STAGE_POST_FAILED = 3,
+} msg_handler_stage;
 
-// Processes backend events and refreshes the internal queue.
+typedef enum msg_handler_result {
+  MSG_HANDLER_RESULT_CONTINUE = 0,
+  MSG_HANDLER_RESULT_STOP_DISPATCH = 1,
+  MSG_HANDLER_RESULT_CANCEL_POST = 2,
+} msg_handler_result;
+
+typedef enum msg_handler_option {
+  MSG_HANDLER_OPTION_NONE = 0,
+  MSG_HANDLER_OPTION_ONCE = (1u << 0),
+  MSG_HANDLER_OPTION_STAGE_BEFORE_POST = (1u << 1),
+  MSG_HANDLER_OPTION_STAGE_AFTER_POST = (1u << 2),
+  MSG_HANDLER_OPTION_STAGE_POST_FAILED = (1u << 3),
+  MSG_HANDLER_OPTION_DISABLED = (1u << 4),
+} msg_handler_option;
+
+typedef msg_handler_result (*msg_handler_fn)(msg* src, msg_handler_stage stage, void* user_data);
+
+typedef struct msg_handler_desc {
+  // Required.
+  msg_handler_fn handler_fn;
+  void* user_data;
+  // Higher values run first.
+  i32 priority;
+  // Bitmask of msg_handler_option.
+  u32 options;
+  // Inclusive type filter. Set both to 0 to match all message types.
+  u32 type_min;
+  u32 type_max;
+} msg_handler_desc;
+
+// Processes backend events and refreshes the process-global SDL queue.
+// Prefer calling from the main thread.
 func void msg_pump(void);
 
-// Pops the next queued message into out_msg. Returns 1 on success, 0 otherwise.
+// Pops the next message from the process-global queue into out_msg.
+// Returns 1 on success, 0 otherwise.
 func b32 msg_poll(msg* out_msg);
 
-// Waits indefinitely for the next message and writes it to out_msg.
+// Waits indefinitely on the process-global queue and writes the next message to out_msg.
 func b32 msg_wait(msg* out_msg);
 
-// Waits up to timeout_ms for the next message and writes it to out_msg.
+// Waits up to timeout_ms on the process-global queue and writes the next message to out_msg.
 func b32 msg_wait_timeout(msg* out_msg, i32 timeout_ms);
 
-// Posts src into the backend queue. Returns 1 on success, 0 otherwise.
+// Posts src into the process-global queue. Returns 1 on success, 0 otherwise.
+// Suitable for cross-thread producers that need to signal the consumer thread.
 func b32 _msg_post(const msg* src, callsite site);
 #define msg_post(src) _msg_post((src), CALLSITE_HERE)
 
 // Reserves count consecutive custom event types and returns the first type value.
 func u32 msg_register_custom_range(sz count);
 
-// Registers a callback invoked before backend queue insertion.
-// If the callback returns 0, posting is canceled.
-func void msg_set_post_callback(msg_post_callback callback, void* user_data);
+// Registers one message handler and returns a non-zero handler id on success.
+// Handlers are dispatched by descending priority.
+// If no stage flags are set in desc->options, BEFORE_POST is implied.
+func u64 msg_add_handler(const msg_handler_desc* desc);
 
-// Posts one object lifecycle message.
-func b32 _msg_post_object_event(
-    msg_object_event_kind event_kind,
-    msg_object_type object_type,
-    void* object_ptr,
-    callsite site);
-#define msg_post_object_event(event_kind, object_type, object_ptr) \
-  _msg_post_object_event((event_kind), (object_type), (object_ptr), CALLSITE_HERE)
+// Removes a previously registered message handler.
+func b32 msg_remove_handler(u64 handler_id);
 
-// Posts one thread-context lifecycle message.
-func b32 _msg_post_thread_ctx_event(
-    msg_thread_ctx_event_kind event_kind,
-    void* ctx_ptr,
-    u64 thread_id,
-    callsite site);
-#define msg_post_thread_ctx_event(event_kind, ctx_ptr, thread_id) \
-  _msg_post_thread_ctx_event((event_kind), (ctx_ptr), (thread_id), CALLSITE_HERE)
+// Removes all registered message handlers.
+func void msg_clear_handlers(void);
 
 // Converts a backend-native event object into a msg. Returns 1 on success, 0 otherwise.
 func b32 msg_from_native(const void* native_event, msg* out_msg);

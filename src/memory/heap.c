@@ -174,7 +174,12 @@ func heap heap_create(allocator parent_alloc, mutex opt_mutex, sz default_block_
   hep.parent = parent_alloc;
   hep.opt_mutex = opt_mutex;
   hep.default_block_sz = default_block_sz;
-  if (!msg_post_object_event(MSG_OBJECT_EVENT_CREATE, MSG_OBJECT_TYPE_HEAP, &hep)) {
+  msg lifecycle_msg = {0};
+  lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
+  lifecycle_msg.object_lifecycle.event_kind = (u32)MSG_OBJECT_EVENT_CREATE;
+  lifecycle_msg.object_lifecycle.object_type = (u32)MSG_OBJECT_TYPE_HEAP;
+  lifecycle_msg.object_lifecycle.object_ptr = &hep;
+  if (!msg_post(&lifecycle_msg)) {
     memset(&hep, 0, sizeof(hep));
   }
   return hep;
@@ -191,7 +196,12 @@ func void heap_destroy(heap* hep) {
     return;
   }
 
-  if (!msg_post_object_event(MSG_OBJECT_EVENT_DESTROY, MSG_OBJECT_TYPE_HEAP, hep)) {
+  msg lifecycle_msg = {0};
+  lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
+  lifecycle_msg.object_lifecycle.event_kind = (u32)MSG_OBJECT_EVENT_DESTROY;
+  lifecycle_msg.object_lifecycle.object_type = (u32)MSG_OBJECT_TYPE_HEAP;
+  lifecycle_msg.object_lifecycle.object_ptr = hep;
+  if (!msg_post(&lifecycle_msg)) {
     return;
   }
 

@@ -40,7 +40,12 @@ func thread thread_create_impl(thread_func entry, void* arg, const c8* name, all
     return NULL;
   }
 
-  if (!msg_post_object_event(MSG_OBJECT_EVENT_CREATE, MSG_OBJECT_TYPE_THREAD, NULL)) {
+  msg lifecycle_msg = {0};
+  lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
+  lifecycle_msg.object_lifecycle.event_kind = (u32)MSG_OBJECT_EVENT_CREATE;
+  lifecycle_msg.object_lifecycle.object_type = (u32)MSG_OBJECT_TYPE_THREAD;
+  lifecycle_msg.object_lifecycle.object_ptr = NULL;
+  if (!msg_post(&lifecycle_msg)) {
     return NULL;
   }
 
@@ -85,7 +90,12 @@ func b32 thread_is_valid(thread thd) {
 
 func b32 thread_join(thread thd, i32* out_exit_code) {
   if (!thd) return 0;
-  if (!msg_post_object_event(MSG_OBJECT_EVENT_DESTROY, MSG_OBJECT_TYPE_THREAD, thd)) {
+  msg lifecycle_msg = {0};
+  lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
+  lifecycle_msg.object_lifecycle.event_kind = (u32)MSG_OBJECT_EVENT_DESTROY;
+  lifecycle_msg.object_lifecycle.object_type = (u32)MSG_OBJECT_TYPE_THREAD;
+  lifecycle_msg.object_lifecycle.object_ptr = thd;
+  if (!msg_post(&lifecycle_msg)) {
     return 0;
   }
   SDL_WaitThread((SDL_Thread*)thd, (int*)out_exit_code);
@@ -96,7 +106,12 @@ func void thread_detach(thread thd) {
   if (!thd) {
     return;
   }
-  if (!msg_post_object_event(MSG_OBJECT_EVENT_DESTROY, MSG_OBJECT_TYPE_THREAD, thd)) {
+  msg lifecycle_msg = {0};
+  lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
+  lifecycle_msg.object_lifecycle.event_kind = (u32)MSG_OBJECT_EVENT_DESTROY;
+  lifecycle_msg.object_lifecycle.object_type = (u32)MSG_OBJECT_TYPE_THREAD;
+  lifecycle_msg.object_lifecycle.object_ptr = thd;
+  if (!msg_post(&lifecycle_msg)) {
     return;
   }
   SDL_DetachThread((SDL_Thread*)thd);

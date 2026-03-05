@@ -15,7 +15,12 @@ func ring ring_create(void* ptr, sz capacity, mutex opt_mutex) {
   rng.ptr = (u8*)ptr;
   rng.capacity = capacity;
   rng.opt_mutex = opt_mutex;
-  if (!msg_post_object_event(MSG_OBJECT_EVENT_CREATE, MSG_OBJECT_TYPE_RING, &rng)) {
+  msg lifecycle_msg = {0};
+  lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
+  lifecycle_msg.object_lifecycle.event_kind = (u32)MSG_OBJECT_EVENT_CREATE;
+  lifecycle_msg.object_lifecycle.object_type = (u32)MSG_OBJECT_TYPE_RING;
+  lifecycle_msg.object_lifecycle.object_ptr = &rng;
+  if (!msg_post(&lifecycle_msg)) {
     memset(&rng, 0, sizeof(rng));
   }
   return rng;
@@ -37,7 +42,12 @@ func ring ring_create_alloc(allocator parent_alloc, sz capacity, mutex opt_mutex
     rng.ptr = (u8*)_allocator_alloc(&parent_alloc, capacity, CALLSITE_HERE);
     rng.buf_owned = rng.ptr != NULL ? 1 : 0;
   }
-  if (!msg_post_object_event(MSG_OBJECT_EVENT_CREATE, MSG_OBJECT_TYPE_RING, &rng)) {
+  msg lifecycle_msg = {0};
+  lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
+  lifecycle_msg.object_lifecycle.event_kind = (u32)MSG_OBJECT_EVENT_CREATE;
+  lifecycle_msg.object_lifecycle.object_type = (u32)MSG_OBJECT_TYPE_RING;
+  lifecycle_msg.object_lifecycle.object_ptr = &rng;
+  if (!msg_post(&lifecycle_msg)) {
     if (rng.buf_owned && rng.parent.alloc_fn) {
       _allocator_dealloc(&rng.parent, rng.ptr, rng.capacity, CALLSITE_HERE);
     }
@@ -57,7 +67,12 @@ func void ring_destroy(ring* rng) {
     return;
   }
 
-  if (!msg_post_object_event(MSG_OBJECT_EVENT_DESTROY, MSG_OBJECT_TYPE_RING, rng)) {
+  msg lifecycle_msg = {0};
+  lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
+  lifecycle_msg.object_lifecycle.event_kind = (u32)MSG_OBJECT_EVENT_DESTROY;
+  lifecycle_msg.object_lifecycle.object_type = (u32)MSG_OBJECT_TYPE_RING;
+  lifecycle_msg.object_lifecycle.object_ptr = rng;
+  if (!msg_post(&lifecycle_msg)) {
     return;
   }
 

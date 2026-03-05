@@ -87,7 +87,12 @@ func void filemap_close(filemap* map) {
     return;
   }
 
-  if (!msg_post_object_event(MSG_OBJECT_EVENT_DESTROY, MSG_OBJECT_TYPE_FILEMAP, map)) {
+  msg lifecycle_msg = {0};
+  lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
+  lifecycle_msg.object_lifecycle.event_kind = (u32)MSG_OBJECT_EVENT_DESTROY;
+  lifecycle_msg.object_lifecycle.object_type = (u32)MSG_OBJECT_TYPE_FILEMAP;
+  lifecycle_msg.object_lifecycle.object_ptr = map;
+  if (!msg_post(&lifecycle_msg)) {
     return;
   }
 
@@ -196,7 +201,12 @@ func filemap filemap_open(const path* src, filemap_access access) {
     return filemap_empty();
   }
 
-  if (!msg_post_object_event(MSG_OBJECT_EVENT_CREATE, MSG_OBJECT_TYPE_FILEMAP, &map)) {
+  msg lifecycle_msg = {0};
+  lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
+  lifecycle_msg.object_lifecycle.event_kind = (u32)MSG_OBJECT_EVENT_CREATE;
+  lifecycle_msg.object_lifecycle.object_type = (u32)MSG_OBJECT_TYPE_FILEMAP;
+  lifecycle_msg.object_lifecycle.object_ptr = &map;
+  if (!msg_post(&lifecycle_msg)) {
     filemap_close(&map);
     return filemap_empty();
   }
@@ -240,7 +250,12 @@ func filemap filemap_open(const path* src, filemap_access access) {
   }
 
   map.native_mapping = (void*)(up)map_flags;
-  if (!msg_post_object_event(MSG_OBJECT_EVENT_CREATE, MSG_OBJECT_TYPE_FILEMAP, &map)) {
+  msg lifecycle_msg = {0};
+  lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
+  lifecycle_msg.object_lifecycle.event_kind = (u32)MSG_OBJECT_EVENT_CREATE;
+  lifecycle_msg.object_lifecycle.object_type = (u32)MSG_OBJECT_TYPE_FILEMAP;
+  lifecycle_msg.object_lifecycle.object_ptr = &map;
+  if (!msg_post(&lifecycle_msg)) {
     filemap_close(&map);
     return filemap_empty();
   }
@@ -287,7 +302,12 @@ func filemap filemap_open(const path* src, filemap_access access) {
 
   fclose(file_ptr);
   map.uses_fallback_copy = 1;
-  if (!msg_post_object_event(MSG_OBJECT_EVENT_CREATE, MSG_OBJECT_TYPE_FILEMAP, &map)) {
+  msg lifecycle_msg = {0};
+  lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
+  lifecycle_msg.object_lifecycle.event_kind = (u32)MSG_OBJECT_EVENT_CREATE;
+  lifecycle_msg.object_lifecycle.object_type = (u32)MSG_OBJECT_TYPE_FILEMAP;
+  lifecycle_msg.object_lifecycle.object_ptr = &map;
+  if (!msg_post(&lifecycle_msg)) {
     filemap_close(&map);
     return filemap_empty();
   }

@@ -76,7 +76,12 @@ func arena arena_create(allocator parent_alloc, mutex opt_mutex, sz default_bloc
   arn.parent = parent_alloc;
   arn.opt_mutex = opt_mutex;
   arn.default_block_sz = default_block_sz;
-  if (!msg_post_object_event(MSG_OBJECT_EVENT_CREATE, MSG_OBJECT_TYPE_ARENA, &arn)) {
+  msg lifecycle_msg = {0};
+  lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
+  lifecycle_msg.object_lifecycle.event_kind = (u32)MSG_OBJECT_EVENT_CREATE;
+  lifecycle_msg.object_lifecycle.object_type = (u32)MSG_OBJECT_TYPE_ARENA;
+  lifecycle_msg.object_lifecycle.object_ptr = &arn;
+  if (!msg_post(&lifecycle_msg)) {
     memset(&arn, 0, sizeof(arn));
   }
   return arn;
@@ -93,7 +98,12 @@ func void arena_destroy(arena* arn) {
     return;
   }
 
-  if (!msg_post_object_event(MSG_OBJECT_EVENT_DESTROY, MSG_OBJECT_TYPE_ARENA, arn)) {
+  msg lifecycle_msg = {0};
+  lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
+  lifecycle_msg.object_lifecycle.event_kind = (u32)MSG_OBJECT_EVENT_DESTROY;
+  lifecycle_msg.object_lifecycle.object_type = (u32)MSG_OBJECT_TYPE_ARENA;
+  lifecycle_msg.object_lifecycle.object_ptr = arn;
+  if (!msg_post(&lifecycle_msg)) {
     return;
   }
 
