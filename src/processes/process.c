@@ -2,6 +2,8 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "processes/process.h"
+#include "basic/assert.h"
+#include "context/thread_ctx.h"
 #include "input/msg.h"
 #include "../sdl3_include.h"
 
@@ -33,6 +35,7 @@ func process _process_create_with(cstr8 const* args, process_options options, ca
   if (!args || !args[0]) {
     return NULL;
   }
+  assert(args[0][0] != '\0');
 
   msg lifecycle_msg = {0};
   lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
@@ -44,7 +47,13 @@ func process _process_create_with(cstr8 const* args, process_options options, ca
   }
 
   if (process_options_is_default(options)) {
-    return (process)SDL_CreateProcess(args, false);
+    process prc = (process)SDL_CreateProcess(args, false);
+    if (prc == NULL) {
+      thread_log_error("process_create: SDL_CreateProcess failed for '%s'", args[0]);
+    } else {
+      thread_log_trace("process_create: '%s' options=default", args[0]);
+    }
+    return prc;
   }
 
   SDL_PropertiesID props = SDL_CreateProperties();
@@ -71,6 +80,11 @@ func process _process_create_with(cstr8 const* args, process_options options, ca
 
   process prc = ok ? (process)SDL_CreateProcessWithProperties(props) : NULL;
   SDL_DestroyProperties(props);
+  if (prc == NULL) {
+    thread_log_error("process_create_with: failed for '%s'", args[0]);
+  } else {
+    thread_log_trace("process_create_with: '%s'", args[0]);
+  }
   return prc;
 }
 
@@ -95,6 +109,7 @@ func void* process_read(process prc, sz* out_size, i32* out_exit_code) {
   if (!prc) {
     return NULL;
   }
+  assert(process_is_valid(prc));
 
   sz read_size = 0;
   i32 exit_code = 0;
@@ -121,6 +136,7 @@ func b32 process_wait(process prc, b32 block, i32* out_exit_code) {
   if (!prc) {
     return 0;
   }
+  assert(block == 0 || block == 1);
 
   i32 exit_code = 0;
   b32 finished = SDL_WaitProcess(
@@ -130,6 +146,7 @@ func b32 process_wait(process prc, b32 block, i32* out_exit_code) {
   if (finished && out_exit_code) {
     *out_exit_code = (i32)exit_code;
   }
+  thread_log_trace("process_wait: prc=%p finished=%u", prc, (u32)finished);
 
   return finished;
 }
@@ -138,6 +155,7 @@ func b32 process_kill(process prc, b32 force) {
   if (!prc) {
     return 0;
   }
+  assert(force == 0 || force == 1);
 
   return SDL_KillProcess((SDL_Process*)prc, force != 0);
 }
@@ -156,5 +174,6 @@ func void process_destroy(process prc) {
     return;
   }
 
+  thread_log_trace("process_destroy: prc=%p", prc);
   SDL_DestroyProcess((SDL_Process*)prc);
 }

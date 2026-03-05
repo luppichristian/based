@@ -3,6 +3,8 @@
 
 #include "filesystem/module.h"
 
+#include "basic/assert.h"
+#include "context/thread_ctx.h"
 #include "basic/env_defines.h"
 
 #include <string.h>
@@ -35,6 +37,7 @@ func void* mod_get_func(const mod* mod_ptr, cstr8 name) {
   if (!mod_is_open(mod_ptr) || name == NULL || name[0] == '\0') {
     return NULL;
   }
+  assert(name[0] != '\0');
 
 #if defined(PLATFORM_WINDOWS)
   FARPROC raw_symbol = GetProcAddress((HMODULE)mod_ptr->native_handle, name);
@@ -74,6 +77,7 @@ func void mod_close(mod* mod_ptr) {
   if (!mod_is_open(mod_ptr)) {
     return;
   }
+  assert(mod_ptr != NULL);
 
   if (mod_ptr->initialized && mod_ptr->quit_func != NULL) {
     mod_ptr->quit_func();
@@ -87,6 +91,7 @@ func void mod_close(mod* mod_ptr) {
 #endif
 
   *mod_ptr = module_empty();
+  thread_log_trace("mod_close");
 }
 
 func mod mod_open(const path* src) {
@@ -97,6 +102,7 @@ func mod mod_open(const path* src) {
   if (src == NULL || src->buf[0] == '\0') {
     return module_value;
   }
+  assert(src->buf[0] != '\0');
 
 #if defined(PLATFORM_WINDOWS)
   HMODULE handle = LoadLibraryA(src->buf);
@@ -129,15 +135,18 @@ func mod mod_open(const path* src) {
   module_value.quit_func = cast_value.quit_func;
 
   if (module_value.init_func == NULL || module_value.quit_func == NULL) {
+    thread_log_error("mod_open: missing mod_init/mod_quit symbols path=%s", src->buf);
     mod_close(&module_value);
     return module_empty();
   }
 
   if (!module_value.init_func()) {
+    thread_log_error("mod_open: mod_init failed path=%s", src->buf);
     mod_close(&module_value);
     return module_empty();
   }
 
   module_value.initialized = 1;
+  thread_log_trace("mod_open: path=%s", src->buf);
   return module_value;
 }

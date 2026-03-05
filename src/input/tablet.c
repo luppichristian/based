@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "input/tablet.h"
+#include "basic/assert.h"
 #include "input/msg.h"
 #include "../sdl3_include.h"
 #include <SDL3/SDL_hidapi.h>
@@ -86,6 +87,7 @@ func b32 tablet_get_last_pen_state(tablet_pen_state* out_state) {
   if (!out_state || !tablet_cached_pen_state.pen_id) {
     return 0;
   }
+  assert(out_state != NULL);
 
   *out_state = tablet_cached_pen_state;
   return 1;
@@ -108,6 +110,8 @@ func b32 tablet_read_hid_report(device_id id, void* dst, sz capacity, sz* out_si
     }
     return 0;
   }
+  assert(dst != NULL);
+  assert(capacity > 0);
 
   while (entry) {
     if (entry->usage_page == 0x0D && tablet_hash_path(entry->path) == id.instance) {

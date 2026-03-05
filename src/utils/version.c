@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "utils/version.h"
+#include "basic/assert.h"
 #include "basic/utility_defines.h"
 
 func sz version_u32_digits(u32 value) {
@@ -79,6 +80,10 @@ func i32 version_cmp(version lhs, version rhs) {
 }
 
 func b32 version_to_cstr8(version ver, c8* dst, sz cap) {
+  if (dst == NULL) {
+    return 0;
+  }
+  assert(dst != NULL);
   sz needed = version_string_length(ver) + 1;
   if (cap < needed) {
     if (cap > 0) {
@@ -97,6 +102,10 @@ func b32 version_to_cstr8(version ver, c8* dst, sz cap) {
 }
 
 func b32 version_to_cstr16(version ver, c16* dst, sz cap) {
+  if (dst == NULL) {
+    return 0;
+  }
+  assert(dst != NULL);
   c8 buffer[32];
   if (!version_to_cstr8(ver, buffer, count_of(buffer))) {
     if (cap > 0) {
@@ -111,6 +120,10 @@ func b32 version_to_cstr16(version ver, c16* dst, sz cap) {
 }
 
 func b32 version_to_cstr32(version ver, c32* dst, sz cap) {
+  if (dst == NULL) {
+    return 0;
+  }
+  assert(dst != NULL);
   c8 buffer[32];
   if (!version_to_cstr8(ver, buffer, count_of(buffer))) {
     if (cap > 0) {
@@ -125,6 +138,10 @@ func b32 version_to_cstr32(version ver, c32* dst, sz cap) {
 }
 
 func b32 version_to_str8(version ver, str8* dst) {
+  if (dst == NULL) {
+    return 0;
+  }
+  assert(dst != NULL);
   if (dst->cap == 0) {
     dst->size = 0;
     return 0;
@@ -136,6 +153,10 @@ func b32 version_to_str8(version ver, str8* dst) {
 }
 
 func b32 version_to_str16(version ver, str16* dst) {
+  if (dst == NULL) {
+    return 0;
+  }
+  assert(dst != NULL);
   if (dst->cap == 0) {
     dst->size = 0;
     return 0;
@@ -147,6 +168,10 @@ func b32 version_to_str16(version ver, str16* dst) {
 }
 
 func b32 version_to_str32(version ver, str32* dst) {
+  if (dst == NULL) {
+    return 0;
+  }
+  assert(dst != NULL);
   if (dst->cap == 0) {
     dst->size = 0;
     return 0;

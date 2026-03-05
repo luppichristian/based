@@ -2,12 +2,17 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "utils/crc.h"
+#include "basic/assert.h"
 
 func u32 crc32_init(void) {
   return 0xFFFFFFFFU;
 }
 
 func u32 crc32_update(u32 crc, const void* data, sz size) {
+  if (size > 0 && data == NULL) {
+    return crc;
+  }
+  assert(size == 0 || data != NULL);
   const u8* bytes = (const u8*)data;
   for (sz index = 0; index < size; index++) {
     crc ^= (u32)bytes[index];
@@ -35,6 +40,10 @@ func u64 crc64_init(void) {
 }
 
 func u64 crc64_update(u64 crc, const void* data, sz size) {
+  if (size > 0 && data == NULL) {
+    return crc;
+  }
+  assert(size == 0 || data != NULL);
   const u8* bytes = (const u8*)data;
   for (sz index = 0; index < size; index++) {
     crc ^= (u64)bytes[index] << 56U;

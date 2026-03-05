@@ -3,11 +3,13 @@
 
 #include "utils/endian.h"
 
+#include "basic/assert.h"
 #include "basic/intrinsics.h"
 
 func b32 endian_is_little(void) {
   u16 value = 1;
   const u8* bytes = (const u8*)&value;
+  assert(bytes != NULL);
   return bytes[0] == 1U ? 1 : 0;
 }
 

@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "input/capture.h"
+#include "basic/assert.h"
 
 global_var input_key input_capture_keys[INPUT_CAPTURE_MAX_KEYS] = {0};
 global_var b32 input_capture_used[INPUT_CAPTURE_MAX_KEYS] = {0};
@@ -35,6 +36,7 @@ func sz input_capture_find_slot(input_key key) {
 
 func sz input_capture_get_slot(input_key key) {
   input_capture_ensure_default_slot();
+  assert(INPUT_CAPTURE_MAX_KEYS > 0);
 
   sz found_idx = input_capture_find_slot(key);
   if (found_idx < INPUT_CAPTURE_MAX_KEYS) {
@@ -86,6 +88,7 @@ func u32 input_capture_get_slot_epoch(sz slot_idx) {
   if (slot_idx >= INPUT_CAPTURE_MAX_KEYS) {
     return 0;
   }
+  assert(slot_idx < INPUT_CAPTURE_MAX_KEYS);
 
   return input_capture_slot_epoch[slot_idx];
 }

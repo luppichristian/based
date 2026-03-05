@@ -3,6 +3,7 @@
 
 #include "filesystem/pathinfo.h"
 
+#include "basic/assert.h"
 #include "basic/env_defines.h"
 #include "filesystem/directory.h"
 #include "filesystem/file.h"
@@ -132,6 +133,7 @@ func b32 pathinfo_get(const path* src, pathinfo* out_info) {
   if (out_info == NULL || src == NULL || src->buf[0] == '\0') {
     return 0;
   }
+  assert(src->buf[0] != '\0');
 
 #if defined(PLATFORM_WINDOWS)
   WIN32_FILE_ATTRIBUTE_DATA attr_data;

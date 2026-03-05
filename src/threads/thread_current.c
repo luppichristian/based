@@ -2,6 +2,8 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "threads/thread_current.h"
+#include "basic/assert.h"
+#include "context/thread_ctx.h"
 #include "../sdl3_include.h"
 #include "basic/utility_defines.h"
 
@@ -28,11 +30,13 @@ func b32 thread_set_priority(thread_priority priority) {
   if (priority >= count_of(sdl_priorities)) {
     return false;  // Invalid priority
   }
+  assert(priority < count_of(sdl_priorities));
 
   b32 ok = SDL_SetCurrentThreadPriority(sdl_priorities[priority]);
   if (ok) {
     tls_priority = priority;
   }
+  thread_log_trace("thread_set_priority: priority=%u success=%u", (u32)priority, (u32)ok);
   return ok;
 }
 

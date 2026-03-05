@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "memory/scratch.h"
+#include "basic/assert.h"
 
 // =========================================================================
 // Create / Destroy
@@ -9,6 +10,11 @@
 
 func scratch scratch_begin(arena* arn) {
   scratch scr;
+  if (arn == NULL) {
+    scr = (scratch) {0};
+    return scr;
+  }
+  assert(arn != NULL);
   scr.arn = arn;
 
   if (arn->opt_mutex) {
@@ -26,6 +32,10 @@ func scratch scratch_begin(arena* arn) {
 }
 
 func void scratch_end(scratch* scr) {
+  if (scr == NULL || scr->arn == NULL) {
+    return;
+  }
+  assert(scr != NULL);
   arena* arn = scr->arn;
 
   if (arn->opt_mutex) {

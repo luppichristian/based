@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "filesystem/path.h"
+#include "basic/assert.h"
 #include "basic/env_defines.h"
 #include "../sdl3_include.h"
 
@@ -16,10 +17,18 @@
 #endif
 
 func c8* path_mut_buf(path* value) {
+  if (value == NULL) {
+    return NULL;
+  }
+  assert(value != NULL);
   return value->buf;
 }
 
 func cstr8 path_buf(const path* value) {
+  if (value == NULL) {
+    return "";
+  }
+  assert(value != NULL);
   return value->buf;
 }
 
@@ -135,6 +144,11 @@ func path path_from_str8(str8 src) {
 
 func path path_join_cstr(const path* lhs, cstr8 rhs) {
   path result;
+  if (lhs == NULL || rhs == NULL) {
+    return path_empty_value();
+  }
+  assert(lhs != NULL);
+  assert(rhs != NULL);
 
   if (path_is_absolute_cstr(rhs) || cstr8_is_empty(path_buf(lhs))) {
     cstr8_copy(result.buf, size_of(result.buf), rhs);
@@ -165,16 +179,28 @@ func path path_join(const path* lhs, const path* rhs) {
 }
 
 func sz path_append_cstr(path* dst, cstr8 src) {
+  if (dst == NULL || src == NULL) {
+    return 0;
+  }
+  assert(dst != NULL);
   *dst = path_join_cstr(dst, src);
   return cstr8_len(path_mut_buf(dst));
 }
 
 func sz path_append(path* dst, const path* src) {
+  if (dst == NULL || src == NULL) {
+    return 0;
+  }
+  assert(dst != NULL);
   *dst = path_join(dst, src);
   return cstr8_len(path_mut_buf(dst));
 }
 
 func void path_normalize(path* src) {
+  if (src == NULL) {
+    return;
+  }
+  assert(src != NULL);
   sz root_len = path_root_length_cstr(path_buf(src));
   sz read_idx = 0;
   sz write_idx = 0;
@@ -205,6 +231,10 @@ func void path_normalize(path* src) {
 }
 
 func b32 path_ends_with(const path* src, cstr8 suffix) {
+  if (src == NULL || suffix == NULL) {
+    return 0;
+  }
+  assert(src != NULL);
   return cstr8_ends_with(path_buf(src), suffix);
 }
 
@@ -397,14 +427,23 @@ func path path_make_relative(const path* src, const path* root) {
 
 func b32 path_exists(const path* src) {
   SDL_PathInfo path_info;
+  if (src == NULL || src->buf[0] == '\0') {
+    return 0;
+  }
   return SDL_GetPathInfo(path_buf(src), &path_info) ? 1 : 0;
 }
 
 func b32 path_remove(const path* src) {
+  if (src == NULL || src->buf[0] == '\0') {
+    return 0;
+  }
   return SDL_RemovePath(path_buf(src)) ? 1 : 0;
 }
 
 func b32 path_rename(const path* old_src, const path* new_src) {
+  if (old_src == NULL || new_src == NULL || old_src->buf[0] == '\0' || new_src->buf[0] == '\0') {
+    return 0;
+  }
   return SDL_RenamePath(path_buf(old_src), path_buf(new_src)) ? 1 : 0;
 }
 

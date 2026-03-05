@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "input/touch.h"
+#include "basic/assert.h"
 #include "../sdl3_include.h"
 
 func b32 touch_is_available(void) {
@@ -76,6 +77,7 @@ func b32 touch_get_finger(device_id id, sz index, touch_finger_state* out_finger
   if (id.type != DEVICE_TYPE_TOUCH || !out_finger) {
     return 0;
   }
+  assert(out_finger != NULL);
 
   fingers = SDL_GetTouchFingers((SDL_TouchID)id.instance, &count);
   if (fingers && index < (sz)count && fingers[index]) {

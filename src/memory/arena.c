@@ -2,6 +2,8 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "memory/arena.h"
+#include "basic/assert.h"
+#include "context/thread_ctx.h"
 #include "input/msg.h"
 #include "basic/utility_defines.h"
 #include <string.h>
@@ -84,6 +86,7 @@ func arena arena_create(allocator parent_alloc, mutex opt_mutex, sz default_bloc
   if (!msg_post(&lifecycle_msg)) {
     memset(&arn, 0, sizeof(arn));
   }
+  thread_log_trace("arena_create: block_sz=%zu", (size_t)default_block_sz);
   return arn;
 }
 
@@ -97,6 +100,7 @@ func void arena_destroy(arena* arn) {
   if (arn == NULL) {
     return;
   }
+  assert(arn != NULL);
 
   msg lifecycle_msg = {0};
   lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
@@ -134,6 +138,7 @@ func void arena_destroy(arena* arn) {
 
   arn->opt_mutex = NULL;
   arn->mutex_owned = 0;
+  thread_log_trace("arena_destroy: arn=%p", (void*)arn);
 }
 
 func allocator arena_get_allocator(arena* arn) {
@@ -150,6 +155,10 @@ func allocator arena_get_allocator(arena* arn) {
 // =========================================================================
 
 func void arena_add_block(arena* arn, void* ptr, sz size) {
+  if (arn == NULL || ptr == NULL || size <= sizeof(arena_block)) {
+    return;
+  }
+  assert(arn != NULL);
   if (arn->opt_mutex) {
     mutex_lock(arn->opt_mutex);
   }
@@ -164,6 +173,9 @@ func void arena_add_block(arena* arn, void* ptr, sz size) {
 }
 
 func b32 arena_remove_block(arena* arn, void* ptr) {
+  if (arn == NULL || ptr == NULL) {
+    return 0;
+  }
   if (arn->opt_mutex) {
     mutex_lock(arn->opt_mutex);
   }
@@ -201,6 +213,10 @@ func b32 arena_remove_block(arena* arn, void* ptr) {
 // =========================================================================
 
 func void* _arena_alloc(arena* arn, sz size, sz align, callsite site) {
+  if (arn == NULL || size == 0 || align == 0) {
+    return NULL;
+  }
+  assert(align > 0);
   if (arn->opt_mutex) {
     mutex_lock(arn->opt_mutex);
   }
@@ -289,6 +305,9 @@ func void* _arena_realloc(
 // =========================================================================
 
 func void arena_clear(arena* arn) {
+  if (arn == NULL) {
+    return;
+  }
   if (arn->opt_mutex) {
     mutex_lock(arn->opt_mutex);
   }

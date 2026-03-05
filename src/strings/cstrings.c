@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "strings/cstrings.h"
+#include "basic/assert.h"
 #include "strings/char.h"
 #include "strings/unicode.h"
 
@@ -36,18 +37,35 @@ func sz cstr32_len_impl(cstr32 str) {
 // =========================================================================
 
 func sz cstr8_len(cstr8 str) {
+  if (str == NULL) {
+    return 0;
+  }
+  assert(str != NULL);
   return strlen(str);
 }
 
 func b32 cstr8_is_empty(cstr8 str) {
+  if (str == NULL) {
+    return 1;
+  }
+  assert(str != NULL);
   return str[0] == '\0' ? 1 : 0;
 }
 
 func void cstr8_clear(c8* str) {
+  if (str == NULL) {
+    return;
+  }
+  assert(str != NULL);
   str[0] = '\0';
 }
 
 func i32 cstr8_cmp(cstr8 lhs, cstr8 rhs) {
+  if (lhs == NULL || rhs == NULL) {
+    return lhs == rhs ? 0 : (lhs == NULL ? -1 : 1);
+  }
+  assert(lhs != NULL);
+  assert(rhs != NULL);
   return strcmp(lhs, rhs);
 }
 
@@ -84,10 +102,12 @@ func i32 cstr8_cmp_nocase(cstr8 lhs, cstr8 rhs) {
 // =========================================================================
 
 func sz cstr8_copy(c8* dst, sz dst_size, cstr8 src) {
-  if (dst_size == 0) {
+  if (dst == NULL || src == NULL || dst_size == 0) {
     return 0;
   }
-  sz src_len = strlen(src);
+  assert(dst != NULL);
+  assert(src != NULL);
+  sz src_len = cstr8_len(src);
   sz copy_len = src_len < dst_size - 1 ? src_len : dst_size - 1;
   memcpy(dst, src, copy_len);
   dst[copy_len] = '\0';
@@ -98,7 +118,7 @@ func sz cstr8_copy_n(c8* dst, sz dst_size, cstr8 src, sz cnt) {
   if (dst_size == 0) {
     return 0;
   }
-  sz src_len = strlen(src);
+  sz src_len = cstr8_len(src);
   sz max_copy = cnt < src_len ? cnt : src_len;
   sz copy_len = max_copy < dst_size - 1 ? max_copy : dst_size - 1;
   memcpy(dst, src, copy_len);
@@ -110,12 +130,12 @@ func sz cstr8_concat(c8* dst, sz dst_cap, cstr8 src) {
   if (dst_cap == 0) {
     return 0;
   }
-  sz dst_len = strlen(dst);
+  sz dst_len = cstr8_len(dst);
   if (dst_len >= dst_cap - 1) {
     return dst_len;
   }
   sz remaining = dst_cap - dst_len - 1;
-  sz src_len = strlen(src);
+  sz src_len = cstr8_len(src);
   sz copy_len = src_len < remaining ? src_len : remaining;
   memcpy(dst + dst_len, src, copy_len);
   dst[dst_len + copy_len] = '\0';
@@ -126,7 +146,7 @@ func sz cstr8_append_char(c8* dst, sz dst_cap, c8 chr) {
   if (dst_cap == 0) {
     return 0;
   }
-  sz len = strlen(dst);
+  sz len = cstr8_len(dst);
   if (len >= dst_cap - 1) {
     return len;
   }
@@ -136,7 +156,7 @@ func sz cstr8_append_char(c8* dst, sz dst_cap, c8 chr) {
 }
 
 func void cstr8_truncate(c8* str, sz length) {
-  if (strlen(str) > length) {
+  if (cstr8_len(str) > length) {
     str[length] = '\0';
   }
 }
@@ -155,7 +175,7 @@ func b32 cstr8_vformat(c8* dst, sz dst_cap, cstr8 fmt, va_list args) {
 }
 
 func b32 cstr8_append_format(c8* dst, sz dst_cap, cstr8 fmt, ...) {
-  sz len = strlen(dst);
+  sz len = cstr8_len(dst);
   if (len >= dst_cap) {
     return 0;
   }
@@ -167,7 +187,7 @@ func b32 cstr8_append_format(c8* dst, sz dst_cap, cstr8 fmt, ...) {
 }
 
 func b32 cstr8_append_vformat(c8* dst, sz dst_cap, cstr8 fmt, va_list args) {
-  sz len = strlen(dst);
+  sz len = cstr8_len(dst);
   if (len >= dst_cap) {
     return 0;
   }
@@ -193,10 +213,10 @@ func cstr8 cstr8_find(cstr8 str, cstr8 sub) {
 
 func cstr8 cstr8_find_last(cstr8 str, cstr8 sub) {
   if (sub[0] == '\0') {
-    return str + strlen(str);
+    return str + cstr8_len(str);
   }
-  sz sub_len = strlen(sub);
-  sz str_len = strlen(str);
+  sz sub_len = cstr8_len(sub);
+  sz str_len = cstr8_len(str);
   if (sub_len > str_len) {
     return NULL;
   }
@@ -229,13 +249,13 @@ func sz cstr8_count_char(cstr8 str, c8 chr) {
 }
 
 func b32 cstr8_starts_with(cstr8 str, cstr8 prefix) {
-  sz prefix_len = strlen(prefix);
+  sz prefix_len = cstr8_len(prefix);
   return strncmp(str, prefix, prefix_len) == 0 ? 1 : 0;
 }
 
 func b32 cstr8_ends_with(cstr8 str, cstr8 suffix) {
-  sz str_len = strlen(str);
-  sz suffix_len = strlen(suffix);
+  sz str_len = cstr8_len(str);
+  sz suffix_len = cstr8_len(suffix);
   if (suffix_len > str_len) {
     return 0;
   }
@@ -263,7 +283,7 @@ func void cstr8_trim(c8* str) {
   while (c8_is_space(str[start])) {
     start++;
   }
-  sz len = strlen(str + start);
+  sz len = cstr8_len(str + start);
   while (len > 0 && c8_is_space(str[start + len - 1])) {
     len--;
   }
@@ -308,18 +328,18 @@ func sz cstr8_remove_whitespace(c8* str) {
 }
 
 func b32 cstr8_remove_prefix(c8* str, cstr8 prefix) {
-  sz prefix_len = strlen(prefix);
+  sz prefix_len = cstr8_len(prefix);
   if (strncmp(str, prefix, prefix_len) != 0) {
     return 0;
   }
-  sz str_len = strlen(str);
+  sz str_len = cstr8_len(str);
   memmove(str, str + prefix_len, str_len - prefix_len + 1);
   return 1;
 }
 
 func b32 cstr8_remove_suffix(c8* str, cstr8 suffix) {
-  sz str_len = strlen(str);
-  sz suffix_len = strlen(suffix);
+  sz str_len = cstr8_len(str);
+  sz suffix_len = cstr8_len(suffix);
   if (suffix_len > str_len || strcmp(str + str_len - suffix_len, suffix) != 0) {
     return 0;
   }
@@ -328,14 +348,14 @@ func b32 cstr8_remove_suffix(c8* str, cstr8 suffix) {
 }
 
 func sz cstr8_replace(c8* str, sz str_cap, cstr8 from, cstr8 rep) {
-  sz from_len = strlen(from);
-  sz rep_len = strlen(rep);
+  sz from_len = cstr8_len(from);
+  sz rep_len = cstr8_len(rep);
   if (from_len == 0) {
     return 0;
   }
   sz count = 0;
   sz pos = 0;
-  sz str_len = strlen(str);
+  sz str_len = cstr8_len(str);
   while (pos + from_len <= str_len) {
     if (memcmp(str + pos, from, from_len) == 0) {
       sz new_len = str_len - from_len + rep_len;
@@ -377,6 +397,11 @@ func void cstr8_beautify(c8* str) {
 // =========================================================================
 
 func b32 cstr8_to_i64(cstr8 str, i64* out) {
+  if (str == NULL || out == NULL) {
+    return 0;
+  }
+  assert(str != NULL);
+  assert(out != NULL);
   char* end;
   errno = 0;
   long long val = strtoll(str, &end, 10);
@@ -388,6 +413,11 @@ func b32 cstr8_to_i64(cstr8 str, i64* out) {
 }
 
 func b32 cstr8_to_f64(cstr8 str, f64* out) {
+  if (str == NULL || out == NULL) {
+    return 0;
+  }
+  assert(str != NULL);
+  assert(out != NULL);
   char* end;
   errno = 0;
   double val = strtod(str, &end);
@@ -1178,7 +1208,7 @@ func sz cstr8_to_cstr16(cstr8 src, c16* buf, sz buf_cap) {
   if (buf_cap == 0) {
     return 0;
   }
-  sz src_len = strlen(src);
+  sz src_len = cstr8_len(src);
   sz written = utf8_to_utf16(src, src_len, buf, buf_cap - 1);
   buf[written] = (c16)'\0';
   return written;
@@ -1188,7 +1218,7 @@ func sz cstr8_to_cstr32(cstr8 src, c32* buf, sz buf_cap) {
   if (buf_cap == 0) {
     return 0;
   }
-  sz src_len = strlen(src);
+  sz src_len = cstr8_len(src);
   sz written = utf8_to_utf32(src, src_len, buf, buf_cap - 1);
   buf[written] = (c32)'\0';
   return written;

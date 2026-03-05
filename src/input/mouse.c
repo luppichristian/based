@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "input/mouse.h"
+#include "basic/assert.h"
 #include "input/msg.h"
 #include "../sdl3_include.h"
 
@@ -67,6 +68,7 @@ func b32 mouse_is_button_down(input_key key, u8 button) {
   if (!mouse_button_is_valid(button)) {
     return 0;
   }
+  assert(mouse_button_is_valid(button));
 
   return (mask & (1u << (button - 1))) != 0 ? 1 : 0;
 }
@@ -75,6 +77,7 @@ func b32 mouse_is_button_pressed(input_key key, u8 button) {
   if (!mouse_button_is_valid(button)) {
     return 0;
   }
+  assert(mouse_button_is_valid(button));
 
   sz slot_idx = input_capture_get_slot(key);
   if (slot_idx >= INPUT_CAPTURE_MAX_KEYS) {
@@ -101,6 +104,7 @@ func b32 mouse_is_button_released(input_key key, u8 button) {
   if (!mouse_button_is_valid(button)) {
     return 0;
   }
+  assert(mouse_button_is_valid(button));
 
   sz slot_idx = input_capture_get_slot(key);
   if (slot_idx >= INPUT_CAPTURE_MAX_KEYS) {

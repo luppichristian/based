@@ -2,63 +2,73 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "threads/thread_group.h"
+#include "basic/assert.h"
 #include "context/thread_ctx.h"
 #include "input/msg.h"
+#include "memory/vmem.h"
 #include "../sdl3_include.h"
 
-// SDL thread wrapper — bridges thread_func into thread_group_func.
+// SDL thread wrapper that bridges thread_func into thread_group_func.
 func i32 thread_group_wrapper(void* raw) {
   thread_group_slot* slot = (thread_group_slot*)raw;
+  if (slot == NULL || slot->entry == NULL) {
+    return 0;
+  }
+  assert(slot->index < U32_MAX);
   return slot->entry(slot->index, slot->arg);
 }
 
 // Shared creation path. base_name may be NULL for unnamed threads.
 func thread_group create_impl(u32 count, thread_group_func entry, void* arg, cstr8 base_name) {
+  allocator alloc = vmem_get_allocator();
   thread_group empty = {0};
   if (!count || !entry) {
     return empty;
   }
+  assert(alloc.alloc_fn != NULL);
+  assert(alloc.dealloc_fn != NULL);
 
   allocator main_allocator = {0};
   ctx* context = thread_ctx_get();
-  if (context) {
+  if (context != NULL) {
     main_allocator = context->main_allocator;
   }
 
   thread_group group = {0};
-  group.threads = (thread*)SDL_malloc((size_t)count * sizeof(thread));
-  group.slots = (thread_group_slot*)SDL_malloc((size_t)count * sizeof(thread_group_slot));
+  group.threads = (thread*)allocator_alloc(&alloc, (sz)count * sizeof(thread));
+  group.slots = (thread_group_slot*)allocator_alloc(&alloc, (sz)count * sizeof(thread_group_slot));
 
   if (!group.threads || !group.slots) {
-    SDL_free(group.threads);
-    SDL_free(group.slots);
+    allocator_dealloc(&alloc, group.threads, (sz)count * sizeof(thread));
+    allocator_dealloc(&alloc, group.slots, (sz)count * sizeof(thread_group_slot));
     return empty;
   }
 
-  for (u32 i = 0; i < count; i++) {
-    group.slots[i].entry = entry;
-    group.slots[i].arg = arg;
-    group.slots[i].index = i;
+  for (u32 idx = 0; idx < count; idx += 1) {
+    group.slots[idx].entry = entry;
+    group.slots[idx].arg = arg;
+    group.slots[idx].index = idx;
 
-    if (base_name) {
-      c8 name_buf[256];
-      SDL_snprintf(name_buf, sizeof(name_buf), "%s[%u]", base_name, i);
-      group.threads[i] = thread_create_named(thread_group_wrapper, &group.slots[i], name_buf, main_allocator);
+    if (base_name != NULL) {
+      str8_medium name_buf = {0};
+      cstr8_format(name_buf, sizeof(name_buf), "%s[%u]", base_name, idx);
+      group.threads[idx] = thread_create_named(thread_group_wrapper, &group.slots[idx], name_buf, main_allocator);
     } else {
-      group.threads[i] = thread_create(thread_group_wrapper, &group.slots[i], main_allocator);
+      group.threads[idx] = thread_create(thread_group_wrapper, &group.slots[idx], main_allocator);
     }
 
-    if (!group.threads[i]) {
-      for (u32 j = 0; j < i; j++) {
-        thread_detach(group.threads[j]);
+    if (!group.threads[idx]) {
+      for (u32 join_idx = 0; join_idx < idx; join_idx += 1) {
+        thread_detach(group.threads[join_idx]);
       }
-      SDL_free(group.threads);
-      SDL_free(group.slots);
+      allocator_dealloc(&alloc, group.threads, (sz)count * sizeof(thread));
+      allocator_dealloc(&alloc, group.slots, (sz)count * sizeof(thread_group_slot));
       return empty;
     }
   }
 
   group.count = count;
+  thread_log_trace("thread_group_create: count=%u base_name=%s", count, base_name != NULL ? base_name : "<null>");
   return group;
 }
 
@@ -96,10 +106,13 @@ func thread_group _thread_group_create_named(
 }
 
 func void _thread_group_destroy(thread_group* group, callsite site) {
+  allocator alloc = vmem_get_allocator();
   (void)site;
   if (!group) {
     return;
   }
+  assert(alloc.dealloc_fn != NULL);
+
   msg lifecycle_msg = {0};
   lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
   lifecycle_msg.object_lifecycle.event_kind = (u32)MSG_OBJECT_EVENT_DESTROY;
@@ -108,11 +121,13 @@ func void _thread_group_destroy(thread_group* group, callsite site) {
   if (!msg_post(&lifecycle_msg)) {
     return;
   }
-  SDL_free(group->threads);
-  SDL_free(group->slots);
+
+  allocator_dealloc(&alloc, group->threads, (sz)group->count * sizeof(thread));
+  allocator_dealloc(&alloc, group->slots, (sz)group->count * sizeof(thread_group_slot));
   group->threads = NULL;
   group->slots = NULL;
   group->count = 0;
+  thread_log_trace("thread_group_destroy: group=%p", (void*)group);
 }
 
 func b32 thread_group_is_valid(thread_group* group) {
@@ -134,26 +149,28 @@ func b32 thread_group_join_all(thread_group* group, i32* out_exit_codes) {
   if (!group || !group->threads) {
     return 0;
   }
-  b32 ok = 1;
-  for (u32 i = 0; i < group->count; i++) {
-    i32 code = 0;
-    if (!thread_join(group->threads[i], &code)) {
-      ok = 0;
+  assert(group->count > 0);
+
+  b32 success = 1;
+  for (u32 idx = 0; idx < group->count; idx += 1) {
+    i32 exit_code = 0;
+    if (!thread_join(group->threads[idx], &exit_code)) {
+      success = 0;
     }
     if (out_exit_codes) {
-      out_exit_codes[i] = code;
+      out_exit_codes[idx] = exit_code;
     }
-    group->threads[i] = NULL;
+    group->threads[idx] = NULL;
   }
-  return ok;
+  return success;
 }
 
 func void thread_group_detach_all(thread_group* group) {
   if (!group || !group->threads) {
     return;
   }
-  for (u32 i = 0; i < group->count; i++) {
-    thread_detach(group->threads[i]);
-    group->threads[i] = NULL;
+  for (u32 idx = 0; idx < group->count; idx += 1) {
+    thread_detach(group->threads[idx]);
+    group->threads[idx] = NULL;
   }
 }

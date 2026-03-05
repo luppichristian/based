@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "memory/buffer.h"
+#include "basic/assert.h"
 #include <string.h>
 
 // =========================================================================
@@ -9,6 +10,9 @@
 // =========================================================================
 
 func buffer buffer_from(void* ptr, sz size) {
+  if (size > 0 && ptr == NULL) {
+    return (buffer) {0};
+  }
   buffer result = {.size = size, .ptr = ptr};
   return result;
 }
@@ -43,6 +47,10 @@ func buffer buffer_slice(buffer buff, sz start, sz end) {
 }
 
 func buffer buffer_split_offset(buffer* buff, sz offset) {
+  if (buff == NULL) {
+    return (buffer) {0};
+  }
+  assert(buff != NULL);
   if (offset > buff->size) {
     offset = buff->size;
   }
@@ -53,6 +61,10 @@ func buffer buffer_split_offset(buffer* buff, sz offset) {
 }
 
 func buffer buffer_split_size(buffer* buff, sz size) {
+  if (buff == NULL) {
+    return (buffer) {0};
+  }
+  assert(buff != NULL);
   if (size > buff->size) {
     size = buff->size;
   }
@@ -95,6 +107,9 @@ func void* buffer_get_data(buffer buff, sz offset, sz read_size) {
 }
 
 func void buffer_set8(buffer buff, u8 value) {
+  if (buff.ptr == NULL || buff.size == 0) {
+    return;
+  }
   memset(buff.ptr, value, buff.size);
 }
 
@@ -123,5 +138,8 @@ func void buffer_set64(buffer buff, u64 value) {
 }
 
 func void buffer_zero(buffer buff) {
+  if (buff.ptr == NULL || buff.size == 0) {
+    return;
+  }
   memset(buff.ptr, 0, buff.size);
 }

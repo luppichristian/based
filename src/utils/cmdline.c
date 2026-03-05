@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "utils/cmdline.h"
+#include "basic/assert.h"
 #include "strings/cstrings.h"
 
 func cmdline cmdline_build(sz count, c8** args) {
@@ -9,6 +10,8 @@ func cmdline cmdline_build(sz count, c8** args) {
     cmdline empty = {.count = 0, .args = NULL};
     return empty;
   }
+  assert(count > 0);
+  assert(args != NULL);
 
   cmdline cmdl = {.count = (sz)count, .args = args};
   return cmdl;
@@ -26,6 +29,7 @@ func cstr8 cmdline_get_arg(cmdline cmdl, sz index) {
   if (index >= cmdl.count || cmdl.args == NULL) {
     return NULL;
   }
+  assert(index < cmdl.count);
   return cmdl.args[index];
 }
 
@@ -37,6 +41,7 @@ func b32 cmdline_find(cmdline cmdl, cstr8 arg, sz* out_idx) {
   if (arg == NULL || cmdl.args == NULL) {
     return 0;
   }
+  assert(arg[0] != '\0');
 
   for (sz index = 0; index < cmdl.count; index++) {
     cstr8 value = cmdline_get_arg(cmdl, index);
@@ -87,6 +92,7 @@ func b32 cmdline_get_option_i64(cmdline cmdl, cstr8 name, i64* out) {
   if (out == NULL) {
     return 0;
   }
+  assert(out != NULL);
 
   cstr8 value = cmdline_get_option(cmdl, name);
   if (value == NULL) {
@@ -100,6 +106,7 @@ func b32 cmdline_get_option_f64(cmdline cmdl, cstr8 name, f64* out) {
   if (out == NULL) {
     return 0;
   }
+  assert(out != NULL);
 
   cstr8 value = cmdline_get_option(cmdl, name);
   if (value == NULL) {

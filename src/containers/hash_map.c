@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "containers/hash_map.h"
+#include "basic/assert.h"
 #include "based.h"
 #include <string.h>
 
@@ -56,6 +57,10 @@ func b32 hash_map_raw_insert(
 // Grow the backing array to new_cap slots and re-insert all entries.
 // Returns 1 on success, 0 on allocation failure.
 func b32 hash_map_rehash(hash_map* map, sz new_cap) {
+  if (map == NULL || new_cap < 2) {
+    return 0;
+  }
+  assert(map != NULL);
   hash_map_slot* new_slots =
       (hash_map_slot*)allocator_calloc(&map->alloc, new_cap, sizeof(hash_map_slot));
   if (!new_slots) {
@@ -79,6 +84,10 @@ func b32 hash_map_rehash(hash_map* map, sz new_cap) {
 
 // Find the slot for key in map->slots; returns a pointer to the slot or NULL.
 func hash_map_slot* hash_map_find_slot(hash_map* map, u64 key) {
+  if (map == NULL || map->slots == NULL || map->cap == 0) {
+    return NULL;
+  }
+  assert(map->slots != NULL);
   sz pos = (sz)(hash_u64(key) & (u64)(map->cap - 1));
   u32 dist = 0;
 
@@ -103,6 +112,8 @@ func hash_map hash_map_create(sz cap, allocator alloc) {
   hash_map map;
   memset(&map, 0, sizeof(map));
   map.alloc = alloc;
+  assert(alloc.alloc_fn != NULL);
+  assert(alloc.dealloc_fn != NULL);
 
   sz actual = 16;
   while (actual < cap) {
@@ -114,6 +125,9 @@ func hash_map hash_map_create(sz cap, allocator alloc) {
 }
 
 func void hash_map_destroy(hash_map* map) {
+  if (map == NULL) {
+    return;
+  }
   if (map->slots) {
     allocator_dealloc(&map->alloc, map->slots, map->cap * sizeof(hash_map_slot));
     map->slots = NULL;
@@ -123,6 +137,9 @@ func void hash_map_destroy(hash_map* map) {
 }
 
 func void hash_map_clear(hash_map* map) {
+  if (map == NULL) {
+    return;
+  }
   if (map->slots) {
     memset(map->slots, 0, map->cap * sizeof(hash_map_slot));
   }
@@ -134,9 +151,10 @@ func void hash_map_clear(hash_map* map) {
 // =========================================================================
 
 func b32 hash_map_set(hash_map* map, u64 key, void* value) {
-  if (!map->slots) {
+  if (map == NULL || !map->slots) {
     return 0;
   }
+  assert(map->cap > 0);
 
   // Rehash before inserting once load reaches 75%.
   if (map->count >= map->cap - (map->cap / 4)) {
@@ -153,7 +171,7 @@ func b32 hash_map_set(hash_map* map, u64 key, void* value) {
 }
 
 func void* hash_map_get(hash_map* map, u64 key) {
-  if (!map->slots || map->count == 0) {
+  if (map == NULL || !map->slots || map->count == 0) {
     return NULL;
   }
   hash_map_slot* slot = hash_map_find_slot(map, key);
@@ -161,14 +179,14 @@ func void* hash_map_get(hash_map* map, u64 key) {
 }
 
 func b32 hash_map_has(hash_map* map, u64 key) {
-  if (!map->slots || map->count == 0) {
+  if (map == NULL || !map->slots || map->count == 0) {
     return 0;
   }
   return hash_map_find_slot(map, key) != NULL;
 }
 
 func b32 hash_map_remove(hash_map* map, u64 key) {
-  if (!map->slots || map->count == 0) {
+  if (map == NULL || !map->slots || map->count == 0) {
     return 0;
   }
 
@@ -213,7 +231,7 @@ func hash_map_iter hash_map_iter_begin(void) {
 }
 
 func hash_map_slot* hash_map_next(hash_map* map, hash_map_iter* iter) {
-  if (!map->slots) {
+  if (map == NULL || iter == NULL || !map->slots) {
     return NULL;
   }
   while (*iter < map->cap) {

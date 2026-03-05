@@ -2,6 +2,8 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "filesystem/pathwatch.h"
+#include "basic/assert.h"
+#include "context/thread_ctx.h"
 #include "input/msg.h"
 
 #include <efsw/efsw.h>
@@ -251,6 +253,7 @@ func pathwatch pathwatch_create(b32 use_generic_mode) {
     }
     watcher.id = 0;
     watcher.native_handle = NULL;
+    thread_log_error("pathwatch_create: failed");
     return watcher;
   }
 
@@ -265,6 +268,9 @@ func pathwatch pathwatch_create(b32 use_generic_mode) {
     watcher.id = 0;
     watcher.native_handle = NULL;
   }
+  if (watcher.native_handle != NULL) {
+    thread_log_trace("pathwatch_create: id=%lld", (long long)watcher.id);
+  }
 
   return watcher;
 }
@@ -273,6 +279,7 @@ func void pathwatch_destroy(pathwatch* watcher) {
   if (watcher == NULL || watcher->native_handle == NULL) {
     return;
   }
+  assert(watcher != NULL);
 
   msg lifecycle_msg = {0};
   lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
@@ -286,6 +293,7 @@ func void pathwatch_destroy(pathwatch* watcher) {
   pathwatch_watch_bind_remove_all_for_watcher(watcher->id, watcher->native_handle);
   pathwatch_bind_remove(watcher->native_handle);
   efsw_release((efsw_watcher)watcher->native_handle);
+  thread_log_trace("pathwatch_destroy: id=%lld", (long long)watcher->id);
   watcher->id = 0;
   watcher->native_handle = NULL;
 }
@@ -294,6 +302,7 @@ func b32 pathwatch_start(pathwatch* watcher) {
   if (watcher == NULL || watcher->native_handle == NULL) {
     return 0;
   }
+  assert(watcher->id > 0);
 
   efsw_watch((efsw_watcher)watcher->native_handle);
   return 1;
@@ -303,6 +312,7 @@ func i64 pathwatch_add(pathwatch* watcher, const path* src, b32 recursive) {
   if (watcher == NULL || watcher->native_handle == NULL || src == NULL) {
     return 0;
   }
+  assert(src->buf[0] != '\0');
 
   efsw_watchid native_watch_id = efsw_addwatch_withoptions(
       (efsw_watcher)watcher->native_handle,
@@ -317,11 +327,15 @@ func i64 pathwatch_add(pathwatch* watcher, const path* src, b32 recursive) {
     return 0;
   }
 
-  return pathwatch_watch_bind_create(
+  i64 watch_id = pathwatch_watch_bind_create(
       watcher->id,
       watcher->native_handle,
       (i64)native_watch_id,
       src);
+  if (watch_id > 0) {
+    thread_log_trace("pathwatch_add: watcher=%lld watch=%lld path=%s", (long long)watcher->id, (long long)watch_id, src->buf);
+  }
+  return watch_id;
 }
 
 func b32 pathwatch_remove(pathwatch* watcher, i64 watch_id) {
@@ -337,6 +351,7 @@ func b32 pathwatch_remove(pathwatch* watcher, i64 watch_id) {
 
   efsw_removewatch_byid((efsw_watcher)watcher->native_handle, (efsw_watchid)binding->native_watch_id);
   pathwatch_watch_bind_remove(watch_id);
+  thread_log_trace("pathwatch_remove: watcher=%lld watch=%lld", (long long)watcher->id, (long long)watch_id);
   return 1;
 }
 

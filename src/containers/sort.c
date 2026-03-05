@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "containers/sort.h"
+#include "basic/assert.h"
 #include <string.h>
 
 typedef struct sort_range {
@@ -44,6 +45,9 @@ func b32 sort_is_invalid_input(
   if (!ptr || !compare || !elem_size) {
     return 1;
   }
+  assert(ptr != NULL);
+  assert(compare != NULL);
+  assert(elem_size > 0);
 
   return 0;
 }
@@ -248,6 +252,8 @@ func b32 sort_check(
   if (!ptr || !compare || !elem_size) {
     return 0;
   }
+  assert(ptr != NULL);
+  assert(compare != NULL);
 
   const u8* base_ptr = (const u8*)ptr;
   for (sz idx = 1; idx < elem_count; ++idx) {

@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "context/global_ctx.h"
+#include "basic/assert.h"
 #include "input/msg.h"
 #include "memory/vmem.h"
 #include "threads/atomics.h"
@@ -22,6 +23,7 @@ func b32 global_ctx_init(allocator main_allocator) {
   if (!main_allocator.alloc_fn) {
     return false;
   }
+  assert(main_allocator.dealloc_fn != NULL);
 
   i32 state = atomic_i32_get(&process_global_ctx_init);
   if (state == 2) {
@@ -166,6 +168,7 @@ func void* global_get_user_data(ctx_user_data_idx index) {
   if (!wrapper || index >= CTX_USER_DATA_COUNT) {
     return NULL;
   }
+  assert(index < CTX_USER_DATA_COUNT);
 
   if (wrapper->mutex_handle) {
     mutex_lock(wrapper->mutex_handle);
@@ -186,6 +189,7 @@ func b32 global_set_user_data(ctx_user_data_idx index, void* user_data) {
   if (!wrapper || index >= CTX_USER_DATA_COUNT) {
     return false;
   }
+  assert(index < CTX_USER_DATA_COUNT);
 
   if (wrapper->mutex_handle) {
     mutex_lock(wrapper->mutex_handle);

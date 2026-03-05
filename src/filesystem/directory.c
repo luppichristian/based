@@ -3,6 +3,8 @@
 
 #include "filesystem/directory.h"
 
+#include "basic/assert.h"
+#include "context/thread_ctx.h"
 #include "filesystem/file.h"
 
 #include "../sdl3_include.h"
@@ -301,7 +303,12 @@ func path dir_get_system(dir_system_path location) {
 }
 
 func b32 dir_create(const path* src) {
+  if (src == NULL || src->buf[0] == '\0') {
+    return 0;
+  }
+  assert(src->buf[0] != '\0');
   if (SDL_CreateDirectory(dir_path_cstr(src))) {
+    thread_log_trace("dir_create: path=%s", src->buf);
     return 1;
   }
 
@@ -312,6 +319,7 @@ func b32 dir_remove(const path* src) {
   if (!dir_exists(src)) {
     return 0;
   }
+  assert(src != NULL);
 
   return SDL_RemovePath(dir_path_cstr(src)) ? 1 : 0;
 }
@@ -320,6 +328,10 @@ func b32 dir_rename(const path* old_src, const path* new_src) {
   if (!dir_exists(old_src)) {
     return 0;
   }
+  if (new_src == NULL || new_src->buf[0] == '\0') {
+    return 0;
+  }
+  assert(new_src->buf[0] != '\0');
 
   return SDL_RenamePath(dir_path_cstr(old_src), dir_path_cstr(new_src)) ? 1 : 0;
 }
@@ -332,6 +344,8 @@ func b32 dir_copy_recursive(const path* src, const path* dst, b32 overwrite_exis
   if (!dir_exists(src) || dst == NULL) {
     return 0;
   }
+  assert(src != NULL);
+  assert(dst != NULL);
 
   src_abs = path_resolve(src);
   dst_abs = path_resolve(dst);
@@ -380,6 +394,7 @@ func b32 dir_create_recursive(const path* src) {
   if (cstr8_is_empty(cur_path.buf)) {
     return 0;
   }
+  assert(cur_path.buf[0] != '\0');
 
   root_len = dir_root_length(cur_path.buf);
   for (item_idx = root_len; cur_path.buf[item_idx] != '\0'; item_idx += 1) {
@@ -407,6 +422,7 @@ func b32 dir_remove_recursive(const path* src) {
   if (!dir_exists(src)) {
     return 0;
   }
+  assert(src != NULL);
 
   memset(&state, 0, size_of(state));
   state.success = 1;
@@ -425,9 +441,10 @@ func b32 dir_remove_recursive(const path* src) {
 func b32 dir_iterate(const path* src, dir_iterate_callback* callback, void* user_data) {
   dir_iterate_state state;
 
-  if (!dir_exists(src)) {
+  if (!dir_exists(src) || callback == NULL) {
     return 0;
   }
+  assert(callback != NULL);
 
   memset(&state, 0, size_of(state));
   state.root_path = *src;
@@ -449,9 +466,10 @@ func b32 dir_iterate_recursive(
     void* user_data) {
   dir_iterate_state state;
 
-  if (!dir_exists(src)) {
+  if (!dir_exists(src) || callback == NULL) {
     return 0;
   }
+  assert(callback != NULL);
 
   memset(&state, 0, size_of(state));
   state.root_path = *src;

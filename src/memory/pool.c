@@ -2,6 +2,8 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "memory/pool.h"
+#include "basic/assert.h"
+#include "context/thread_ctx.h"
 #include "input/msg.h"
 #include "basic/utility_defines.h"
 #include <string.h>
@@ -125,6 +127,7 @@ func pool pool_create(
   if (!msg_post(&lifecycle_msg)) {
     memset(&pol, 0, sizeof(pol));
   }
+  thread_log_trace("pool_create: obj_size=%zu obj_align=%zu", (size_t)object_size, (size_t)object_align);
   return pol;
 }
 
@@ -143,6 +146,7 @@ func void pool_destroy(pool* pol) {
   if (pol == NULL) {
     return;
   }
+  assert(pol != NULL);
 
   msg lifecycle_msg = {0};
   lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
@@ -181,6 +185,7 @@ func void pool_destroy(pool* pol) {
 
   pol->opt_mutex = NULL;
   pol->mutex_owned = 0;
+  thread_log_trace("pool_destroy: pol=%p", (void*)pol);
 }
 
 func allocator pool_get_allocator(pool* pol) {
@@ -197,6 +202,9 @@ func allocator pool_get_allocator(pool* pol) {
 // =========================================================================
 
 func void pool_add_block(pool* pol, void* ptr, sz size) {
+  if (pol == NULL || ptr == NULL || size <= sizeof(pool_block)) {
+    return;
+  }
   if (pol->opt_mutex) {
     mutex_lock(pol->opt_mutex);
   }
@@ -214,6 +222,9 @@ func void pool_add_block(pool* pol, void* ptr, sz size) {
 }
 
 func b32 pool_remove_block(pool* pol, void* ptr) {
+  if (pol == NULL || ptr == NULL) {
+    return 0;
+  }
   if (pol->opt_mutex) {
     mutex_lock(pol->opt_mutex);
   }
@@ -275,6 +286,9 @@ func b32 pool_remove_block(pool* pol, void* ptr) {
 // =========================================================================
 
 func void* _pool_alloc(pool* pol, callsite site) {
+  if (pol == NULL) {
+    return NULL;
+  }
   if (pol->opt_mutex) {
     mutex_lock(pol->opt_mutex);
   }
@@ -312,7 +326,7 @@ func void* _pool_alloc(pool* pol, callsite site) {
 
 func void _pool_dealloc(pool* pol, void* ptr, callsite site) {
   (void)site;
-  if (!ptr) {
+  if (pol == NULL || !ptr) {
     return;
   }
 
@@ -333,6 +347,9 @@ func void _pool_dealloc(pool* pol, void* ptr, callsite site) {
 // =========================================================================
 
 func void pool_clear(pool* pol) {
+  if (pol == NULL) {
+    return;
+  }
   if (pol->opt_mutex) {
     mutex_lock(pol->opt_mutex);
   }

@@ -2,11 +2,13 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "filesystem/archive.h"
+#include "basic/assert.h"
 #include "basic/utility_defines.h"
+#include "context/thread_ctx.h"
+#include "filesystem/file.h"
 #include "input/msg.h"
+#include "memory/vmem.h"
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 #if defined(__has_include)
@@ -20,48 +22,51 @@
 #  define BASED_ARCHIVE_HAS_MINIZ 0
 #endif
 
+func allocator archive_allocator_resolve(allocator* opt_alloc) {
+  if (opt_alloc != NULL && opt_alloc->alloc_fn != NULL && opt_alloc->dealloc_fn != NULL) {
+    return *opt_alloc;
+  }
+
+  allocator thread_alloc = thread_get_allocator();
+  if (thread_alloc.alloc_fn != NULL && thread_alloc.dealloc_fn != NULL) {
+    return thread_alloc;
+  }
+
+  return vmem_get_allocator();
+}
+
 func void* archive_alloc_bytes(allocator* opt_alloc, sz size) {
+  allocator resolved_alloc = archive_allocator_resolve(opt_alloc);
   if (size == 0) {
     return NULL;
   }
 
-  if (opt_alloc != NULL) {
-    return allocator_alloc(opt_alloc, size);
-  }
-
-  return malloc((size_t)size);
+  assert(resolved_alloc.alloc_fn != NULL);
+  return allocator_alloc(&resolved_alloc, size);
 }
 
 func void* archive_realloc_bytes(allocator* opt_alloc, void* ptr, sz old_size, sz new_size) {
+  allocator resolved_alloc = archive_allocator_resolve(opt_alloc);
   if (new_size == 0) {
     if (ptr != NULL) {
-      if (opt_alloc != NULL) {
-        allocator_dealloc(opt_alloc, ptr, old_size);
-      } else {
-        free(ptr);
-      }
+      allocator_dealloc(&resolved_alloc, ptr, old_size);
     }
     return NULL;
   }
 
-  if (opt_alloc != NULL) {
-    return allocator_realloc(opt_alloc, ptr, old_size, new_size);
-  }
-
-  return realloc(ptr, (size_t)new_size);
+  assert(resolved_alloc.alloc_fn != NULL);
+  assert(resolved_alloc.dealloc_fn != NULL);
+  return allocator_realloc(&resolved_alloc, ptr, old_size, new_size);
 }
 
 func void archive_dealloc_bytes(allocator* opt_alloc, void* ptr, sz size) {
+  allocator resolved_alloc = archive_allocator_resolve(opt_alloc);
   if (ptr == NULL) {
     return;
   }
 
-  if (opt_alloc != NULL) {
-    allocator_dealloc(opt_alloc, ptr, size);
-    return;
-  }
-
-  free(ptr);
+  assert(resolved_alloc.dealloc_fn != NULL);
+  allocator_dealloc(&resolved_alloc, ptr, size);
 }
 
 func path archive_normalize_entry_path(const path* src) {
@@ -96,6 +101,10 @@ func sz archive_find_idx(const archive* arc, const path* src) {
 func b32 archive_reserve(archive* arc, sz min_capacity) {
   archive_entry* new_entries = NULL;
   sz new_capacity = 0;
+  if (arc == NULL) {
+    return 0;
+  }
+  assert(arc->entry_count <= arc->entry_capacity);
 
   if (arc->entry_capacity >= min_capacity) {
     return 1;
@@ -125,6 +134,8 @@ func b32 archive_reserve(archive* arc, sz min_capacity) {
 }
 
 func void archive_reset_entry(archive* arc, archive_entry* ent) {
+  assert(arc != NULL);
+  assert(ent != NULL);
   archive_dealloc_bytes(arc->opt_alloc, ent->data_ptr, ent->data_capacity);
   ent->data_ptr = NULL;
   ent->data_size = 0;
@@ -135,6 +146,10 @@ func void archive_reset_entry(archive* arc, archive_entry* ent) {
 
 func b32 archive_assign_entry_bytes(archive* arc, archive_entry* ent, buffer data) {
   void* data_ptr = NULL;
+  if (arc == NULL || ent == NULL) {
+    return 0;
+  }
+  assert(arc->entry_count <= arc->entry_capacity);
 
   archive_dealloc_bytes(arc->opt_alloc, ent->data_ptr, ent->data_capacity);
   ent->data_ptr = NULL;
@@ -144,6 +159,11 @@ func b32 archive_assign_entry_bytes(archive* arc, archive_entry* ent, buffer dat
   if (data.size == 0) {
     return 1;
   }
+  if (data.ptr == NULL) {
+    return 0;
+  }
+  assert(arc != NULL);
+  assert(ent != NULL);
 
   data_ptr = archive_alloc_bytes(arc->opt_alloc, data.size);
   if (data_ptr == NULL) {
@@ -159,7 +179,13 @@ func b32 archive_assign_entry_bytes(archive* arc, archive_entry* ent, buffer dat
 
 func b32 archive_add_empty_entry(archive* arc, const path* src, b32 is_directory, sz* out_idx) {
   archive_entry* ent = NULL;
-  sz item_idx = archive_find_idx(arc, src);
+  sz item_idx = SZ_MAX;
+
+  if (arc == NULL || src == NULL) {
+    return 0;
+  }
+  assert(is_directory == 0 || is_directory == 1);
+  item_idx = archive_find_idx(arc, src);
 
   if (item_idx != SZ_MAX) {
     ent = &arc->entries[item_idx];
@@ -192,85 +218,44 @@ func b32 archive_add_empty_entry(archive* arc, const path* src, b32 is_directory
   return 1;
 }
 
-func b32 archive_read_disk_bytes(const path* src, void** out_ptr, sz* out_size) {
-  FILE* file_ptr = NULL;
-  void* data_ptr = NULL;
-  long file_size = 0;
-  size_t read_size = 0;
+func b32 archive_read_disk_bytes(const path* src, allocator* alloc, void** out_ptr, sz* out_size) {
+  buffer file_data = {0};
 
-  if (out_ptr == NULL || out_size == NULL) {
+  if (src == NULL || alloc == NULL || out_ptr == NULL || out_size == NULL) {
     return 0;
   }
+  if (alloc->alloc_fn == NULL || alloc->dealloc_fn == NULL) {
+    return 0;
+  }
+  assert(src->buf[0] != '\0');
 
   *out_ptr = NULL;
   *out_size = 0;
-
-  file_ptr = fopen(src != NULL ? src->buf : "", "rb");
-  if (file_ptr == NULL) {
+  if (!file_read_all(src, alloc, &file_data)) {
     return 0;
   }
-
-  if (fseek(file_ptr, 0, SEEK_END) != 0) {
-    fclose(file_ptr);
-    return 0;
-  }
-
-  file_size = ftell(file_ptr);
-  if (file_size < 0) {
-    fclose(file_ptr);
-    return 0;
-  }
-
-  if (fseek(file_ptr, 0, SEEK_SET) != 0) {
-    fclose(file_ptr);
-    return 0;
-  }
-
-  if (file_size > 0) {
-    data_ptr = malloc((size_t)file_size);
-    if (data_ptr == NULL) {
-      fclose(file_ptr);
-      return 0;
-    }
-
-    read_size = fread(data_ptr, 1, (size_t)file_size, file_ptr);
-    if ((long)read_size != file_size) {
-      free(data_ptr);
-      fclose(file_ptr);
-      return 0;
-    }
-  }
-
-  fclose(file_ptr);
-  *out_ptr = data_ptr;
-  *out_size = (sz)file_size;
+  *out_ptr = file_data.ptr;
+  *out_size = file_data.size;
   return 1;
 }
 
 func b32 archive_write_disk_bytes(const path* dst, const void* data_ptr, sz data_size) {
-  FILE* file_ptr = fopen(dst != NULL ? dst->buf : "", "wb");
-  size_t write_size = 0;
-
-  if (file_ptr == NULL) {
+  buffer write_data = {0};
+  if (dst == NULL || (data_size > 0 && data_ptr == NULL)) {
     return 0;
   }
+  assert(dst->buf[0] != '\0');
 
-  if (data_size > 0) {
-    write_size = fwrite(data_ptr, 1, (size_t)data_size, file_ptr);
-    if ((sz)write_size != data_size) {
-      fclose(file_ptr);
-      return 0;
-    }
-  }
-
-  fclose(file_ptr);
-  return 1;
+  write_data.ptr = (void*)data_ptr;
+  write_data.size = data_size;
+  return file_write_all(dst, write_data);
 }
 
 func archive archive_create(allocator* opt_alloc) {
   archive arc;
   memset(&arc, 0, size_of(arc));
   arc.opt_alloc = opt_alloc;
+  thread_log_trace("archive_create: opt_alloc=%p", (void*)opt_alloc);
   msg lifecycle_msg = {0};
   lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
   lifecycle_msg.object_lifecycle.event_kind = (u32)MSG_OBJECT_EVENT_CREATE;
@@ -288,6 +273,7 @@ func void archive_clear(archive* arc) {
   if (arc == NULL) {
     return;
   }
+  assert(arc->entry_count <= arc->entry_capacity);
 
   for (item_idx = 0; item_idx < arc->entry_count; item_idx += 1) {
     archive_reset_entry(arc, &arc->entries[item_idx]);
@@ -300,6 +286,7 @@ func void archive_destroy(archive* arc) {
   if (arc == NULL) {
     return;
   }
+  thread_log_trace("archive_destroy: arc=%p entries=%zu", (void*)arc, (size_t)arc->entry_count);
 
   msg lifecycle_msg = {0};
   lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
@@ -338,6 +325,7 @@ func b32 archive_write_all(archive* arc, const path* src, buffer data) {
   if (arc == NULL || src == NULL || (data.size > 0 && data.ptr == NULL)) {
     return 0;
   }
+  assert(arc->entry_count <= arc->entry_capacity);
 
   if (!archive_add_empty_entry(arc, src, 0, &item_idx)) {
     return 0;
@@ -374,6 +362,10 @@ func b32 archive_read_all(const archive* arc, const path* src, allocator* alloc,
   if (arc == NULL || alloc == NULL || out_data == NULL) {
     return 0;
   }
+  if (alloc->alloc_fn == NULL || alloc->dealloc_fn == NULL) {
+    return 0;
+  }
+  assert(arc->entry_count <= arc->entry_capacity);
 
   out_data->ptr = NULL;
   out_data->size = 0;
@@ -402,19 +394,26 @@ func b32 archive_read_all(const archive* arc, const path* src, allocator* alloc,
 }
 
 func b32 archive_add_file(archive* arc, const path* archive_path, const path* disk_path) {
+  allocator data_alloc = {0};
   void* data_ptr = NULL;
   sz data_size = 0;
   b32 result = 0;
   buffer data = {0};
 
-  if (!archive_read_disk_bytes(disk_path, &data_ptr, &data_size)) {
+  if (arc == NULL || archive_path == NULL || disk_path == NULL) {
     return 0;
   }
+
+  data_alloc = archive_allocator_resolve(arc->opt_alloc);
+  if (!archive_read_disk_bytes(disk_path, &data_alloc, &data_ptr, &data_size)) {
+    return 0;
+  }
+  assert(data_size == 0 || data_ptr != NULL);
 
   data.ptr = data_ptr;
   data.size = data_size;
   result = archive_write_all(arc, archive_path, data);
-  free(data_ptr);
+  archive_dealloc_bytes(arc->opt_alloc, data_ptr, data_size);
   return result;
 }
 
@@ -440,6 +439,7 @@ func b32 archive_iterate(const archive* arc, archive_iterate_callback* callback,
 
 func b32 archive_load_file(archive* arc, const path* src) {
 #if BASED_ARCHIVE_HAS_MINIZ
+  allocator zip_alloc = {0};
   mz_zip_archive zip_archive;
   void* zip_ptr = NULL;
   sz zip_size = 0;
@@ -449,16 +449,23 @@ func b32 archive_load_file(archive* arc, const path* src) {
   if (arc == NULL) {
     return 0;
   }
+  if (src == NULL) {
+    return 0;
+  }
+  assert(arc->entry_count <= arc->entry_capacity);
+  thread_log_trace("archive_load_file: arc=%p src=%s", (void*)arc, src->buf);
+  zip_alloc = archive_allocator_resolve(arc->opt_alloc);
 
   archive_clear(arc);
 
-  if (!archive_read_disk_bytes(src, &zip_ptr, &zip_size)) {
+  if (!archive_read_disk_bytes(src, &zip_alloc, &zip_ptr, &zip_size)) {
     return 0;
   }
+  assert(zip_size == 0 || zip_ptr != NULL);
 
   memset(&zip_archive, 0, size_of(zip_archive));
   if (!mz_zip_reader_init_mem(&zip_archive, zip_ptr, (size_t)zip_size, 0)) {
-    free(zip_ptr);
+    archive_dealloc_bytes(arc->opt_alloc, zip_ptr, zip_size);
     return 0;
   }
 
@@ -470,7 +477,7 @@ func b32 archive_load_file(archive* arc, const path* src) {
 
     if (!mz_zip_reader_file_stat(&zip_archive, file_idx, &file_stat)) {
       mz_zip_reader_end(&zip_archive);
-      free(zip_ptr);
+      archive_dealloc_bytes(arc->opt_alloc, zip_ptr, zip_size);
       archive_clear(arc);
       return 0;
     }
@@ -481,7 +488,7 @@ func b32 archive_load_file(archive* arc, const path* src) {
       path_remove_trailing_slash(&item_path);
       if (!archive_add_empty_entry(arc, &item_path, 1, &item_idx)) {
         mz_zip_reader_end(&zip_archive);
-        free(zip_ptr);
+        archive_dealloc_bytes(arc->opt_alloc, zip_ptr, zip_size);
         archive_clear(arc);
         return 0;
       }
@@ -490,7 +497,7 @@ func b32 archive_load_file(archive* arc, const path* src) {
 
     if (!archive_add_empty_entry(arc, &item_path, 0, &item_idx)) {
       mz_zip_reader_end(&zip_archive);
-      free(zip_ptr);
+      archive_dealloc_bytes(arc->opt_alloc, zip_ptr, zip_size);
       archive_clear(arc);
       return 0;
     }
@@ -502,7 +509,7 @@ func b32 archive_load_file(archive* arc, const path* src) {
 
       if (item_ptr == NULL) {
         mz_zip_reader_end(&zip_archive);
-        free(zip_ptr);
+        archive_dealloc_bytes(arc->opt_alloc, zip_ptr, zip_size);
         archive_clear(arc);
         return 0;
       }
@@ -512,7 +519,7 @@ func b32 archive_load_file(archive* arc, const path* src) {
       if (!archive_assign_entry_bytes(arc, &arc->entries[item_idx], data)) {
         mz_free(item_ptr);
         mz_zip_reader_end(&zip_archive);
-        free(zip_ptr);
+        archive_dealloc_bytes(arc->opt_alloc, zip_ptr, zip_size);
         archive_clear(arc);
         return 0;
       }
@@ -522,7 +529,7 @@ func b32 archive_load_file(archive* arc, const path* src) {
   }
 
   mz_zip_reader_end(&zip_archive);
-  free(zip_ptr);
+  archive_dealloc_bytes(arc->opt_alloc, zip_ptr, zip_size);
   return 1;
 #else
   (void)arc;
@@ -541,6 +548,8 @@ func b32 archive_save_file(const archive* arc, const path* dst) {
   if (arc == NULL || dst == NULL) {
     return 0;
   }
+  assert(arc->entry_count <= arc->entry_capacity);
+  thread_log_trace("archive_save_file: arc=%p dst=%s entries=%zu", (void*)arc, dst->buf, (size_t)arc->entry_count);
 
   memset(&zip_archive, 0, size_of(zip_archive));
   if (!mz_zip_writer_init_heap(&zip_archive, 0, 0)) {

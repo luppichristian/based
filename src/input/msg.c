@@ -3,7 +3,9 @@
 
 #include "input/msg.h"
 #include "../sdl3_include.h"
+#include "basic/assert.h"
 #include "basic/utility_defines.h"
+#include "context/thread_ctx.h"
 #include <SDL3/SDL_hidapi.h>
 
 func void tablet_internal_on_msg(const msg* src);
@@ -316,6 +318,8 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
   if (!src || !out_msg) {
     return 0;
   }
+  assert(src != NULL);
+  assert(out_msg != NULL);
 
   *out_msg = (msg) {0};
   msg_apply_common(out_msg, src);
@@ -676,6 +680,8 @@ func b32 msg_to_sdl_event(const msg* src, SDL_Event* out_event) {
   if (!src || !out_event) {
     return 0;
   }
+  assert(src != NULL);
+  assert(out_event != NULL);
 
   *out_event = (SDL_Event) {0};
   out_event->type = src->type;
@@ -1087,6 +1093,7 @@ func void msg_pump(void) {
   // Pumps the process-global queue.
   SDL_PumpEvents();
   msg_refresh_synthetic_device_messages();
+  thread_log_trace("msg_pump");
 }
 
 func b32 msg_poll(msg* out_msg) {
@@ -1096,6 +1103,7 @@ func b32 msg_poll(msg* out_msg) {
   if (!out_msg || !SDL_PollEvent(&native_event) || !msg_from_sdl(&native_event, out_msg)) {
     return 0;
   }
+  assert(out_msg != NULL);
 
   msg_notify_internal_listeners(out_msg);
   return 1;
@@ -1107,6 +1115,7 @@ func b32 msg_wait(msg* out_msg) {
   if (!out_msg) {
     return 0;
   }
+  assert(out_msg != NULL);
 
   msg_refresh_synthetic_device_messages();
   if (SDL_PollEvent(&native_event) && msg_from_sdl(&native_event, out_msg)) {
@@ -1128,6 +1137,10 @@ func b32 msg_wait_timeout(msg* out_msg, i32 timeout_ms) {
   if (!out_msg) {
     return 0;
   }
+  if (timeout_ms < 0) {
+    return 0;
+  }
+  assert(out_msg != NULL);
 
   msg_refresh_synthetic_device_messages();
   if (SDL_PollEvent(&native_event) && msg_from_sdl(&native_event, out_msg)) {
@@ -1151,17 +1164,20 @@ func b32 _msg_post(const msg* src, callsite site) {
   if (!src) {
     return 0;
   }
+  assert(src != NULL);
 
   posted_msg = *src;
   posted_msg.post_site = site;
 
   if (!msg_dispatch_handlers(&posted_msg, MSG_HANDLER_STAGE_BEFORE_POST)) {
+    thread_log_trace("msg_post: cancelled type=%u", posted_msg.type);
     return 0;
   }
 
   if (posted_msg.type >= MSG_TYPE_USER) {
     payload = (msg*)SDL_malloc(sizeof(*payload));
     if (!payload) {
+      thread_log_error("msg_post: payload alloc failed type=%u", posted_msg.type);
       return 0;
     }
     *payload = posted_msg;
@@ -1183,6 +1199,7 @@ func b32 _msg_post(const msg* src, callsite site) {
       SDL_free(payload);
     }
     (void)msg_dispatch_handlers(&posted_msg, MSG_HANDLER_STAGE_POST_FAILED);
+    thread_log_warn("msg_post: SDL_PushEvent failed type=%u", posted_msg.type);
     return 0;
   }
 
@@ -1203,6 +1220,8 @@ func u64 msg_add_handler(const msg_handler_desc* desc) {
   if (desc == NULL || desc->handler_fn == NULL || msg_handler_count >= MSG_HANDLER_CAP) {
     return 0;
   }
+  assert(desc != NULL);
+  assert(desc->handler_fn != NULL);
 
   u64 handler_id = msg_handler_next_id;
   msg_handler_next_id += 1;
@@ -1222,6 +1241,7 @@ func u64 msg_add_handler(const msg_handler_desc* desc) {
   };
   msg_handler_count += 1;
   msg_handler_sort_entries();
+  thread_log_trace("msg_add_handler: id=%llu count=%u", (unsigned long long)handler_id, msg_handler_count);
   return handler_id;
 }
 
@@ -1229,6 +1249,7 @@ func b32 msg_remove_handler(u64 handler_id) {
   if (handler_id == 0) {
     return 0;
   }
+  assert(handler_id != 0);
 
   for (u32 index = 0; index < msg_handler_count; index += 1) {
     if (msg_handler_entries[index].handler_id != handler_id) {
@@ -1241,6 +1262,7 @@ func b32 msg_remove_handler(u64 handler_id) {
 
     msg_handler_count -= 1;
     msg_handler_entries[msg_handler_count] = (msg_handler_entry) {0};
+    thread_log_trace("msg_remove_handler: id=%llu count=%u", (unsigned long long)handler_id, msg_handler_count);
     return 1;
   }
 
@@ -1254,12 +1276,19 @@ func void msg_clear_handlers(void) {
 
   msg_handler_count = 0;
   msg_handler_next_id = 1;
+  thread_log_trace("msg_clear_handlers");
 }
 
 func b32 msg_from_native(const void* native_event, msg* out_msg) {
+  if (native_event == NULL || out_msg == NULL) {
+    return 0;
+  }
   return msg_from_sdl((const SDL_Event*)native_event, out_msg);
 }
 
 func b32 msg_to_native(const msg* src, void* native_event) {
+  if (src == NULL || native_event == NULL) {
+    return 0;
+  }
   return msg_to_sdl_event(src, (SDL_Event*)native_event);
 }

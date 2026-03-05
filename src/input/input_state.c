@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "input/input_state.h"
+#include "basic/assert.h"
 
 #include <string.h>
 
@@ -66,6 +67,7 @@ func void input_state_clear(input_state* src) {
   if (!src) {
     return;
   }
+  assert(src != NULL);
 
   *src = (input_state) {0};
 }
@@ -74,6 +76,7 @@ func b32 input_state_capture(input_key key, input_state* out_state) {
   if (!out_state) {
     return 0;
   }
+  assert(out_state != NULL);
 
   *out_state = (input_state) {0};
 
@@ -210,6 +213,8 @@ func void input_state_apply_msg(input_state* src, const msg* event_msg) {
   if (!src || !event_msg) {
     return;
   }
+  assert(src != NULL);
+  assert(event_msg != NULL);
 
   src->timestamp = event_msg->timestamp;
 
@@ -236,6 +241,8 @@ func b32 input_state_serialize(const input_state* src, void* dst, sz dst_cap, sz
   if (!src || !dst) {
     return 0;
   }
+  assert(src != NULL);
+  assert(dst != NULL);
 
   sz total_size = input_state_serialized_size();
   if (dst_cap < total_size) {
@@ -263,6 +270,8 @@ func b32 input_state_deserialize(const void* src, sz src_size, input_state* out_
   if (!src || !out_state || src_size < size_of(input_state_blob_header) + size_of(input_state)) {
     return 0;
   }
+  assert(src != NULL);
+  assert(out_state != NULL);
 
   input_state_blob_header header = {0};
   memcpy(&header, src, size_of(header));

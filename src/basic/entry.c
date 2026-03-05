@@ -6,6 +6,7 @@
 #endif
 
 #include "basic/entry.h"
+#include "basic/assert.h"
 #include "context/global_ctx.h"
 #include "context/thread_ctx.h"
 #include "input/msg.h"
@@ -36,12 +37,14 @@ thread_local global_var b32 entry_owns_thread_ctx = false;
 
 func b32 entry_init(cmdline cmdline) {
   (void)cmdline;
+  assert(entry_sdl_init_depth >= 0);
 
   if (entry_sdl_init_depth == 0) {
     if (!SDL_WasInit(0)) {
       if (!SDL_Init(0)) {
         return false;
       }
+      thread_log_trace("entry_init: SDL initialized");
       entry_owns_sdl = true;
     } else {
       entry_owns_sdl = false;
@@ -60,6 +63,7 @@ func b32 entry_init(cmdline cmdline) {
         return false;
       }
       entry_owns_global_ctx = true;
+      thread_log_trace("entry_init: global_ctx initialized");
     } else {
       entry_owns_global_ctx = false;
     }
@@ -86,6 +90,7 @@ func b32 entry_init(cmdline cmdline) {
 
       entry_owns_thread_ctx = true;
       (void)thread_log_sync();
+      thread_log_trace("entry_init: thread_ctx initialized");
     } else {
       entry_owns_thread_ctx = false;
     }
@@ -99,6 +104,7 @@ func void entry_quit(void) {
   if (entry_thread_ctx_init_depth > 0) {
     entry_thread_ctx_init_depth -= 1;
     if (entry_thread_ctx_init_depth == 0 && entry_owns_thread_ctx) {
+      thread_log_trace("entry_quit: thread_ctx");
       thread_ctx_quit();
       entry_owns_thread_ctx = false;
     }
@@ -107,6 +113,7 @@ func void entry_quit(void) {
   if (entry_global_ctx_init_depth > 0) {
     entry_global_ctx_init_depth -= 1;
     if (entry_global_ctx_init_depth == 0 && entry_owns_global_ctx) {
+      thread_log_trace("entry_quit: global_ctx");
       global_ctx_quit();
       entry_owns_global_ctx = false;
     }
@@ -115,6 +122,7 @@ func void entry_quit(void) {
   if (entry_sdl_init_depth > 0) {
     entry_sdl_init_depth -= 1;
     if (entry_sdl_init_depth == 0 && entry_owns_sdl) {
+      thread_log_trace("entry_quit: SDL");
       SDL_Quit();
       entry_owns_sdl = false;
     }

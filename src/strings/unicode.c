@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "strings/unicode.h"
+#include "basic/assert.h"
 
 // =========================================================================
 // Validity
@@ -53,6 +54,14 @@ func sz utf8_byte_count(c8 first_byte) {
 }
 
 func c32 utf8_decode(cstr8 ptr, sz* consumed) {
+  if (ptr == NULL || consumed == NULL) {
+    if (consumed != NULL) {
+      *consumed = 0;
+    }
+    return UNICODE_REPLACEMENT_CHAR;
+  }
+  assert(ptr != NULL);
+  assert(consumed != NULL);
   u8 first = (u8)*ptr;
   sz byte_cnt = utf8_byte_count((c8)first);
 
@@ -92,6 +101,10 @@ func c32 utf8_decode(cstr8 ptr, sz* consumed) {
 }
 
 func sz utf8_encode(c32 codepoint, c8* out) {
+  if (out == NULL) {
+    return 0;
+  }
+  assert(out != NULL);
   sz size = utf8_encode_size(codepoint);
   if (size == 0) {
     return 0;

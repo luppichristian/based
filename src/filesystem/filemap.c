@@ -3,12 +3,14 @@
 
 #include "filesystem/filemap.h"
 
+#include "basic/assert.h"
 #include "basic/env_defines.h"
+#include "context/thread_ctx.h"
 #include "filesystem/file.h"
 #include "input/msg.h"
+#include "memory/vmem.h"
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 #if defined(PLATFORM_WINDOWS)
@@ -29,6 +31,14 @@ func filemap filemap_empty(void) {
   memset(&map, 0, size_of(map));
   map.source_path = path_from_cstr("");
   return map;
+}
+
+func allocator filemap_allocator_resolve(void) {
+  allocator alloc = thread_get_allocator();
+  if (alloc.alloc_fn != NULL && alloc.dealloc_fn != NULL) {
+    return alloc;
+  }
+  return vmem_get_allocator();
 }
 
 func b32 filemap_is_open(const filemap* map) {
@@ -52,13 +62,18 @@ func b32 filemap_flush(filemap* map) {
     return 1;
   }
 
-  if (map->dirty) {
+  if (!map->dirty) {
     return 1;
   }
+  assert(map->source_path.buf[0] != '\0');
 
   if (map->uses_fallback_copy) {
     buffer data = buffer_from(map->data_ptr, map->data_size);
-    return file_write_all(&map->source_path, data);
+    if (!file_write_all(&map->source_path, data)) {
+      return 0;
+    }
+    map->dirty = 0;
+    return 1;
   }
 
 #if defined(PLATFORM_WINDOWS)
@@ -69,13 +84,15 @@ func b32 filemap_flush(filemap* map) {
   if (map->native_file != NULL && !FlushFileBuffers((HANDLE)map->native_file)) {
     return 0;
   }
-
+  map->dirty = 0;
   return 1;
 #elif defined(PLATFORM_UNIX) || defined(PLATFORM_ANDROID) || defined(PLATFORM_IOS)
   if (map->data_ptr != NULL && map->data_size > 0) {
-    return msync(map->data_ptr, map->data_size, MS_SYNC) == 0 ? 1 : 0;
+    if (msync(map->data_ptr, map->data_size, MS_SYNC) != 0) {
+      return 0;
+    }
   }
-
+  map->dirty = 0;
   return 1;
 #else
   return 1;
@@ -83,9 +100,11 @@ func b32 filemap_flush(filemap* map) {
 }
 
 func void filemap_close(filemap* map) {
+  allocator alloc = filemap_allocator_resolve();
   if (map == NULL) {
     return;
   }
+  assert(map->data_size == 0 || map->source_path.buf[0] != '\0');
 
   msg lifecycle_msg = {0};
   lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
@@ -101,7 +120,10 @@ func void filemap_close(filemap* map) {
       (void)filemap_flush(map);
     }
 
-    free(map->data_ptr);
+    if (map->data_ptr != NULL) {
+      allocator_dealloc(&alloc, map->data_ptr, map->data_size);
+    }
+    thread_log_trace("filemap_close: fallback path=%s", map->source_path.buf);
     *map = filemap_empty();
     return;
   }
@@ -129,14 +151,17 @@ func void filemap_close(filemap* map) {
 #endif
 
   *map = filemap_empty();
+  thread_log_trace("filemap_close: mapped");
 }
 
 func filemap filemap_open(const path* src, filemap_access access) {
+  allocator alloc = filemap_allocator_resolve();
   filemap map = filemap_empty();
 
   if (src == NULL || !file_exists(src)) {
     return map;
   }
+  assert(access == FILEMAP_ACCESS_READ || access == FILEMAP_ACCESS_READ_WRITE || access == FILEMAP_ACCESS_COPY_ON_WRITE);
 
   map.source_path = *src;
   map.writable = access != FILEMAP_ACCESS_READ ? 1 : 0;
@@ -210,6 +235,7 @@ func filemap filemap_open(const path* src, filemap_access access) {
     filemap_close(&map);
     return filemap_empty();
   }
+  thread_log_trace("filemap_open: windows path=%s size=%zu writable=%u", src->buf, (size_t)map.data_size, (u32)map.writable);
   return map;
 #elif defined(PLATFORM_UNIX) || defined(PLATFORM_ANDROID) || defined(PLATFORM_IOS)
   i32 open_flags = O_RDONLY;
@@ -259,48 +285,16 @@ func filemap filemap_open(const path* src, filemap_access access) {
     filemap_close(&map);
     return filemap_empty();
   }
+  thread_log_trace("filemap_open: unix path=%s size=%zu writable=%u", src->buf, (size_t)map.data_size, (u32)map.writable);
   return map;
 #else
-  FILE* file_ptr = NULL;
-  long file_size = 0;
+  buffer file_data = {0};
 
-  file_ptr = fopen(src->buf, "rb");
-  if (file_ptr == NULL) {
+  if (!file_read_all(src, &alloc, &file_data)) {
     return filemap_empty();
   }
-
-  if (fseek(file_ptr, 0, SEEK_END) != 0) {
-    fclose(file_ptr);
-    return filemap_empty();
-  }
-
-  file_size = ftell(file_ptr);
-  if (file_size < 0) {
-    fclose(file_ptr);
-    return filemap_empty();
-  }
-
-  map.data_size = (sz)file_size;
-  if (fseek(file_ptr, 0, SEEK_SET) != 0) {
-    fclose(file_ptr);
-    return filemap_empty();
-  }
-
-  if (map.data_size > 0) {
-    map.data_ptr = malloc(map.data_size);
-    if (map.data_ptr == NULL) {
-      fclose(file_ptr);
-      return filemap_empty();
-    }
-
-    if ((sz)fread(map.data_ptr, 1, map.data_size, file_ptr) != map.data_size) {
-      fclose(file_ptr);
-      free(map.data_ptr);
-      return filemap_empty();
-    }
-  }
-
-  fclose(file_ptr);
+  map.data_ptr = file_data.ptr;
+  map.data_size = file_data.size;
   map.uses_fallback_copy = 1;
   msg lifecycle_msg = {0};
   lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
@@ -311,6 +305,7 @@ func filemap filemap_open(const path* src, filemap_access access) {
     filemap_close(&map);
     return filemap_empty();
   }
+  thread_log_trace("filemap_open: fallback path=%s size=%zu writable=%u", src->buf, (size_t)map.data_size, (u32)map.writable);
   return map;
 #endif
 }

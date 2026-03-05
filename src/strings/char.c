@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "strings/char.h"
+#include "basic/assert.h"
 
 func u32 c8_to_code(c8 chr) {
   return (u32)(u8)chr;
@@ -92,6 +93,7 @@ func i32 char_code_hex_to_nibble(u32 code) {
 
 func c8 char_code_nibble_to_hex(u8 nibble) {
   local_persist const c8 digits[] = "0123456789abcdef";
+  assert((nibble & 0x0FU) < 16);
   return digits[nibble & 0x0FU];
 }
 

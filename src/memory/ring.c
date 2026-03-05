@@ -2,6 +2,8 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "memory/ring.h"
+#include "basic/assert.h"
+#include "context/thread_ctx.h"
 #include "input/msg.h"
 #include <string.h>
 
@@ -23,6 +25,7 @@ func ring ring_create(void* ptr, sz capacity, mutex opt_mutex) {
   if (!msg_post(&lifecycle_msg)) {
     memset(&rng, 0, sizeof(rng));
   }
+  thread_log_trace("ring_create: capacity=%zu", (size_t)capacity);
   return rng;
 }
 
@@ -53,6 +56,7 @@ func ring ring_create_alloc(allocator parent_alloc, sz capacity, mutex opt_mutex
     }
     memset(&rng, 0, sizeof(rng));
   }
+  thread_log_trace("ring_create_alloc: capacity=%zu", (size_t)capacity);
   return rng;
 }
 
@@ -66,6 +70,7 @@ func void ring_destroy(ring* rng) {
   if (rng == NULL) {
     return;
   }
+  assert(rng != NULL);
 
   msg lifecycle_msg = {0};
   lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
@@ -97,6 +102,7 @@ func void ring_destroy(ring* rng) {
 
   rng->opt_mutex = NULL;
   rng->mutex_owned = 0;
+  thread_log_trace("ring_destroy: rng=%p", (void*)rng);
 }
 
 // =========================================================================
@@ -104,6 +110,9 @@ func void ring_destroy(ring* rng) {
 // =========================================================================
 
 func sz ring_size(ring* rng) {
+  if (rng == NULL) {
+    return 0;
+  }
   if (rng->opt_mutex) {
     mutex_lock(rng->opt_mutex);
   }
@@ -115,6 +124,9 @@ func sz ring_size(ring* rng) {
 }
 
 func sz ring_space(ring* rng) {
+  if (rng == NULL) {
+    return 0;
+  }
   if (rng->opt_mutex) {
     mutex_lock(rng->opt_mutex);
   }
@@ -160,6 +172,9 @@ func void ring_copy_in(ring* rng, sz ring_offset, void* src, sz byte_count) {
 // =========================================================================
 
 func sz ring_write(ring* rng, void* data, sz size) {
+  if (rng == NULL || data == NULL || size == 0 || rng->capacity == 0 || rng->ptr == NULL) {
+    return 0;
+  }
   if (rng->opt_mutex) {
     mutex_lock(rng->opt_mutex);
   }
@@ -178,6 +193,9 @@ func sz ring_write(ring* rng, void* data, sz size) {
 }
 
 func sz ring_read(ring* rng, void* out, sz size) {
+  if (rng == NULL || out == NULL || size == 0 || rng->capacity == 0 || rng->ptr == NULL) {
+    return 0;
+  }
   if (rng->opt_mutex) {
     mutex_lock(rng->opt_mutex);
   }
@@ -196,6 +214,9 @@ func sz ring_read(ring* rng, void* out, sz size) {
 }
 
 func sz ring_peek(ring* rng, void* out, sz size) {
+  if (rng == NULL || out == NULL || size == 0 || rng->capacity == 0 || rng->ptr == NULL) {
+    return 0;
+  }
   if (rng->opt_mutex) {
     mutex_lock(rng->opt_mutex);
   }
@@ -212,6 +233,9 @@ func sz ring_peek(ring* rng, void* out, sz size) {
 }
 
 func sz ring_skip(ring* rng, sz size) {
+  if (rng == NULL || size == 0 || rng->capacity == 0) {
+    return 0;
+  }
   if (rng->opt_mutex) {
     mutex_lock(rng->opt_mutex);
   }
@@ -233,6 +257,9 @@ func sz ring_skip(ring* rng, sz size) {
 // =========================================================================
 
 func void ring_clear(ring* rng) {
+  if (rng == NULL) {
+    return;
+  }
   if (rng->opt_mutex) {
     mutex_lock(rng->opt_mutex);
   }

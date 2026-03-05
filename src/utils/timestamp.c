@@ -2,6 +2,8 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "utils/timestamp.h"
+#include "basic/assert.h"
+#include "context/thread_ctx.h"
 
 #include "../sdl3_include.h"
 
@@ -21,8 +23,10 @@ func timestamp timestamp_now(void) {
   SDL_Time current_time = 0;
 
   if (!SDL_GetCurrentTime(&current_time)) {
+    thread_log_warn("timestamp_now: SDL_GetCurrentTime failed");
     return timestamp_zero();
   }
+  assert(current_time >= 0);
 
   return timestamp_from_microseconds((i64)SDL_NS_TO_US(current_time));
 }

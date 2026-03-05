@@ -2,6 +2,8 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "system/cpu_info.h"
+#include "basic/assert.h"
+#include "context/thread_ctx.h"
 #include "basic/env_defines.h"
 
 #include <stddef.h>
@@ -25,13 +27,14 @@ func void cpu_copy_string(c8* dst_ptr, sz dst_cap, cstr8 src_ptr) {
   if (dst_ptr == NULL || dst_cap == 0) {
     return;
   }
+  assert(dst_cap > 0);
 
   dst_ptr[0] = '\0';
   if (src_ptr == NULL) {
     return;
   }
 
-  sz src_len = strlen(src_ptr);
+  sz src_len = cstr8_len(src_ptr);
   if (src_len >= dst_cap) {
     src_len = dst_cap - 1;
   }
@@ -82,6 +85,10 @@ func void cpu_set_compile_time_fallback(cpu_info* out_info) {
 
 #if defined(ARCH_X86) || defined(ARCH_X86_64)
 func b32 cpu_read_cpuid(u32 leaf_id, u32 subleaf_id, i32 out_regs[4]) {
+  if (out_regs == NULL) {
+    return 0;
+  }
+  assert(out_regs != NULL);
 #  if defined(COMPILER_MSVC)
   __cpuidex(out_regs, (i32)leaf_id, (i32)subleaf_id);
   return 1;
@@ -107,6 +114,10 @@ func b32 cpu_read_cpuid(u32 leaf_id, u32 subleaf_id, i32 out_regs[4]) {
 }
 
 func void cpu_fill_x86_strings(cpu_info* out_info) {
+  if (out_info == NULL) {
+    return;
+  }
+  assert(out_info != NULL);
   i32 base_regs[4];
   if (cpu_read_cpuid(0, 0, base_regs)) {
     c8 vendor_name[13];
@@ -137,6 +148,10 @@ func void cpu_fill_x86_strings(cpu_info* out_info) {
 }
 
 func void cpu_fill_x86_features(cpu_info* out_info) {
+  if (out_info == NULL) {
+    return;
+  }
+  assert(out_info != NULL);
   i32 base_regs[4];
   if (!cpu_read_cpuid(1, 0, base_regs)) {
     return;
@@ -179,6 +194,7 @@ func b32 cpu_info_query(cpu_info* out_info) {
   if (out_info == NULL) {
     return 0;
   }
+  assert(out_info != NULL);
 
   memset(out_info, 0, sizeof(*out_info));
   out_info->logical_core_count = cpu_query_logical_cores();
@@ -190,5 +206,6 @@ func b32 cpu_info_query(cpu_info* out_info) {
   cpu_fill_x86_features(out_info);
 #endif
 
+  thread_log_trace("cpu_info_query: cores=%u cache_line=%u", out_info->logical_core_count, out_info->cache_line_bytes);
   return 1;
 }

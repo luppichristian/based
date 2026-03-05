@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "memory/vmem.h"
+#include "basic/assert.h"
 #include "basic/env_defines.h"
 #include "basic/utility_defines.h"
 #include <string.h>
@@ -246,6 +247,7 @@ func void* vmem_alloc(sz size) {
   if (size == 0) {
     return NULL;
   }
+  assert(size > 0);
 
   sz alloc_align = vmem_get_alloc_align();
   sz prefix_size = align_up(sizeof(vmem_alloc_header), alloc_align);
@@ -301,6 +303,7 @@ func void* vmem_realloc(void* ptr, sz old_size, sz new_size) {
     (void)vmem_free(ptr, 0);
     return NULL;
   }
+  assert(new_size > 0);
 
   vmem_alloc_header* old_header = vmem_get_alloc_header(ptr);
   if (new_size == old_header->info.user_size) {

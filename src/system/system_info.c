@@ -2,6 +2,8 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "system/system_info.h"
+#include "basic/assert.h"
+#include "context/thread_ctx.h"
 #include "basic/env_defines.h"
 
 #include <stdio.h>
@@ -31,13 +33,14 @@ func void system_copy_string(c8* dst_ptr, sz dst_cap, cstr8 src_ptr) {
   if (dst_ptr == NULL || dst_cap == 0) {
     return;
   }
+  assert(dst_cap > 0);
 
   dst_ptr[0] = '\0';
   if (src_ptr == NULL) {
     return;
   }
 
-  sz src_len = strlen(src_ptr);
+  sz src_len = cstr8_len(src_ptr);
   if (src_len >= dst_cap) {
     src_len = dst_cap - 1;
   }
@@ -108,6 +111,7 @@ func b32 system_info_query(system_info* out_info) {
   if (out_info == NULL) {
     return 0;
   }
+  assert(out_info != NULL);
 
   memset(out_info, 0, sizeof(*out_info));
   system_copy_string(out_info->architecture_name,
@@ -145,6 +149,7 @@ func b32 system_info_query(system_info* out_info) {
     system_copy_string(out_info->user_home, size_of(out_info->user_home), home_path);
   }
 
+  thread_log_trace("system_info_query: platform=windows arch=%s", out_info->architecture_name);
   return 1;
 #elif defined(PLATFORM_UNIX) || defined(PLATFORM_ANDROID) || defined(PLATFORM_IOS)
   struct utsname uname_info;
@@ -185,10 +190,12 @@ func b32 system_info_query(system_info* out_info) {
     }
   }
 
+  thread_log_trace("system_info_query: platform=unix arch=%s", out_info->architecture_name);
   return 1;
 #else
   system_copy_string(out_info->os_name, size_of(out_info->os_name), "unknown");
   system_copy_string(out_info->os_version, size_of(out_info->os_version), "unknown");
+  thread_log_warn("system_info_query: unknown platform");
   return 0;
 #endif
 }

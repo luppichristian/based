@@ -2,8 +2,10 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "threads/thread.h"
+#include "basic/assert.h"
 #include "context/thread_ctx.h"
 #include "input/msg.h"
+#include "memory/vmem.h"
 #include "../sdl3_include.h"
 
 // SDL_ThreadFunction is `int (SDLCALL *)(void*)`.
@@ -13,32 +15,57 @@
 typedef struct thread_entry_payload {
   thread_func entry;
   void* arg;
+  allocator payload_allocator;
   allocator main_allocator;
   b32 should_init_thread_ctx;
 } thread_entry_payload;
 
+func allocator thread_allocator_resolve(allocator preferred_alloc) {
+  if (preferred_alloc.alloc_fn != NULL && preferred_alloc.dealloc_fn != NULL) {
+    return preferred_alloc;
+  }
+
+  allocator thread_alloc = thread_get_allocator();
+  if (thread_alloc.alloc_fn != NULL && thread_alloc.dealloc_fn != NULL) {
+    return thread_alloc;
+  }
+
+  return vmem_get_allocator();
+}
+
 func i32 thread_entry_wrapper(void* raw) {
   thread_entry_payload* payload = (thread_entry_payload*)raw;
   b32 has_thread_ctx = false;
+  i32 exit_code = 0;
+
+  if (payload == NULL || payload->entry == NULL) {
+    return 0;
+  }
+  assert(payload->payload_allocator.dealloc_fn != NULL);
 
   if (payload->should_init_thread_ctx) {
     has_thread_ctx = thread_ctx_init(payload->main_allocator);
+    thread_log_trace("thread_entry_wrapper: thread_ctx_init=%u", (u32)has_thread_ctx);
   }
 
-  i32 exit_code = payload->entry(payload->arg);
+  exit_code = payload->entry(payload->arg);
 
   if (has_thread_ctx) {
     thread_ctx_quit();
   }
 
-  SDL_free(payload);
+  allocator_dealloc(&payload->payload_allocator, payload, sizeof(*payload));
   return exit_code;
 }
 
 func thread thread_create_impl(thread_func entry, void* arg, cstr8 name, allocator main_allocator) {
+  allocator payload_allocator = {0};
   if (!entry) {
     return NULL;
   }
+  payload_allocator = thread_allocator_resolve(main_allocator);
+  assert(payload_allocator.alloc_fn != NULL);
+  assert(payload_allocator.dealloc_fn != NULL);
 
   msg lifecycle_msg = {0};
   lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
@@ -49,7 +76,7 @@ func thread thread_create_impl(thread_func entry, void* arg, cstr8 name, allocat
     return NULL;
   }
 
-  thread_entry_payload* payload = (thread_entry_payload*)SDL_malloc(sizeof(*payload));
+  thread_entry_payload* payload = (thread_entry_payload*)allocator_alloc(&payload_allocator, sizeof(*payload));
   if (!payload) {
     return NULL;
   }
@@ -57,6 +84,7 @@ func thread thread_create_impl(thread_func entry, void* arg, cstr8 name, allocat
   SDL_zero(*payload);
   payload->entry = entry;
   payload->arg = arg;
+  payload->payload_allocator = payload_allocator;
   if (main_allocator.alloc_fn) {
     payload->main_allocator = main_allocator;
     payload->should_init_thread_ctx = true;
@@ -64,8 +92,11 @@ func thread thread_create_impl(thread_func entry, void* arg, cstr8 name, allocat
 
   thread thd = (thread)SDL_CreateThread(thread_entry_wrapper, name, payload);
   if (!thd) {
-    SDL_free(payload);
+    allocator_dealloc(&payload_allocator, payload, sizeof(*payload));
+    thread_log_error("thread_create_impl: SDL_CreateThread failed name=%s", name != NULL ? name : "<null>");
+    return NULL;
   }
+  thread_log_trace("thread_create_impl: created thread=%p name=%s", thd, name != NULL ? name : "<null>");
   return thd;
 }
 
@@ -89,7 +120,10 @@ func b32 thread_is_valid(thread thd) {
 }
 
 func b32 thread_join(thread thd, i32* out_exit_code) {
-  if (!thd) return 0;
+  if (!thd) {
+    return 0;
+  }
+  assert(thread_is_valid(thd));
   msg lifecycle_msg = {0};
   lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
   lifecycle_msg.object_lifecycle.event_kind = (u32)MSG_OBJECT_EVENT_DESTROY;
@@ -99,6 +133,7 @@ func b32 thread_join(thread thd, i32* out_exit_code) {
     return 0;
   }
   SDL_WaitThread((SDL_Thread*)thd, (int*)out_exit_code);
+  thread_log_trace("thread_join: thread=%p", thd);
   return 1;
 }
 
@@ -115,6 +150,7 @@ func void thread_detach(thread thd) {
     return;
   }
   SDL_DetachThread((SDL_Thread*)thd);
+  thread_log_trace("thread_detach: thread=%p", thd);
 }
 
 func u64 thread_get_id(thread thd) {

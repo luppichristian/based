@@ -11,6 +11,7 @@
 #include "devices.h"
 #include "gamepads.h"
 #include "mouse.h"
+#include "../strings/cstrings.h"
 
 // Event types mirrored from the backend event system.
 typedef enum msg_type {
@@ -487,13 +488,13 @@ typedef struct msg_log_data {
   void* state_ptr;
   log_level level;
   callsite source_site;
-  c8 text[MSG_LOG_TEXT_CAP];
+  str8_medium text;
 } msg_log_data;
 
 typedef struct msg_assert_data {
   assert_mode mode;
   callsite source_site;
-  c8 text[MSG_ASSERT_TEXT_CAP];
+  str8_medium text;
 } msg_assert_data;
 
 // Normalized event record used by the input message queue.

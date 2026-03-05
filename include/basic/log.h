@@ -94,14 +94,14 @@ func b32 log_frame_has_messages(log_frame* frame);
 func sz log_frame_message_count(log_frame* frame);
 func log_msg* log_frame_first(log_frame* frame);
 func log_msg* log_frame_last(log_frame* frame);
-func log_msg* log_message_next(log_msg* message);
-func log_level log_message_level(log_msg* message);
-func callsite log_message_site(log_msg* message);
-func cstr8 log_message_text(log_msg* message);
+func log_msg* log_msg_next(log_msg* message);
+func log_level log_msg_level(log_msg* message);
+func callsite log_msg_site(log_msg* message);
+func cstr8 log_msg_text(log_msg* message);
 
 // Iterates over every message in a log frame from first to last.
 #define LOG_FRAME_FOREACH(frame, it) \
-  for (log_msg* it = log_frame_first(frame); (it) != NULL; (it) = log_message_next(it))
+  for (log_msg* it = log_frame_first(frame); (it) != NULL; (it) = log_msg_next(it))
 
 // Log function called by the logging macros.
 func void _log(log_state* state, log_level level, callsite site, const char* msg, ...);

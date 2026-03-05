@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "input/devices.h"
+#include "basic/assert.h"
 #include "../sdl3_include.h"
 #include <SDL3/SDL_hidapi.h>
 
@@ -73,6 +74,7 @@ func u64 devices_hash_path(cstr8 src) {
 
 func device_id devices_make_id(device_type type, u64 instance) {
   device_id result = {0};
+  assert(type >= DEVICE_TYPE_UNKNOWN && type <= DEVICE_TYPE_TOUCH);
   result.type = type;
   result.instance = instance;
   return result;
@@ -313,6 +315,7 @@ func b32 devices_get_device(device_type type, sz index, device_id* out_id) {
       return devices_find_tablet_by_idx(index, out_id);
     case DEVICE_TYPE_UNKNOWN:
     default:
+      assert(type == DEVICE_TYPE_UNKNOWN);
       return 0;
   }
 }

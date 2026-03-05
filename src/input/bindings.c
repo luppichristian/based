@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "input/bindings.h"
+#include "basic/assert.h"
 
 typedef struct binding_entry {
   b32 used;
@@ -243,6 +244,7 @@ func b32 bindings_add(const binding_desc* desc) {
   if (!desc || desc->binding_id == 0 || !bindings_desc_has_any_combo(desc)) {
     return 0;
   }
+  assert(desc->binding_id != 0);
 
   if (desc->keyboard.count > BINDING_MAX_KEYS || desc->mouse.count > BINDING_MAX_MOUSE_BUTTONS ||
       desc->gamepad.count > BINDING_MAX_GAMEPAD_BUTTONS) {
@@ -308,6 +310,7 @@ func b32 bindings_is_down(u32 binding_id) {
 }
 
 func b32 bindings_is_pressed(input_key key, u32 binding_id) {
+  assert(binding_id != 0);
   sz binding_slot_idx = bindings_find_slot_by_id(binding_id);
   if (binding_slot_idx >= BINDINGS_MAX_COUNT) {
     return 0;
@@ -322,6 +325,7 @@ func b32 bindings_is_pressed(input_key key, u32 binding_id) {
 }
 
 func b32 bindings_is_released(input_key key, u32 binding_id) {
+  assert(binding_id != 0);
   sz binding_slot_idx = bindings_find_slot_by_id(binding_id);
   if (binding_slot_idx >= BINDINGS_MAX_COUNT) {
     return 0;

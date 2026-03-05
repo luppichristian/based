@@ -2,7 +2,9 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "context/ctx.h"
+#include "basic/assert.h"
 #include "basic/utility_defines.h"
+#include "context/thread_ctx.h"
 
 #include <string.h>
 
@@ -13,6 +15,8 @@ func b32 ctx_init(ctx* context, allocator main_allocator, b32 use_log_mutex) {
   if (!context || !main_allocator.alloc_fn || context->is_init) {
     return false;
   }
+  assert(main_allocator.dealloc_fn != NULL);
+  assert(use_log_mutex == 0 || use_log_mutex == 1);
 
   memset(context, 0, sizeof(*context));
   if (!log_state_init(&context->log, use_log_mutex)) {
@@ -26,6 +30,7 @@ func b32 ctx_init(ctx* context, allocator main_allocator, b32 use_log_mutex) {
   context->perm_heap = heap_create(main_allocator, NULL, CTX_DEFAULT_BLOCK_SIZE);
   context->temp_heap = heap_create(main_allocator, NULL, CTX_DEFAULT_BLOCK_SIZE);
   context->is_init = true;
+  thread_log_trace("ctx_init: context=%p use_log_mutex=%u", (void*)context, (u32)use_log_mutex);
   return true;
 }
 
@@ -39,6 +44,7 @@ func void ctx_quit(ctx* context) {
   arena_destroy(&context->temp_arena);
   arena_destroy(&context->perm_arena);
   log_state_quit(&context->log);
+  thread_log_trace("ctx_quit: context=%p", (void*)context);
   memset(context, 0, sizeof(*context));
 }
 
@@ -81,6 +87,7 @@ func void* ctx_get_user_data(ctx* context, ctx_user_data_idx index) {
   if (!ctx_is_init(context) || index >= CTX_USER_DATA_COUNT) {
     return NULL;
   }
+  assert(index < CTX_USER_DATA_COUNT);
   return context->user_data[index];
 }
 
@@ -88,6 +95,7 @@ func b32 ctx_set_user_data(ctx* context, ctx_user_data_idx index, void* user_dat
   if (!ctx_is_init(context) || index >= CTX_USER_DATA_COUNT) {
     return false;
   }
+  assert(index < CTX_USER_DATA_COUNT);
 
   context->user_data[index] = user_data;
   return true;

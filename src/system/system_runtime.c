@@ -2,6 +2,8 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "system/system_runtime.h"
+#include "basic/assert.h"
+#include "context/thread_ctx.h"
 #include "basic/env_defines.h"
 
 #include <stddef.h>
@@ -43,6 +45,10 @@ func u64 runtime_filetime_to_u64(FILETIME value) {
 }
 
 func b32 runtime_query_windows_cpu(runtime_cpu_sample* out_sample) {
+  if (out_sample == NULL) {
+    return 0;
+  }
+  assert(out_sample != NULL);
   FILETIME idle_time;
   FILETIME kernel_time;
   FILETIME user_time;
@@ -62,6 +68,10 @@ typedef struct runtime_cpu_sample {
 } runtime_cpu_sample;
 
 func b32 runtime_query_linux_cpu(runtime_cpu_sample* out_sample) {
+  if (out_sample == NULL) {
+    return 0;
+  }
+  assert(out_sample != NULL);
   FILE* stat_file = fopen("/proc/stat", "r");
   if (stat_file == NULL) {
     return 0;
@@ -109,6 +119,10 @@ typedef struct runtime_cpu_sample {
 } runtime_cpu_sample;
 
 func b32 runtime_query_apple_cpu(runtime_cpu_sample* out_sample) {
+  if (out_sample == NULL) {
+    return 0;
+  }
+  assert(out_sample != NULL);
   host_cpu_load_info_data_t load_info;
   mach_msg_type_number_t load_count = HOST_CPU_LOAD_INFO_COUNT;
   kern_return_t query_result =
@@ -130,6 +144,7 @@ func b32 system_runtime_query(system_runtime_info* out_info) {
   if (out_info == NULL) {
     return 0;
   }
+  assert(out_info != NULL);
 
   memset(out_info, 0, sizeof(*out_info));
 
@@ -191,6 +206,7 @@ func b32 system_runtime_query(system_runtime_info* out_info) {
     has_prev_sample = 1;
   }
 
+  thread_log_trace("system_runtime_query: platform=windows mem_used=%zu", (size_t)out_info->memory_used);
   return 1;
 #elif defined(PLATFORM_LINUX)
   struct sysinfo sys_info;
@@ -246,6 +262,7 @@ func b32 system_runtime_query(system_runtime_info* out_info) {
     has_prev_sample = 1;
   }
 
+  thread_log_trace("system_runtime_query: platform=linux mem_used=%zu", (size_t)out_info->memory_used);
   return 1;
 #elif defined(PLATFORM_MACOS) || defined(PLATFORM_IOS)
   u64 total_memory = 0;
@@ -295,8 +312,10 @@ func b32 system_runtime_query(system_runtime_info* out_info) {
     has_prev_sample = 1;
   }
 
+  thread_log_trace("system_runtime_query: platform=apple mem_used=%zu", (size_t)out_info->memory_used);
   return 1;
 #else
+  thread_log_warn("system_runtime_query: unsupported platform");
   return 0;
 #endif
 }

@@ -2,6 +2,8 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "processes/pipe.h"
+#include "basic/assert.h"
+#include "context/thread_ctx.h"
 #include "input/msg.h"
 #include "../sdl3_include.h"
 
@@ -9,6 +11,7 @@ func pipe pipe_stdin(process prc) {
   if (!prc) {
     return NULL;
   }
+  assert(prc != NULL);
 
   pipe pip = (pipe)SDL_GetProcessInput((SDL_Process*)prc);
   if (pip != NULL) {
@@ -28,6 +31,7 @@ func pipe pipe_stdout(process prc) {
   if (!prc) {
     return NULL;
   }
+  assert(prc != NULL);
 
   pipe pip = (pipe)SDL_GetProcessOutput((SDL_Process*)prc);
   if (pip != NULL) {
@@ -47,6 +51,7 @@ func pipe pipe_stderr(process prc) {
   if (!prc) {
     return NULL;
   }
+  assert(prc != NULL);
 
   SDL_PropertiesID props = SDL_GetProcessProperties((SDL_Process*)prc);
   if (!props) {
@@ -75,6 +80,7 @@ func sz pipe_read(pipe pip, void* ptr, sz size) {
   if (!pip || !ptr || !size) {
     return 0;
   }
+  assert(size > 0);
 
   return (sz)SDL_ReadIO((SDL_IOStream*)pip, ptr, (size_t)size);
 }
@@ -83,6 +89,7 @@ func sz pipe_write(pipe pip, const void* ptr, sz size) {
   if (!pip || !ptr || !size) {
     return 0;
   }
+  assert(size > 0);
 
   return (sz)SDL_WriteIO((SDL_IOStream*)pip, ptr, (size_t)size);
 }
@@ -109,5 +116,6 @@ func void pipe_close(pipe pip) {
     return;
   }
 
+  thread_log_trace("pipe_close: pipe=%p", pip);
   SDL_CloseIO((SDL_IOStream*)pip);
 }

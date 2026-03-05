@@ -2,6 +2,8 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "memory/heap.h"
+#include "basic/assert.h"
+#include "context/thread_ctx.h"
 #include "input/msg.h"
 #include "basic/utility_defines.h"
 #include <string.h>
@@ -182,6 +184,7 @@ func heap heap_create(allocator parent_alloc, mutex opt_mutex, sz default_block_
   if (!msg_post(&lifecycle_msg)) {
     memset(&hep, 0, sizeof(hep));
   }
+  thread_log_trace("heap_create: block_sz=%zu", (size_t)default_block_sz);
   return hep;
 }
 
@@ -195,6 +198,7 @@ func void heap_destroy(heap* hep) {
   if (hep == NULL) {
     return;
   }
+  assert(hep != NULL);
 
   msg lifecycle_msg = {0};
   lifecycle_msg.type = MSG_TYPE_OBJECT_LIFECYCLE;
@@ -233,6 +237,7 @@ func void heap_destroy(heap* hep) {
 
   hep->opt_mutex = NULL;
   hep->mutex_owned = 0;
+  thread_log_trace("heap_destroy: hep=%p", (void*)hep);
 }
 
 func allocator heap_get_allocator(heap* hep) {
@@ -249,6 +254,9 @@ func allocator heap_get_allocator(heap* hep) {
 // =========================================================================
 
 func void heap_add_block(heap* hep, void* ptr, sz size) {
+  if (hep == NULL || ptr == NULL || size <= sizeof(heap_block)) {
+    return;
+  }
   if (hep->opt_mutex) {
     mutex_lock(hep->opt_mutex);
   }
@@ -263,6 +271,9 @@ func void heap_add_block(heap* hep, void* ptr, sz size) {
 }
 
 func b32 heap_remove_block(heap* hep, void* ptr) {
+  if (hep == NULL || ptr == NULL) {
+    return 0;
+  }
   if (hep->opt_mutex) {
     mutex_lock(hep->opt_mutex);
   }
@@ -309,6 +320,10 @@ func b32 heap_remove_block(heap* hep, void* ptr) {
 // =========================================================================
 
 func void* _heap_alloc(heap* hep, sz size, sz align, callsite site) {
+  if (hep == NULL || size == 0 || align == 0) {
+    return NULL;
+  }
+  assert(align > 0);
   sz eff_align = align < HEAP_BACK_REF_SZ ? HEAP_BACK_REF_SZ : align;
 
   if (hep->opt_mutex) {
@@ -338,7 +353,7 @@ func void* _heap_alloc(heap* hep, sz size, sz align, callsite site) {
 
 func void _heap_dealloc(heap* hep, void* ptr, callsite site) {
   (void)site;
-  if (!ptr) {
+  if (hep == NULL || !ptr) {
     return;
   }
 
@@ -426,6 +441,9 @@ func void* _heap_realloc(
 // =========================================================================
 
 func void heap_clear(heap* hep) {
+  if (hep == NULL) {
+    return;
+  }
   if (hep->opt_mutex) {
     mutex_lock(hep->opt_mutex);
   }

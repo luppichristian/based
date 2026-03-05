@@ -2,6 +2,8 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "processes/process_current.h"
+#include "basic/assert.h"
+#include "context/thread_ctx.h"
 #include "basic/env_defines.h"
 
 #include <errno.h>
@@ -71,9 +73,12 @@ func b32 process_set_priority(process_priority priority) {
   if (priority < PROCESS_PRIORITY_LOW || priority > PROCESS_PRIORITY_REALTIME) {
     return 0;
   }
+  assert(priority >= PROCESS_PRIORITY_LOW && priority <= PROCESS_PRIORITY_REALTIME);
 
 #if defined(PLATFORM_WINDOWS)
-  return SetPriorityClass(GetCurrentProcess(), win32_process_priorities[priority]) != 0;
+  b32 success = SetPriorityClass(GetCurrentProcess(), win32_process_priorities[priority]) != 0;
+  thread_log_trace("process_set_priority: priority=%u success=%u", (u32)priority, (u32)success);
+  return success;
 #elif defined(PLATFORM_UNIX) || defined(PLATFORM_ANDROID) || defined(PLATFORM_IOS)
   i32 nice_value = 0;
 
@@ -96,7 +101,9 @@ func b32 process_set_priority(process_priority priority) {
       break;
   }
 
-  return setpriority(PRIO_PROCESS, 0, (int)nice_value) == 0;
+  b32 success = setpriority(PRIO_PROCESS, 0, (int)nice_value) == 0;
+  thread_log_trace("process_set_priority: priority=%u success=%u", (u32)priority, (u32)success);
+  return success;
 #else
   (void)priority;
   return 0;
@@ -114,6 +121,7 @@ func u64 process_id(void) {
 }
 
 func no_return void process_exit(i32 exit_code) {
+  thread_log_fatal("process_exit: code=%d", exit_code);
 #if defined(PLATFORM_WINDOWS)
   ExitProcess((UINT)exit_code);
 #else
@@ -122,5 +130,6 @@ func no_return void process_exit(i32 exit_code) {
 }
 
 func no_return void process_abort(void) {
+  thread_log_fatal("process_abort");
   abort();
 }

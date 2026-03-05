@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "input/keyboard.h"
+#include "basic/assert.h"
 #include "input/msg.h"
 #include "../sdl3_include.h"
 
@@ -41,6 +42,7 @@ func b32 keyboard_is_key_down(input_key key, u32 scancode) {
   if (!state || scancode >= (u32)key_count) {
     return 0;
   }
+  assert(scancode < (u32)key_count);
 
   return state[scancode] ? 1 : 0;
 }
@@ -102,6 +104,7 @@ func u32 keyboard_get_key_repeat_count(input_key key, u32 scancode) {
   if (!keyboard_scancode_is_valid(scancode)) {
     return 0;
   }
+  assert(keyboard_scancode_is_valid(scancode));
 
   return keyboard_repeat_count[scancode];
 }

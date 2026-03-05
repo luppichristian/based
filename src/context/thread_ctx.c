@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "context/thread_ctx.h"
+#include "basic/assert.h"
 #include "context/global_ctx.h"
 #include "input/msg.h"
 #include "threads/thread_current.h"
@@ -23,7 +24,11 @@ func b32 thread_ctx_is_init(void) {
 }
 
 func allocator thread_get_allocator(void) {
-  return ctx_get_allocator(thread_ctx_get());
+  ctx* context = thread_ctx_get();
+  if (context == NULL) {
+    return global_get_allocator();
+  }
+  return ctx_get_allocator(context);
 }
 
 func log_state* thread_get_log_state(void) {
@@ -88,6 +93,7 @@ func b32 thread_ctx_init(allocator main_allocator) {
   if (!main_allocator.alloc_fn || thread_ctx.is_init) {
     return false;
   }
+  assert(main_allocator.dealloc_fn != NULL);
 
   msg thread_ctx_msg = {0};
   thread_ctx_msg.type = MSG_TYPE_THREAD_CTX;
@@ -104,6 +110,7 @@ func b32 thread_ctx_init(allocator main_allocator) {
     return false;
   }
 
+  thread_log_trace("thread_ctx_init: thread_id=%llu", (unsigned long long)thread_id());
   return true;
 }
 
@@ -121,5 +128,6 @@ func void thread_ctx_quit(void) {
     return;
   }
 
+  thread_log_trace("thread_ctx_quit: thread_id=%llu", (unsigned long long)thread_id());
   ctx_quit(&thread_ctx);
 }

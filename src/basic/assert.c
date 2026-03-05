@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "basic/assert.h"
+#include "basic/log.h"
 #include "context/thread_ctx.h"
 #include "input/msg.h"
 #include "threads/atomics.h"
@@ -48,10 +49,8 @@ func void assert_log_msg(cstr8 msg, callsite site) {
 // Returns: 0 = ignore, 1 = breakpoint, 2 = quit.
 // Defaults to quit if the message box cannot be displayed.
 func i32 assert_dialog(cstr8 msg, callsite site) {
-  // TODO: Only do this if on desktop...
-  // TODO: Proper message.
-  c8 buf[1024];
-  SDL_snprintf(buf, sizeof(buf), "Assertion failed: %s\n\nin %s() at %s:%u", msg, site.function, site.filename, site.line);
+  str8_long buf = {0};
+  cstr8_format(buf, sizeof(buf), "Assertion failed: %s\n\nin %s() at %s:%u", msg, site.function, site.filename, site.line);
 
   SDL_MessageBoxButtonData buttons[] = {
       {SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT, 1, "Breakpoint"},
@@ -79,6 +78,10 @@ func i32 assert_dialog(cstr8 msg, callsite site) {
 // =========================================================================
 
 func void assert_set_mode(assert_mode mode) {
+  if (mode < ASSERT_MODE_DEBUG || mode > ASSERT_MODE_IGNORE) {
+    return;
+  }
+  assert(mode >= ASSERT_MODE_DEBUG && mode <= ASSERT_MODE_IGNORE);
   mutex lock = assert_lock_get();
   if (lock) {
     mutex_lock(lock);
@@ -93,6 +96,10 @@ func void _assert(b32 condition, cstr8 cond_msg, callsite site) {
   if (condition) {
     return;
   }
+  if (cond_msg == NULL) {
+    cond_msg = "<null assertion message>";
+  }
+  assert(cond_msg != NULL);
 
   assert_mode mode = ASSERT_MODE_DEFAULT;
   mutex lock = assert_lock_get();

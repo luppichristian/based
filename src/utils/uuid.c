@@ -3,6 +3,7 @@
 
 #include "utils/uuid.h"
 
+#include "basic/assert.h"
 #include "basic/utility_defines.h"
 #include "strings/char.h"
 
@@ -15,6 +16,10 @@ func uuid uuid_zero(void) {
 
 func uuid uuid_from_bytes(const u8* bytes) {
   uuid value = {0};
+  if (bytes == NULL) {
+    return value;
+  }
+  assert(bytes != NULL);
   memcpy(value.bytes, bytes, size_of(value.bytes));
   return value;
 }
@@ -30,6 +35,10 @@ func uuid uuid_from_u64(u64 upper, u64 lower) {
 }
 
 func void uuid_get_bytes(uuid value, u8* dst) {
+  if (dst == NULL) {
+    return;
+  }
+  assert(dst != NULL);
   memcpy(dst, value.bytes, size_of(value.bytes));
 }
 
@@ -79,6 +88,11 @@ func sz uuid_string_length(void) {
 }
 
 func b32 uuid_parse_cstr8(cstr8 src, uuid* out) {
+  if (src == NULL || out == NULL) {
+    return 0;
+  }
+  assert(src != NULL);
+  assert(out != NULL);
   if (cstr8_len(src) != uuid_string_length()) {
     return 0;
   }
@@ -111,6 +125,10 @@ func b32 uuid_parse_cstr8(cstr8 src, uuid* out) {
 }
 
 func b32 uuid_to_cstr8(uuid value, c8* dst, sz cap) {
+  if (dst == NULL) {
+    return 0;
+  }
+  assert(dst != NULL);
   sz needed = uuid_string_length() + 1;
   if (cap < needed) {
     if (cap > 0) {
@@ -135,6 +153,10 @@ func b32 uuid_to_cstr8(uuid value, c8* dst, sz cap) {
 }
 
 func b32 uuid_to_cstr16(uuid value, c16* dst, sz cap) {
+  if (dst == NULL) {
+    return 0;
+  }
+  assert(dst != NULL);
   c8 buffer[37];
   if (!uuid_to_cstr8(value, buffer, count_of(buffer))) {
     if (cap > 0) {
@@ -148,6 +170,10 @@ func b32 uuid_to_cstr16(uuid value, c16* dst, sz cap) {
 }
 
 func b32 uuid_to_cstr32(uuid value, c32* dst, sz cap) {
+  if (dst == NULL) {
+    return 0;
+  }
+  assert(dst != NULL);
   c8 buffer[37];
   if (!uuid_to_cstr8(value, buffer, count_of(buffer))) {
     if (cap > 0) {
@@ -161,6 +187,10 @@ func b32 uuid_to_cstr32(uuid value, c32* dst, sz cap) {
 }
 
 func b32 uuid_to_str8(uuid value, str8* dst) {
+  if (dst == NULL) {
+    return 0;
+  }
+  assert(dst != NULL);
   if (dst->cap == 0) {
     dst->size = 0;
     return 0;
@@ -172,6 +202,10 @@ func b32 uuid_to_str8(uuid value, str8* dst) {
 }
 
 func b32 uuid_to_str16(uuid value, str16* dst) {
+  if (dst == NULL) {
+    return 0;
+  }
+  assert(dst != NULL);
   if (dst->cap == 0) {
     dst->size = 0;
     return 0;
@@ -183,6 +217,10 @@ func b32 uuid_to_str16(uuid value, str16* dst) {
 }
 
 func b32 uuid_to_str32(uuid value, str32* dst) {
+  if (dst == NULL) {
+    return 0;
+  }
+  assert(dst != NULL);
   if (dst->cap == 0) {
     dst->size = 0;
     return 0;

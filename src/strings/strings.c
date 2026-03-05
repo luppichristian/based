@@ -2,12 +2,17 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "strings/strings.h"
+#include "basic/assert.h"
 
 // =========================================================================
 // str8
 // =========================================================================
 
 func str8 str8_make(c8* ptr, sz cap) {
+  if (ptr == NULL || cap == 0) {
+    return (str8) {0};
+  }
+  assert(ptr != NULL);
   str8 str;
   str.ptr = ptr;
   str.cap = cap;
@@ -81,6 +86,10 @@ func b32 str8_to_f64(str8 str, f64* out) {
 }
 
 func void str8_clear(str8* str) {
+  if (str == NULL || str->ptr == NULL) {
+    return;
+  }
+  assert(str != NULL);
   cstr8_clear(str->ptr);
   str->size = 0;
 }
@@ -108,6 +117,10 @@ func void str8_truncate(str8* str, sz length) {
 }
 
 func b32 str8_format(str8* str, cstr8 fmt, ...) {
+  if (str == NULL || str->ptr == NULL || fmt == NULL) {
+    return 0;
+  }
+  assert(fmt != NULL);
   va_list args;
   va_start(args, fmt);
   b32 result = cstr8_vformat(str->ptr, str->cap, fmt, args);
@@ -515,6 +528,10 @@ func void str32_beautify(str32* str) {
 // =========================================================================
 
 func sz str8_to_str16(str8 src, str16* dst) {
+  if (dst == NULL || dst->ptr == NULL) {
+    return 0;
+  }
+  assert(dst != NULL);
   dst->size = cstr8_to_cstr16(src.ptr, dst->ptr, dst->cap);
   return dst->size;
 }

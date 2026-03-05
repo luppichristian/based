@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "input/gamepads.h"
+#include "basic/assert.h"
 #include "input/msg.h"
 #include "../sdl3_include.h"
 
@@ -97,8 +98,12 @@ func sz gamepads_get_count(void) {
 }
 
 func b32 gamepads_is_connected(sz slot_idx) {
+  if (slot_idx >= GAMEPADS_MAX_COUNT) {
+    return 0;
+  }
+  assert(slot_idx < GAMEPADS_MAX_COUNT);
   gamepads_sync_slots();
-  return slot_idx < GAMEPADS_MAX_COUNT && gamepad_slots[slot_idx].handle != NULL;
+  return gamepad_slots[slot_idx].handle != NULL;
 }
 
 func b32 gamepads_get_device_id(sz slot_idx, device_id* out_id) {
@@ -134,6 +139,7 @@ func b32 gamepads_has_button(sz slot_idx, gamepad_button button) {
   if (slot_idx >= GAMEPADS_MAX_COUNT || !gamepad_slots[slot_idx].handle || button < 0) {
     return 0;
   }
+  assert(button < GAMEPAD_BUTTON_COUNT);
 
   return SDL_GamepadHasButton(gamepad_slots[slot_idx].handle, (SDL_GamepadButton)button) ? 1 : 0;
 }
@@ -219,6 +225,7 @@ func i16 gamepads_get_axis(input_key key, sz slot_idx, gamepad_axis axis) {
   if (slot_idx >= GAMEPADS_MAX_COUNT || !gamepad_slots[slot_idx].handle || axis < 0) {
     return 0;
   }
+  assert(axis < GAMEPAD_AXIS_COUNT);
 
   return (i16)SDL_GetGamepadAxis(gamepad_slots[slot_idx].handle, (SDL_GamepadAxis)axis);
 }

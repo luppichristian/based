@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "basic/intrinsics.h"
+#include "basic/assert.h"
 
 #if defined(COMPILER_MSVC)
 #  include <intrin.h>
@@ -49,6 +50,10 @@ func i32 popcount_u64(u64 val) {
 // =========================================================================
 
 func i32 ctz_u32(u32 val) {
+  if (val == 0) {
+    return 32;
+  }
+  assert(val != 0);
 #if defined(COMPILER_MSVC)
   unsigned long idx;
   _BitScanForward(&idx, val);
@@ -67,6 +72,10 @@ func i32 ctz_u32(u32 val) {
 }
 
 func i32 ctz_u64(u64 val) {
+  if (val == 0) {
+    return 64;
+  }
+  assert(val != 0);
 #if defined(COMPILER_MSVC)
   unsigned long idx;
   _BitScanForward64(&idx, val);
@@ -89,6 +98,10 @@ func i32 ctz_u64(u64 val) {
 // =========================================================================
 
 func i32 clz_u32(u32 val) {
+  if (val == 0) {
+    return 32;
+  }
+  assert(val != 0);
 #if defined(COMPILER_MSVC)
   unsigned long idx;
   _BitScanReverse(&idx, val);
@@ -108,6 +121,10 @@ func i32 clz_u32(u32 val) {
 }
 
 func i32 clz_u64(u64 val) {
+  if (val == 0) {
+    return 64;
+  }
+  assert(val != 0);
 #if defined(COMPILER_MSVC)
   unsigned long idx;
   _BitScanReverse64(&idx, val);
@@ -131,6 +148,10 @@ func i32 clz_u64(u64 val) {
 // =========================================================================
 
 func i32 bsr_u32(u32 val) {
+  if (val == 0) {
+    return 0;
+  }
+  assert(val != 0);
 #if defined(COMPILER_MSVC)
   unsigned long idx;
   _BitScanReverse(&idx, val);
@@ -153,6 +174,10 @@ func i32 bsr_u32(u32 val) {
 }
 
 func i32 bsr_u64(u64 val) {
+  if (val == 0) {
+    return 0;
+  }
+  assert(val != 0);
 #if defined(COMPILER_MSVC)
   unsigned long idx;
   _BitScanReverse64(&idx, val);

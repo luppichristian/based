@@ -3,6 +3,8 @@
 
 #include "filesystem/file.h"
 
+#include "basic/assert.h"
+#include "context/thread_ctx.h"
 #include "basic/env_defines.h"
 
 #include "../sdl3_include.h"
@@ -66,12 +68,18 @@ func cstr8 file_path_cstr(const path* src) {
 }
 
 func b32 file_create(const path* src) {
+  if (src == NULL || src->buf[0] == '\0') {
+    return 0;
+  }
+  assert(src->buf[0] != '\0');
   SDL_IOStream* file_ptr = SDL_IOFromFile(file_path_cstr(src), "wb");
   if (file_ptr == NULL) {
+    thread_log_error("file_create: failed path=%s", src->buf);
     return 0;
   }
 
   SDL_CloseIO(file_ptr);
+  thread_log_trace("file_create: path=%s", src->buf);
   return 1;
 }
 
@@ -79,6 +87,7 @@ func b32 file_delete(const path* src) {
   if (!file_exists(src)) {
     return 0;
   }
+  assert(src != NULL);
 
   return SDL_RemovePath(file_path_cstr(src)) ? 1 : 0;
 }
@@ -87,6 +96,10 @@ func b32 file_rename(const path* old_src, const path* new_src) {
   if (!file_exists(old_src)) {
     return 0;
   }
+  if (new_src == NULL || new_src->buf[0] == '\0') {
+    return 0;
+  }
+  assert(new_src->buf[0] != '\0');
 
   return SDL_RenamePath(file_path_cstr(old_src), file_path_cstr(new_src)) ? 1 : 0;
 }
@@ -100,6 +113,8 @@ func b32 file_copy(const path* src, const path* dst, b32 overwrite_existing) {
   if (!file_exists(src) || dst == NULL) {
     return 0;
   }
+  assert(src != NULL);
+  assert(dst != NULL);
 
   if (file_paths_equal(src, dst)) {
     return 1;
@@ -146,6 +161,9 @@ func b32 file_copy(const path* src, const path* dst, b32 overwrite_existing) {
 
 func b32 file_exists(const path* src) {
   SDL_PathInfo path_info;
+  if (src == NULL || src->buf[0] == '\0') {
+    return 0;
+  }
 
   if (!SDL_GetPathInfo(file_path_cstr(src), &path_info)) {
     return 0;
@@ -160,6 +178,7 @@ func b32 file_get_size(const path* src, sz* out_size) {
   if (out_size == NULL || !file_exists(src)) {
     return 0;
   }
+  assert(out_size != NULL);
 
   if (!SDL_GetPathInfo(file_path_cstr(src), &path_info) || path_info.type != SDL_PATHTYPE_FILE) {
     return 0;
@@ -178,6 +197,11 @@ func b32 file_read_all(const path* src, allocator* alloc, buffer* out_data) {
   if (alloc == NULL || out_data == NULL) {
     return 0;
   }
+  if (alloc->alloc_fn == NULL || alloc->dealloc_fn == NULL) {
+    return 0;
+  }
+  assert(alloc->alloc_fn != NULL);
+  assert(alloc->dealloc_fn != NULL);
 
   out_data->ptr = NULL;
   out_data->size = 0;
@@ -209,10 +233,15 @@ func b32 file_read_all(const path* src, allocator* alloc, buffer* out_data) {
   SDL_CloseIO(file_ptr);
   out_data->ptr = data_ptr;
   out_data->size = file_size;
+  thread_log_trace("file_read_all: path=%s size=%zu", src != NULL ? src->buf : "<null>", (size_t)file_size);
   return 1;
 }
 
 func b32 file_write_all(const path* src, buffer data) {
+  if (src == NULL || src->buf[0] == '\0' || (data.size > 0 && data.ptr == NULL)) {
+    return 0;
+  }
+  assert(src->buf[0] != '\0');
   SDL_IOStream* file_ptr = SDL_IOFromFile(file_path_cstr(src), "wb");
   sz write_size = 0;
 
@@ -231,10 +260,15 @@ func b32 file_write_all(const path* src, buffer data) {
   if (!SDL_CloseIO(file_ptr)) {
     return 0;
   }
+  thread_log_trace("file_write_all: path=%s size=%zu", src->buf, (size_t)data.size);
   return 1;
 }
 
 func b32 file_append_all(const path* src, buffer data) {
+  if (src == NULL || src->buf[0] == '\0' || (data.size > 0 && data.ptr == NULL)) {
+    return 0;
+  }
+  assert(src->buf[0] != '\0');
   SDL_IOStream* file_ptr = SDL_IOFromFile(file_path_cstr(src), "ab");
   sz write_size = 0;
 

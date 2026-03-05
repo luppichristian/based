@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "utils/id.h"
+#include "basic/assert.h"
 
 #include <errno.h>
 #include <stdlib.h>
@@ -18,6 +19,11 @@ func sz id_u64_digits(u64 value) {
 
 // Shared unsigned decimal parser with a caller-supplied upper bound.
 func b32 id_parse_u64(cstr8 src, u64 max_value, u64* out) {
+  if (src == NULL || out == NULL) {
+    return 0;
+  }
+  assert(src != NULL);
+  assert(out != NULL);
   if (src[0] == '\0') {
     return 0;
   }
