@@ -4,18 +4,16 @@
 #include "windowing/window.h"
 #include "../sdl3_include.h"
 
-func b32 window_id_is_valid(window_id src) {
-  return src.opaque != 0;
+func b32 window_id_is_valid(window src) {
+  return src != NULL;
 }
 
-func window_id window_from_native_id(u64 native_id) {
-  window_id result = {0};
-  result.opaque = native_id;
-  return result;
+func window window_from_native_id(up native_id) {
+  return (window)(up)native_id;
 }
 
-func u64 window_to_native_id(window_id src) {
-  return src.opaque;
+func up window_to_native_id(window src) {
+  return (up)src;
 }
 
 func sz window_get_count(void) {
@@ -29,17 +27,17 @@ func sz window_get_count(void) {
   return count > 0 ? (sz)count : 0;
 }
 
-func b32 window_get_id(sz idx, window_id* out_id) {
+func b32 window_get_id(sz idx, window* out_id) {
   int count = 0;
   SDL_Window** windows = SDL_GetWindows(&count);
   b32 found = windows != NULL && idx < (sz)count && windows[idx] != NULL;
 
   if (out_id) {
-    *out_id = (window_id) {0};
+    *out_id = NULL;
   }
 
   if (found && out_id) {
-    *out_id = window_from_native_id((u64)SDL_GetWindowID(windows[idx]));
+    *out_id = window_from_native_id((up)SDL_GetWindowID(windows[idx]));
   }
 
   if (windows) {
@@ -49,7 +47,7 @@ func b32 window_get_id(sz idx, window_id* out_id) {
   return found;
 }
 
-func b32 window_is_valid(window_id id) {
+func b32 window_is_valid(window id) {
   if (!window_id_is_valid(id)) {
     return 0;
   }
@@ -57,7 +55,7 @@ func b32 window_is_valid(window_id id) {
   return SDL_GetWindowFromID((SDL_WindowID)window_to_native_id(id)) != NULL;
 }
 
-func cstr8 window_get_title(window_id id) {
+func cstr8 window_get_title(window id) {
   SDL_Window* window_ptr = NULL;
 
   if (!window_id_is_valid(id)) {
@@ -72,12 +70,12 @@ func cstr8 window_get_title(window_id id) {
   return SDL_GetWindowTitle(window_ptr);
 }
 
-func b32 window_get_display_id(window_id id, display_id* out_display_id) {
+func b32 window_get_display_id(window id, display* out_display_id) {
   SDL_Window* window_ptr = NULL;
   SDL_DisplayID native_display_id = 0;
 
   if (out_display_id) {
-    *out_display_id = (display_id) {0};
+    *out_display_id = NULL;
   }
 
   if (!window_id_is_valid(id)) {
@@ -95,8 +93,9 @@ func b32 window_get_display_id(window_id id, display_id* out_display_id) {
   }
 
   if (out_display_id) {
-    *out_display_id = display_from_native_id((u64)native_display_id);
+    *out_display_id = display_from_native_id((up)native_display_id);
   }
 
   return 1;
 }
+

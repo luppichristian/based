@@ -167,7 +167,7 @@ func void tablet_internal_on_msg(msg* src) {
       tablet_cached_pen_state.id = msg_core_get_pen_proximity(src)->device;
       tablet_cached_pen_state.pen_id = msg_core_get_pen_proximity(src)->pen_id;
       tablet_cached_pen_state.in_proximity = 1;
-      tablet_cached_pen_state.window_id = msg_core_get_pen_proximity(src)->window_id;
+      tablet_cached_pen_state.window = msg_core_get_pen_proximity(src)->window;
       break;
 
     case MSG_CORE_TYPE_PEN_PROXIMITY_OUT:
@@ -175,7 +175,7 @@ func void tablet_internal_on_msg(msg* src) {
       tablet_cached_pen_state.pen_id = msg_core_get_pen_proximity(src)->pen_id;
       tablet_cached_pen_state.in_proximity = 0;
       tablet_cached_pen_state.touching = 0;
-      tablet_cached_pen_state.window_id = msg_core_get_pen_proximity(src)->window_id;
+      tablet_cached_pen_state.window = msg_core_get_pen_proximity(src)->window;
       break;
 
     case MSG_CORE_TYPE_PEN_MOTION:
@@ -183,7 +183,7 @@ func void tablet_internal_on_msg(msg* src) {
       tablet_cached_pen_state.pen_id = msg_core_get_pen_motion(src)->pen_id;
       tablet_cached_pen_state.in_proximity = 1;
       tablet_cached_pen_state.input_mask = msg_core_get_pen_motion(src)->pen_state;
-      tablet_cached_pen_state.window_id = msg_core_get_pen_motion(src)->window_id;
+      tablet_cached_pen_state.window = msg_core_get_pen_motion(src)->window;
       tablet_cached_pen_state.x = msg_core_get_pen_motion(src)->x;
       tablet_cached_pen_state.y = msg_core_get_pen_motion(src)->y;
       break;
@@ -196,7 +196,7 @@ func void tablet_internal_on_msg(msg* src) {
       tablet_cached_pen_state.touching = msg_core_get_pen_touch(src)->down;
       tablet_cached_pen_state.eraser = msg_core_get_pen_touch(src)->eraser;
       tablet_cached_pen_state.input_mask = msg_core_get_pen_touch(src)->pen_state;
-      tablet_cached_pen_state.window_id = msg_core_get_pen_touch(src)->window_id;
+      tablet_cached_pen_state.window = msg_core_get_pen_touch(src)->window;
       tablet_cached_pen_state.x = msg_core_get_pen_touch(src)->x;
       tablet_cached_pen_state.y = msg_core_get_pen_touch(src)->y;
       break;
@@ -207,7 +207,7 @@ func void tablet_internal_on_msg(msg* src) {
       tablet_cached_pen_state.pen_id = msg_core_get_pen_button(src)->pen_id;
       tablet_cached_pen_state.in_proximity = 1;
       tablet_cached_pen_state.input_mask = msg_core_get_pen_button(src)->pen_state;
-      tablet_cached_pen_state.window_id = msg_core_get_pen_button(src)->window_id;
+      tablet_cached_pen_state.window = msg_core_get_pen_button(src)->window;
       tablet_cached_pen_state.x = msg_core_get_pen_button(src)->x;
       tablet_cached_pen_state.y = msg_core_get_pen_button(src)->y;
       break;
@@ -217,7 +217,7 @@ func void tablet_internal_on_msg(msg* src) {
       tablet_cached_pen_state.pen_id = msg_core_get_pen_axis(src)->pen_id;
       tablet_cached_pen_state.in_proximity = 1;
       tablet_cached_pen_state.input_mask = msg_core_get_pen_axis(src)->pen_state;
-      tablet_cached_pen_state.window_id = msg_core_get_pen_axis(src)->window_id;
+      tablet_cached_pen_state.window = msg_core_get_pen_axis(src)->window;
       tablet_cached_pen_state.x = msg_core_get_pen_axis(src)->x;
       tablet_cached_pen_state.y = msg_core_get_pen_axis(src)->y;
       if (msg_core_get_pen_axis(src)->axis < TABLET_AXIS_COUNT) {
@@ -229,3 +229,4 @@ func void tablet_internal_on_msg(msg* src) {
       break;
   }
 }
+

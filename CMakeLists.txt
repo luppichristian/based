@@ -21,6 +21,22 @@ option(BASED_BUILD_TESTS  "Build tests"                ON)
 option(BASED_GTEST_FETCH  "Fetch GoogleTest if not found" ON)
 
 # =========================================================================
+# Tracy
+# =========================================================================
+
+option(BASED_TRACY_FETCH "Fetch Tracy if not found" ON)
+find_package(Tracy CONFIG QUIET)
+
+if(NOT Tracy_FOUND AND BASED_TRACY_FETCH)
+    FetchContent_Declare(
+        tracy
+        GIT_REPOSITORY https://github.com/wolfpld/tracy.git
+        GIT_TAG v0.13.1
+    )
+    FetchContent_MakeAvailable(tracy)
+endif()
+
+# =========================================================================
 # SDL3
 # =========================================================================
 
@@ -155,7 +171,7 @@ endfunction()
 file(GLOB_RECURSE BASED_SOURCES "src/**.c")
 add_library(based STATIC ${BASED_SOURCES})
 target_include_directories(based PUBLIC include)
-target_link_libraries(based PRIVATE SDL3::SDL3 efsw miniz PUBLIC olib::static libmath2)
+target_link_libraries(based PRIVATE SDL3::SDL3 efsw miniz PUBLIC olib::static libmath2 Tracy::TracyClient)
 target_compile_definitions(based PRIVATE _CRT_SECURE_NO_WARNINGS)
 target_compile_options(based PRIVATE ${BASED_CLANG_FOLDING_CONSTANT_WARNING})
 based_apply_binary_type_defines(based)

@@ -190,14 +190,14 @@ typedef enum msg_core_global_ctx_event_kind {
 
 // Display event payload.
 typedef struct msg_core_display_data {
-  display_id display_id;
+  display display;
   i32 data1;
   i32 data2;
 } msg_core_display_data;
 
 // Window event payload.
 typedef struct msg_core_window_data {
-  window_id window_id;
+  window window;
   i32 data1;
   i32 data2;
 } msg_core_window_data;
@@ -209,7 +209,7 @@ typedef struct msg_core_keyboard_device_data {
 
 // Key press and release payload.
 typedef struct msg_core_keyboard_data {
-  window_id window_id;
+  window window;
   device_id device;
   keyboard_scancode scancode;
   keyboard_keycode keycode;
@@ -221,7 +221,7 @@ typedef struct msg_core_keyboard_data {
 
 // IME editing payload.
 typedef struct msg_core_text_editing_data {
-  window_id window_id;
+  window window;
   cstr8 text;
   i32 start;
   i32 length;
@@ -229,7 +229,7 @@ typedef struct msg_core_text_editing_data {
 
 // IME candidate list payload.
 typedef struct msg_core_text_editing_candidates_data {
-  window_id window_id;
+  window window;
   cstr8 const* candidates;
   i32 num_candidates;
   i32 selected_candidate;
@@ -238,7 +238,7 @@ typedef struct msg_core_text_editing_candidates_data {
 
 // Text input payload.
 typedef struct msg_core_text_input_data {
-  window_id window_id;
+  window window;
   cstr8 text;
 } msg_core_text_input_data;
 
@@ -249,7 +249,7 @@ typedef struct msg_core_mouse_device_data {
 
 // Mouse motion payload.
 typedef struct msg_core_mouse_motion_data {
-  window_id window_id;
+  window window;
   device_id device;
   u32 button_mask;
   f32 x;
@@ -260,7 +260,7 @@ typedef struct msg_core_mouse_motion_data {
 
 // Mouse button payload.
 typedef struct msg_core_mouse_button_data {
-  window_id window_id;
+  window window;
   device_id device;
   mouse_button button;
   b32 down;
@@ -271,7 +271,7 @@ typedef struct msg_core_mouse_button_data {
 
 // Mouse wheel payload.
 typedef struct msg_core_mouse_wheel_data {
-  window_id window_id;
+  window window;
   device_id device;
   f32 x;
   f32 y;
@@ -365,12 +365,12 @@ typedef struct msg_core_audio_device_data {
 
 // Camera device payload.
 typedef struct msg_core_camera_device_data {
-  camera_id camera_id;
+  camera camera;
 } msg_core_camera_device_data;
 
 // Render reset payload.
 typedef struct msg_core_render_data {
-  window_id window_id;
+  window window;
 } msg_core_render_data;
 
 // Touch device connection payload.
@@ -392,19 +392,19 @@ typedef struct msg_core_touch_data {
   f32 dx;
   f32 dy;
   f32 pressure;
-  window_id window_id;
+  window window;
 } msg_core_touch_data;
 
 // Pen proximity payload.
 typedef struct msg_core_pen_proximity_data {
-  window_id window_id;
+  window window;
   device_id device;
   pen_id pen_id;
 } msg_core_pen_proximity_data;
 
 // Pen motion payload.
 typedef struct msg_core_pen_motion_data {
-  window_id window_id;
+  window window;
   device_id device;
   pen_id pen_id;
   tablet_input_flags pen_state;
@@ -414,7 +414,7 @@ typedef struct msg_core_pen_motion_data {
 
 // Pen touch payload.
 typedef struct msg_core_pen_touch_data {
-  window_id window_id;
+  window window;
   device_id device;
   pen_id pen_id;
   tablet_input_flags pen_state;
@@ -426,7 +426,7 @@ typedef struct msg_core_pen_touch_data {
 
 // Pen button payload.
 typedef struct msg_core_pen_button_data {
-  window_id window_id;
+  window window;
   device_id device;
   pen_id pen_id;
   tablet_input_flags pen_state;
@@ -438,7 +438,7 @@ typedef struct msg_core_pen_button_data {
 
 // Pen axis payload.
 typedef struct msg_core_pen_axis_data {
-  window_id window_id;
+  window window;
   device_id device;
   pen_id pen_id;
   tablet_input_flags pen_state;
@@ -450,7 +450,7 @@ typedef struct msg_core_pen_axis_data {
 
 // Drag-and-drop payload.
 typedef struct msg_core_drop_data {
-  window_id window_id;
+  window window;
   f32 x;
   f32 y;
   cstr8 source;
@@ -466,7 +466,7 @@ typedef struct msg_core_clipboard_data {
 
 // Generic sensor payload.
 typedef struct msg_core_sensor_data {
-  sensor_id sensor_id;
+  sensor sensor;
   f32 data[6];
   u64 sensor_timestamp;
 } msg_core_sensor_data;
@@ -638,3 +638,4 @@ func msg_core_pathwatch_data* msg_core_get_pathwatch(msg* src);
 func msg_core_log_data* msg_core_get_log(msg* src);
 func msg_core_assert_data* msg_core_get_assert(msg* src);
 func msg_core_global_ctx_data* msg_core_get_global_ctx(msg* src);
+

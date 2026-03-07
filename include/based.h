@@ -11,6 +11,7 @@
 #include "basic/intrinsics.h"
 #include "basic/keyword_defines.h"
 #include "basic/primitive_types.h"
+#include "basic/profiler.h"
 #include "basic/utility_defines.h"
 
 // Include container modules.

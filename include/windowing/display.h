@@ -6,9 +6,7 @@
 #include "../basic/primitive_types.h"
 #include "../strings/cstrings.h"
 
-typedef struct display_id {
-  u64 opaque;
-} display_id;
+typedef void* display;
 
 typedef struct display_rect {
   i32 x;
@@ -18,28 +16,29 @@ typedef struct display_rect {
 } display_rect;
 
 // Returns 1 if src refers to a concrete display id, 0 otherwise.
-func b32 display_id_is_valid(display_id src);
+func b32 display_id_is_valid(display src);
 
-// Builds a display_id from a backend-native display identifier.
-func display_id display_from_native_id(u64 native_id);
+// Builds a display from a backend-native display identifier.
+func display display_from_native_id(up native_id);
 
 // Returns the backend-native display identifier encoded in src.
-func u64 display_to_native_id(display_id src);
+func up display_to_native_id(display src);
 
 // Returns the number of currently known displays.
 func sz display_get_count(void);
 
 // Writes the display id at index into out_id. Returns 1 on success, 0 otherwise.
-func b32 display_get_id(sz idx, display_id* out_id);
+func b32 display_get_id(sz idx, display* out_id);
 
 // Returns the primary display id, or an invalid id on failure.
-func display_id display_get_primary_id(void);
+func display display_get_primary_id(void);
 
 // Returns a backend-defined display name for id, or NULL when unavailable.
-func cstr8 display_get_name(display_id id);
+func cstr8 display_get_name(display id);
 
 // Writes the full display bounds into out_rect. Returns 1 on success, 0 otherwise.
-func b32 display_get_bounds(display_id id, display_rect* out_rect);
+func b32 display_get_bounds(display id, display_rect* out_rect);
 
 // Writes the usable display bounds into out_rect. Returns 1 on success, 0 otherwise.
-func b32 display_get_usable_bounds(display_id id, display_rect* out_rect);
+func b32 display_get_usable_bounds(display id, display_rect* out_rect);
+

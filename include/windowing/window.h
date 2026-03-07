@@ -7,30 +7,28 @@
 #include "../strings/cstrings.h"
 #include "display.h"
 
-typedef struct window_id {
-  u64 opaque;
-} window_id;
+typedef void* window;
 
 // Returns 1 if src refers to a concrete window id, 0 otherwise.
-func b32 window_id_is_valid(window_id src);
+func b32 window_id_is_valid(window src);
 
-// Builds a window_id from a backend-native window identifier.
-func window_id window_from_native_id(u64 native_id);
+// Builds a window from a backend-native window identifier.
+func window window_from_native_id(up native_id);
 
 // Returns the backend-native window identifier encoded in src.
-func u64 window_to_native_id(window_id src);
+func up window_to_native_id(window src);
 
 // Returns the number of currently known windows.
 func sz window_get_count(void);
 
 // Writes the window id at index into out_id. Returns 1 on success, 0 otherwise.
-func b32 window_get_id(sz idx, window_id* out_id);
+func b32 window_get_id(sz idx, window* out_id);
 
 // Returns 1 when id maps to an existing window, 0 otherwise.
-func b32 window_is_valid(window_id id);
+func b32 window_is_valid(window id);
 
 // Returns a backend-defined title for id, or NULL when unavailable.
-func cstr8 window_get_title(window_id id);
+func cstr8 window_get_title(window id);
 
 // Writes the display currently associated with id into out_display_id. Returns 1 on success, 0 otherwise.
-func b32 window_get_display_id(window_id id, display_id* out_display_id);
+func b32 window_get_display_id(window id, display* out_display_id);

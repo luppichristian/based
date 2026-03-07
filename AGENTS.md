@@ -42,6 +42,7 @@ include/                      # public API headers
     keyword_defines.h         # project keyword and attribute macros
     log.h                     # logging levels, macros, retained frames, and message-system interception
     primitive_types.h         # primitive type aliases and min/max constants
+    profiler.h                # Tracy-backed profiling helpers with build-config-based enable/disable
     utility_defines.h         # general-purpose utility macros
   context/                    # shared context payload plus thread/global wrappers
     ctx.h                     # shared allocator/log/user-data context payload used across wrappers
@@ -174,6 +175,7 @@ Related core helper macros from `include/basic/` that are used pervasively:
 - `assert(condition)`: project assert wrapper that forwards through `_assert(..., CALLSITE_HERE)`.
 - `log_state_fatal(state, ...)`, `log_state_error(state, ...)`, `log_state_warn(state, ...)`, `log_state_info(state, ...)`, `log_state_debug(state, ...)`, `log_state_verbose(state, ...)`, `log_state_trace(state, ...)`: state-explicit logging wrappers from `include/basic/log.h` that forward through `_log(..., CALLSITE_HERE)`.
 - `global_log_fatal(...)`, `global_log_error(...)`, `global_log_warn(...)`, `global_log_info(...)`, `global_log_debug(...)`, `global_log_verbose(...)`, `global_log_trace(...)`: process-global logging wrappers from `include/context/global_ctx.h` that forward through `_log(global_get_log_state(), ..., CALLSITE_HERE)`.
+- `profiler_zone_begin(zone_var, zone_name, is_active)`, `profiler_zone_end(zone_var)`, `profiler_frame_mark()`, `profiler_frame_mark_named(name)`: profiling wrappers from `include/basic/profiler.h`; they map to Tracy when enabled and become no-ops otherwise.
 
 Common utility macros from `include/basic/utility_defines.h`:
 

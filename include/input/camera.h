@@ -6,9 +6,7 @@
 #include "../basic/primitive_types.h"
 #include "../strings/cstrings.h"
 
-typedef struct camera_id {
-  u64 opaque;
-} camera_id;
+typedef void* camera;
 
 typedef enum camera_position {
   CAMERA_POSITION_UNKNOWN = 0,
@@ -17,22 +15,23 @@ typedef enum camera_position {
 } camera_position;
 
 // Returns 1 if src refers to a concrete camera id, 0 otherwise.
-func b32 camera_id_is_valid(camera_id src);
+func b32 camera_id_is_valid(camera src);
 
-// Builds a camera_id from a backend-native camera identifier.
-func camera_id camera_from_native_id(u64 native_id);
+// Builds a camera from a backend-native camera identifier.
+func camera camera_from_native_id(up native_id);
 
 // Returns the backend-native camera identifier encoded in src.
-func u64 camera_to_native_id(camera_id src);
+func up camera_to_native_id(camera src);
 
 // Returns the number of currently known camera devices.
 func sz camera_get_count(void);
 
 // Writes the camera id at idx into out_id. Returns 1 on success, 0 otherwise.
-func b32 camera_get_id(sz idx, camera_id* out_id);
+func b32 camera_get_id(sz idx, camera* out_id);
 
 // Returns a backend-defined camera name for id, or NULL when unavailable.
-func cstr8 camera_get_name(camera_id id);
+func cstr8 camera_get_name(camera id);
 
 // Returns the camera physical position for id.
-func camera_position camera_get_position(camera_id id);
+func camera_position camera_get_position(camera id);
+

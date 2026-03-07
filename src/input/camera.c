@@ -4,18 +4,16 @@
 #include "input/camera.h"
 #include "../sdl3_include.h"
 
-func b32 camera_id_is_valid(camera_id src) {
-  return src.opaque != 0;
+func b32 camera_id_is_valid(camera src) {
+  return src != NULL;
 }
 
-func camera_id camera_from_native_id(u64 native_id) {
-  camera_id result = {0};
-  result.opaque = native_id;
-  return result;
+func camera camera_from_native_id(up native_id) {
+  return (camera)(up)native_id;
 }
 
-func u64 camera_to_native_id(camera_id src) {
-  return src.opaque;
+func up camera_to_native_id(camera src) {
+  return (up)src;
 }
 
 func sz camera_get_count(void) {
@@ -29,17 +27,17 @@ func sz camera_get_count(void) {
   return count > 0 ? (sz)count : 0;
 }
 
-func b32 camera_get_id(sz idx, camera_id* out_id) {
+func b32 camera_get_id(sz idx, camera* out_id) {
   int count = 0;
   SDL_CameraID* ids = SDL_GetCameras(&count);
   b32 found = ids != NULL && idx < (sz)count;
 
   if (out_id) {
-    *out_id = (camera_id) {0};
+    *out_id = NULL;
   }
 
   if (found && out_id) {
-    *out_id = camera_from_native_id((u64)ids[idx]);
+    *out_id = camera_from_native_id((up)ids[idx]);
   }
 
   if (ids) {
@@ -49,7 +47,7 @@ func b32 camera_get_id(sz idx, camera_id* out_id) {
   return found;
 }
 
-func cstr8 camera_get_name(camera_id id) {
+func cstr8 camera_get_name(camera id) {
   if (!camera_id_is_valid(id)) {
     return NULL;
   }
@@ -57,7 +55,7 @@ func cstr8 camera_get_name(camera_id id) {
   return SDL_GetCameraName((SDL_CameraID)camera_to_native_id(id));
 }
 
-func camera_position camera_get_position(camera_id id) {
+func camera_position camera_get_position(camera id) {
   if (!camera_id_is_valid(id)) {
     return CAMERA_POSITION_UNKNOWN;
   }
@@ -72,3 +70,4 @@ func camera_position camera_get_position(camera_id id) {
       return CAMERA_POSITION_UNKNOWN;
   }
 }
+

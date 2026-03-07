@@ -4,18 +4,16 @@
 #include "windowing/display.h"
 #include "../sdl3_include.h"
 
-func b32 display_id_is_valid(display_id src) {
-  return src.opaque != 0;
+func b32 display_id_is_valid(display src) {
+  return src != NULL;
 }
 
-func display_id display_from_native_id(u64 native_id) {
-  display_id result = {0};
-  result.opaque = native_id;
-  return result;
+func display display_from_native_id(up native_id) {
+  return (display)(up)native_id;
 }
 
-func u64 display_to_native_id(display_id src) {
-  return src.opaque;
+func up display_to_native_id(display src) {
+  return (up)src;
 }
 
 func sz display_get_count(void) {
@@ -29,17 +27,17 @@ func sz display_get_count(void) {
   return count > 0 ? (sz)count : 0;
 }
 
-func b32 display_get_id(sz idx, display_id* out_id) {
+func b32 display_get_id(sz idx, display* out_id) {
   int count = 0;
   SDL_DisplayID* ids = SDL_GetDisplays(&count);
   b32 found = ids != NULL && idx < (sz)count;
 
   if (out_id) {
-    *out_id = (display_id) {0};
+    *out_id = NULL;
   }
 
   if (found && out_id) {
-    *out_id = display_from_native_id((u64)ids[idx]);
+    *out_id = display_from_native_id((up)ids[idx]);
   }
 
   if (ids) {
@@ -49,11 +47,11 @@ func b32 display_get_id(sz idx, display_id* out_id) {
   return found;
 }
 
-func display_id display_get_primary_id(void) {
-  return display_from_native_id((u64)SDL_GetPrimaryDisplay());
+func display display_get_primary_id(void) {
+  return display_from_native_id((up)SDL_GetPrimaryDisplay());
 }
 
-func cstr8 display_get_name(display_id id) {
+func cstr8 display_get_name(display id) {
   if (!display_id_is_valid(id)) {
     return NULL;
   }
@@ -61,7 +59,7 @@ func cstr8 display_get_name(display_id id) {
   return SDL_GetDisplayName((SDL_DisplayID)display_to_native_id(id));
 }
 
-func b32 display_get_bounds(display_id id, display_rect* out_rect) {
+func b32 display_get_bounds(display id, display_rect* out_rect) {
   SDL_Rect bounds = {0};
 
   if (!display_id_is_valid(id) || out_rect == NULL ||
@@ -76,7 +74,7 @@ func b32 display_get_bounds(display_id id, display_rect* out_rect) {
   return 1;
 }
 
-func b32 display_get_usable_bounds(display_id id, display_rect* out_rect) {
+func b32 display_get_usable_bounds(display id, display_rect* out_rect) {
   SDL_Rect bounds = {0};
 
   if (!display_id_is_valid(id) || out_rect == NULL ||
@@ -90,3 +88,4 @@ func b32 display_get_usable_bounds(display_id id, display_rect* out_rect) {
   out_rect->height = bounds.h;
   return 1;
 }
+
