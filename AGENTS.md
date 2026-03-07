@@ -147,7 +147,21 @@ src/                          # module implementations
   utils/                      # implementations for utils/*
   threads/                    # implementations for threads/*
 tests/                        # GoogleTest coverage
-  test_based.cpp             # umbrella include smoke test plus lightweight directory path query coverage
+  test_common.hpp             # shared C++ test include/bootstrap helpers for header inclusion safety
+  test_main.cpp               # custom GoogleTest entry point that calls entry_init/entry_quit
+  based_test.cpp              # umbrella include smoke test
+  basic/                      # include smoke tests for basic/*
+  context/                    # include smoke tests for context/*
+  containers/                 # include smoke tests for containers/*
+  memory/                     # include smoke tests for memory/*
+  filesystem/                 # include smoke tests for filesystem/*
+  input/                      # include smoke tests for input/*
+  windowing/                  # include smoke tests for windowing/*
+  processes/                  # include smoke tests for processes/*
+  system/                     # include smoke tests for system/*
+  strings/                    # include smoke tests for strings/*
+  utils/                      # include smoke tests for utils/*
+  threads/                    # include smoke tests for threads/*
 ```
 
 Names should remain descriptive enough that this section can stay compact; 

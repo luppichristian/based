@@ -189,6 +189,7 @@ target_compile_definitions(
 # =========================================================================
 
 if(BASED_BUILD_TESTS)
+    enable_testing()
     find_package(GTest QUIET)
 
     if(NOT GTest_FOUND AND BASED_GTEST_FETCH)
@@ -203,12 +204,19 @@ if(BASED_BUILD_TESTS)
         target_compile_options(gtest_main PRIVATE $<$<CXX_COMPILER_ID:Clang,AppleClang,GNU>:-Wno-undef>)
     endif()
 
-    file(GLOB TEST_SOURCES "tests/*.cpp")
+    file(GLOB_RECURSE TEST_SOURCES CONFIGURE_DEPENDS "tests/**.cpp")
     add_executable(based-tests ${TEST_SOURCES})
-    target_link_libraries(based-tests PRIVATE based GTest::gtest_main)
+    target_link_libraries(based-tests PRIVATE based GTest::gtest)
+    target_include_directories(based-tests PRIVATE tests)
     target_compile_options(based-tests PRIVATE ${BASED_CLANG_FOLDING_CONSTANT_WARNING})
     based_apply_binary_type_defines(based-tests)
 
     include(GoogleTest)
     gtest_discover_tests(based-tests)
+
+    # libmath2 may register a gtest_discover placeholder when its test binary
+    # is not built in this workspace configuration; ignore that non-project test.
+    if(TEST libmath2-tests_NOT_BUILT)
+        set_tests_properties(libmath2-tests_NOT_BUILT PROPERTIES DISABLED TRUE)
+    endif()
 endif()
