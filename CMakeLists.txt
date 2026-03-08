@@ -8,6 +8,13 @@
 cmake_minimum_required(VERSION 3.19)
 project(based C CXX)
 include(FetchContent)
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/fetch_tracy.cmake")
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/fetch_sdl3.cmake")
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/fetch_efsw.cmake")
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/fetch_miniz.cmake")
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/fetch_olib.cmake")
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/fetch_libmath2.cmake")
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/fetch_googletest.cmake")
 
 # Ensure third-party subprojects default to honoring pre-set option variables.
 set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
@@ -18,121 +25,43 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 option(BASED_BUILD_TESTS  "Build tests"                ON)
-option(BASED_GTEST_FETCH  "Fetch GoogleTest if not found" ON)
+option(BASED_ENABLE_FETCHCONTENT "Enable FetchContent fallback for missing dependencies" ON)
 
 # =========================================================================
 # Tracy
 # =========================================================================
 
-option(BASED_TRACY_FETCH "Fetch Tracy if not found" ON)
-find_package(Tracy CONFIG QUIET)
-
-if(NOT Tracy_FOUND AND BASED_TRACY_FETCH)
-    FetchContent_Declare(
-        tracy
-        GIT_REPOSITORY https://github.com/wolfpld/tracy.git
-        GIT_TAG v0.13.1
-    )
-    FetchContent_MakeAvailable(tracy)
-endif()
+fetch_tracy()
 
 # =========================================================================
 # SDL3
 # =========================================================================
 
-option(BASED_SDL3_FETCH "Fetch SDL3 if not found" ON)
-find_package(SDL3 QUIET)
-
-if(NOT SDL3_FOUND AND BASED_SDL3_FETCH)
-    set(SDL_SHARED          OFF CACHE BOOL "" FORCE)
-    set(SDL_STATIC          ON  CACHE BOOL "" FORCE)
-    set(SDL_TEST_LIBRARY    OFF CACHE BOOL "" FORCE)
-    set(SDL_TESTS           OFF CACHE BOOL "" FORCE)
-    set(SDL_EXAMPLES        OFF CACHE BOOL "" FORCE)
-
-    FetchContent_Declare(
-        SDL3
-        URL https://github.com/libsdl-org/SDL/releases/download/release-3.2.0/SDL3-3.2.0.tar.gz
-        DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-    )
-    FetchContent_MakeAvailable(SDL3)
-endif()
+fetch_sdl3()
 
 # =========================================================================
 # efsw
 # =========================================================================
 
-option(BASED_EFSW_FETCH "Fetch efsw if not found" ON)
-find_package(efsw QUIET)
-
-if(NOT efsw_FOUND AND BASED_EFSW_FETCH)
-    set(BUILD_SHARED_LIBS OFF)
-    set(BUILD_STATIC_LIBS ON)
-    set(BUILD_TEST_APP OFF)
-
-    FetchContent_Declare(
-        efsw 
-        GIT_REPOSITORY https://github.com/SpartanJ/efsw 
-        GIT_TAG master
-    )
-    FetchContent_MakeAvailable(efsw)
-endif()
+fetch_efsw()
 
 # =========================================================================
 # miniz
 # =========================================================================
 
-option(BASED_MINIZ_FETCH "Fetch miniz if not found" ON)
-find_package(miniz QUIET)
-
-if(NOT miniz_FOUND AND BASED_MINIZ_FETCH)
-    set(BUILD_TESTS Off)
-    set(BUILD_SHARED_LIBS Off)
-    set(BUILD_EXAMPLES Off)
-
-    FetchContent_Declare(
-        miniz 
-        GIT_REPOSITORY https://github.com/richgel999/miniz 
-        DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-    )
-    FetchContent_MakeAvailable(miniz)
-endif()
+fetch_miniz()
 
 # =========================================================================
 # Olib
 # =========================================================================
 
-option(BASED_OLIB_FETCH "Fetch Olib if not found" ON)
-find_package(olib QUIET)
-
-if(NOT olib_FOUND AND BASED_OLIB_FETCH)
-    set(OLIB_BUILD_TESTS    OFF CACHE BOOL "" FORCE)
-    set(OLIB_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-    set(OLIB_BUILD_CLI      OFF CACHE BOOL "" FORCE)
-    FetchContent_Declare(
-        olib
-        URL https://github.com/luppichristian/olib/archive/refs/tags/v1.0.0.zip
-        DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-    )
-    FetchContent_MakeAvailable(olib)
-endif()
+fetch_olib()
 
 # =========================================================================
 # libmath2
 # =========================================================================
 
-option(BASED_LIBMATH2_FETCH "Fetch libmath2 if not found" ON)
-find_package(libmath2 QUIET)
-if(NOT libmath2_FOUND AND BASED_LIBMATH2_FETCH)
-    set(LM2_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-    set(LM2_BUILD_SHARED OFF CACHE BOOL "" FORCE)
-    FetchContent_Declare(
-        libmath2
-        URL https://github.com/luppichristian/libmath2/archive/main.zip
-        DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-    )
-    FetchContent_MakeAvailable(libmath2)
-endif()
+fetch_libmath2()
 
 # Define LM2_CUSTOM_ASSERT to use custom assert in libmath2.
 target_compile_definitions(libmath2 PUBLIC LM2_CUSTOM_ASSERT)
@@ -195,19 +124,7 @@ if(BASED_BUILD_TESTS)
     # is intentionally disabled in this workspace configuration.
     file(WRITE "${CMAKE_BINARY_DIR}/CTestCustom.cmake" "set(CTEST_CUSTOM_TESTS_IGNORE libmath2-tests_NOT_BUILT)\n")
 
-    find_package(GTest QUIET)
-
-    if(NOT GTest_FOUND AND BASED_GTEST_FETCH)
-        FetchContent_Declare(
-            googletest
-            URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
-            DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-        )
-        set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-        FetchContent_MakeAvailable(googletest)
-        target_compile_options(gtest      PRIVATE $<$<CXX_COMPILER_ID:Clang,AppleClang,GNU>:-Wno-undef>)
-        target_compile_options(gtest_main PRIVATE $<$<CXX_COMPILER_ID:Clang,AppleClang,GNU>:-Wno-undef>)
-    endif()
+    fetch_googletest()
 
     file(GLOB_RECURSE TEST_SOURCES CONFIGURE_DEPENDS "tests/**.cpp")
     add_executable(based-tests ${TEST_SOURCES})

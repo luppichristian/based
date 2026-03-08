@@ -30,6 +30,14 @@ Keeping this file up to date is mandatory. Any change that adds, removes, or mat
 ## Project Layout
 
 ```text
+cmake/                       # CMake helper modules
+  fetch_tracy.cmake          # fetch_tracy() package-or-fetch setup helper with one-time guard
+  fetch_sdl3.cmake           # fetch_sdl3() package-or-fetch setup helper with one-time guard
+  fetch_efsw.cmake           # fetch_efsw() package-or-fetch setup helper with one-time guard
+  fetch_miniz.cmake          # fetch_miniz() package-or-fetch setup helper with one-time guard
+  fetch_olib.cmake           # fetch_olib() package-or-fetch setup helper with one-time guard
+  fetch_libmath2.cmake       # fetch_libmath2() package-or-fetch setup helper with one-time guard
+  fetch_googletest.cmake     # fetch_googletest() package-or-fetch setup helper with one-time guard
 include/                      # public API headers
   based.h                     # umbrella include for most public modules
   basic/                      # core types, macros, asserts, logging, environment helpers
