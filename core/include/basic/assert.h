@@ -28,15 +28,25 @@ func void _assert(b32 condition, const char* msg, callsite site);
 
 // Different modes settable at runtime.
 typedef enum assert_mode {
-  ASSERT_MODE_DEBUG,   // On Desktop: Opens a debug window and waits for user input, in
-                       // the window you can choose to break point, ignore or quit the application.
-                       // The message is also logged.
-  ASSERT_MODE_QUIT,    // Quits the application immediately.
-  ASSERT_MODE_LOG,     // Just log a message.
-  ASSERT_MODE_IGNORE,  // Ignores the assertion, does nothing.
-} assert_mode;
+  // On Desktop: Opens a debug window and waits for user input, in
+  // the window you can choose to break point, ignore or quit the application.
+  // The message is also logged.
+  ASSERT_MODE_DEBUG,
 
-typedef void (*assert_hook_fn)(assert_mode mode, cstr8 msg, callsite site, void* user_data);
+  // Quits the application immediately.
+  // Also logs a message.
+  ASSERT_MODE_QUIT,
+
+  // Aborts the application immediately.
+  // Also logs a message.
+  ASSERT_MODE_ABORT,
+
+  // Just log a message.
+  ASSERT_MODE_LOG,
+
+  // Ignores the assertion, does nothing.
+  ASSERT_MODE_IGNORE,
+} assert_mode;
 
 // Define default assert mode if not defined by the user.
 #ifndef ASSERT_MODE_DEFAULT
@@ -52,6 +62,3 @@ func void assert_set_mode(assert_mode mode);
 
 // Returns the current runtime assertion mode.
 func assert_mode assert_get_mode(void);
-
-// Sets an optional assertion hook called for every failed assertion.
-func void assert_set_hook(assert_hook_fn hook_fn, void* user_data);

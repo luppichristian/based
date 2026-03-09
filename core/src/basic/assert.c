@@ -10,80 +10,109 @@
 #include "../sdl3_include.h"
 #include "basic/utility_defines.h"
 #include "basic/profiler.h"
+#include "processes/process_current.h"
 #include <stdlib.h>
 
 // =========================================================================
 // Internal state
 // =========================================================================
 
-global_var assert_mode assert_mode_current = ASSERT_MODE_DEFAULT;
-global_var mutex assert_mutex = NULL;
-global_var atomic_i32 assert_mutex_init = {0};
-global_var assert_hook_fn assert_hook_current = NULL;
-global_var void* assert_hook_user_data = NULL;
+global_var atomic_u32 assert_mode_current = {ASSERT_MODE_DEFAULT};
 
 // =========================================================================
 // Internal helpers
 // =========================================================================
 
-func mutex assert_lock_get(void) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  if (atomic_i32_get(&assert_mutex_init) == 2) {
-    TracyCZoneEnd(__tracy_zone_ctx);
-    return assert_mutex;
-  }
-
-  i32 expected = 0;
-  if (atomic_i32_cmpex(&assert_mutex_init, &expected, 1)) {
-    assert_mutex = mutex_create();
-    atomic_fence_release();
-    atomic_i32_set(&assert_mutex_init, 2);
-    TracyCZoneEnd(__tracy_zone_ctx);
-    return assert_mutex;
-  }
-
-  while (atomic_i32_get(&assert_mutex_init) != 2) {
-    atomic_pause();
-  }
-
-  atomic_fence_acquire();
-  TracyCZoneEnd(__tracy_zone_ctx);
-  return assert_mutex;
-}
-
 func void assert_log_msg(cstr8 msg, callsite site) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   _log(thread_get_log_state(), LOG_LEVEL_FATAL, site, "Assertion failed: %s", msg);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
-// Returns: 0 = ignore, 1 = breakpoint, 2 = quit.
+// Action requested by user with assert_dialog
+typedef enum assert_action {
+  ASSERT_ACTION_IGNORE = 0,
+  ASSERT_ACTION_BREAKPOINT = 1,
+  ASSERT_ACTION_QUIT = 2,
+  ASSERT_ACTION_ABORT = 3,
+} assert_action;
+
 // Defaults to quit if the message box cannot be displayed.
-func i32 assert_dialog(cstr8 msg, callsite site) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+func assert_action assert_dialog(cstr8 msg, callsite site) {
+  profile_func_begin;
   str8_long buf = {0};
   cstr8_format(buf, size_of(buf), "Assertion failed: %s\n\nin %s() at %s:%u", msg, site.function, site.filename, site.line);
 
   SDL_MessageBoxButtonData buttons[] = {
       {SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT, 1, "Breakpoint"},
       {                                      0, 0,     "Ignore"},
+      {                                      0, 3,      "Abort"},
       {SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT, 2,       "Quit"},
   };
 
   SDL_MessageBoxData data = {
       SDL_MESSAGEBOX_ERROR,
       NULL,
-      "Assertion Failed",
+      "Assertion Triggered",
       buf,
       count_of(buttons),
       buttons,
       NULL,
   };
 
+  assert_action action = ASSERT_ACTION_IGNORE;
+
   int btn_id = 2;
   SDL_ShowMessageBox(&data, &btn_id);
-  TracyCZoneEnd(__tracy_zone_ctx);
-  return (i32)btn_id;
+  switch (btn_id) {
+    case 0: {
+      action = ASSERT_ACTION_IGNORE;
+      break;
+    }
+    case 1: {
+      action = ASSERT_ACTION_BREAKPOINT;
+      break;
+    }
+    case 2: {
+      action = ASSERT_ACTION_QUIT;
+      break;
+    }
+    case 3: {
+      action = ASSERT_ACTION_ABORT;
+      break;
+    }
+    default: {
+      break;
+    }
+  }
+
+  profile_func_end;
+  return action;
+}
+
+func void assert_do_action(assert_action action) {
+  profile_func_begin;
+  switch (action) {
+    case ASSERT_ACTION_IGNORE: {
+      break;
+    }
+    case ASSERT_ACTION_BREAKPOINT: {
+      SDL_TriggerBreakpoint();
+      break;
+    }
+    case ASSERT_ACTION_QUIT: {
+      process_exit(1);
+      break;
+    }
+    case ASSERT_ACTION_ABORT: {
+      process_abort();
+      break;
+    }
+    default: {
+      break;
+    }
+  }
+  profile_func_end;
 }
 
 // =========================================================================
@@ -91,123 +120,79 @@ func i32 assert_dialog(cstr8 msg, callsite site) {
 // =========================================================================
 
 func void assert_set_mode(assert_mode mode) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (mode < ASSERT_MODE_DEBUG || mode > ASSERT_MODE_IGNORE) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return;
   }
   assert(mode >= ASSERT_MODE_DEBUG && mode <= ASSERT_MODE_IGNORE);
-  mutex lock = assert_lock_get();
-  if (lock) {
-    mutex_lock(lock);
-  }
-  assert_mode_current = mode;
-  if (lock) {
-    mutex_unlock(lock);
-  }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  atomic_u32_set(&assert_mode_current, mode);
+  profile_func_end;
 }
 
 func assert_mode assert_get_mode(void) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  mutex lock = assert_lock_get();
-  if (lock) {
-    mutex_lock(lock);
-  }
-  assert_mode mode = assert_mode_current;
-  if (lock) {
-    mutex_unlock(lock);
-  }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_begin;
+  assert_mode mode = (assert_mode)atomic_u32_get(&assert_mode_current);
+  profile_func_end;
   return mode;
 }
 
-func void assert_set_hook(assert_hook_fn hook_fn, void* user_data) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  mutex lock = assert_lock_get();
-  if (lock) {
-    mutex_lock(lock);
-  }
-  assert_hook_current = hook_fn;
-  assert_hook_user_data = user_data;
-  if (lock) {
-    mutex_unlock(lock);
-  }
-  TracyCZoneEnd(__tracy_zone_ctx);
-}
-
 func void _assert(b32 condition, cstr8 cond_msg, callsite site) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (condition) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return;
   }
   if (cond_msg == NULL) {
     cond_msg = "<null assertion message>";
   }
   assert(cond_msg != NULL);
-
-  assert_mode mode = ASSERT_MODE_DEFAULT;
-  mutex lock = assert_lock_get();
-  if (lock) {
-    mutex_lock(lock);
-  }
-  mode = assert_mode_current;
-  if (lock) {
-    mutex_unlock(lock);
-  }
-
-  assert_hook_fn hook_fn = NULL;
-  void* hook_user_data = NULL;
-  if (lock) {
-    mutex_lock(lock);
-  }
-  hook_fn = assert_hook_current;
-  hook_user_data = assert_hook_user_data;
-  if (lock) {
-    mutex_unlock(lock);
-  }
+  assert_mode mode = assert_get_mode();
 
   msg assert_msg = {0};
   assert_msg.type = MSG_CORE_TYPE_ASSERT;
   msg_core_assert_data assert_data = {
       .mode = mode,
       .source_site = site,
+      .text = cond_msg != NULL ? cond_msg : "",
   };
-  strncpy(assert_data.text, cond_msg != NULL ? cond_msg : "", MSG_ASSERT_TEXT_CAP);
   msg_core_fill_assert(&assert_msg, &assert_data);
   if (!msg_post(&assert_msg)) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return;
   }
 
-  if (hook_fn != NULL) {
-    hook_fn(mode, cond_msg, site, hook_user_data);
-  }
-
+  assert_action action = ASSERT_ACTION_IGNORE;
   switch (mode) {
     case ASSERT_MODE_DEBUG: {
       assert_log_msg(cond_msg, site);
-      i32 action = assert_dialog(cond_msg, site);
-      if (action == 1) {
-        SDL_TriggerBreakpoint();
-      } else if (action == 2) {
-        exit(1);
-      }
+      action = assert_dialog(cond_msg, site);
       break;
     }
-    case ASSERT_MODE_QUIT:
+    case ASSERT_MODE_QUIT: {
       assert_log_msg(cond_msg, site);
-      exit(1);
-    case ASSERT_MODE_LOG:
+      action = ASSERT_ACTION_QUIT;
+      break;
+    }
+    case ASSERT_MODE_ABORT: {
+      assert_log_msg(cond_msg, site);
+      action = ASSERT_ACTION_ABORT;
+      break;
+    }
+    case ASSERT_MODE_LOG: {
       assert_log_msg(cond_msg, site);
       break;
-    case ASSERT_MODE_IGNORE:
+    }
+    case ASSERT_MODE_IGNORE: {
       break;
+    }
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+
+  assert_do_action(action);
+  profile_func_end;
 }
 
+// Make libmath2 use our custom assert...
 void _lm2_custom_assert(
     int expression,
     const char* msg,

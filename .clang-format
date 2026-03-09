@@ -17,6 +17,7 @@ SpacesInSquareBrackets: 'false'
 LambdaBodyIndentation: Signature
 IndentCaseLabels: 'true'
 IndentPPDirectives: AfterHash
+PPIndentWidth: '2'
 TabWidth: '2'
 IndentWidth: '2'
 BinPackArguments: false

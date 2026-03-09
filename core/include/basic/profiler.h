@@ -34,4 +34,9 @@
 // Set max callstack depth
 #define TRACY_CALLSTACK 32
 
+// Include Tracy profiler, macros expand to nothing if tracy is disabled.
 #include <tracy/TracyC.h>
+
+// Helper functions for convenience
+#define profile_func_begin TracyCZoneN(__tracy_zone_ctx, __func__, 1)
+#define profile_func_end   TracyCZoneEnd(__tracy_zone_ctx)

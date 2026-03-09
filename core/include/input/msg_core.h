@@ -505,7 +505,7 @@ typedef struct msg_core_global_ctx_data {
 typedef struct msg_core_assert_data {
   assert_mode mode;
   callsite source_site;
-  str8_medium text;
+  cstr8 text;
 } msg_core_assert_data;
 
 typedef union msg_core_data {
