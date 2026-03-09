@@ -3,13 +3,10 @@
 
 #include "test_common.hpp"
 
-int main(int argc, char** argv) {
-  cmdline cmdl = cmdline_build(argc, argv);
-  if (!entry_init(cmdl)) {
-    return 1;
-  }
-
-  ::testing::InitGoogleTest(&argc, argv);
+func b32 run(cmdline cmdl) {
+  int argc = cmdl.count;
+  char** argv = cmdl.args;
+  testing::InitGoogleTest(&argc, argv);
   int test_result = RUN_ALL_TESTS();
-  return test_result;
+  return test_result == 0;
 }

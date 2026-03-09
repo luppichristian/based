@@ -27,47 +27,28 @@ set(
 # Source code
 file(GLOB_RECURSE BASED_CORE_SOURCES "src/**.c")
 
-function(configure_based_core_target tgt source_root)
-    target_include_directories(${tgt} PUBLIC include)
-    target_link_libraries(${tgt}
-        PRIVATE SDL3::SDL3 efsw miniz
-        PUBLIC olib::static libmath2 Tracy::TracyClient
-    )
-    target_compile_options(${tgt} PRIVATE ${BASED_CLANG_FOLDING_CONSTANT_WARNING})
-    foreach(source_file IN LISTS ARGN)
-        get_filename_component(source_dir "${source_file}" DIRECTORY)
-        file(RELATIVE_PATH relative_dir "${source_root}" "${source_dir}")
-
-        if(relative_dir STREQUAL "")
-            set(unity_group "root")
-        else()
-            string(REPLACE "\\" "/" normalized_dir "${relative_dir}")
-            string(REGEX MATCH "^[^/]+" unity_group "${normalized_dir}")
-        endif()
-
-        set_source_files_properties(${source_file} PROPERTIES UNITY_GROUP "${unity_group}")
-    endforeach()
-    set_target_properties(${tgt} PROPERTIES UNITY_BUILD ON UNITY_BUILD_MODE GROUP)
-endfunction()
-
 # Default target (entry point is not handled)
 add_library(based-core STATIC ${BASED_CORE_SOURCES})
-configure_based_core_target(based-core "${CMAKE_CURRENT_SOURCE_DIR}/src" ${BASED_CORE_SOURCES})
+target_include_directories(based-core PUBLIC include)
+target_link_libraries(based-core
+    PRIVATE SDL3::SDL3 efsw miniz
+    PUBLIC olib::static libmath2 Tracy::TracyClient
+)
+target_compile_options(based-core PRIVATE ${BASED_CLANG_FOLDING_CONSTANT_WARNING})
+foreach(source_file IN LISTS BASED_CORE_SOURCES)
+    get_filename_component(source_dir "${source_file}" DIRECTORY)
+    file(RELATIVE_PATH relative_dir "${CMAKE_CURRENT_SOURCE_DIR}/src" "${source_dir}")
 
-# Module entry target (ENTRY_TYPE_MOD handled)
-add_library(based-core-mod STATIC ${BASED_CORE_SOURCES})
-configure_based_core_target(based-core-mod "${CMAKE_CURRENT_SOURCE_DIR}/src" ${BASED_CORE_SOURCES})
-target_compile_definitions(based-core-mod PUBLIC ENTRY_TYPE_MOD )
+    if(relative_dir STREQUAL "")
+        set(unity_group "root")
+    else()
+        string(REPLACE "\\" "/" normalized_dir "${relative_dir}")
+        string(REGEX MATCH "^[^/]+" unity_group "${normalized_dir}")
+    endif()
 
-# Main entry target (ENTRY_TYPE_MAIN handled)
-add_library(based-core-main STATIC ${BASED_CORE_SOURCES})
-configure_based_core_target(based-core-main "${CMAKE_CURRENT_SOURCE_DIR}/src" ${BASED_CORE_SOURCES})
-target_compile_definitions(based-core-main PUBLIC ENTRY_TYPE_MAIN)
-
-# App entry target (ENTRY_TYPE_APP handled)
-add_library(based-core-app STATIC ${BASED_CORE_SOURCES})
-configure_based_core_target(based-core-app "${CMAKE_CURRENT_SOURCE_DIR}/src" ${BASED_CORE_SOURCES})
-target_compile_definitions(based-core-app PUBLIC ENTRY_TYPE_APP)
+    set_source_files_properties(${source_file} PROPERTIES UNITY_GROUP "${unity_group}")
+endforeach()
+set_target_properties(based-core PROPERTIES UNITY_BUILD ON UNITY_BUILD_MODE GROUP)
 
 # =========================================================================
 # Tests

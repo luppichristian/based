@@ -1,10 +1,6 @@
 // MIT License
 // Copyright (c) 2026 Christian Luppi
 
-#if defined(ENTRY_TYPE_APP)
-#  define SDL_MAIN_USE_CALLBACKS 1
-#endif
-
 #include "basic/entry.h"
 #include "context/global_ctx.h"
 #include "context/thread_ctx.h"
@@ -17,10 +13,6 @@
 #include <olib.h>
 #include <stdlib.h>
 #include <string.h>
-
-#if defined(ENTRY_TYPE_MAIN)
-func b32 entry_main(cmdline cmdl);
-#endif
 
 // =========================================================================
 // Entry runtime state
@@ -42,6 +34,7 @@ global_var entry_shared_state entry_shared = {0};
 thread_local global_var entry_thread_state entry_thread = {0};
 global_var allocator entry_memory_fallback = {0};
 global_var cmdline entry_cmdline_current = {0};
+global_var allocator entry_start_allocator = {0};
 
 func allocator entry_get_pipeline_allocator(void) {
   TracyCZoneN(__tracy_zone_ctx, __func__, 1);
@@ -97,6 +90,20 @@ func cmdline entry_get_cmdline(void) {
   return entry_cmdline_current;
 }
 
+func allocator entry_default_allocator(allocator start_alloc) {
+  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  allocator alloc = start_alloc;
+  if (!alloc.alloc_fn) {
+#ifdef OVERRIDE_GLOBAL_DEFAULT_ALLOCATOR
+    alloc = global_allocator_default();
+#else
+    alloc = vmem_get_allocator();
+#endif
+  }
+  TracyCZoneEnd(__tracy_zone_ctx);
+  return alloc;
+}
+
 // =========================================================================
 // Common lifecycle hooks
 // =========================================================================
@@ -107,11 +114,7 @@ func b32 entry_init(cmdline cmdline) {
     entry_cmdline_current = cmdline;
   }
 
-#ifdef OVERRIDE_GLOBAL_DEFAULT_ALLOCATOR
-  allocator default_global_allocator = global_allocator_default();
-#else
-  allocator default_global_allocator = vmem_get_allocator();
-#endif
+  allocator default_global_allocator = entry_default_allocator(entry_start_allocator);
   entry_memory_fallback = default_global_allocator;
 
   olib_set_memory_fns(
@@ -219,6 +222,7 @@ func void entry_quit(void) {
   if (entry_shared.sdl_init_depth == 0 && entry_shared.global_ctx_init_depth == 0 &&
       entry_thread.thread_ctx_init_depth == 0) {
     entry_cmdline_current = (cmdline) {0};
+    entry_start_allocator = (allocator) {0};
   }
   TracyCZoneEnd(__tracy_zone_ctx);
 }
@@ -227,10 +231,29 @@ func void entry_quit(void) {
 // Application entry point
 // =========================================================================
 
-#if defined(ENTRY_TYPE_APP)
-
 global_var b32 app_entry_initialized = false;
 global_var b32 app_callbacks_started = false;
+global_var entry_app_init_fn* app_init_callback = NULL;
+global_var entry_app_update_fn* app_update_callback = NULL;
+global_var entry_app_quit_fn* app_quit_callback = NULL;
+global_var entry_run_fn* run_callback = NULL;
+
+func void entry_set_app_callbacks(
+    entry_app_init_fn* init_fn,
+    entry_app_update_fn* update_fn,
+    entry_app_quit_fn* quit_fn) {
+  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  app_init_callback = init_fn;
+  app_update_callback = update_fn;
+  app_quit_callback = quit_fn;
+  TracyCZoneEnd(__tracy_zone_ctx);
+}
+
+func void entry_set_run_callback(entry_run_fn* callback_fn) {
+  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  run_callback = callback_fn;
+  TracyCZoneEnd(__tracy_zone_ctx);
+}
 
 func SDL_AppResult app_result_to_sdl_result(app_result result) {
   TracyCZoneN(__tracy_zone_ctx, __func__, 1);
@@ -264,17 +287,23 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char** argv) {
   if (!entry_init(cmdl)) {
     return SDL_APP_FAILURE;
   }
+
+  if (app_init_callback == NULL || app_update_callback == NULL || app_quit_callback == NULL) {
+    entry_quit();
+    return SDL_APP_FAILURE;
+  }
+
   app_entry_initialized = true;
 
   app_callbacks_started = true;
-  return app_result_to_sdl_result(app_init(cmdl, appstate));
+  return app_result_to_sdl_result(app_init_callback(cmdl, appstate));
 }
 
 void SDL_AppQuit(void* appstate, SDL_AppResult result) {
   (void)result;
 
-  if (app_callbacks_started) {
-    app_quit(appstate);
+  if (app_callbacks_started && app_quit_callback != NULL) {
+    app_quit_callback(appstate);
     app_callbacks_started = false;
   }
 
@@ -285,7 +314,11 @@ void SDL_AppQuit(void* appstate, SDL_AppResult result) {
 }
 
 SDL_AppResult SDL_AppIterate(void* appstate) {
-  return app_result_to_sdl_result(app_update(appstate));
+  if (app_update_callback == NULL) {
+    return SDL_APP_FAILURE;
+  }
+
+  return app_result_to_sdl_result(app_update_callback(appstate));
 }
 
 SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
@@ -300,53 +333,33 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
   return SDL_APP_CONTINUE;
 }
 
+int main_app(int argc, char** argv, allocator alloc) {
+  entry_start_allocator = alloc;
+  return SDL_EnterAppMainCallbacks(argc, argv, SDL_AppInit, SDL_AppIterate, SDL_AppEvent, SDL_AppQuit);
+}
+
 // =========================================================================
-// Command-line entry point
+// Run entry point
 // =========================================================================
 
-#elif defined(ENTRY_TYPE_MAIN)
-
-int main(int argc, char** argv) {
+int main_run_internal(int argc, char** argv) {
   cmdline cmdl = cmdline_build((sz)argc, (c8**)argv);
   if (!entry_init(cmdl)) {
     return EXIT_FAILURE;
   }
 
-  b32 result = entry_main(cmdl);
+  if (run_callback == NULL) {
+    entry_quit();
+    return EXIT_FAILURE;
+  }
+
+  b32 result = run_callback(cmdl);
   entry_quit();
+
   return result ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
-// =========================================================================
-// Module entry point
-// =========================================================================
-
-#elif defined(ENTRY_TYPE_MOD)
-
-global_var b32 module_entry_initialized = false;
-
-func dll_export b32 mod_init(void) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  cmdline empty_cmdline = cmdline_build(0, NULL);
-
-  module_entry_initialized = false;
-
-  if (!entry_init(empty_cmdline)) {
-    TracyCZoneEnd(__tracy_zone_ctx);
-    return false;
-  }
-  module_entry_initialized = true;
-  TracyCZoneEnd(__tracy_zone_ctx);
-  return true;
+int main_run(int argc, char** argv, allocator alloc) {
+  entry_start_allocator = alloc;
+  return SDL_RunApp(argc, argv, main_run_internal, NULL);
 }
-
-func dll_export void mod_quit(void) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  if (module_entry_initialized) {
-    entry_quit();
-    module_entry_initialized = false;
-  }
-  TracyCZoneEnd(__tracy_zone_ctx);
-}
-
-#endif

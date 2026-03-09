@@ -3,6 +3,10 @@
 
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // Include basic module.
 #include "basic/assert.h"
 #include "basic/codespace.h"
@@ -110,6 +114,12 @@
 #include "threads/thread.h"
 #include "threads/thread_current.h"
 #include "threads/thread_group.h"
+
+#ifdef __cplusplus
+}
+#endif
+
+#include "basic/entry_impl.h"
 
 #include <olib.h>
 

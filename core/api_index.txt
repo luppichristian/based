@@ -14,17 +14,22 @@
 27: typedef struct src_loc {
 
 === include\basic\entry.h ===
-21: typedef enum app_result {
-30: func app_result app_init(cmdline cmdl, void** state);
-33: func app_result app_update(void* state);
-36: func void app_quit(void* state);
-42: func b32 main(cmdline cmdl);
-51: func dll_export b32 mod_init(void);
-54: func dll_export void mod_quit(void);
-74: func b32 entry_init(cmdline cmdline);
-77: func cmdline entry_get_cmdline(void);
-78: func void entry_quit(void);
-87: func allocator global_allocator_default();
+19: func b32 entry_init(cmdline cmdline);
+22: func cmdline entry_get_cmdline(void);
+26: func void entry_quit(void);
+29: typedef enum app_result {
+36: typedef app_result entry_app_init_fn(cmdline cmdl, void** state);
+37: typedef app_result entry_app_update_fn(void* state);
+38: typedef void entry_app_quit_fn(void* state);
+39: typedef b32 entry_run_fn(cmdline cmdl);
+41: func void entry_set_app_callbacks(
+45: func void entry_set_run_callback(entry_run_fn* run_fn);
+59: func app_result app_init(cmdline cmdl, void** state);
+62: func app_result app_update(void* state);
+65: func void app_quit(void* state);
+74: func b32 run(cmdline cmdl);
+86: func dll_export b32 mod_init(void);
+89: func dll_export void mod_quit(void);
 
 === include\basic\env_defines.h ===
 

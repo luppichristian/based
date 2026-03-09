@@ -5,6 +5,5 @@
 
 #include <gtest/gtest.h>
 
-extern "C" {
+#define ENTRY_TYPE_RUN
 #include <based_core.h>
-}
