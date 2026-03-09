@@ -17,14 +17,14 @@ func void gamepads_internal_on_msg(msg* src);
 func void bindings_internal_on_msg(const msg* src);
 
 func void msg_notify_internal_listeners(const msg* src) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   msg* src_mut = (msg*)src;
   keyboard_internal_on_msg(src_mut);
   mouse_internal_on_msg(src_mut);
   gamepads_internal_on_msg(src_mut);
   tablet_internal_on_msg(src_mut);
   bindings_internal_on_msg(src);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 const_var i32 MSG_PAYLOAD_CODE = 0x42415345;
@@ -53,21 +53,21 @@ global_var u32 msg_user_space_bases[MSG_CATEGORY_MAX] = {0};
 func b32 msg_remove_handler(u64 handler_id);
 
 func b32 msg_category_is_valid(msg_category category) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_begin;
+  profile_func_end;
   return category >= MSG_CATEGORY_CORE && category < MSG_CATEGORY_MAX;
 }
 
 func b32 msg_category_needs_user_space(msg_category category) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_begin;
+  profile_func_end;
   return category > MSG_CATEGORY_CORE && category < MSG_CATEGORY_MAX;
 }
 
 func b32 msg_user_space_ensure(void) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (msg_user_spaces_ready) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return true;
   }
 
@@ -78,29 +78,29 @@ func b32 msg_user_space_ensure(void) {
         msg_user_space_bases[idx] = 0;
       }
       msg_user_spaces_ready = false;
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return false;
     }
     msg_user_space_bases[(sz)category] = base_type;
   }
 
   msg_user_spaces_ready = true;
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return true;
 }
 
 func b32 msg_user_space_get_sdl_type(msg_category category, u32 local_type, u32* out_sdl_type) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (out_sdl_type != NULL) {
     *out_sdl_type = 0;
   }
 
   if (!msg_category_needs_user_space(category)) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return false;
   }
   if (!msg_user_space_ensure()) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return false;
   }
 
@@ -110,7 +110,7 @@ func b32 msg_user_space_get_sdl_type(msg_category category, u32 local_type, u32*
     sdl_type = local_type;
   } else {
     if (local_type >= MSG_CATEGORY_USER_TYPE_COUNT) {
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return false;
     }
     sdl_type = base_type + local_type;
@@ -119,12 +119,12 @@ func b32 msg_user_space_get_sdl_type(msg_category category, u32 local_type, u32*
   if (out_sdl_type != NULL) {
     *out_sdl_type = sdl_type;
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return true;
 }
 
 func b32 msg_user_space_decode_sdl_type(u32 sdl_type, msg_category* out_category, u32* out_local_type) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (out_category != NULL) {
     *out_category = MSG_CATEGORY_CORE;
   }
@@ -133,7 +133,7 @@ func b32 msg_user_space_decode_sdl_type(u32 sdl_type, msg_category* out_category
   }
 
   if (!msg_user_space_ensure()) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return false;
   }
 
@@ -146,33 +146,33 @@ func b32 msg_user_space_decode_sdl_type(u32 sdl_type, msg_category* out_category
       if (out_local_type != NULL) {
         *out_local_type = sdl_type - base_type;
       }
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return true;
     }
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return false;
 }
 
 func b32 msg_filter_accept(const msg* src) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (msg_filter_current == NULL || src == NULL) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 1;
   }
   b32 result = msg_filter_current(src, msg_filter_user_data);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return result;
 }
 
 func u64 msg_hash_path(cstr8 src) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   u64 hash_value = 1469598103934665603ULL;
   sz idx = 0;
 
   if (!src) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
@@ -182,36 +182,36 @@ func u64 msg_hash_path(cstr8 src) {
     idx += 1;
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return hash_value;
 }
 
 func b32 msg_device_id_equal(device_id lhs, device_id rhs) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_begin;
+  profile_func_end;
   return lhs.type == rhs.type && lhs.instance == rhs.instance;
 }
 
 func b32 msg_device_list_contains(const device_id* list, sz count, device_id src) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (!list) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
   for (sz item_idx = 0; item_idx < count; item_idx += 1) {
     if (msg_device_id_equal(list[item_idx], src)) {
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
     }
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return 0;
 }
 
 func sz msg_collect_touch_devices(device_id* out_ids, sz cap) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   int count = 0;
   SDL_TouchID* ids = SDL_GetTouchDevices(&count);
   sz out_count = 0;
@@ -230,12 +230,12 @@ func sz msg_collect_touch_devices(device_id* out_ids, sz cap) {
     SDL_free(ids);
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return out_count;
 }
 
 func sz msg_collect_tablet_devices(device_id* out_ids, sz cap) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   SDL_hid_device_info* head = SDL_hid_enumerate(0, 0);
   SDL_hid_device_info* entry = head;
   sz out_count = 0;
@@ -254,32 +254,32 @@ func sz msg_collect_tablet_devices(device_id* out_ids, sz cap) {
     SDL_hid_free_enumeration(head);
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return out_count;
 }
 
 func void msg_post_touch_device_event(u32 type, device_id device) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   msg device_msg = {0};
   device_msg.type = type;
   msg_core_touch_device_data core_data = {.device = device};
   msg_core_fill_touch_device(&device_msg, &core_data);
   (void)_msg_post(&device_msg, CALLSITE_HERE);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func void msg_post_tablet_device_event(u32 type, device_id device) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   msg device_msg = {0};
   device_msg.type = type;
   msg_core_tablet_device_data core_data = {.device = device};
   msg_core_fill_tablet_device(&device_msg, &core_data);
   (void)_msg_post(&device_msg, CALLSITE_HERE);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func void msg_refresh_touch_devices(void) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   local_persist device_id previous_ids[MSG_DEVICE_TRACK_CAP] = {0};
   local_persist sz previous_count = 0;
   device_id current_ids[MSG_DEVICE_TRACK_CAP] = {0};
@@ -301,11 +301,11 @@ func void msg_refresh_touch_devices(void) {
   for (sz item_idx = 0; item_idx < previous_count; item_idx += 1) {
     previous_ids[item_idx] = current_ids[item_idx];
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func void msg_refresh_tablet_devices(void) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   local_persist device_id previous_ids[MSG_DEVICE_TRACK_CAP] = {0};
   local_persist sz previous_count = 0;
   device_id current_ids[MSG_DEVICE_TRACK_CAP] = {0};
@@ -327,14 +327,14 @@ func void msg_refresh_tablet_devices(void) {
   for (sz item_idx = 0; item_idx < previous_count; item_idx += 1) {
     previous_ids[item_idx] = current_ids[item_idx];
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func void msg_refresh_synthetic_device_msgs(void) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   msg_refresh_touch_devices();
   msg_refresh_tablet_devices();
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 // NOTE:
@@ -342,7 +342,7 @@ func void msg_refresh_synthetic_device_msgs(void) {
 // that model: any thread may post, while one designated thread should pump/poll/wait.
 
 func b32 msg_handler_should_run_for_stage(u32 options, msg_handler_stage stage) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   u32 stage_options = options &
                       (MSG_HANDLER_OPTION_STAGE_BEFORE_POST | MSG_HANDLER_OPTION_STAGE_AFTER_POST |
                        MSG_HANDLER_OPTION_STAGE_POST_FAILED);
@@ -353,38 +353,38 @@ func b32 msg_handler_should_run_for_stage(u32 options, msg_handler_stage stage) 
 
   switch (stage) {
     case MSG_HANDLER_STAGE_BEFORE_POST:
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return (stage_options & MSG_HANDLER_OPTION_STAGE_BEFORE_POST) != 0;
     case MSG_HANDLER_STAGE_AFTER_POST:
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return (stage_options & MSG_HANDLER_OPTION_STAGE_AFTER_POST) != 0;
     case MSG_HANDLER_STAGE_POST_FAILED:
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return (stage_options & MSG_HANDLER_OPTION_STAGE_POST_FAILED) != 0;
     default:
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 0;
   }
 }
 
 func b32 msg_handler_should_run_for_type(const msg_handler_entry* entry, u32 type) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (entry->type_min == 0 && entry->type_max == 0) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 1;
   }
 
   if (entry->type_min <= entry->type_max) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return in_range(type, entry->type_min, entry->type_max);
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return in_range(type, entry->type_max, entry->type_min);
 }
 
 func void msg_handler_sort_entries(void) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   for (u32 outer_idx = 0; outer_idx < msg_handler_count; outer_idx += 1) {
     for (u32 inner_idx = outer_idx + 1; inner_idx < msg_handler_count; inner_idx += 1) {
       msg_handler_entry* lhs = &msg_handler_entries[outer_idx];
@@ -404,11 +404,11 @@ func void msg_handler_sort_entries(void) {
       }
     }
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func b32 msg_dispatch_handlers(msg* posted_msg, msg_handler_stage stage) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   msg_handler_entry dispatch_entries[MSG_HANDLER_CAP] = {0};
   u64 once_handler_ids[MSG_HANDLER_CAP] = {0};
   u32 dispatch_cap = (u32)count_of(dispatch_entries);
@@ -458,7 +458,7 @@ func b32 msg_dispatch_handlers(msg* posted_msg, msg_handler_stage stage) {
       for (u32 once_idx = 0; once_idx < once_handler_count; once_idx += 1) {
         (void)msg_remove_handler(once_handler_ids[once_idx]);
       }
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 0;
     }
   }
@@ -467,23 +467,23 @@ func b32 msg_dispatch_handlers(msg* posted_msg, msg_handler_stage stage) {
     (void)msg_remove_handler(once_handler_ids[once_idx]);
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return 1;
 }
 
 func void msg_apply_common(msg* dst, const SDL_Event* src) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   dst->type = src->type;
   dst->timestamp = src->common.timestamp;
   dst->post_site = (callsite) {0};
   dst->category = MSG_CATEGORY_CORE;
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (!src || !out_msg) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   assert(src != NULL);
@@ -507,7 +507,7 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
               .data1 = (i32)src->display.data1,
               .data2 = (i32)src->display.data2,
           });
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_WINDOW_SHOWN:
@@ -542,7 +542,7 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
               .data1 = (i32)src->window.data1,
               .data2 = (i32)src->window.data2,
           });
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_KEYBOARD_ADDED:
@@ -552,7 +552,7 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
           &(msg_core_keyboard_device_data) {
               .device = {.type = DEVICE_TYPE_KEYBOARD, .instance = (u64)src->kdevice.which},
       });
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_KEY_DOWN:
@@ -569,7 +569,7 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
               .down = src->key.down ? 1 : 0,
               .repeat = src->key.repeat ? 1 : 0,
       });
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_TEXT_EDITING:
@@ -581,7 +581,7 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
               .start = (i32)src->edit.start,
               .length = (i32)src->edit.length,
           });
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_TEXT_EDITING_CANDIDATES:
@@ -594,7 +594,7 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
               .selected_candidate = (i32)src->edit_candidates.selected_candidate,
               .horizontal = src->edit_candidates.horizontal ? 1 : 0,
           });
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_TEXT_INPUT:
@@ -604,7 +604,7 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
               .window = window_from_native_id((up)src->text.windowID),
               .text = src->text.text,
           });
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_MOUSE_ADDED:
@@ -614,7 +614,7 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
           &(msg_core_mouse_device_data) {
               .device = {.type = DEVICE_TYPE_MOUSE, .instance = (u64)src->mdevice.which},
       });
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_MOUSE_MOTION:
@@ -629,7 +629,7 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
               .xrel = src->motion.xrel,
               .yrel = src->motion.yrel,
       });
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_MOUSE_BUTTON_DOWN:
@@ -645,7 +645,7 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
               .x = src->button.x,
               .y = src->button.y,
       });
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_MOUSE_WHEEL:
@@ -660,7 +660,7 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
               .mouse_x = src->wheel.mouse_x,
               .mouse_y = src->wheel.mouse_y,
       });
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_JOYSTICK_ADDED:
@@ -671,7 +671,7 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
           &(msg_core_joystick_device_data) {
               .device = {.type = DEVICE_TYPE_JOYSTICK, .instance = (u64)src->jdevice.which},
       });
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_JOYSTICK_AXIS_MOTION:
@@ -682,7 +682,7 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
               .axis = (u8)src->jaxis.axis,
               .value = (i16)src->jaxis.value,
       });
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_JOYSTICK_BALL_MOTION:
@@ -694,7 +694,7 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
               .xrel = (i16)src->jball.xrel,
               .yrel = (i16)src->jball.yrel,
       });
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_JOYSTICK_HAT_MOTION:
@@ -705,7 +705,7 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
               .hat = (u8)src->jhat.hat,
               .value = (joystick_hat_state)src->jhat.value,
       });
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_JOYSTICK_BUTTON_DOWN:
@@ -717,7 +717,7 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
               .button = (u8)src->jbutton.button,
               .down = src->jbutton.down ? 1 : 0,
       });
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_JOYSTICK_BATTERY_UPDATED:
@@ -728,7 +728,7 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
               .state = (battery_state)src->jbattery.state,
               .percent = (i32)src->jbattery.percent,
       });
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_GAMEPAD_ADDED:
@@ -741,7 +741,7 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
           &(msg_core_gamepad_device_data) {
               .device = {.type = DEVICE_TYPE_GAMEPAD, .instance = (u64)src->gdevice.which},
       });
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_GAMEPAD_AXIS_MOTION:
@@ -752,7 +752,7 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
               .axis = (gamepad_axis)src->gaxis.axis,
               .value = (i16)src->gaxis.value,
       });
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
@@ -764,7 +764,7 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
               .button = (gamepad_button)src->gbutton.button,
               .down = src->gbutton.down ? 1 : 0,
       });
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     default:
@@ -785,7 +785,7 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
               .y = src->gtouchpad.y,
               .pressure = src->gtouchpad.pressure,
       });
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_GAMEPAD_SENSOR_UPDATE:
@@ -797,7 +797,7 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
               .data = {src->gsensor.data[0], src->gsensor.data[1], src->gsensor.data[2]},
               .sensor_timestamp = (u64)src->gsensor.sensor_timestamp,
       });
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_AUDIO_DEVICE_ADDED:
@@ -810,7 +810,7 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
                   (u64)src->adevice.which,
                   src->adevice.recording ? AUDIO_DEVICE_TYPE_RECORDING : AUDIO_DEVICE_TYPE_PLAYBACK),
           });
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_CAMERA_DEVICE_ADDED:
@@ -822,7 +822,7 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
           &(msg_core_camera_device_data) {
               .camera = camera_from_native_id((up)src->cdevice.which),
           });
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_RENDER_TARGETS_RESET:
@@ -833,7 +833,7 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
           &(msg_core_render_data) {
               .window = window_from_native_id((up)src->render.windowID),
           });
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_FINGER_DOWN:
@@ -852,7 +852,7 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
               .pressure = src->tfinger.pressure,
               .window = window_from_native_id((up)src->tfinger.windowID),
       });
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_PEN_PROXIMITY_IN:
@@ -864,7 +864,7 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
               .device = {.type = DEVICE_TYPE_TABLET, .instance = (u64)src->pproximity.which},
               .pen_id = (pen_id)src->pproximity.which,
       });
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_PEN_MOTION:
@@ -878,7 +878,7 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
               .x = src->pmotion.x,
               .y = src->pmotion.y,
       });
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_PEN_DOWN:
@@ -895,7 +895,7 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
               .eraser = src->ptouch.eraser ? 1 : 0,
               .down = src->ptouch.down ? 1 : 0,
       });
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_PEN_BUTTON_DOWN:
@@ -912,7 +912,7 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
               .button = (tablet_button)src->pbutton.button,
               .down = src->pbutton.down ? 1 : 0,
       });
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_PEN_AXIS:
@@ -928,7 +928,7 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
               .axis = (tablet_axis)src->paxis.axis,
               .value = src->paxis.value,
       });
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_DROP_FILE:
@@ -945,7 +945,7 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
               .source = src->drop.source,
               .data = src->drop.data,
           });
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_CLIPBOARD_UPDATE:
@@ -956,7 +956,7 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
               .num_mime_types = (i32)src->clipboard.num_mime_types,
               .mime_types = (cstr8 const*)src->clipboard.mime_types,
           });
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_SENSOR_UPDATE:
@@ -974,7 +974,7 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
                        },
               .sensor_timestamp = (u64)src->sensor.sensor_timestamp,
       });
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     default:
@@ -982,7 +982,7 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
         msg* payload = (msg*)src->user.data1;
         *out_msg = *payload;
         SDL_free(payload);
-        TracyCZoneEnd(__tracy_zone_ctx);
+        profile_func_end;
         return 1;
       }
 
@@ -992,21 +992,21 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
         if (msg_user_space_decode_sdl_type(src->type, &category, &local_type)) {
           out_msg->category = category;
           out_msg->type = local_type;
-          TracyCZoneEnd(__tracy_zone_ctx);
+          profile_func_end;
           return 1;
         }
-        TracyCZoneEnd(__tracy_zone_ctx);
+        profile_func_end;
         return 0;
       }
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
   }
 }
 
 func b32 msg_to_sdl_event(msg* src, SDL_Event* out_event) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (!src || !out_event) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   assert(src != NULL);
@@ -1018,19 +1018,19 @@ func b32 msg_to_sdl_event(msg* src, SDL_Event* out_event) {
   if (msg_category_needs_user_space(src->category)) {
     u32 sdl_type = 0;
     if (!msg_user_space_get_sdl_type(src->category, src->type, &sdl_type)) {
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 0;
     }
     out_event->user.type = sdl_type;
     out_event->user.timestamp = (Uint64)src->timestamp;
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 1;
   }
 
   if (src->type >= SDL_EVENT_USER) {
     out_event->user.type = (Uint32)src->type;
     out_event->user.timestamp = (Uint64)src->timestamp;
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 1;
   }
 
@@ -1047,7 +1047,7 @@ func b32 msg_to_sdl_event(msg* src, SDL_Event* out_event) {
       out_event->display.displayID = (SDL_DisplayID)monitor_to_native_id(msg_core_get_monitor(src)->monitor);
       out_event->display.data1 = (Sint32)msg_core_get_monitor(src)->data1;
       out_event->display.data2 = (Sint32)msg_core_get_monitor(src)->data2;
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_WINDOW_SHOWN:
@@ -1080,7 +1080,7 @@ func b32 msg_to_sdl_event(msg* src, SDL_Event* out_event) {
       out_event->window.windowID = (SDL_WindowID)window_to_native_id(msg_core_get_window(src)->window);
       out_event->window.data1 = (Sint32)msg_core_get_window(src)->data1;
       out_event->window.data2 = (Sint32)msg_core_get_window(src)->data2;
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_KEYBOARD_ADDED:
@@ -1088,7 +1088,7 @@ func b32 msg_to_sdl_event(msg* src, SDL_Event* out_event) {
       out_event->kdevice.type = (SDL_EventType)src->type;
       out_event->kdevice.timestamp = (Uint64)src->timestamp;
       out_event->kdevice.which = (SDL_KeyboardID)msg_core_get_keyboard_device(src)->device.instance;
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_KEY_DOWN:
@@ -1103,7 +1103,7 @@ func b32 msg_to_sdl_event(msg* src, SDL_Event* out_event) {
       out_event->key.raw = (Uint16)msg_core_get_keyboard(src)->raw;
       out_event->key.down = msg_core_get_keyboard(src)->down != 0;
       out_event->key.repeat = msg_core_get_keyboard(src)->repeat != 0;
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_TEXT_EDITING:
@@ -1113,7 +1113,7 @@ func b32 msg_to_sdl_event(msg* src, SDL_Event* out_event) {
       out_event->edit.text = msg_core_get_text_editing(src)->text;
       out_event->edit.start = (Sint32)msg_core_get_text_editing(src)->start;
       out_event->edit.length = (Sint32)msg_core_get_text_editing(src)->length;
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_TEXT_EDITING_CANDIDATES:
@@ -1124,7 +1124,7 @@ func b32 msg_to_sdl_event(msg* src, SDL_Event* out_event) {
       out_event->edit_candidates.num_candidates = (Sint32)msg_core_get_text_editing_candidates(src)->num_candidates;
       out_event->edit_candidates.selected_candidate = (Sint32)msg_core_get_text_editing_candidates(src)->selected_candidate;
       out_event->edit_candidates.horizontal = msg_core_get_text_editing_candidates(src)->horizontal != 0;
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_TEXT_INPUT:
@@ -1132,7 +1132,7 @@ func b32 msg_to_sdl_event(msg* src, SDL_Event* out_event) {
       out_event->text.timestamp = (Uint64)src->timestamp;
       out_event->text.windowID = (SDL_WindowID)window_to_native_id(msg_core_get_text_input(src)->window);
       out_event->text.text = msg_core_get_text_input(src)->text;
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     default:
@@ -1145,7 +1145,7 @@ func b32 msg_to_sdl_event(msg* src, SDL_Event* out_event) {
       out_event->mdevice.type = (SDL_EventType)src->type;
       out_event->mdevice.timestamp = (Uint64)src->timestamp;
       out_event->mdevice.which = (SDL_MouseID)msg_core_get_mouse_device(src)->device.instance;
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_MOUSE_MOTION:
@@ -1158,7 +1158,7 @@ func b32 msg_to_sdl_event(msg* src, SDL_Event* out_event) {
       out_event->motion.y = msg_core_get_mouse_motion(src)->y;
       out_event->motion.xrel = msg_core_get_mouse_motion(src)->xrel;
       out_event->motion.yrel = msg_core_get_mouse_motion(src)->yrel;
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_MOUSE_BUTTON_DOWN:
@@ -1172,7 +1172,7 @@ func b32 msg_to_sdl_event(msg* src, SDL_Event* out_event) {
       out_event->button.clicks = (Uint8)msg_core_get_mouse_button(src)->clicks;
       out_event->button.x = msg_core_get_mouse_button(src)->x;
       out_event->button.y = msg_core_get_mouse_button(src)->y;
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_MOUSE_WHEEL:
@@ -1185,7 +1185,7 @@ func b32 msg_to_sdl_event(msg* src, SDL_Event* out_event) {
       out_event->wheel.direction = (SDL_MouseWheelDirection)msg_core_get_mouse_wheel(src)->direction;
       out_event->wheel.mouse_x = msg_core_get_mouse_wheel(src)->mouse_x;
       out_event->wheel.mouse_y = msg_core_get_mouse_wheel(src)->mouse_y;
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_JOYSTICK_ADDED:
@@ -1194,7 +1194,7 @@ func b32 msg_to_sdl_event(msg* src, SDL_Event* out_event) {
       out_event->jdevice.type = (SDL_EventType)src->type;
       out_event->jdevice.timestamp = (Uint64)src->timestamp;
       out_event->jdevice.which = (SDL_JoystickID)msg_core_get_joystick_device(src)->device.instance;
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_JOYSTICK_AXIS_MOTION:
@@ -1203,7 +1203,7 @@ func b32 msg_to_sdl_event(msg* src, SDL_Event* out_event) {
       out_event->jaxis.which = (SDL_JoystickID)msg_core_get_joystick_axis(src)->device.instance;
       out_event->jaxis.axis = (Uint8)msg_core_get_joystick_axis(src)->axis;
       out_event->jaxis.value = (Sint16)msg_core_get_joystick_axis(src)->value;
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_JOYSTICK_BALL_MOTION:
@@ -1213,7 +1213,7 @@ func b32 msg_to_sdl_event(msg* src, SDL_Event* out_event) {
       out_event->jball.ball = (Uint8)msg_core_get_joystick_ball(src)->ball;
       out_event->jball.xrel = (Sint16)msg_core_get_joystick_ball(src)->xrel;
       out_event->jball.yrel = (Sint16)msg_core_get_joystick_ball(src)->yrel;
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
   }
 
@@ -1224,7 +1224,7 @@ func b32 msg_to_sdl_event(msg* src, SDL_Event* out_event) {
       out_event->jhat.which = (SDL_JoystickID)msg_core_get_joystick_hat(src)->device.instance;
       out_event->jhat.hat = (Uint8)msg_core_get_joystick_hat(src)->hat;
       out_event->jhat.value = (Uint8)msg_core_get_joystick_hat(src)->value;
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_JOYSTICK_BUTTON_DOWN:
@@ -1234,7 +1234,7 @@ func b32 msg_to_sdl_event(msg* src, SDL_Event* out_event) {
       out_event->jbutton.which = (SDL_JoystickID)msg_core_get_joystick_button(src)->device.instance;
       out_event->jbutton.button = (Uint8)msg_core_get_joystick_button(src)->button;
       out_event->jbutton.down = msg_core_get_joystick_button(src)->down != 0;
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_JOYSTICK_BATTERY_UPDATED:
@@ -1243,7 +1243,7 @@ func b32 msg_to_sdl_event(msg* src, SDL_Event* out_event) {
       out_event->jbattery.which = (SDL_JoystickID)msg_core_get_joystick_battery(src)->device.instance;
       out_event->jbattery.state = (SDL_PowerState)msg_core_get_joystick_battery(src)->state;
       out_event->jbattery.percent = (int)msg_core_get_joystick_battery(src)->percent;
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_GAMEPAD_ADDED:
@@ -1254,7 +1254,7 @@ func b32 msg_to_sdl_event(msg* src, SDL_Event* out_event) {
       out_event->gdevice.type = (SDL_EventType)src->type;
       out_event->gdevice.timestamp = (Uint64)src->timestamp;
       out_event->gdevice.which = (SDL_JoystickID)msg_core_get_gamepad_device(src)->device.instance;
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_GAMEPAD_AXIS_MOTION:
@@ -1263,7 +1263,7 @@ func b32 msg_to_sdl_event(msg* src, SDL_Event* out_event) {
       out_event->gaxis.which = (SDL_JoystickID)msg_core_get_gamepad_axis(src)->device.instance;
       out_event->gaxis.axis = (Uint8)msg_core_get_gamepad_axis(src)->axis;
       out_event->gaxis.value = (Sint16)msg_core_get_gamepad_axis(src)->value;
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
@@ -1273,7 +1273,7 @@ func b32 msg_to_sdl_event(msg* src, SDL_Event* out_event) {
       out_event->gbutton.which = (SDL_JoystickID)msg_core_get_gamepad_button(src)->device.instance;
       out_event->gbutton.button = (Uint8)msg_core_get_gamepad_button(src)->button;
       out_event->gbutton.down = msg_core_get_gamepad_button(src)->down != 0;
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_GAMEPAD_TOUCHPAD_DOWN:
@@ -1287,7 +1287,7 @@ func b32 msg_to_sdl_event(msg* src, SDL_Event* out_event) {
       out_event->gtouchpad.x = msg_core_get_gamepad_touchpad(src)->x;
       out_event->gtouchpad.y = msg_core_get_gamepad_touchpad(src)->y;
       out_event->gtouchpad.pressure = msg_core_get_gamepad_touchpad(src)->pressure;
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_GAMEPAD_SENSOR_UPDATE:
@@ -1299,7 +1299,7 @@ func b32 msg_to_sdl_event(msg* src, SDL_Event* out_event) {
       out_event->gsensor.data[1] = msg_core_get_gamepad_sensor(src)->data[1];
       out_event->gsensor.data[2] = msg_core_get_gamepad_sensor(src)->data[2];
       out_event->gsensor.sensor_timestamp = (Uint64)msg_core_get_gamepad_sensor(src)->sensor_timestamp;
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     default:
@@ -1315,7 +1315,7 @@ func b32 msg_to_sdl_event(msg* src, SDL_Event* out_event) {
       out_event->adevice.which = (SDL_AudioDeviceID)devices_get_audio_native_id(msg_core_get_audio_device(src)->device);
       out_event->adevice.recording =
           devices_get_audio_device_type(msg_core_get_audio_device(src)->device) == AUDIO_DEVICE_TYPE_RECORDING;
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_CAMERA_DEVICE_ADDED:
@@ -1325,7 +1325,7 @@ func b32 msg_to_sdl_event(msg* src, SDL_Event* out_event) {
       out_event->cdevice.type = (SDL_EventType)src->type;
       out_event->cdevice.timestamp = (Uint64)src->timestamp;
       out_event->cdevice.which = (SDL_CameraID)camera_to_native_id(msg_core_get_camera_device(src)->camera);
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_RENDER_TARGETS_RESET:
@@ -1334,7 +1334,7 @@ func b32 msg_to_sdl_event(msg* src, SDL_Event* out_event) {
       out_event->render.type = (SDL_EventType)src->type;
       out_event->render.timestamp = (Uint64)src->timestamp;
       out_event->render.windowID = (SDL_WindowID)window_to_native_id(msg_core_get_render(src)->window);
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_FINGER_DOWN:
@@ -1351,7 +1351,7 @@ func b32 msg_to_sdl_event(msg* src, SDL_Event* out_event) {
       out_event->tfinger.dy = msg_core_get_touch(src)->dy;
       out_event->tfinger.pressure = msg_core_get_touch(src)->pressure;
       out_event->tfinger.windowID = (SDL_WindowID)window_to_native_id(msg_core_get_touch(src)->window);
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_PEN_PROXIMITY_IN:
@@ -1360,7 +1360,7 @@ func b32 msg_to_sdl_event(msg* src, SDL_Event* out_event) {
       out_event->pproximity.timestamp = (Uint64)src->timestamp;
       out_event->pproximity.windowID = (SDL_WindowID)window_to_native_id(msg_core_get_pen_proximity(src)->window);
       out_event->pproximity.which = (SDL_PenID)msg_core_get_pen_proximity(src)->pen_id;
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_PEN_MOTION:
@@ -1371,7 +1371,7 @@ func b32 msg_to_sdl_event(msg* src, SDL_Event* out_event) {
       out_event->pmotion.pen_state = (SDL_PenInputFlags)msg_core_get_pen_motion(src)->pen_state;
       out_event->pmotion.x = msg_core_get_pen_motion(src)->x;
       out_event->pmotion.y = msg_core_get_pen_motion(src)->y;
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_PEN_DOWN:
@@ -1385,7 +1385,7 @@ func b32 msg_to_sdl_event(msg* src, SDL_Event* out_event) {
       out_event->ptouch.y = msg_core_get_pen_touch(src)->y;
       out_event->ptouch.eraser = msg_core_get_pen_touch(src)->eraser != 0;
       out_event->ptouch.down = msg_core_get_pen_touch(src)->down != 0;
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_PEN_BUTTON_DOWN:
@@ -1399,7 +1399,7 @@ func b32 msg_to_sdl_event(msg* src, SDL_Event* out_event) {
       out_event->pbutton.y = msg_core_get_pen_button(src)->y;
       out_event->pbutton.button = (Uint8)msg_core_get_pen_button(src)->button;
       out_event->pbutton.down = msg_core_get_pen_button(src)->down != 0;
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_PEN_AXIS:
@@ -1412,7 +1412,7 @@ func b32 msg_to_sdl_event(msg* src, SDL_Event* out_event) {
       out_event->paxis.y = msg_core_get_pen_axis(src)->y;
       out_event->paxis.axis = (SDL_PenAxis)msg_core_get_pen_axis(src)->axis;
       out_event->paxis.value = msg_core_get_pen_axis(src)->value;
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     default:
@@ -1432,7 +1432,7 @@ func b32 msg_to_sdl_event(msg* src, SDL_Event* out_event) {
       out_event->drop.y = msg_core_get_drop(src)->y;
       out_event->drop.source = msg_core_get_drop(src)->source;
       out_event->drop.data = msg_core_get_drop(src)->data;
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_CLIPBOARD_UPDATE:
@@ -1441,7 +1441,7 @@ func b32 msg_to_sdl_event(msg* src, SDL_Event* out_event) {
       out_event->clipboard.owner = msg_core_get_clipboard(src)->owner != 0;
       out_event->clipboard.num_mime_types = (Sint32)msg_core_get_clipboard(src)->num_mime_types;
       out_event->clipboard.mime_types = (const char**)msg_core_get_clipboard(src)->mime_types;
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     case SDL_EVENT_SENSOR_UPDATE:
@@ -1452,33 +1452,33 @@ func b32 msg_to_sdl_event(msg* src, SDL_Event* out_event) {
         out_event->sensor.data[idx] = msg_core_get_sensor(src)->data[idx];
       }
       out_event->sensor.sensor_timestamp = (Uint64)msg_core_get_sensor(src)->sensor_timestamp;
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
 
     default:
       out_event->common.type = (Uint32)src->type;
       out_event->common.timestamp = (Uint64)src->timestamp;
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
   }
 }
 
 func void msg_pump(void) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   // Pumps the process-global queue.
   SDL_PumpEvents();
   msg_refresh_synthetic_device_msgs();
   thread_log_trace("msg_pump");
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func b32 msg_poll(msg* out_msg) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   SDL_Event native_event;
 
   msg_refresh_synthetic_device_msgs();
   if (!out_msg) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   assert(out_msg != NULL);
@@ -1491,20 +1491,20 @@ func b32 msg_poll(msg* out_msg) {
       continue;
     }
     msg_notify_internal_listeners(out_msg);
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 1;
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return 0;
 }
 
 func b32 msg_wait(msg* out_msg) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   SDL_Event native_event;
 
   if (!out_msg) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   assert(out_msg != NULL);
@@ -1518,13 +1518,13 @@ func b32 msg_wait(msg* out_msg) {
       continue;
     }
     msg_notify_internal_listeners(out_msg);
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 1;
   }
 
   for (;;) {
     if (!SDL_WaitEvent(&native_event)) {
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 0;
     }
     if (!msg_from_sdl(&native_event, out_msg)) {
@@ -1534,21 +1534,21 @@ func b32 msg_wait(msg* out_msg) {
       continue;
     }
     msg_notify_internal_listeners(out_msg);
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 1;
   }
 }
 
 func b32 msg_wait_timeout(msg* out_msg, i32 timeout_ms) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   SDL_Event native_event;
 
   if (!out_msg) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   if (timeout_ms < 0) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   assert(out_msg != NULL);
@@ -1562,45 +1562,45 @@ func b32 msg_wait_timeout(msg* out_msg, i32 timeout_ms) {
       continue;
     }
     msg_notify_internal_listeners(out_msg);
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 1;
   }
 
   if (!SDL_WaitEventTimeout(&native_event, (Sint32)timeout_ms) || !msg_from_sdl(&native_event, out_msg) ||
       !msg_filter_accept(out_msg)) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
   msg_notify_internal_listeners(out_msg);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return 1;
 }
 
 func b32 msg_peek(msg* out_msg) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   SDL_Event native_event = {0};
   if (out_msg == NULL) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
   if (SDL_PeepEvents(&native_event, 1, SDL_PEEKEVENT, SDL_EVENT_FIRST, SDL_EVENT_LAST) <= 0) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
   if (!msg_from_sdl(&native_event, out_msg) || !msg_filter_accept(out_msg)) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return 1;
 }
 
 func i32 msg_count(u32 type_min, u32 type_max) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (type_min > type_max) {
     u32 temp = type_min;
     type_min = type_max;
@@ -1608,29 +1608,29 @@ func i32 msg_count(u32 type_min, u32 type_max) {
   }
 
   i32 count = SDL_PeepEvents(NULL, 0, SDL_PEEKEVENT, type_min, type_max);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return count;
 }
 
 func void msg_flush(u32 type_min, u32 type_max) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (type_min > type_max) {
     u32 temp = type_min;
     type_min = type_max;
     type_max = temp;
   }
   SDL_FlushEvents(type_min, type_max);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func b32 _msg_post(const msg* src, callsite site) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   SDL_Event native_event;
   msg posted_msg;
   msg* payload = NULL;
 
   if (!src) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   assert(src != NULL);
@@ -1638,18 +1638,18 @@ func b32 _msg_post(const msg* src, callsite site) {
   posted_msg = *src;
   posted_msg.post_site = site;
   if (!msg_category_is_valid(posted_msg.category)) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
   if (!msg_filter_accept(&posted_msg)) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
   if (!msg_dispatch_handlers(&posted_msg, MSG_HANDLER_STAGE_BEFORE_POST)) {
     thread_log_trace("msg_post: cancelled type=%u", posted_msg.type);
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
@@ -1658,7 +1658,7 @@ func b32 _msg_post(const msg* src, callsite site) {
     u32 native_event_type = posted_msg.type;
     if (msg_category_needs_user_space(posted_msg.category)) {
       if (!msg_user_space_get_sdl_type(posted_msg.category, posted_msg.type, &native_event_type)) {
-        TracyCZoneEnd(__tracy_zone_ctx);
+        profile_func_end;
         return 0;
       }
     }
@@ -1666,7 +1666,7 @@ func b32 _msg_post(const msg* src, callsite site) {
     payload = (msg*)SDL_malloc(size_of(*payload));
     if (!payload) {
       thread_log_error("msg_post: payload alloc failed type=%u", posted_msg.type);
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 0;
     }
     *payload = posted_msg;
@@ -1678,7 +1678,7 @@ func b32 _msg_post(const msg* src, callsite site) {
     native_event.user.data1 = payload;
     native_event.user.data2 = NULL;
   } else if (!msg_to_sdl_event(&posted_msg, &native_event)) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
@@ -1689,20 +1689,20 @@ func b32 _msg_post(const msg* src, callsite site) {
     }
     (void)msg_dispatch_handlers(&posted_msg, MSG_HANDLER_STAGE_POST_FAILED);
     thread_log_warn("msg_post: SDL_PushEvent failed type=%u", posted_msg.type);
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
   (void)msg_dispatch_handlers(&posted_msg, MSG_HANDLER_STAGE_AFTER_POST);
   msg_notify_internal_listeners(&posted_msg);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return 1;
 }
 
 func u64 msg_add_handler(const msg_handler_desc* desc) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (desc == NULL || desc->handler_fn == NULL || msg_handler_count >= MSG_HANDLER_CAP) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   assert(desc != NULL);
@@ -1727,14 +1727,14 @@ func u64 msg_add_handler(const msg_handler_desc* desc) {
   msg_handler_count += 1;
   msg_handler_sort_entries();
   thread_log_trace("msg_add_handler: id=%llu count=%u", (unsigned long long)handler_id, msg_handler_count);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return handler_id;
 }
 
 func b32 msg_remove_handler(u64 handler_id) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (handler_id == 0) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   assert(handler_id != 0);
@@ -1751,16 +1751,16 @@ func b32 msg_remove_handler(u64 handler_id) {
     msg_handler_count -= 1;
     msg_handler_entries[msg_handler_count] = (msg_handler_entry) {0};
     thread_log_trace("msg_remove_handler: id=%llu count=%u", (unsigned long long)handler_id, msg_handler_count);
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 1;
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return 0;
 }
 
 func void msg_clear_handlers(void) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   for (u32 idx = 0; idx < msg_handler_count; idx += 1) {
     msg_handler_entries[idx] = (msg_handler_entry) {0};
   }
@@ -1768,32 +1768,32 @@ func void msg_clear_handlers(void) {
   msg_handler_count = 0;
   msg_handler_next_id = 1;
   thread_log_trace("msg_clear_handlers");
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func void msg_set_filter(msg_filter_fn filter_fn, void* user_data) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   msg_filter_current = filter_fn;
   msg_filter_user_data = user_data;
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func b32 msg_from_native(const void* native_event, msg* out_msg) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (native_event == NULL || out_msg == NULL) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return msg_from_sdl((const SDL_Event*)native_event, out_msg);
 }
 
 func b32 msg_to_native(const msg* src, void* native_event) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (src == NULL || native_event == NULL) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return msg_to_sdl_event((msg*)src, (SDL_Event*)native_event);
 }

@@ -10,9 +10,9 @@
 #include "basic/profiler.h"
 
 func pipe pipe_stdin(process prc) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (!prc) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return NULL;
   }
   assert(prc != NULL);
@@ -28,14 +28,14 @@ func pipe pipe_stdin(process prc) {
                                                    });
     (void)msg_post(&lifecycle_msg);
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return pip;
 }
 
 func pipe pipe_stdout(process prc) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (!prc) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return NULL;
   }
   assert(prc != NULL);
@@ -51,21 +51,21 @@ func pipe pipe_stdout(process prc) {
                                                    });
     (void)msg_post(&lifecycle_msg);
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return pip;
 }
 
 func pipe pipe_stderr(process prc) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (!prc) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return NULL;
   }
   assert(prc != NULL);
 
   SDL_PropertiesID props = SDL_GetProcessProperties((SDL_Process*)prc);
   if (!props) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return NULL;
   }
 
@@ -80,82 +80,82 @@ func pipe pipe_stderr(process prc) {
                                                    });
     (void)msg_post(&lifecycle_msg);
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return pip;
 }
 
 func b32 pipe_is_valid(pipe pip) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_begin;
+  profile_func_end;
   return pip != NULL;
 }
 
 func sz pipe_read(pipe pip, void* ptr, sz size) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (!pip || !ptr || !size) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   assert(size > 0);
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return (sz)SDL_ReadIO((SDL_IOStream*)pip, ptr, (size_t)size);
 }
 
 func sz pipe_write(pipe pip, const void* ptr, sz size) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (!pip || !ptr || !size) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   assert(size > 0);
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return (sz)SDL_WriteIO((SDL_IOStream*)pip, ptr, (size_t)size);
 }
 
 func sz pipe_read_nonblocking(pipe pip, void* ptr, sz size) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   sz result = pipe_read(pip, ptr, size);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return result;
 }
 
 func sz pipe_write_nonblocking(pipe pip, const void* ptr, sz size) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   sz result = pipe_write(pip, ptr, size);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return result;
 }
 
 func b32 pipe_poll_readable(pipe pip, i32 timeout_ms) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (!pipe_is_valid(pip) || timeout_ms < 0) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   if (timeout_ms > 0) {
     SDL_Delay((u32)timeout_ms);
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return 1;
 }
 
 func b32 pipe_flush(pipe pip) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (!pip) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return SDL_FlushIO((SDL_IOStream*)pip);
 }
 
 func void pipe_close(pipe pip) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (!pip) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return;
   }
 
@@ -170,5 +170,5 @@ func void pipe_close(pipe pip) {
 
   thread_log_trace("pipe_close: pipe=%p", pip);
   SDL_CloseIO((SDL_IOStream*)pip);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }

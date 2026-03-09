@@ -15,24 +15,24 @@ global_var atomic_i32 process_global_ctx_init = {0};
 thread_local global_var b8 global_user_data_access[CTX_USER_DATA_COUNT] = {0};
 
 func void global_user_data_access_set_all_local(b8 has_access) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   for (sz idx = 0; idx < CTX_USER_DATA_COUNT; idx += 1) {
     global_user_data_access[idx] = has_access ? true : false;
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func b32 global_ctx_init(allocator main_allocator) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (!main_allocator.alloc_fn) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return false;
   }
   assert(main_allocator.dealloc_fn != NULL);
 
   i32 state = atomic_i32_get(&process_global_ctx_init);
   if (state == 2) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return true;
   }
 
@@ -56,7 +56,7 @@ func b32 global_ctx_init(allocator main_allocator) {
       memset(&process_global_ctx, 0, size_of(process_global_ctx));
       atomic_fence_release();
       atomic_i32_set(&process_global_ctx_init, 0);
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return false;
     }
 
@@ -65,7 +65,7 @@ func b32 global_ctx_init(allocator main_allocator) {
     process_global_ctx.is_init = true;
     atomic_fence_release();
     atomic_i32_set(&process_global_ctx_init, 2);
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return true;
   }
 
@@ -73,15 +73,15 @@ func b32 global_ctx_init(allocator main_allocator) {
     atomic_pause();
   }
   atomic_fence_acquire();
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return atomic_i32_get(&process_global_ctx_init) == 2;
 }
 
 func void global_ctx_quit(void) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   i32 expected = 2;
   if (!atomic_i32_cmpex(&process_global_ctx_init, &expected, 1)) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return;
   }
 
@@ -110,108 +110,108 @@ func void global_ctx_quit(void) {
   global_user_data_access_set_all_local(false);
   atomic_fence_release();
   atomic_i32_set(&process_global_ctx_init, 0);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func b32 global_ctx_is_init(void) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_begin;
+  profile_func_end;
   return atomic_i32_get(&process_global_ctx_init) == 2;
 }
 
 func global_ctx* global_ctx_get(void) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (!global_ctx_is_init()) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return NULL;
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return &process_global_ctx;
 }
 
 func ctx* global_ctx_get_shared(void) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   global_ctx* wrapper = global_ctx_get();
   if (!wrapper) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return NULL;
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return &wrapper->shared_ctx;
 }
 
 func log_state* global_get_log_state(void) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_begin;
+  profile_func_end;
   return ctx_get_log_state(global_ctx_get_shared());
 }
 
 func void global_ctx_lock(void) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   global_ctx* wrapper = global_ctx_get();
   if (wrapper && wrapper->mutex_handle) {
     mutex_lock(wrapper->mutex_handle);
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func void global_ctx_unlock(void) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   global_ctx* wrapper = global_ctx_get();
   if (wrapper && wrapper->mutex_handle) {
     mutex_unlock(wrapper->mutex_handle);
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func allocator global_get_allocator(void) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_begin;
+  profile_func_end;
   return ctx_get_allocator(global_ctx_get_shared());
 }
 
 func allocator global_get_main_allocator(void) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   allocator alloc = {0};
   i32 state = atomic_i32_get(&process_global_ctx_init);
   if (state == 0) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return alloc;
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return process_global_ctx.shared_ctx.main_allocator;
 }
 
 func arena* global_get_perm_arena(void) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_begin;
+  profile_func_end;
   return ctx_get_perm_arena(global_ctx_get_shared());
 }
 
 func arena* global_get_temp_arena(void) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_begin;
+  profile_func_end;
   return ctx_get_temp_arena(global_ctx_get_shared());
 }
 
 func heap* global_get_perm_heap(void) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_begin;
+  profile_func_end;
   return ctx_get_perm_heap(global_ctx_get_shared());
 }
 
 func heap* global_get_temp_heap(void) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_begin;
+  profile_func_end;
   return ctx_get_temp_heap(global_ctx_get_shared());
 }
 
 func void* global_get_user_data(ctx_user_data_idx idx) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   global_ctx* wrapper = global_ctx_get();
   if (!wrapper || idx >= CTX_USER_DATA_COUNT) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return NULL;
   }
   assert(idx < CTX_USER_DATA_COUNT);
@@ -227,15 +227,15 @@ func void* global_get_user_data(ctx_user_data_idx idx) {
     mutex_unlock(wrapper->mutex_handle);
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return user_data;
 }
 
 func b32 global_set_user_data(ctx_user_data_idx idx, void* user_data) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   global_ctx* wrapper = global_ctx_get();
   if (!wrapper || idx >= CTX_USER_DATA_COUNT) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return false;
   }
   assert(idx < CTX_USER_DATA_COUNT);
@@ -253,61 +253,61 @@ func b32 global_set_user_data(ctx_user_data_idx idx, void* user_data) {
     mutex_unlock(wrapper->mutex_handle);
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return has_access;
 }
 
 func b32 global_has_user_data_access(ctx_user_data_idx idx) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (!global_ctx_get() || idx >= CTX_USER_DATA_COUNT) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return false;
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return global_user_data_access[idx] != 0;
 }
 
 func b32 global_set_user_data_access(ctx_user_data_idx idx, b8 has_access) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (!global_ctx_get() || idx >= CTX_USER_DATA_COUNT) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return false;
   }
   global_user_data_access[idx] = has_access ? true : false;
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return true;
 }
 
 func void global_set_user_data_access_all(b8 has_access) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (!global_ctx_get()) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return;
   }
   global_user_data_access_set_all_local(has_access);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func void global_clear_temp(void) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   ctx_clear_temp(global_ctx_get_shared());
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func void global_log_set_level(log_level level) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   log_state_set_level(global_get_log_state(), level);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func void global_log_begin_frame(void) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   log_state_begin_frame(global_get_log_state());
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func log_frame* global_log_end_frame(u32 severity_mask) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_begin;
+  profile_func_end;
   return log_state_end_frame(global_get_log_state(), severity_mask);
 }

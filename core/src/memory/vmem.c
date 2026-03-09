@@ -34,11 +34,11 @@ typedef struct vmem_stats_state {
 global_var vmem_stats_state g_vmem_stats;
 
 func void vmem_update_peak_allocated_bytes(void) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (g_vmem_stats.live_allocated_bytes > g_vmem_stats.peak_live_allocated_bytes) {
     g_vmem_stats.peak_live_allocated_bytes = g_vmem_stats.live_allocated_bytes;
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 // =========================================================================
@@ -50,77 +50,77 @@ func void vmem_update_peak_allocated_bytes(void) {
 #  include <windows.h>
 
 func sz vmem_page_size(void) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   SYSTEM_INFO info;
   GetSystemInfo(&info);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return (sz)info.dwPageSize;
 }
 
 func void* vmem_reserve(sz size) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   g_vmem_stats.reserve_calls += 1;
   void* ptr = VirtualAlloc(NULL, size, MEM_RESERVE, PAGE_NOACCESS);
   if (ptr != NULL) {
     g_vmem_stats.reserved_bytes += size;
     TracyCAlloc(ptr, size);
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return ptr;
 }
 
 func b32 vmem_commit(void* ptr, sz size) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   g_vmem_stats.commit_calls += 1;
   b32 success = VirtualAlloc(ptr, size, MEM_COMMIT, PAGE_READWRITE) != NULL ? 1 : 0;
   if (success) {
     g_vmem_stats.committed_bytes += size;
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return success;
 }
 
 func b32 vmem_decommit(void* ptr, sz size) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   g_vmem_stats.decommit_calls += 1;
   b32 success = VirtualFree(ptr, size, MEM_DECOMMIT) != 0 ? 1 : 0;
   if (success) {
     g_vmem_stats.decommitted_bytes += size;
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return success;
 }
 
 func b32 vmem_release(void* ptr, sz size) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   g_vmem_stats.release_calls += 1;
   b32 success = VirtualFree(ptr, 0, MEM_RELEASE) != 0 ? 1 : 0;
   if (success) {
     g_vmem_stats.released_bytes += size;
     TracyCFree(ptr);
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return success;
 }
 
 func void* vmem_platform_alloc(sz size) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   void* ptr = VirtualAlloc(NULL, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
   if (ptr != NULL) {
     TracyCAlloc(ptr, size);
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return ptr;
 }
 
 func b32 vmem_platform_free(void* ptr, sz size) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   (void)size;
   b32 success = VirtualFree(ptr, 0, MEM_RELEASE) != 0 ? 1 : 0;
   if (success) {
     TracyCFree(ptr);
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return success;
 }
 
@@ -130,81 +130,81 @@ func b32 vmem_platform_free(void* ptr, sz size) {
 #  include <unistd.h>
 
 func sz vmem_page_size(void) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_begin;
+  profile_func_end;
   return (sz)sysconf(_SC_PAGESIZE);
 }
 
 func void* vmem_reserve(sz size) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   g_vmem_stats.reserve_calls += 1;
   void* ptr = mmap(NULL, size, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
   if (ptr == MAP_FAILED) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return NULL;
   }
   g_vmem_stats.reserved_bytes += size;
   TracyCAlloc(ptr, size);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return ptr;
 }
 
 func b32 vmem_commit(void* ptr, sz size) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   g_vmem_stats.commit_calls += 1;
   b32 success = mprotect(ptr, size, PROT_READ | PROT_WRITE) == 0 ? 1 : 0;
   if (success) {
     g_vmem_stats.committed_bytes += size;
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return success;
 }
 
 func b32 vmem_decommit(void* ptr, sz size) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   g_vmem_stats.decommit_calls += 1;
   if (mprotect(ptr, size, PROT_NONE) != 0) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   // Hint to the OS to release the physical pages; best-effort, not checked.
   (void)madvise(ptr, size, MADV_DONTNEED);
   g_vmem_stats.decommitted_bytes += size;
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return 1;
 }
 
 func b32 vmem_release(void* ptr, sz size) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   g_vmem_stats.release_calls += 1;
   b32 success = munmap(ptr, size) == 0 ? 1 : 0;
   if (success) {
     g_vmem_stats.released_bytes += size;
     TracyCFree(ptr);
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return success;
 }
 
 func void* vmem_platform_alloc(sz size) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   void* ptr = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
   if (ptr == MAP_FAILED) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return NULL;
   }
   TracyCAlloc(ptr, size);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return ptr;
 }
 
 func b32 vmem_platform_free(void* ptr, sz size) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   b32 success = munmap(ptr, size) == 0 ? 1 : 0;
   if (success) {
     TracyCFree(ptr);
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return success;
 }
 
@@ -218,71 +218,71 @@ func b32 vmem_platform_free(void* ptr, sz size) {
 #  include <stdlib.h>
 
 func sz vmem_page_size(void) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_begin;
+  profile_func_end;
   return 4096;
 }
 
 func void* vmem_reserve(sz size) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   g_vmem_stats.reserve_calls += 1;
   void* ptr = malloc(size);
   if (ptr != NULL) {
     g_vmem_stats.reserved_bytes += size;
     TracyCAlloc(ptr, size);
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return ptr;
 }
 
 func b32 vmem_commit(void* ptr, sz size) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   g_vmem_stats.commit_calls += 1;
   (void)ptr;
   g_vmem_stats.committed_bytes += size;
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return 1;
 }
 
 func b32 vmem_decommit(void* ptr, sz size) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   g_vmem_stats.decommit_calls += 1;
   (void)ptr;
   g_vmem_stats.decommitted_bytes += size;
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return 1;
 }
 
 func b32 vmem_release(void* ptr, sz size) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   g_vmem_stats.release_calls += 1;
   g_vmem_stats.released_bytes += size;
   if (ptr != NULL) {
     TracyCFree(ptr);
   }
   free(ptr);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return 1;
 }
 
 func void* vmem_platform_alloc(sz size) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   void* ptr = malloc(size);
   if (ptr != NULL) {
     TracyCAlloc(ptr, size);
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return ptr;
 }
 
 func b32 vmem_platform_free(void* ptr, sz size) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   (void)size;
   if (ptr != NULL) {
     TracyCFree(ptr);
   }
   free(ptr);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return 1;
 }
 
@@ -302,34 +302,34 @@ typedef union vmem_alloc_header {
 } vmem_alloc_header;
 
 func vmem_alloc_header* vmem_get_alloc_header(void* ptr) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_begin;
+  profile_func_end;
   return ((vmem_alloc_header*)ptr) - 1;
 }
 
 func void* vmem_get_alloc_base(void* ptr) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   vmem_alloc_header* header = vmem_get_alloc_header(ptr);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return (u8*)ptr - header->info.prefix_size;
 }
 
 func sz vmem_get_alloc_align(void) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
 #if defined(PLATFORM_WINDOWS) || defined(PLATFORM_UNIX)
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return vmem_page_size();
 #else
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return align_of(max_align_t);
 #endif
 }
 
 func void* vmem_alloc(sz size) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   g_vmem_stats.alloc_calls += 1;
   if (size == 0) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return NULL;
   }
   assert(size > 0);
@@ -338,14 +338,14 @@ func void* vmem_alloc(sz size) {
   sz prefix_size = align_up(size_of(vmem_alloc_header), alloc_align);
 
   if (size > SZ_MAX - prefix_size) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return NULL;
   }
 
   sz total_size = prefix_size + size;
   void* base_ptr = vmem_platform_alloc(total_size);
   if (!base_ptr) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return NULL;
   }
 
@@ -358,20 +358,20 @@ func void* vmem_alloc(sz size) {
   g_vmem_stats.live_allocated_bytes += size;
   g_vmem_stats.total_allocated_bytes += size;
   vmem_update_peak_allocated_bytes();
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return user_ptr;
 }
 
 func void* vmem_calloc(sz count, sz size) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   g_vmem_stats.calloc_calls += 1;
   if (count == 0 || size == 0) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return NULL;
   }
 
   if (count > SZ_MAX / size) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return NULL;
   }
 
@@ -380,51 +380,51 @@ func void* vmem_calloc(sz count, sz size) {
   if (ptr) {
     memset(ptr, 0, total_size);
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return ptr;
 }
 
 func void* vmem_realloc(void* ptr, sz old_size, sz new_size) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   g_vmem_stats.realloc_calls += 1;
   (void)old_size;
   if (!ptr) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return vmem_alloc(new_size);
   }
 
   if (new_size == 0) {
     (void)vmem_free(ptr, 0);
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return NULL;
   }
   assert(new_size > 0);
 
   vmem_alloc_header* old_header = vmem_get_alloc_header(ptr);
   if (new_size == old_header->info.user_size) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return ptr;
   }
 
   void* new_ptr = vmem_alloc(new_size);
   if (!new_ptr) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return NULL;
   }
 
   sz copy_size = old_header->info.user_size < new_size ? old_header->info.user_size : new_size;
   memcpy(new_ptr, ptr, copy_size);
   (void)vmem_free(ptr, 0);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return new_ptr;
 }
 
 func b32 vmem_free(void* ptr, sz size) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   g_vmem_stats.free_calls += 1;
   (void)size;
   if (!ptr) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 1;
   }
 
@@ -445,7 +445,7 @@ func b32 vmem_free(void* ptr, sz size) {
     }
     g_vmem_stats.total_freed_bytes += user_size;
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return success;
 }
 
@@ -454,19 +454,19 @@ func b32 vmem_free(void* ptr, sz size) {
 // =========================================================================
 
 func void* vmem_alloc_callback(void* user_data, callsite site, sz size) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   (void)user_data;
   (void)site;
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return vmem_alloc(size);
 }
 
 func void vmem_dealloc_callback(void* user_data, callsite site, void* ptr) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   (void)user_data;
   (void)site;
   (void)vmem_free(ptr, 0);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func void* vmem_realloc_callback(
@@ -475,26 +475,26 @@ func void* vmem_realloc_callback(
     void* ptr,
     sz old_size,
     sz new_size) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   (void)user_data;
   (void)site;
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return vmem_realloc(ptr, old_size, new_size);
 }
 
 func allocator vmem_get_allocator(void) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   allocator alloc;
   alloc.user_data = NULL;
   alloc.alloc_fn = vmem_alloc_callback;
   alloc.dealloc_fn = vmem_dealloc_callback;
   alloc.realloc_fn = vmem_realloc_callback;
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return alloc;
 }
 
 func vmem_stats vmem_get_stats(void) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   vmem_stats stats;
   stats.page_size = vmem_page_size();
 
@@ -518,6 +518,6 @@ func vmem_stats vmem_get_stats(void) {
   stats.peak_live_allocated_bytes = g_vmem_stats.peak_live_allocated_bytes;
   stats.total_allocated_bytes = g_vmem_stats.total_allocated_bytes;
   stats.total_freed_bytes = g_vmem_stats.total_freed_bytes;
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return stats;
 }

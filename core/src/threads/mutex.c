@@ -10,7 +10,7 @@
 #include "basic/profiler.h"
 
 func mutex _mutex_create(callsite site) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   (void)site;
   mutex handle = (mutex)SDL_CreateMutex();
   if (handle != NULL) {
@@ -24,15 +24,15 @@ func mutex _mutex_create(callsite site) {
     (void)msg_post(&lifecycle_msg);
     thread_log_trace("mutex_create: handle=%p", handle);
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return handle;
 }
 
 func b32 _mutex_destroy(mutex mtx, callsite site) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   (void)site;
   if (!mtx) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
@@ -46,65 +46,65 @@ func b32 _mutex_destroy(mutex mtx, callsite site) {
   (void)msg_post(&lifecycle_msg);
   thread_log_trace("mutex_destroy: handle=%p", mtx);
   SDL_DestroyMutex((SDL_Mutex*)mtx);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return 1;
 }
 
 func b32 mutex_is_valid(mutex mtx) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_begin;
+  profile_func_end;
   return mtx != NULL;
 }
 
 func void mutex_lock(mutex mtx) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (mtx == NULL) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return;
   }
   assert(mtx != NULL);
   SDL_LockMutex((SDL_Mutex*)mtx);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func b32 mutex_trylock(mutex mtx) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (mtx == NULL) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   assert(mtx != NULL);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return SDL_TryLockMutex((SDL_Mutex*)mtx);
 }
 
 func b32 mutex_timed_lock(mutex mtx, i32 timeout_ms) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (mtx == NULL || timeout_ms < 0) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
   u64 start_ticks = SDL_GetTicks();
   while (!mutex_trylock(mtx)) {
     if ((i32)(SDL_GetTicks() - start_ticks) >= timeout_ms) {
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 0;
     }
     SDL_Delay(1);
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return 1;
 }
 
 func void mutex_unlock(mutex mtx) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (mtx == NULL) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return;
   }
   assert(mtx != NULL);
   SDL_UnlockMutex((SDL_Mutex*)mtx);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }

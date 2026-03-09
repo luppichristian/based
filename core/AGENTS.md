@@ -28,7 +28,7 @@ CMakeLists.txt               # Core module build targets
 api_index.txt                # Core public API index
 include/                     # Core public headers
   based_core.h               # Core umbrella header
-  basic/                     # Primitive types, keywords, assert/log, profiler, intrinsics
+  basic/                     # Primitive types, keywords, assert, profiler, intrinsics
   context/                   # Global/thread/shared context APIs
   containers/                # Intrusive containers and sorting
   memory/                    # Allocators and memory utilities
@@ -38,7 +38,7 @@ include/                     # Core public headers
   processes/                 # Process and pipe APIs
   system/                    # CPU/system/runtime information APIs
   strings/                   # Character/string/unicode APIs
-  utils/                     # Utility helpers (cmdline, crc, timer, uuid, etc.)
+  utils/                     # Utility helpers (cmdline, crc, log state, timer, uuid, etc.)
   threads/                   # Threading/synchronization/atomics
 src/                         # Core implementations (mirrors include/ module folders)
 tests/                       # Core GoogleTest coverage (mirrors include/ module folders)

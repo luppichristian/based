@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "../basic/log.h"
+#include "../utils/log_state.h"
 #include "../memory/arena.h"
 #include "../memory/heap.h"
 #include "../threads/mutex.h"

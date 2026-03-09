@@ -3,9 +3,9 @@
 
 #pragma once
 
+#include "../basic/codespace.h"
+#include "../basic/primitive_types.h"
 #include "../threads/mutex.h"
-#include "codespace.h"
-#include "primitive_types.h"
 
 // =========================================================================
 // Log function

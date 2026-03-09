@@ -10,20 +10,20 @@
 // =========================================================================
 
 func b32 monitor_id_is_valid(monitor src) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_begin;
+  profile_func_end;
   return src != NULL;
 }
 
 func monitor monitor_from_native_id(up native_id) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_begin;
+  profile_func_end;
   return (monitor)(up)native_id;
 }
 
 func up monitor_to_native_id(monitor src) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_begin;
+  profile_func_end;
   return (up)src;
 }
 
@@ -32,7 +32,7 @@ func up monitor_to_native_id(monitor src) {
 // =========================================================================
 
 func sz monitor_get_count(void) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   int count = 0;
   SDL_DisplayID* ids = SDL_GetDisplays(&count);
 
@@ -40,12 +40,12 @@ func sz monitor_get_count(void) {
     SDL_free(ids);
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return count > 0 ? (sz)count : 0;
 }
 
 func b32 monitor_get_id(sz idx, monitor* out_id) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   int count = 0;
   SDL_DisplayID* ids = SDL_GetDisplays(&count);
   b32 found = ids != NULL && idx < (sz)count;
@@ -62,24 +62,24 @@ func b32 monitor_get_id(sz idx, monitor* out_id) {
     SDL_free(ids);
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return found;
 }
 
 func monitor monitor_get_primary_id(void) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_begin;
+  profile_func_end;
   return monitor_from_native_id((up)SDL_GetPrimaryDisplay());
 }
 
 func cstr8 monitor_get_name(monitor id) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (!monitor_id_is_valid(id)) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return NULL;
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return SDL_GetDisplayName((SDL_DisplayID)monitor_to_native_id(id));
 }
 
@@ -88,12 +88,12 @@ func cstr8 monitor_get_name(monitor id) {
 // =========================================================================
 
 func b32 monitor_get_bounds(monitor id, monitor_rect* out_rect) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   SDL_Rect bounds = {0};
 
   if (!monitor_id_is_valid(id) || out_rect == NULL ||
       !SDL_GetDisplayBounds((SDL_DisplayID)monitor_to_native_id(id), &bounds)) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
@@ -101,17 +101,17 @@ func b32 monitor_get_bounds(monitor id, monitor_rect* out_rect) {
   out_rect->y = bounds.y;
   out_rect->width = bounds.w;
   out_rect->height = bounds.h;
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return 1;
 }
 
 func b32 monitor_get_usable_bounds(monitor id, monitor_rect* out_rect) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   SDL_Rect bounds = {0};
 
   if (!monitor_id_is_valid(id) || out_rect == NULL ||
       !SDL_GetDisplayUsableBounds((SDL_DisplayID)monitor_to_native_id(id), &bounds)) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
@@ -119,7 +119,7 @@ func b32 monitor_get_usable_bounds(monitor id, monitor_rect* out_rect) {
   out_rect->y = bounds.y;
   out_rect->width = bounds.w;
   out_rect->height = bounds.h;
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return 1;
 }
 
@@ -128,9 +128,9 @@ func b32 monitor_get_usable_bounds(monitor id, monitor_rect* out_rect) {
 // =========================================================================
 
 func b32 monitor_mode_from_native(const SDL_DisplayMode* native_mode, monitor_mode* out_mode) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (native_mode == NULL || out_mode == NULL) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
@@ -138,14 +138,14 @@ func b32 monitor_mode_from_native(const SDL_DisplayMode* native_mode, monitor_mo
   out_mode->height = native_mode->h;
   out_mode->pixel_format = native_mode->format;
   out_mode->refresh_rate = native_mode->refresh_rate;
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return 1;
 }
 
 func sz monitor_get_mode_count(monitor id) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (!monitor_id_is_valid(id)) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
@@ -155,14 +155,14 @@ func sz monitor_get_mode_count(monitor id) {
     SDL_free(modes);
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return mode_count > 0 ? (sz)mode_count : 0;
 }
 
 func b32 monitor_get_mode(monitor id, sz idx, monitor_mode* out_mode) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (out_mode == NULL) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
@@ -174,39 +174,39 @@ func b32 monitor_get_mode(monitor id, sz idx, monitor_mode* out_mode) {
     if (modes != NULL) {
       SDL_free(modes);
     }
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
   b32 result = monitor_mode_from_native(modes[idx], out_mode);
   SDL_free(modes);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return result;
 }
 
 func b32 monitor_get_current_mode(monitor id, monitor_mode* out_mode) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (!monitor_id_is_valid(id) || out_mode == NULL) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
   const SDL_DisplayMode* native_mode = SDL_GetCurrentDisplayMode((SDL_DisplayID)monitor_to_native_id(id));
   b32 result = monitor_mode_from_native(native_mode, out_mode);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return result;
 }
 
 func b32 monitor_get_desktop_mode(monitor id, monitor_mode* out_mode) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (!monitor_id_is_valid(id) || out_mode == NULL) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
   const SDL_DisplayMode* native_mode = SDL_GetDesktopDisplayMode((SDL_DisplayID)monitor_to_native_id(id));
   b32 result = monitor_mode_from_native(native_mode, out_mode);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return result;
 }
 
@@ -215,58 +215,58 @@ func b32 monitor_get_desktop_mode(monitor id, monitor_mode* out_mode) {
 // =========================================================================
 
 func f32 monitor_get_refresh_rate(monitor id) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   monitor_mode mode = {0};
   if (!monitor_get_current_mode(id, &mode)) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0.0f;
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return mode.refresh_rate;
 }
 
 func f32 monitor_get_content_scale(monitor id) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (!monitor_id_is_valid(id)) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 1.0f;
   }
 
   f32 scale = SDL_GetDisplayContentScale((SDL_DisplayID)monitor_to_native_id(id));
   if (scale <= 0.0f) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 1.0f;
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return scale;
 }
 
 func monitor_orientation monitor_get_orientation(monitor id) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (!monitor_id_is_valid(id)) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return MONITOR_ORIENTATION_UNKNOWN;
   }
 
   SDL_DisplayOrientation orientation = SDL_GetCurrentDisplayOrientation((SDL_DisplayID)monitor_to_native_id(id));
   switch (orientation) {
     case SDL_ORIENTATION_LANDSCAPE:
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return MONITOR_ORIENTATION_LANDSCAPE;
     case SDL_ORIENTATION_LANDSCAPE_FLIPPED:
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return MONITOR_ORIENTATION_LANDSCAPE_FLIPPED;
     case SDL_ORIENTATION_PORTRAIT:
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return MONITOR_ORIENTATION_PORTRAIT;
     case SDL_ORIENTATION_PORTRAIT_FLIPPED:
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return MONITOR_ORIENTATION_PORTRAIT_FLIPPED;
     case SDL_ORIENTATION_UNKNOWN:
     default:
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return MONITOR_ORIENTATION_UNKNOWN;
   }
 }

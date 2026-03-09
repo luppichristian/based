@@ -11,22 +11,22 @@
 #include "basic/profiler.h"
 
 func allocator spinlock_allocator_resolve(void) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   allocator alloc = thread_get_allocator();
   if (alloc.alloc_fn != NULL && alloc.dealloc_fn != NULL) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return alloc;
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return global_get_allocator();
 }
 
 func spinlock _spinlock_create(callsite site) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   allocator alloc = spinlock_allocator_resolve();
   (void)site;
   if (alloc.alloc_fn == NULL || alloc.dealloc_fn == NULL) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return NULL;
   }
   assert(alloc.alloc_fn != NULL);
@@ -46,25 +46,25 @@ func spinlock _spinlock_create(callsite site) {
                                                    });
     if (!msg_post(&lifecycle_msg)) {
       allocator_dealloc(&alloc, spl, size_of(SDL_SpinLock));
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return NULL;
     }
     thread_log_trace("spinlock_create: handle=%p", spl);
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return (spinlock)spl;
 }
 
 func void _spinlock_destroy(spinlock sl, callsite site) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   allocator alloc = spinlock_allocator_resolve();
   (void)site;
   if (!sl) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return;
   }
   if (alloc.dealloc_fn == NULL) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return;
   }
   assert(alloc.dealloc_fn != NULL);
@@ -77,49 +77,49 @@ func void _spinlock_destroy(spinlock sl, callsite site) {
                                                      .object_ptr = sl,
                                                  });
   if (!msg_post(&lifecycle_msg)) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return;
   }
   thread_log_trace("spinlock_destroy: handle=%p", sl);
   allocator_dealloc(&alloc, sl, size_of(SDL_SpinLock));
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func b32 spinlock_is_valid(spinlock sl) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_begin;
+  profile_func_end;
   return sl != NULL;
 }
 
 func void spinlock_lock(spinlock sl) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (sl == NULL) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return;
   }
   assert(sl != NULL);
   SDL_LockSpinlock((SDL_SpinLock*)sl);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func void spinlock_unlock(spinlock sl) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (sl == NULL) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return;
   }
   assert(sl != NULL);
   SDL_UnlockSpinlock((SDL_SpinLock*)sl);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func b32 spinlock_try_lock(spinlock sl) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (sl == NULL) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   assert(sl != NULL);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return SDL_TryLockSpinlock((SDL_SpinLock*)sl);
 }

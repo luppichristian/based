@@ -36,6 +36,10 @@ Primitive types:
 - `u32x`: 32-bit fast unsigned integer (at least 32 bits)
 - `i64x`: 64-bit fast signed integer (at least 64 bits)
 - `u64x`: 64-bit fast unsigned integer (at least 64 bits)
+- `b8x`: 8-bit fast boolean (at least 8 bits)
+- `b16x`: 16-bit fast boolean (at least 16 bits)
+- `b32x`: 32-bit fast boolean (at least 32 bits)
+- `b64x`: 64-bit fast boolean (at least 64 bits)
 - `sz`: platform-width unsigned size type (`size_t`)
 - `up`: platform-width unsigned pointer integer (`uintptr_t`)
 - `sp`: platform-width signed pointer integer (`intptr_t`)
@@ -141,23 +145,35 @@ typedef int_fast32_t i32x;
 typedef uint_fast32_t u32x;
 typedef int_fast64_t i64x;
 typedef uint_fast64_t u64x;
+typedef uint_fast8_t b8x;
+typedef uint_fast16_t b16x;
+typedef uint_fast32_t b32x;
+typedef uint_fast64_t b64x;
 
-const_var i8x I8X_MIN = -128;
-const_var i8x I8X_MAX = 127;
+const_var i8x I8X_MIN = INT_FAST8_MIN;
+const_var i8x I8X_MAX = INT_FAST8_MAX;
 const_var u8x U8X_MIN = 0;
-const_var u8x U8X_MAX = 255;
-const_var i16x I16X_MIN = -32768;
-const_var i16x I16X_MAX = 32767;
+const_var u8x U8X_MAX = UINT_FAST8_MAX;
+const_var i16x I16X_MIN = INT_FAST16_MIN;
+const_var i16x I16X_MAX = INT_FAST16_MAX;
 const_var u16x U16X_MIN = 0;
-const_var u16x U16X_MAX = 65535;
-const_var i32x I32X_MIN = -2147483647 - 1;
-const_var i32x I32X_MAX = 2147483647;
+const_var u16x U16X_MAX = UINT_FAST16_MAX;
+const_var i32x I32X_MIN = INT_FAST32_MIN;
+const_var i32x I32X_MAX = INT_FAST32_MAX;
 const_var u32x U32X_MIN = 0;
-const_var u32x U32X_MAX = 4294967295U;
-const_var i64x I64X_MIN = -9223372036854775807LL - 1;
-const_var i64x I64X_MAX = 9223372036854775807LL;
+const_var u32x U32X_MAX = UINT_FAST32_MAX;
+const_var i64x I64X_MIN = INT_FAST64_MIN;
+const_var i64x I64X_MAX = INT_FAST64_MAX;
 const_var u64x U64X_MIN = 0;
-const_var u64x U64X_MAX = 18446744073709551615ULL;
+const_var u64x U64X_MAX = UINT_FAST64_MAX;
+const_var b8x B8X_MIN = 0;
+const_var b8x B8X_MAX = 1;
+const_var b16x B16X_MIN = 0;
+const_var b16x B16X_MAX = 1;
+const_var b32x B32X_MIN = 0;
+const_var b32x B32X_MAX = 1;
+const_var b64x B64X_MIN = 0;
+const_var b64x B64X_MAX = 1;
 
 // =========================================================================
 // Pointer and size types
@@ -198,3 +214,15 @@ static_assert(size_of(b64) == 8);
 static_assert(size_of(c8) == 1);
 static_assert(size_of(c16) == 2);
 static_assert(size_of(c32) == 4);
+static_assert(size_of(i8x) >= 1);
+static_assert(size_of(u8x) >= 1);
+static_assert(size_of(i16x) >= 2);
+static_assert(size_of(u16x) >= 2);
+static_assert(size_of(i32x) >= 4);
+static_assert(size_of(u32x) >= 4);
+static_assert(size_of(i64x) >= 8);
+static_assert(size_of(u64x) >= 8);
+static_assert(size_of(b8x) >= 1);
+static_assert(size_of(b16x) >= 2);
+static_assert(size_of(b32x) >= 4);
+static_assert(size_of(b64x) >= 8);

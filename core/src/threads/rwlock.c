@@ -10,7 +10,7 @@
 #include "basic/profiler.h"
 
 func rwlock _rwlock_create(callsite site) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   (void)site;
   rwlock handle = (rwlock)SDL_CreateRWLock();
   if (handle != NULL) {
@@ -23,20 +23,20 @@ func rwlock _rwlock_create(callsite site) {
                                                    });
     if (!msg_post(&lifecycle_msg)) {
       SDL_DestroyRWLock((SDL_RWLock*)handle);
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return NULL;
     }
     thread_log_trace("rwlock_create: handle=%p", handle);
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return handle;
 }
 
 func b32 _rwlock_destroy(rwlock rw, callsite site) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   (void)site;
   if (!rw) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
@@ -48,123 +48,123 @@ func b32 _rwlock_destroy(rwlock rw, callsite site) {
                                                      .object_ptr = rw,
                                                  });
   if (!msg_post(&lifecycle_msg)) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   thread_log_trace("rwlock_destroy: handle=%p", rw);
   SDL_DestroyRWLock((SDL_RWLock*)rw);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return 1;
 }
 
 func b32 rwlock_is_valid(rwlock rw) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_begin;
+  profile_func_end;
   return rw != NULL;
 }
 
 func void rwlock_read_lock(rwlock rw) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (rw == NULL) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return;
   }
   assert(rw != NULL);
   SDL_LockRWLockForReading((SDL_RWLock*)rw);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func void rwlock_read_unlock(rwlock rw) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (rw == NULL) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return;
   }
   assert(rw != NULL);
   SDL_UnlockRWLock((SDL_RWLock*)rw);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func void rwlock_write_lock(rwlock rw) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (rw == NULL) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return;
   }
   assert(rw != NULL);
   SDL_LockRWLockForWriting((SDL_RWLock*)rw);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func void rwlock_write_unlock(rwlock rw) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (rw == NULL) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return;
   }
   assert(rw != NULL);
   SDL_UnlockRWLock((SDL_RWLock*)rw);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func b32 rwlock_try_read_lock(rwlock rw) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (rw == NULL) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   assert(rw != NULL);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return SDL_TryLockRWLockForReading((SDL_RWLock*)rw);
 }
 
 func b32 rwlock_try_write_lock(rwlock rw) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (rw == NULL) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   assert(rw != NULL);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return SDL_TryLockRWLockForWriting((SDL_RWLock*)rw);
 }
 
 func b32 rwlock_timed_read_lock(rwlock rw, i32 timeout_ms) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (rw == NULL || timeout_ms < 0) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
   u64 start_ticks = SDL_GetTicks();
   while (!rwlock_try_read_lock(rw)) {
     if ((i32)(SDL_GetTicks() - start_ticks) >= timeout_ms) {
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 0;
     }
     SDL_Delay(1);
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return 1;
 }
 
 func b32 rwlock_timed_write_lock(rwlock rw, i32 timeout_ms) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (rw == NULL || timeout_ms < 0) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
   u64 start_ticks = SDL_GetTicks();
   while (!rwlock_try_write_lock(rw)) {
     if ((i32)(SDL_GetTicks() - start_ticks) >= timeout_ms) {
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 0;
     }
     SDL_Delay(1);
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return 1;
 }

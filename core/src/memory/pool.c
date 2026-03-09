@@ -24,35 +24,35 @@ typedef union pool_slot_ref {
 
 // Writes the next-free pointer into the first bytes of the slot at slot_ptr.
 func void pool_slot_write_next(void* slot_ptr, void* next_ptr) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   pool_slot_ref ref;
   ref.ptr = next_ptr;
   memcpy(slot_ptr, ref.bytes, size_of(void*));
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 // Reads the next-free pointer from the first bytes of the slot at slot_ptr.
 func void* pool_slot_read_next(void* slot_ptr) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   pool_slot_ref ref;
   memcpy(ref.bytes, slot_ptr, size_of(void*));
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return ref.ptr;
 }
 
 // Returns the stride between consecutive slots: large enough for object_size
 // bytes and a free-list pointer, aligned to object_align.
 func sz pool_slot_stride(pool* pol) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   sz min_sz = pol->object_size > size_of(void*) ? pol->object_size : size_of(void*);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return align_up(min_sz, pol->object_align);
 }
 
 // Carves all usable space in blk into free slots and prepends them to the
 // pool's free list. Called both from pool_add_block and pool_clear.
 func void pool_block_carve(pool* pol, pool_block* blk) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   sz stride = pool_slot_stride(pol);
   // Ensure each slot is aligned for both the object type and the free-list pointer.
   sz eff_align = pol->object_align > align_of(void*) ? pol->object_align : align_of(void*);
@@ -68,12 +68,12 @@ func void pool_block_carve(pool* pol, pool_block* blk) {
     slot += stride;
     avail -= stride;
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 // Appends blk to the pool's block chain.
 func void pool_chain_block(pool* pol, pool_block* blk) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (pol->blocks_tail) {
     pol->blocks_tail->next = blk;
     pol->blocks_tail = blk;
@@ -81,7 +81,7 @@ func void pool_chain_block(pool* pol, pool_block* blk) {
     pol->blocks_head = blk;
     pol->blocks_tail = blk;
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 // =========================================================================
@@ -89,18 +89,18 @@ func void pool_chain_block(pool* pol, pool_block* blk) {
 // =========================================================================
 
 func void* pool_alloc_callback(void* user_data, callsite site, sz size) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   (void)size;
   pool* pol = (pool*)user_data;
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return _pool_alloc(pol, site);
 }
 
 func void pool_dealloc_callback(void* user_data, callsite site, void* ptr) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   pool* pol = (pool*)user_data;
   _pool_dealloc(pol, ptr, site);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func void* pool_realloc_callback(
@@ -109,16 +109,16 @@ func void* pool_realloc_callback(
     void* ptr,
     sz old_size,
     sz new_size) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   (void)site;
   (void)old_size;
   pool* pol = (pool*)user_data;
   // Pools are fixed-size: realloc only makes sense when the sizes match.
   if (new_size == pol->object_size) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return ptr;
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return NULL;
 }
 
@@ -132,7 +132,7 @@ func pool pool_create(
     sz default_block_sz,
     sz object_size,
     sz object_align) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   pool pol;
   memset(&pol, 0, size_of(pol));
   pol.parent = parent_alloc;
@@ -155,7 +155,7 @@ func pool pool_create(
                                                  });
   (void)msg_post(&lifecycle_msg);
   thread_log_trace("pool_create: obj_size=%zu obj_align=%zu", (size_t)object_size, (size_t)object_align);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return pol;
 }
 
@@ -164,18 +164,18 @@ func pool pool_create_mutexed(
     sz default_block_sz,
     sz object_size,
     sz object_align) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   pool pol =
       pool_create(parent_alloc, mutex_create(), default_block_sz, object_size, object_align);
   pol.mutex_owned = 1;
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return pol;
 }
 
 func void pool_destroy(pool* pol) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (pol == NULL) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return;
   }
   assert(pol != NULL);
@@ -218,17 +218,17 @@ func void pool_destroy(pool* pol) {
   pol->opt_mutex = NULL;
   pol->mutex_owned = 0;
   thread_log_trace("pool_destroy: pol=%p", (void*)pol);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func allocator pool_get_allocator(pool* pol) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   allocator alloc;
   alloc.user_data = pol;
   alloc.alloc_fn = pool_alloc_callback;
   alloc.dealloc_fn = pool_dealloc_callback;
   alloc.realloc_fn = pool_realloc_callback;
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return alloc;
 }
 
@@ -237,9 +237,9 @@ func allocator pool_get_allocator(pool* pol) {
 // =========================================================================
 
 func void pool_add_block(pool* pol, void* ptr, sz size) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (pol == NULL || ptr == NULL || size <= size_of(pool_block)) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return;
   }
   if (pol->opt_mutex) {
@@ -256,13 +256,13 @@ func void pool_add_block(pool* pol, void* ptr, sz size) {
   if (pol->opt_mutex) {
     mutex_unlock(pol->opt_mutex);
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func b32 pool_remove_block(pool* pol, void* ptr) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (pol == NULL || ptr == NULL) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   if (pol->opt_mutex) {
@@ -318,7 +318,7 @@ func b32 pool_remove_block(pool* pol, void* ptr) {
     mutex_unlock(pol->opt_mutex);
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return found;
 }
 
@@ -327,9 +327,9 @@ func b32 pool_remove_block(pool* pol, void* ptr) {
 // =========================================================================
 
 func void* _pool_alloc(pool* pol, callsite site) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (pol == NULL) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return NULL;
   }
   if (pol->opt_mutex) {
@@ -364,15 +364,15 @@ func void* _pool_alloc(pool* pol, callsite site) {
     mutex_unlock(pol->opt_mutex);
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return result;
 }
 
 func void _pool_dealloc(pool* pol, void* ptr, callsite site) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   (void)site;
   if (pol == NULL || !ptr) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return;
   }
 
@@ -386,7 +386,7 @@ func void _pool_dealloc(pool* pol, void* ptr, callsite site) {
   if (pol->opt_mutex) {
     mutex_unlock(pol->opt_mutex);
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 // =========================================================================
@@ -394,9 +394,9 @@ func void _pool_dealloc(pool* pol, void* ptr, callsite site) {
 // =========================================================================
 
 func void pool_clear(pool* pol) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (pol == NULL) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return;
   }
   if (pol->opt_mutex) {
@@ -413,13 +413,13 @@ func void pool_clear(pool* pol) {
   if (pol->opt_mutex) {
     mutex_unlock(pol->opt_mutex);
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func sz pool_block_count(pool* pol) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (pol == NULL) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   if (pol->opt_mutex) {
@@ -432,25 +432,25 @@ func sz pool_block_count(pool* pol) {
   if (pol->opt_mutex) {
     mutex_unlock(pol->opt_mutex);
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return count;
 }
 
 func sz pool_slot_size(pool* pol) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (pol == NULL) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   sz result = pol->object_size;
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return result;
 }
 
 func sz pool_free_count(pool* pol) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (pol == NULL) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   if (pol->opt_mutex) {
@@ -463,6 +463,6 @@ func sz pool_free_count(pool* pol) {
   if (pol->opt_mutex) {
     mutex_unlock(pol->opt_mutex);
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return count;
 }

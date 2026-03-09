@@ -12,12 +12,12 @@
 local_persist tablet_pen_state tablet_cached_pen_state;
 
 func u64 tablet_hash_path(cstr8 src) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   u64 hash_value = 1469598103934665603ULL;
   sz idx = 0;
 
   if (!src) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
@@ -27,18 +27,18 @@ func u64 tablet_hash_path(cstr8 src) {
     idx += 1;
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return hash_value;
 }
 
 func b32 tablet_is_available(void) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_begin;
+  profile_func_end;
   return tablet_get_count() > 0;
 }
 
 func sz tablet_get_count(void) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   SDL_hid_device_info* head = SDL_hid_enumerate(0, 0);
   SDL_hid_device_info* entry = head;
   sz total = 0;
@@ -54,12 +54,12 @@ func sz tablet_get_count(void) {
     SDL_hid_free_enumeration(head);
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return total;
 }
 
 func b32 tablet_get_device_id(sz idx, device_id* out_id) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   SDL_hid_device_info* head = SDL_hid_enumerate(0, 0);
   SDL_hid_device_info* entry = head;
   sz current_idx = 0;
@@ -90,25 +90,25 @@ func b32 tablet_get_device_id(sz idx, device_id* out_id) {
     SDL_hid_free_enumeration(head);
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return found;
 }
 
 func b32 tablet_get_last_pen_state(tablet_pen_state* out_state) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (!out_state || !tablet_cached_pen_state.pen_id) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   assert(out_state != NULL);
 
   *out_state = tablet_cached_pen_state;
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return 1;
 }
 
 func b32 tablet_read_hid_report(device_id id, void* dst, sz capacity, sz* out_size, i32 timeout_ms) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   SDL_hid_device_info* head = SDL_hid_enumerate(0, 0);
   SDL_hid_device_info* entry = head;
   str8_short path_buf = {0};
@@ -123,7 +123,7 @@ func b32 tablet_read_hid_report(device_id id, void* dst, sz capacity, sz* out_si
     if (head) {
       SDL_hid_free_enumeration(head);
     }
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   assert(dst != NULL);
@@ -150,13 +150,13 @@ func b32 tablet_read_hid_report(device_id id, void* dst, sz capacity, sz* out_si
   }
 
   if (!path_buf[0]) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
   device = SDL_hid_open_path(path_buf);
   if (!device) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
@@ -164,7 +164,7 @@ func b32 tablet_read_hid_report(device_id id, void* dst, sz capacity, sz* out_si
   SDL_hid_close(device);
 
   if (read_size <= 0) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
@@ -172,14 +172,14 @@ func b32 tablet_read_hid_report(device_id id, void* dst, sz capacity, sz* out_si
     *out_size = (sz)read_size;
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return 1;
 }
 
 func void tablet_internal_on_msg(msg* src) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (!src) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return;
   }
 
@@ -249,5 +249,5 @@ func void tablet_internal_on_msg(msg* src) {
     default:
       break;
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }

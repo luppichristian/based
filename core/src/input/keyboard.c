@@ -18,59 +18,59 @@ global_var u32 keyboard_released_seen_epoch[INPUT_CAPTURE_MAX_KEYS][SDL_SCANCODE
 global_var u32 keyboard_repeat_count[SDL_SCANCODE_COUNT] = {0};
 
 func b32 keyboard_scancode_is_valid(keyboard_scancode scancode) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_begin;
+  profile_func_end;
   return scancode < (u32)SDL_SCANCODE_COUNT;
 }
 
 func u32 keyboard_next_generation(u32 value) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   u32 result = value + 1;
   if (result == 0) {
     result = 1;
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return result;
 }
 
 func b32 keyboard_is_available(void) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_begin;
+  profile_func_end;
   return SDL_HasKeyboard() ? 1 : 0;
 }
 
 func b32 keyboard_get_primary_device_id(device_id* out_id) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_begin;
+  profile_func_end;
   return devices_get_device(DEVICE_TYPE_KEYBOARD, 0, out_id);
 }
 
 func b32 keyboard_is_key_down(input_key key, keyboard_scancode scancode) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   (void)key;
   int key_count = 0;
   const bool* state = SDL_GetKeyboardState(&key_count);
 
   if (!state || scancode >= (u32)key_count) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   assert(scancode < (u32)key_count);
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return state[scancode] ? 1 : 0;
 }
 
 func b32 keyboard_is_key_pressed(input_key key, keyboard_scancode scancode) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (!keyboard_scancode_is_valid(scancode)) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
   sz slot_idx = input_capture_get_slot(key);
   if (slot_idx >= INPUT_CAPTURE_MAX_KEYS) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
@@ -78,31 +78,31 @@ func b32 keyboard_is_key_pressed(input_key key, keyboard_scancode scancode) {
   if (keyboard_pressed_seen_epoch[slot_idx][scancode] != slot_epoch) {
     keyboard_pressed_seen_epoch[slot_idx][scancode] = slot_epoch;
     keyboard_pressed_seen[slot_idx][scancode] = keyboard_pressed_generation[scancode];
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
   u32 generation = keyboard_pressed_generation[scancode];
   if (generation == 0 || keyboard_pressed_seen[slot_idx][scancode] == generation) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
   keyboard_pressed_seen[slot_idx][scancode] = generation;
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return 1;
 }
 
 func b32 keyboard_is_key_released(input_key key, keyboard_scancode scancode) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (!keyboard_scancode_is_valid(scancode)) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
   sz slot_idx = input_capture_get_slot(key);
   if (slot_idx >= INPUT_CAPTURE_MAX_KEYS) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
@@ -110,126 +110,126 @@ func b32 keyboard_is_key_released(input_key key, keyboard_scancode scancode) {
   if (keyboard_released_seen_epoch[slot_idx][scancode] != slot_epoch) {
     keyboard_released_seen_epoch[slot_idx][scancode] = slot_epoch;
     keyboard_released_seen[slot_idx][scancode] = keyboard_released_generation[scancode];
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
   u32 generation = keyboard_released_generation[scancode];
   if (generation == 0 || keyboard_released_seen[slot_idx][scancode] == generation) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
   keyboard_released_seen[slot_idx][scancode] = generation;
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return 1;
 }
 
 func u32 keyboard_get_key_repeat_count(input_key key, keyboard_scancode scancode) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   (void)key;
   if (!keyboard_scancode_is_valid(scancode)) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   assert(keyboard_scancode_is_valid(scancode));
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return keyboard_repeat_count[scancode];
 }
 
 func keymod keyboard_get_mods(void) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_begin;
+  profile_func_end;
   return (keymod)SDL_GetModState();
 }
 
 func b32 keyboard_has_mods(keymod required_mods) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   keymod current_mods = keyboard_get_mods();
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return (current_mods & required_mods) == required_mods;
 }
 
 func b32 keyboard_has_mods_exact(keymod required_mods, keymod forbidden_mods) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   keymod current_mods = keyboard_get_mods();
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return ((current_mods & required_mods) == required_mods) && ((current_mods & forbidden_mods) == 0);
 }
 
 func b32 keyboard_is_key_down_mod(input_key key, keyboard_scancode scancode, keymod required_mods, keymod forbidden_mods) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_begin;
+  profile_func_end;
   return keyboard_is_key_down(key, scancode) && keyboard_has_mods_exact(required_mods, forbidden_mods);
 }
 
 func keyboard_keycode keyboard_get_keycode(keyboard_scancode scancode, keymod modifiers, b32 key_event) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_begin;
+  profile_func_end;
   return (keyboard_keycode)SDL_GetKeyFromScancode((SDL_Scancode)scancode, (SDL_Keymod)modifiers, key_event != 0);
 }
 
 func cstr8 keyboard_get_scancode_name(keyboard_scancode scancode) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_begin;
+  profile_func_end;
   return SDL_GetScancodeName((SDL_Scancode)scancode);
 }
 
 func b32 keyboard_start_text_input(window opt_window) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   SDL_Window* window_ptr = NULL;
   if (window_id_is_valid(opt_window)) {
     window_ptr = SDL_GetWindowFromID((SDL_WindowID)window_to_native_id(opt_window));
   }
   b32 result = SDL_StartTextInput(window_ptr);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return result;
 }
 
 func b32 keyboard_stop_text_input(window opt_window) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   SDL_Window* window_ptr = NULL;
   if (window_id_is_valid(opt_window)) {
     window_ptr = SDL_GetWindowFromID((SDL_WindowID)window_to_native_id(opt_window));
   }
   b32 result = SDL_StopTextInput(window_ptr);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return result;
 }
 
 func b32 keyboard_is_text_input_active(window opt_window) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   SDL_Window* window_ptr = NULL;
   if (window_id_is_valid(opt_window)) {
     window_ptr = SDL_GetWindowFromID((SDL_WindowID)window_to_native_id(opt_window));
   }
   b32 result = SDL_TextInputActive(window_ptr) ? 1 : 0;
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return result;
 }
 
 func b32 keyboard_set_text_input_area(window opt_window, i32 xpos, i32 ypos, i32 width, i32 height) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   SDL_Window* window_ptr = NULL;
   if (window_id_is_valid(opt_window)) {
     window_ptr = SDL_GetWindowFromID((SDL_WindowID)window_to_native_id(opt_window));
   }
   SDL_Rect area = {.x = xpos, .y = ypos, .w = width, .h = height};
   b32 result = SDL_SetTextInputArea(window_ptr, &area, 0);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return result;
 }
 
 func void keyboard_internal_on_msg(msg* src) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (src == NULL || (src->type != MSG_CORE_TYPE_KEY_DOWN && src->type != MSG_CORE_TYPE_KEY_UP)) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return;
   }
 
   if (!keyboard_scancode_is_valid(msg_core_get_keyboard(src)->scancode)) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return;
   }
 
@@ -248,5 +248,5 @@ func void keyboard_internal_on_msg(msg* src) {
     keyboard_released_generation[scancode] = keyboard_next_generation(keyboard_released_generation[scancode]);
     keyboard_repeat_count[scancode] = 0;
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }

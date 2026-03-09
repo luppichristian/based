@@ -22,6 +22,9 @@ func void _assert(b32 condition, const char* msg, callsite site);
 // Convenience macro for assertions. It will call the _assert function.
 #define assert(condition) _assert((condition), #condition, CALLSITE_HERE)
 
+// Convenience macro for assertions with a custom message. It will call the _assert function.
+#define assert_msg(condition, msg) _assert((condition), msg, CALLSITE_HERE)
+
 // =========================================================================
 // Assert mode
 // =========================================================================

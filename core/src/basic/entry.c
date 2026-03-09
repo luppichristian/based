@@ -37,7 +37,7 @@ global_var cmdline entry_cmdline_current = {0};
 global_var allocator entry_start_allocator = {0};
 
 func allocator entry_get_pipeline_allocator(void) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   allocator alloc = thread_get_allocator();
   if (!alloc.alloc_fn) {
     alloc = global_get_allocator();
@@ -45,53 +45,53 @@ func allocator entry_get_pipeline_allocator(void) {
   if (!alloc.alloc_fn) {
     alloc = entry_memory_fallback;
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return alloc;
 }
 
 func void* entry_pipeline_malloc(sz size) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   allocator alloc = entry_get_pipeline_allocator();
   void* ptr = _allocator_alloc(&alloc, size, CALLSITE_HERE);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return ptr;
 }
 
 func void entry_pipeline_free(void* ptr) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (ptr == NULL) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return;
   }
   allocator alloc = entry_get_pipeline_allocator();
   _allocator_dealloc(&alloc, ptr, 0, CALLSITE_HERE);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func void* entry_pipeline_calloc(sz count, sz size) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   allocator alloc = entry_get_pipeline_allocator();
   void* ptr = _allocator_calloc(&alloc, count, size, CALLSITE_HERE);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return ptr;
 }
 
 func void* entry_pipeline_realloc(void* ptr, sz size) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   allocator alloc = entry_get_pipeline_allocator();
   void* new_ptr = _allocator_realloc(&alloc, ptr, 0, size, CALLSITE_HERE);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return new_ptr;
 }
 
 func cmdline entry_get_cmdline(void) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_begin;
+  profile_func_end;
   return entry_cmdline_current;
 }
 
 func allocator entry_default_allocator(allocator start_alloc) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   allocator alloc = start_alloc;
   if (!alloc.alloc_fn) {
 #ifdef OVERRIDE_GLOBAL_DEFAULT_ALLOCATOR
@@ -100,7 +100,7 @@ func allocator entry_default_allocator(allocator start_alloc) {
     alloc = vmem_get_allocator();
 #endif
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return alloc;
 }
 
@@ -109,7 +109,7 @@ func allocator entry_default_allocator(allocator start_alloc) {
 // =========================================================================
 
 func b32 entry_init(cmdline cmdline) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (entry_cmdline_current.args == NULL && cmdline.args != NULL && cmdline.count > 0) {
     entry_cmdline_current = cmdline;
   }
@@ -128,7 +128,7 @@ func b32 entry_init(cmdline cmdline) {
           entry_pipeline_calloc,
           entry_pipeline_realloc,
           entry_pipeline_free)) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return false;
   }
 
@@ -145,7 +145,7 @@ func b32 entry_init(cmdline cmdline) {
   if (entry_shared.sdl_init_depth == 0) {
     if (!SDL_WasInit(init_flags)) {
       if (!SDL_Init(init_flags)) {
-        TracyCZoneEnd(__tracy_zone_ctx);
+        profile_func_end;
         return false;
       }
       thread_log_trace("entry_init: SDL initialized");
@@ -159,7 +159,7 @@ func b32 entry_init(cmdline cmdline) {
   if (entry_shared.global_ctx_init_depth == 0) {
     if (!global_ctx_is_init()) {
       if (!global_ctx_init(default_global_allocator)) {
-        TracyCZoneEnd(__tracy_zone_ctx);
+        profile_func_end;
         return false;
       }
 
@@ -174,7 +174,7 @@ func b32 entry_init(cmdline cmdline) {
   if (entry_thread.thread_ctx_init_depth == 0) {
     if (!thread_ctx_is_init()) {
       if (!thread_ctx_init(global_get_allocator())) {
-        TracyCZoneEnd(__tracy_zone_ctx);
+        profile_func_end;
         return false;
       }
 
@@ -187,12 +187,12 @@ func b32 entry_init(cmdline cmdline) {
   }
   entry_thread.thread_ctx_init_depth += 1;
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return true;
 }
 
 func void entry_quit(void) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (entry_thread.thread_ctx_init_depth > 0) {
     entry_thread.thread_ctx_init_depth -= 1;
     if (entry_thread.thread_ctx_init_depth == 0 && entry_thread.owns_thread_ctx) {
@@ -224,7 +224,7 @@ func void entry_quit(void) {
     entry_cmdline_current = (cmdline) {0};
     entry_start_allocator = (allocator) {0};
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 // =========================================================================
@@ -242,35 +242,35 @@ func void entry_set_app_callbacks(
     entry_app_init_fn* init_fn,
     entry_app_update_fn* update_fn,
     entry_app_quit_fn* quit_fn) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   app_init_callback = init_fn;
   app_update_callback = update_fn;
   app_quit_callback = quit_fn;
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func void entry_set_run_callback(entry_run_fn* callback_fn) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   run_callback = callback_fn;
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func SDL_AppResult app_result_to_sdl_result(app_result result) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   switch (result) {
     case APP_RESULT_CONTINUE:
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return SDL_APP_CONTINUE;
     case APP_RESULT_SUCCESS:
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return SDL_APP_SUCCESS;
     case APP_RESULT_FAIL:
     case APP_RESULT_MAX:
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return SDL_APP_FAILURE;
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return SDL_APP_FAILURE;
 }
 

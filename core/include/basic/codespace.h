@@ -28,3 +28,6 @@ typedef struct src_loc {
   cstr8 filename;
   u32 line;
 } src_loc;
+
+// Macro to capture the current source location as a src_loc struct.
+#define SRC_LOC_HERE ((callsite) {__FILE__, __LINE__})

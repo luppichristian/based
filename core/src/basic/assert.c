@@ -2,7 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "basic/assert.h"
-#include "basic/log.h"
+#include "utils/log_state.h"
 #include "utils/stacktrace.h"
 #include "context/thread_ctx.h"
 #include "input/msg.h"
@@ -80,9 +80,9 @@ func assert_action assert_dialog(cstr8 msg, callsite site) {
       size_of(buf),
       "Assertion failed\n"
       "----------------\n"
-      "Condition: %s\n"
-      "Function : %s\n"
-      "Location : %s:%u\n"
+      "Message : %s\n"
+      "Function: %s\n"
+      "Location: %s:%u\n"
       "\n"
       "Stack trace:\n",
       msg,

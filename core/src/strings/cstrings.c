@@ -18,22 +18,22 @@
 // =========================================================================
 
 func sz cstr16_len_impl(cstr16 str) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   sz len = 0;
   while (str[len] != (c16)'\0') {
     len++;
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return len;
 }
 
 func sz cstr32_len_impl(cstr32 str) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   sz len = 0;
   while (str[len] != (c32)'\0') {
     len++;
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return len;
 }
 
@@ -42,67 +42,67 @@ func sz cstr32_len_impl(cstr32 str) {
 // =========================================================================
 
 func sz cstr8_len(cstr8 str) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (str == NULL) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   assert(str != NULL);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return strlen(str);
 }
 
 func b32 cstr8_is_empty(cstr8 str) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (str == NULL) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 1;
   }
   assert(str != NULL);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return str[0] == '\0' ? 1 : 0;
 }
 
 func void cstr8_clear(c8* str) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (str == NULL) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return;
   }
   assert(str != NULL);
   str[0] = '\0';
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func i32 cstr8_cmp(cstr8 lhs, cstr8 rhs) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (lhs == NULL || rhs == NULL) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return lhs == rhs ? 0 : (lhs == NULL ? -1 : 1);
   }
   assert(lhs != NULL);
   assert(rhs != NULL);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return strcmp(lhs, rhs);
 }
 
 func i32 cstr8_cmp_n(cstr8 lhs, cstr8 rhs, sz cnt) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_begin;
+  profile_func_end;
   return strncmp(lhs, rhs, cnt);
 }
 
 func i32 cstr8_cmp_nocase(cstr8 lhs, cstr8 rhs) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   while (*lhs != '\0' && *rhs != '\0') {
     u8 lchr = (u8)c8_to_lower(*lhs);
     u8 rchr = (u8)c8_to_lower(*rhs);
     if (lchr < rchr) {
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return -1;
     }
     if (lchr > rchr) {
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
     }
     lhs++;
@@ -111,14 +111,14 @@ func i32 cstr8_cmp_nocase(cstr8 lhs, cstr8 rhs) {
   u8 lchr = (u8)c8_to_lower(*lhs);
   u8 rchr = (u8)c8_to_lower(*rhs);
   if (lchr < rchr) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return -1;
   }
   if (lchr > rchr) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 1;
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return 0;
 }
 
@@ -127,9 +127,9 @@ func i32 cstr8_cmp_nocase(cstr8 lhs, cstr8 rhs) {
 // =========================================================================
 
 func sz cstr8_copy(c8* dst, sz dst_size, cstr8 src) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (dst == NULL || src == NULL || dst_size == 0) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   assert(dst != NULL);
@@ -138,14 +138,14 @@ func sz cstr8_copy(c8* dst, sz dst_size, cstr8 src) {
   sz copy_len = src_len < dst_size - 1 ? src_len : dst_size - 1;
   memcpy(dst, src, copy_len);
   dst[copy_len] = '\0';
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return copy_len;
 }
 
 func sz cstr8_copy_n(c8* dst, sz dst_size, cstr8 src, sz cnt) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (dst_size == 0) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   sz src_len = cstr8_len(src);
@@ -153,19 +153,19 @@ func sz cstr8_copy_n(c8* dst, sz dst_size, cstr8 src, sz cnt) {
   sz copy_len = max_copy < dst_size - 1 ? max_copy : dst_size - 1;
   memcpy(dst, src, copy_len);
   dst[copy_len] = '\0';
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return copy_len;
 }
 
 func sz cstr8_cat(c8* dst, sz dst_cap, cstr8 src) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (dst_cap == 0) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   sz dst_len = cstr8_len(dst);
   if (dst_len >= dst_cap - 1) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return dst_len;
   }
   sz remaining = dst_cap - dst_len - 1;
@@ -173,86 +173,86 @@ func sz cstr8_cat(c8* dst, sz dst_cap, cstr8 src) {
   sz copy_len = src_len < remaining ? src_len : remaining;
   memcpy(dst + dst_len, src, copy_len);
   dst[dst_len + copy_len] = '\0';
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return dst_len + copy_len;
 }
 
 func sz cstr8_append_char(c8* dst, sz dst_cap, c8 chr) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (dst_cap == 0) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   sz len = cstr8_len(dst);
   if (len >= dst_cap - 1) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return len;
   }
   dst[len] = chr;
   dst[len + 1] = '\0';
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return len + 1;
 }
 
 func void cstr8_truncate(c8* str, sz length) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (cstr8_len(str) > length) {
     str[length] = '\0';
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func b32 cstr8_format(c8* dst, sz dst_cap, cstr8 fmt, ...) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   va_list args;
   va_start(args, fmt);
   int result = vsnprintf(dst, dst_cap, fmt, args);
   va_end(args);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return (result >= 0 && (sz)result < dst_cap) ? 1 : 0;
 }
 
 func b32 cstr8_vformat(c8* dst, sz dst_cap, cstr8 fmt, va_list args) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   int result = vsnprintf(dst, dst_cap, fmt, args);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return (result >= 0 && (sz)result < dst_cap) ? 1 : 0;
 }
 
 func b32 cstr8_append_format(c8* dst, sz dst_cap, cstr8 fmt, ...) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   sz len = cstr8_len(dst);
   if (len >= dst_cap) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   va_list args;
   va_start(args, fmt);
   b32 result = cstr8_vformat(dst + len, dst_cap - len, fmt, args);
   va_end(args);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return result;
 }
 
 func b32 cstr8_append_vformat(c8* dst, sz dst_cap, cstr8 fmt, va_list args) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   sz len = cstr8_len(dst);
   if (len >= dst_cap) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   b32 result = cstr8_vformat(dst + len, dst_cap - len, fmt, args);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return result;
 }
 
 func b32 cstr8_scan(cstr8 str, cstr8 fmt, ...) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   va_list args;
   va_start(args, fmt);
   int result = vsscanf(str, fmt, args);
   va_end(args);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return result > 0 ? 1 : 0;
 }
 
@@ -261,21 +261,21 @@ func b32 cstr8_scan(cstr8 str, cstr8 fmt, ...) {
 // =========================================================================
 
 func cstr8 cstr8_find(cstr8 str, cstr8 sub) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_begin;
+  profile_func_end;
   return strstr(str, sub);
 }
 
 func cstr8 cstr8_find_last(cstr8 str, cstr8 sub) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (sub[0] == '\0') {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return str + cstr8_len(str);
   }
   sz sub_len = cstr8_len(sub);
   sz str_len = cstr8_len(str);
   if (sub_len > str_len) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return NULL;
   }
   cstr8 last = NULL;
@@ -285,50 +285,50 @@ func cstr8 cstr8_find_last(cstr8 str, cstr8 sub) {
       last = str + idx;
     }
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return last;
 }
 
 func cstr8 cstr8_find_char(cstr8 str, c8 chr) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_begin;
+  profile_func_end;
   return strchr(str, (int)(unsigned char)chr);
 }
 
 func cstr8 cstr8_find_last_char(cstr8 str, c8 chr) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_begin;
+  profile_func_end;
   return strrchr(str, (int)(unsigned char)chr);
 }
 
 func sz cstr8_count_char(cstr8 str, c8 chr) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   sz count = 0;
   for (sz idx = 0; str[idx] != '\0'; idx++) {
     if (str[idx] == chr) {
       count++;
     }
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return count;
 }
 
 func b32 cstr8_starts_with(cstr8 str, cstr8 prefix) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   sz prefix_len = cstr8_len(prefix);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return strncmp(str, prefix, prefix_len) == 0 ? 1 : 0;
 }
 
 func b32 cstr8_ends_with(cstr8 str, cstr8 suffix) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   sz str_len = cstr8_len(str);
   sz suffix_len = cstr8_len(suffix);
   if (suffix_len > str_len) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return strcmp(str + str_len - suffix_len, suffix) == 0 ? 1 : 0;
 }
 
@@ -337,23 +337,23 @@ func b32 cstr8_ends_with(cstr8 str, cstr8 suffix) {
 // =========================================================================
 
 func void cstr8_to_upper(c8* str) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   for (sz idx = 0; str[idx] != '\0'; idx++) {
     str[idx] = c8_to_upper(str[idx]);
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func void cstr8_to_lower(c8* str) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   for (sz idx = 0; str[idx] != '\0'; idx++) {
     str[idx] = c8_to_lower(str[idx]);
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func void cstr8_trim(c8* str) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   sz start = 0;
   while (c8_is_space(str[start])) {
     start++;
@@ -364,21 +364,21 @@ func void cstr8_trim(c8* str) {
   }
   memmove(str, str + start, len);
   str[len] = '\0';
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func void cstr8_replace_char(c8* str, c8 from_chr, c8 to_chr) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   for (sz idx = 0; str[idx] != '\0'; idx++) {
     if (str[idx] == from_chr) {
       str[idx] = to_chr;
     }
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func sz cstr8_remove_char(c8* str, c8 chr) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   sz write = 0;
   sz removed = 0;
   for (sz idx = 0; str[idx] != '\0'; idx++) {
@@ -389,12 +389,12 @@ func sz cstr8_remove_char(c8* str, c8 chr) {
     }
   }
   str[write] = '\0';
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return removed;
 }
 
 func sz cstr8_remove_whitespace(c8* str) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   sz write = 0;
   sz removed = 0;
   for (sz idx = 0; str[idx] != '\0'; idx++) {
@@ -405,42 +405,42 @@ func sz cstr8_remove_whitespace(c8* str) {
     }
   }
   str[write] = '\0';
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return removed;
 }
 
 func b32 cstr8_remove_prefix(c8* str, cstr8 prefix) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   sz prefix_len = cstr8_len(prefix);
   if (strncmp(str, prefix, prefix_len) != 0) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   sz str_len = cstr8_len(str);
   memmove(str, str + prefix_len, str_len - prefix_len + 1);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return 1;
 }
 
 func b32 cstr8_remove_suffix(c8* str, cstr8 suffix) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   sz str_len = cstr8_len(str);
   sz suffix_len = cstr8_len(suffix);
   if (suffix_len > str_len || strcmp(str + str_len - suffix_len, suffix) != 0) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   str[str_len - suffix_len] = '\0';
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return 1;
 }
 
 func sz cstr8_replace(c8* str, sz str_cap, cstr8 from, cstr8 rep) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   sz from_len = cstr8_len(from);
   sz rep_len = cstr8_len(rep);
   if (from_len == 0) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   sz count = 0;
@@ -461,14 +461,14 @@ func sz cstr8_replace(c8* str, sz str_cap, cstr8 from, cstr8 rep) {
       pos++;
     }
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return count;
 }
 
 func sz cstr8_common_prefix(cstr8 lhs, cstr8 rhs, c8* buf, sz buf_cap) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (buf_cap == 0) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   sz idx = 0;
@@ -477,15 +477,15 @@ func sz cstr8_common_prefix(cstr8 lhs, cstr8 rhs, c8* buf, sz buf_cap) {
     idx++;
   }
   buf[idx] = '\0';
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return idx;
 }
 
 func void cstr8_beautify(c8* str) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   cstr8_to_lower(str);
   str[0] = c8_to_upper(str[0]);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 // =========================================================================
@@ -493,9 +493,9 @@ func void cstr8_beautify(c8* str) {
 // =========================================================================
 
 func b32 cstr8_to_i64(cstr8 str, i64* out) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (str == NULL || out == NULL) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   assert(str != NULL);
@@ -504,18 +504,18 @@ func b32 cstr8_to_i64(cstr8 str, i64* out) {
   errno = 0;
   long long val = strtoll(str, &end, 10);
   if (errno != 0 || end == str || *end != '\0') {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   *out = (i64)val;
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return 1;
 }
 
 func b32 cstr8_to_f64(cstr8 str, f64* out) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (str == NULL || out == NULL) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   assert(str != NULL);
@@ -524,42 +524,42 @@ func b32 cstr8_to_f64(cstr8 str, f64* out) {
   errno = 0;
   double val = strtod(str, &end);
   if (errno != 0 || end == str || *end != '\0') {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   *out = val;
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return 1;
 }
 
 func cstr8_tokenizer cstr8_tokenizer_make(cstr8 src, cstr8 delim) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   cstr8_tokenizer tok = {0};
   tok.src = src != NULL ? src : "";
   tok.delim = delim != NULL ? delim : "";
   tok.cursor = 0;
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return tok;
 }
 
 func b32 cstr8_tokenizer_next(cstr8_tokenizer* tok, c8* out_buf, sz out_cap) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (tok == NULL || out_buf == NULL || out_cap == 0) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
   sz src_len = cstr8_len(tok->src);
   sz delim_len = cstr8_len(tok->delim);
   if (tok->cursor > src_len) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
   if (tok->cursor == src_len) {
     out_buf[0] = '\0';
     tok->cursor = src_len + 1;
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 1;
   }
 
@@ -583,19 +583,19 @@ func b32 cstr8_tokenizer_next(cstr8_tokenizer* tok, c8* out_buf, sz out_cap) {
   }
   memcpy(out_buf, tok->src + start, token_len);
   out_buf[token_len] = '\0';
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return 1;
 }
 
 func sz cstr8_join(c8* dst, sz dst_cap, cstr8 const* parts, sz part_count, cstr8 delim) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (dst == NULL || dst_cap == 0) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   dst[0] = '\0';
   if (parts == NULL || part_count == 0) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
@@ -608,7 +608,7 @@ func sz cstr8_join(c8* dst, sz dst_cap, cstr8 const* parts, sz part_count, cstr8
     total_len = cstr8_cat(dst, dst_cap, parts[part_idx] != NULL ? parts[part_idx] : "");
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return total_len;
 }
 
@@ -617,34 +617,34 @@ func sz cstr8_join(c8* dst, sz dst_cap, cstr8 const* parts, sz part_count, cstr8
 // =========================================================================
 
 func b32 cstr16_to_ascii(cstr16 str, c8* buf, sz buf_size) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   sz idx = 0;
   while (str[idx] != (c16)'\0') {
     if (str[idx] > 0x7FU || idx >= buf_size - 1) {
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 0;
     }
     buf[idx] = (c8)(u8)str[idx];
     idx++;
   }
   buf[idx] = '\0';
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return 1;
 }
 
 func b32 cstr32_to_ascii(cstr32 str, c8* buf, sz buf_size) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   sz idx = 0;
   while (str[idx] != (c32)'\0') {
     if (str[idx] > 0x7FU || idx >= buf_size - 1) {
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 0;
     }
     buf[idx] = (c8)(u8)str[idx];
     idx++;
   }
   buf[idx] = '\0';
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return 1;
 }
 
@@ -653,68 +653,68 @@ func b32 cstr32_to_ascii(cstr32 str, c8* buf, sz buf_size) {
 // =========================================================================
 
 func sz cstr16_len(cstr16 str) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_begin;
+  profile_func_end;
   return cstr16_len_impl(str);
 }
 
 func b32 cstr16_is_empty(cstr16 str) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_begin;
+  profile_func_end;
   return str[0] == (c16)'\0' ? 1 : 0;
 }
 
 func void cstr16_clear(c16* str) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   str[0] = (c16)'\0';
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func i32 cstr16_cmp(cstr16 lhs, cstr16 rhs) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   while (*lhs != 0 && *lhs == *rhs) {
     lhs++;
     rhs++;
   }
   if (*lhs < *rhs) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return -1;
   }
   if (*lhs > *rhs) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 1;
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return 0;
 }
 
 func i32 cstr16_cmp_n(cstr16 lhs, cstr16 rhs, sz cnt) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   for (sz idx = 0; idx < cnt; idx++) {
     if (lhs[idx] != rhs[idx]) {
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return lhs[idx] < rhs[idx] ? -1 : 1;
     }
     if (lhs[idx] == (c16)'\0') {
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 0;
     }
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return 0;
 }
 
 func i32 cstr16_cmp_nocase(cstr16 lhs, cstr16 rhs) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   while (*lhs != (c16)'\0' && *rhs != (c16)'\0') {
     c16 lchr = c16_to_lower(*lhs);
     c16 rchr = c16_to_lower(*rhs);
     if (lchr < rchr) {
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return -1;
     }
     if (lchr > rchr) {
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
     }
     lhs++;
@@ -723,14 +723,14 @@ func i32 cstr16_cmp_nocase(cstr16 lhs, cstr16 rhs) {
   c16 lchr = c16_to_lower(*lhs);
   c16 rchr = c16_to_lower(*rhs);
   if (lchr < rchr) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return -1;
   }
   if (lchr > rchr) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 1;
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return 0;
 }
 
@@ -739,23 +739,23 @@ func i32 cstr16_cmp_nocase(cstr16 lhs, cstr16 rhs) {
 // =========================================================================
 
 func sz cstr16_copy(c16* dst, sz dst_size, cstr16 src) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (dst_size == 0) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   sz src_len = cstr16_len_impl(src);
   sz copy_len = src_len < dst_size - 1 ? src_len : dst_size - 1;
   memcpy(dst, src, copy_len * size_of(c16));
   dst[copy_len] = (c16)'\0';
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return copy_len;
 }
 
 func sz cstr16_copy_n(c16* dst, sz dst_size, cstr16 src, sz cnt) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (dst_size == 0) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   sz src_len = cstr16_len_impl(src);
@@ -763,19 +763,19 @@ func sz cstr16_copy_n(c16* dst, sz dst_size, cstr16 src, sz cnt) {
   sz copy_len = max_copy < dst_size - 1 ? max_copy : dst_size - 1;
   memcpy(dst, src, copy_len * size_of(c16));
   dst[copy_len] = (c16)'\0';
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return copy_len;
 }
 
 func sz cstr16_cat(c16* dst, sz dst_cap, cstr16 src) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (dst_cap == 0) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   sz dst_len = cstr16_len_impl(dst);
   if (dst_len >= dst_cap - 1) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return dst_len;
   }
   sz remaining = dst_cap - dst_len - 1;
@@ -783,33 +783,33 @@ func sz cstr16_cat(c16* dst, sz dst_cap, cstr16 src) {
   sz copy_len = src_len < remaining ? src_len : remaining;
   memcpy(dst + dst_len, src, copy_len * size_of(c16));
   dst[dst_len + copy_len] = (c16)'\0';
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return dst_len + copy_len;
 }
 
 func sz cstr16_append_char(c16* dst, sz dst_cap, c16 chr) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (dst_cap == 0) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   sz len = cstr16_len_impl(dst);
   if (len >= dst_cap - 1) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return len;
   }
   dst[len] = chr;
   dst[len + 1] = (c16)'\0';
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return len + 1;
 }
 
 func void cstr16_truncate(c16* str, sz length) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (cstr16_len_impl(str) > length) {
     str[length] = (c16)'\0';
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 // =========================================================================
@@ -817,38 +817,38 @@ func void cstr16_truncate(c16* str, sz length) {
 // =========================================================================
 
 func cstr16 cstr16_find(cstr16 str, cstr16 sub) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (sub[0] == (c16)'\0') {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return str;
   }
   sz sub_len = cstr16_len_impl(sub);
   sz str_len = cstr16_len_impl(str);
   if (sub_len > str_len) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return NULL;
   }
   sz limit = str_len - sub_len;
   for (sz idx = 0; idx <= limit; idx++) {
     if (memcmp(str + idx, sub, sub_len * size_of(c16)) == 0) {
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return str + idx;
     }
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return NULL;
 }
 
 func cstr16 cstr16_find_last(cstr16 str, cstr16 sub) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (sub[0] == (c16)'\0') {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return str + cstr16_len_impl(str);
   }
   sz sub_len = cstr16_len_impl(sub);
   sz str_len = cstr16_len_impl(str);
   if (sub_len > str_len) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return NULL;
   }
   cstr16 last = NULL;
@@ -858,27 +858,27 @@ func cstr16 cstr16_find_last(cstr16 str, cstr16 sub) {
       last = str + idx;
     }
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return last;
 }
 
 func cstr16 cstr16_find_char(cstr16 str, c16 chr) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   for (sz idx = 0;; idx++) {
     if (str[idx] == chr) {
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return str + idx;
     }
     if (str[idx] == (c16)'\0') {
       break;
     }
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return NULL;
 }
 
 func cstr16 cstr16_find_last_char(cstr16 str, c16 chr) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   cstr16 last = NULL;
   for (sz idx = 0;; idx++) {
     if (str[idx] == chr) {
@@ -888,38 +888,38 @@ func cstr16 cstr16_find_last_char(cstr16 str, c16 chr) {
       break;
     }
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return last;
 }
 
 func sz cstr16_count_char(cstr16 str, c16 chr) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   sz count = 0;
   for (sz idx = 0; str[idx] != (c16)'\0'; idx++) {
     if (str[idx] == chr) {
       count++;
     }
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return count;
 }
 
 func b32 cstr16_starts_with(cstr16 str, cstr16 prefix) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   sz prefix_len = cstr16_len_impl(prefix);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return cstr16_cmp_n(str, prefix, prefix_len) == 0 ? 1 : 0;
 }
 
 func b32 cstr16_ends_with(cstr16 str, cstr16 suffix) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   sz str_len = cstr16_len_impl(str);
   sz suffix_len = cstr16_len_impl(suffix);
   if (suffix_len > str_len) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return memcmp(str + str_len - suffix_len, suffix, suffix_len * size_of(c16)) == 0 ? 1 : 0;
 }
 
@@ -928,23 +928,23 @@ func b32 cstr16_ends_with(cstr16 str, cstr16 suffix) {
 // =========================================================================
 
 func void cstr16_to_upper(c16* str) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   for (sz idx = 0; str[idx] != (c16)'\0'; idx++) {
     str[idx] = c16_to_upper(str[idx]);
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func void cstr16_to_lower(c16* str) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   for (sz idx = 0; str[idx] != (c16)'\0'; idx++) {
     str[idx] = c16_to_lower(str[idx]);
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func void cstr16_trim(c16* str) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   sz start = 0;
   while (c16_is_space(str[start])) {
     start++;
@@ -955,21 +955,21 @@ func void cstr16_trim(c16* str) {
   }
   memmove(str, str + start, len * size_of(c16));
   str[len] = (c16)'\0';
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func void cstr16_replace_char(c16* str, c16 from_chr, c16 to_chr) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   for (sz idx = 0; str[idx] != (c16)'\0'; idx++) {
     if (str[idx] == from_chr) {
       str[idx] = to_chr;
     }
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func sz cstr16_remove_char(c16* str, c16 chr) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   sz write = 0;
   sz removed = 0;
   for (sz idx = 0; str[idx] != (c16)'\0'; idx++) {
@@ -980,12 +980,12 @@ func sz cstr16_remove_char(c16* str, c16 chr) {
     }
   }
   str[write] = (c16)'\0';
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return removed;
 }
 
 func sz cstr16_remove_whitespace(c16* str) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   sz write = 0;
   sz removed = 0;
   for (sz idx = 0; str[idx] != (c16)'\0'; idx++) {
@@ -996,46 +996,46 @@ func sz cstr16_remove_whitespace(c16* str) {
     }
   }
   str[write] = (c16)'\0';
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return removed;
 }
 
 func b32 cstr16_remove_prefix(c16* str, cstr16 prefix) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   sz prefix_len = cstr16_len_impl(prefix);
   if (cstr16_cmp_n(str, prefix, prefix_len) != 0) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   sz str_len = cstr16_len_impl(str);
   memmove(str, str + prefix_len, (str_len - prefix_len + 1) * size_of(c16));
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return 1;
 }
 
 func b32 cstr16_remove_suffix(c16* str, cstr16 suffix) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   sz str_len = cstr16_len_impl(str);
   sz suffix_len = cstr16_len_impl(suffix);
   if (suffix_len > str_len) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   if (memcmp(str + str_len - suffix_len, suffix, suffix_len * size_of(c16)) != 0) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   str[str_len - suffix_len] = (c16)'\0';
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return 1;
 }
 
 func sz cstr16_replace(c16* str, sz str_cap, cstr16 from, cstr16 rep) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   sz from_len = cstr16_len_impl(from);
   sz rep_len = cstr16_len_impl(rep);
   if (from_len == 0) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   sz count = 0;
@@ -1056,14 +1056,14 @@ func sz cstr16_replace(c16* str, sz str_cap, cstr16 from, cstr16 rep) {
       pos++;
     }
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return count;
 }
 
 func sz cstr16_common_prefix(cstr16 lhs, cstr16 rhs, c16* buf, sz buf_cap) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (buf_cap == 0) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   sz idx = 0;
@@ -1072,15 +1072,15 @@ func sz cstr16_common_prefix(cstr16 lhs, cstr16 rhs, c16* buf, sz buf_cap) {
     idx++;
   }
   buf[idx] = (c16)'\0';
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return idx;
 }
 
 func void cstr16_beautify(c16* str) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   cstr16_to_lower(str);
   str[0] = c16_to_upper(str[0]);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 // =========================================================================
@@ -1088,24 +1088,24 @@ func void cstr16_beautify(c16* str) {
 // =========================================================================
 
 func b32 cstr16_to_i64(cstr16 str, i64* out) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   c8 buf[64];
   if (!cstr16_to_ascii(str, buf, size_of(buf))) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return cstr8_to_i64(buf, out);
 }
 
 func b32 cstr16_to_f64(cstr16 str, f64* out) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   c8 buf[256];
   if (!cstr16_to_ascii(str, buf, size_of(buf))) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return cstr8_to_f64(buf, out);
 }
 
@@ -1114,68 +1114,68 @@ func b32 cstr16_to_f64(cstr16 str, f64* out) {
 // =========================================================================
 
 func sz cstr32_len(cstr32 str) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_begin;
+  profile_func_end;
   return cstr32_len_impl(str);
 }
 
 func b32 cstr32_is_empty(cstr32 str) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_begin;
+  profile_func_end;
   return str[0] == (c32)'\0' ? 1 : 0;
 }
 
 func void cstr32_clear(c32* str) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   str[0] = (c32)'\0';
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func i32 cstr32_cmp(cstr32 lhs, cstr32 rhs) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   while (*lhs != 0 && *lhs == *rhs) {
     lhs++;
     rhs++;
   }
   if (*lhs < *rhs) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return -1;
   }
   if (*lhs > *rhs) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 1;
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return 0;
 }
 
 func i32 cstr32_cmp_n(cstr32 lhs, cstr32 rhs, sz cnt) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   for (sz idx = 0; idx < cnt; idx++) {
     if (lhs[idx] != rhs[idx]) {
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return lhs[idx] < rhs[idx] ? -1 : 1;
     }
     if (lhs[idx] == (c32)'\0') {
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 0;
     }
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return 0;
 }
 
 func i32 cstr32_cmp_nocase(cstr32 lhs, cstr32 rhs) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   while (*lhs != (c32)'\0' && *rhs != (c32)'\0') {
     c32 lchr = c32_to_lower(*lhs);
     c32 rchr = c32_to_lower(*rhs);
     if (lchr < rchr) {
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return -1;
     }
     if (lchr > rchr) {
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 1;
     }
     lhs++;
@@ -1184,14 +1184,14 @@ func i32 cstr32_cmp_nocase(cstr32 lhs, cstr32 rhs) {
   c32 lchr = c32_to_lower(*lhs);
   c32 rchr = c32_to_lower(*rhs);
   if (lchr < rchr) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return -1;
   }
   if (lchr > rchr) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 1;
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return 0;
 }
 
@@ -1200,23 +1200,23 @@ func i32 cstr32_cmp_nocase(cstr32 lhs, cstr32 rhs) {
 // =========================================================================
 
 func sz cstr32_copy(c32* dst, sz dst_size, cstr32 src) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (dst_size == 0) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   sz src_len = cstr32_len_impl(src);
   sz copy_len = src_len < dst_size - 1 ? src_len : dst_size - 1;
   memcpy(dst, src, copy_len * size_of(c32));
   dst[copy_len] = (c32)'\0';
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return copy_len;
 }
 
 func sz cstr32_copy_n(c32* dst, sz dst_size, cstr32 src, sz cnt) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (dst_size == 0) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   sz src_len = cstr32_len_impl(src);
@@ -1224,19 +1224,19 @@ func sz cstr32_copy_n(c32* dst, sz dst_size, cstr32 src, sz cnt) {
   sz copy_len = max_copy < dst_size - 1 ? max_copy : dst_size - 1;
   memcpy(dst, src, copy_len * size_of(c32));
   dst[copy_len] = (c32)'\0';
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return copy_len;
 }
 
 func sz cstr32_cat(c32* dst, sz dst_cap, cstr32 src) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (dst_cap == 0) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   sz dst_len = cstr32_len_impl(dst);
   if (dst_len >= dst_cap - 1) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return dst_len;
   }
   sz remaining = dst_cap - dst_len - 1;
@@ -1244,33 +1244,33 @@ func sz cstr32_cat(c32* dst, sz dst_cap, cstr32 src) {
   sz copy_len = src_len < remaining ? src_len : remaining;
   memcpy(dst + dst_len, src, copy_len * size_of(c32));
   dst[dst_len + copy_len] = (c32)'\0';
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return dst_len + copy_len;
 }
 
 func sz cstr32_append_char(c32* dst, sz dst_cap, c32 chr) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (dst_cap == 0) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   sz len = cstr32_len_impl(dst);
   if (len >= dst_cap - 1) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return len;
   }
   dst[len] = chr;
   dst[len + 1] = (c32)'\0';
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return len + 1;
 }
 
 func void cstr32_truncate(c32* str, sz length) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (cstr32_len_impl(str) > length) {
     str[length] = (c32)'\0';
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 // =========================================================================
@@ -1278,38 +1278,38 @@ func void cstr32_truncate(c32* str, sz length) {
 // =========================================================================
 
 func cstr32 cstr32_find(cstr32 str, cstr32 sub) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (sub[0] == (c32)'\0') {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return str;
   }
   sz sub_len = cstr32_len_impl(sub);
   sz str_len = cstr32_len_impl(str);
   if (sub_len > str_len) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return NULL;
   }
   sz limit = str_len - sub_len;
   for (sz idx = 0; idx <= limit; idx++) {
     if (memcmp(str + idx, sub, sub_len * size_of(c32)) == 0) {
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return str + idx;
     }
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return NULL;
 }
 
 func cstr32 cstr32_find_last(cstr32 str, cstr32 sub) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (sub[0] == (c32)'\0') {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return str + cstr32_len_impl(str);
   }
   sz sub_len = cstr32_len_impl(sub);
   sz str_len = cstr32_len_impl(str);
   if (sub_len > str_len) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return NULL;
   }
   cstr32 last = NULL;
@@ -1319,27 +1319,27 @@ func cstr32 cstr32_find_last(cstr32 str, cstr32 sub) {
       last = str + idx;
     }
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return last;
 }
 
 func cstr32 cstr32_find_char(cstr32 str, c32 chr) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   for (sz idx = 0;; idx++) {
     if (str[idx] == chr) {
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return str + idx;
     }
     if (str[idx] == (c32)'\0') {
       break;
     }
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return NULL;
 }
 
 func cstr32 cstr32_find_last_char(cstr32 str, c32 chr) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   cstr32 last = NULL;
   for (sz idx = 0;; idx++) {
     if (str[idx] == chr) {
@@ -1349,38 +1349,38 @@ func cstr32 cstr32_find_last_char(cstr32 str, c32 chr) {
       break;
     }
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return last;
 }
 
 func sz cstr32_count_char(cstr32 str, c32 chr) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   sz count = 0;
   for (sz idx = 0; str[idx] != (c32)'\0'; idx++) {
     if (str[idx] == chr) {
       count++;
     }
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return count;
 }
 
 func b32 cstr32_starts_with(cstr32 str, cstr32 prefix) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   sz prefix_len = cstr32_len_impl(prefix);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return cstr32_cmp_n(str, prefix, prefix_len) == 0 ? 1 : 0;
 }
 
 func b32 cstr32_ends_with(cstr32 str, cstr32 suffix) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   sz str_len = cstr32_len_impl(str);
   sz suffix_len = cstr32_len_impl(suffix);
   if (suffix_len > str_len) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return memcmp(str + str_len - suffix_len, suffix, suffix_len * size_of(c32)) == 0 ? 1 : 0;
 }
 
@@ -1389,23 +1389,23 @@ func b32 cstr32_ends_with(cstr32 str, cstr32 suffix) {
 // =========================================================================
 
 func void cstr32_to_upper(c32* str) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   for (sz idx = 0; str[idx] != (c32)'\0'; idx++) {
     str[idx] = c32_to_upper(str[idx]);
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func void cstr32_to_lower(c32* str) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   for (sz idx = 0; str[idx] != (c32)'\0'; idx++) {
     str[idx] = c32_to_lower(str[idx]);
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func void cstr32_trim(c32* str) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   sz start = 0;
   while (c32_is_space(str[start])) {
     start++;
@@ -1416,21 +1416,21 @@ func void cstr32_trim(c32* str) {
   }
   memmove(str, str + start, len * size_of(c32));
   str[len] = (c32)'\0';
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func void cstr32_replace_char(c32* str, c32 from_chr, c32 to_chr) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   for (sz idx = 0; str[idx] != (c32)'\0'; idx++) {
     if (str[idx] == from_chr) {
       str[idx] = to_chr;
     }
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func sz cstr32_remove_char(c32* str, c32 chr) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   sz write = 0;
   sz removed = 0;
   for (sz idx = 0; str[idx] != (c32)'\0'; idx++) {
@@ -1441,12 +1441,12 @@ func sz cstr32_remove_char(c32* str, c32 chr) {
     }
   }
   str[write] = (c32)'\0';
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return removed;
 }
 
 func sz cstr32_remove_whitespace(c32* str) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   sz write = 0;
   sz removed = 0;
   for (sz idx = 0; str[idx] != (c32)'\0'; idx++) {
@@ -1457,46 +1457,46 @@ func sz cstr32_remove_whitespace(c32* str) {
     }
   }
   str[write] = (c32)'\0';
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return removed;
 }
 
 func b32 cstr32_remove_prefix(c32* str, cstr32 prefix) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   sz prefix_len = cstr32_len_impl(prefix);
   if (cstr32_cmp_n(str, prefix, prefix_len) != 0) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   sz str_len = cstr32_len_impl(str);
   memmove(str, str + prefix_len, (str_len - prefix_len + 1) * size_of(c32));
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return 1;
 }
 
 func b32 cstr32_remove_suffix(c32* str, cstr32 suffix) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   sz str_len = cstr32_len_impl(str);
   sz suffix_len = cstr32_len_impl(suffix);
   if (suffix_len > str_len) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   if (memcmp(str + str_len - suffix_len, suffix, suffix_len * size_of(c32)) != 0) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   str[str_len - suffix_len] = (c32)'\0';
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return 1;
 }
 
 func sz cstr32_replace(c32* str, sz str_cap, cstr32 from, cstr32 rep) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   sz from_len = cstr32_len_impl(from);
   sz rep_len = cstr32_len_impl(rep);
   if (from_len == 0) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   sz count = 0;
@@ -1517,14 +1517,14 @@ func sz cstr32_replace(c32* str, sz str_cap, cstr32 from, cstr32 rep) {
       pos++;
     }
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return count;
 }
 
 func sz cstr32_common_prefix(cstr32 lhs, cstr32 rhs, c32* buf, sz buf_cap) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (buf_cap == 0) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   sz idx = 0;
@@ -1533,15 +1533,15 @@ func sz cstr32_common_prefix(cstr32 lhs, cstr32 rhs, c32* buf, sz buf_cap) {
     idx++;
   }
   buf[idx] = (c32)'\0';
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return idx;
 }
 
 func void cstr32_beautify(c32* str) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   cstr32_to_lower(str);
   str[0] = c32_to_upper(str[0]);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 // =========================================================================
@@ -1549,24 +1549,24 @@ func void cstr32_beautify(c32* str) {
 // =========================================================================
 
 func b32 cstr32_to_i64(cstr32 str, i64* out) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   c8 buf[64];
   if (!cstr32_to_ascii(str, buf, size_of(buf))) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return cstr8_to_i64(buf, out);
 }
 
 func b32 cstr32_to_f64(cstr32 str, f64* out) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   c8 buf[256];
   if (!cstr32_to_ascii(str, buf, size_of(buf))) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return cstr8_to_f64(buf, out);
 }
 
@@ -1575,79 +1575,79 @@ func b32 cstr32_to_f64(cstr32 str, f64* out) {
 // =========================================================================
 
 func sz cstr8_to_cstr16(cstr8 src, c16* buf, sz buf_cap) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (buf_cap == 0) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   sz src_len = cstr8_len(src);
   sz written = utf8_to_utf16(src, src_len, buf, buf_cap - 1);
   buf[written] = (c16)'\0';
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return written;
 }
 
 func sz cstr8_to_cstr32(cstr8 src, c32* buf, sz buf_cap) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (buf_cap == 0) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   sz src_len = cstr8_len(src);
   sz written = utf8_to_utf32(src, src_len, buf, buf_cap - 1);
   buf[written] = (c32)'\0';
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return written;
 }
 
 func sz cstr16_to_cstr8(cstr16 src, c8* buf, sz buf_cap) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (buf_cap == 0) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   sz src_len = cstr16_len_impl(src);
   sz written = utf16_to_utf8(src, src_len, buf, buf_cap - 1);
   buf[written] = '\0';
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return written;
 }
 
 func sz cstr16_to_cstr32(cstr16 src, c32* buf, sz buf_cap) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (buf_cap == 0) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   sz src_len = cstr16_len_impl(src);
   sz written = utf16_to_utf32(src, src_len, buf, buf_cap - 1);
   buf[written] = (c32)'\0';
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return written;
 }
 
 func sz cstr32_to_cstr8(cstr32 src, c8* buf, sz buf_cap) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (buf_cap == 0) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   sz src_len = cstr32_len_impl(src);
   sz written = utf32_to_utf8(src, src_len, buf, buf_cap - 1);
   buf[written] = '\0';
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return written;
 }
 
 func sz cstr32_to_cstr16(cstr32 src, c16* buf, sz buf_cap) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (buf_cap == 0) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   sz src_len = cstr32_len_impl(src);
   sz written = utf32_to_utf16(src, src_len, buf, buf_cap - 1);
   buf[written] = (c16)'\0';
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return written;
 }

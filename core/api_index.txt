@@ -55,39 +55,6 @@
 201: #define local_persist static
 204: #define const_var static read_only
 
-=== include\basic\log.h ===
-16: typedef enum log_level {
-28: #define log_level_mask(level) (1u << (level))
-31: typedef struct log_msg {
-40: typedef struct log_frame {
-49: typedef struct log_state {
-58: func cstr8 log_level_to_str(log_level level);
-62: func b32 log_state_init(log_state* state, b32 use_mutex);
-66: func void log_state_quit(log_state* state);
-69: func b32 log_state_is_init(log_state* state);
-72: func void log_state_set_level(log_state* state, log_level level);
-79: func void log_state_sync(log_state* dst, log_state* src);
-83: func void log_state_begin_frame(log_state* state);
-89: func log_frame* log_state_end_frame(log_state* state, u32 severity_mask);
-92: func void log_frame_destroy(log_frame* frame);
-93: func b32 log_frame_has_msgs(log_frame* frame);
-94: func sz log_frame_msg_count(log_frame* frame);
-95: func log_msg* log_frame_first(log_frame* frame);
-96: func log_msg* log_frame_last(log_frame* frame);
-97: func log_msg* log_msg_next(log_msg* msg);
-98: func log_level log_msg_level(log_msg* msg);
-99: func callsite log_msg_site(log_msg* msg);
-100: func cstr8 log_msg_text(log_msg* msg);
-103: #define LOG_FRAME_FOREACH(frame, it) \
-107: func void _log(log_state* state, log_level level, callsite site, const char* msg, ...);
-110: #define log_state_fatal(state, ...)   _log((state), LOG_LEVEL_FATAL, CALLSITE_HERE, __VA_ARGS__)
-111: #define log_state_error(state, ...)   _log((state), LOG_LEVEL_ERROR, CALLSITE_HERE, __VA_ARGS__)
-112: #define log_state_warn(state, ...)    _log((state), LOG_LEVEL_WARN, CALLSITE_HERE, __VA_ARGS__)
-113: #define log_state_info(state, ...)    _log((state), LOG_LEVEL_INFO, CALLSITE_HERE, __VA_ARGS__)
-114: #define log_state_debug(state, ...)   _log((state), LOG_LEVEL_DEBUG, CALLSITE_HERE, __VA_ARGS__)
-115: #define log_state_verbose(state, ...) _log((state), LOG_LEVEL_VERBOSE, CALLSITE_HERE, __VA_ARGS__)
-116: #define log_state_trace(state, ...)   _log((state), LOG_LEVEL_TRACE, CALLSITE_HERE, __VA_ARGS__)
-
 === include\basic\primitive_types.h ===
 
 === include\basic\profiler.h ===
@@ -1534,6 +1501,39 @@
 173: func b32 id64_parse_cstr8(cstr8 src, id64* out);
 176: func b32 id64_to_cstr8(id64 ident, c8* dst, sz cap);
 179: func b32 id64_to_str8(id64 ident, str8* dst);
+
+=== include\utils\log_state.h ===
+16: typedef enum log_level {
+28: #define log_level_mask(level) (1u << (level))
+31: typedef struct log_msg {
+40: typedef struct log_frame {
+49: typedef struct log_state {
+58: func cstr8 log_level_to_str(log_level level);
+62: func b32 log_state_init(log_state* state, b32 use_mutex);
+66: func void log_state_quit(log_state* state);
+69: func b32 log_state_is_init(log_state* state);
+72: func void log_state_set_level(log_state* state, log_level level);
+79: func void log_state_sync(log_state* dst, log_state* src);
+83: func void log_state_begin_frame(log_state* state);
+89: func log_frame* log_state_end_frame(log_state* state, u32 severity_mask);
+92: func void log_frame_destroy(log_frame* frame);
+93: func b32 log_frame_has_msgs(log_frame* frame);
+94: func sz log_frame_msg_count(log_frame* frame);
+95: func log_msg* log_frame_first(log_frame* frame);
+96: func log_msg* log_frame_last(log_frame* frame);
+97: func log_msg* log_msg_next(log_msg* msg);
+98: func log_level log_msg_level(log_msg* msg);
+99: func callsite log_msg_site(log_msg* msg);
+100: func cstr8 log_msg_text(log_msg* msg);
+103: #define LOG_FRAME_FOREACH(frame, it) \
+107: func void _log(log_state* state, log_level level, callsite site, const char* msg, ...);
+110: #define log_state_fatal(state, ...)   _log((state), LOG_LEVEL_FATAL, CALLSITE_HERE, __VA_ARGS__)
+111: #define log_state_error(state, ...)   _log((state), LOG_LEVEL_ERROR, CALLSITE_HERE, __VA_ARGS__)
+112: #define log_state_warn(state, ...)    _log((state), LOG_LEVEL_WARN, CALLSITE_HERE, __VA_ARGS__)
+113: #define log_state_info(state, ...)    _log((state), LOG_LEVEL_INFO, CALLSITE_HERE, __VA_ARGS__)
+114: #define log_state_debug(state, ...)   _log((state), LOG_LEVEL_DEBUG, CALLSITE_HERE, __VA_ARGS__)
+115: #define log_state_verbose(state, ...) _log((state), LOG_LEVEL_VERBOSE, CALLSITE_HERE, __VA_ARGS__)
+116: #define log_state_trace(state, ...)   _log((state), LOG_LEVEL_TRACE, CALLSITE_HERE, __VA_ARGS__)
 
 === include\utils\stacktrace.h ===
 10: #define STACKTRACE_CAPTURE_CAP 64

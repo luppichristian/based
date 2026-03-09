@@ -18,122 +18,122 @@
 #include <string.h>
 
 func filestream_error filestream_set_error(filestream* stm, filestream_error error_code) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (stm != NULL) {
     stm->error_code = error_code;
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return error_code;
 }
 
 func allocator filestream_allocator_resolve(void) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   allocator alloc = thread_get_allocator();
   if (alloc.alloc_fn != NULL && alloc.dealloc_fn != NULL) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return alloc;
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return global_get_allocator();
 }
 
 func filestream filestream_empty(void) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   filestream stm;
   memset(&stm, 0, size_of(stm));
   stm.archive_path = path_from_cstr("");
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return stm;
 }
 
 func cstr8 filestream_mode_string(u32 mode_flags) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if ((mode_flags & FILESTREAM_OPEN_APPEND) != 0) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return (mode_flags & FILESTREAM_OPEN_READ) != 0 ? "a+b" : "ab";
   }
 
   if ((mode_flags & FILESTREAM_OPEN_WRITE) != 0) {
     if ((mode_flags & FILESTREAM_OPEN_READ) != 0) {
       if ((mode_flags & FILESTREAM_OPEN_TRUNCATE) != 0) {
-        TracyCZoneEnd(__tracy_zone_ctx);
+        profile_func_end;
         return "w+b";
       }
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return "r+b";
     }
 
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return "wb";
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return "rb";
 }
 
 func sz filestream_native_size(SDL_IOStream* file_ptr) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   Sint64 size_value = 0;
 
   if (file_ptr == NULL) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
   size_value = SDL_GetIOSize(file_ptr);
   if (size_value < 0) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return (sz)size_value;
 }
 
 func path filestream_normalize_archive_path(const path* src) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   path item_path = path_from_cstr(src != NULL ? src->buf : "");
   path_normalize(&item_path);
   path_remove_trailing_slash(&item_path);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return item_path;
 }
 
 func archive_entry* filestream_find_archive_entry(archive* arc, const path* src) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   path item_path = filestream_normalize_archive_path(src);
   sz item_idx = 0;
 
   if (arc == NULL) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return NULL;
   }
 
   for (item_idx = 0; item_idx < arc->entry_count; item_idx += 1) {
     path ent_path = filestream_normalize_archive_path(&arc->entries[item_idx].item_path);
     if (cstr8_cmp(ent_path.buf, item_path.buf) == 0) {
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return &arc->entries[item_idx];
     }
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return NULL;
 }
 
 func b32 filestream_reserve_memory(filestream* stm, sz min_capacity) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   allocator alloc = {0};
   u8* new_ptr = NULL;
   sz new_capacity = 0;
 
   if (stm == NULL) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   if (stm->memory_capacity >= min_capacity) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 1;
   }
   assert(stm->memory_size <= stm->memory_capacity);
@@ -151,18 +151,18 @@ func b32 filestream_reserve_memory(filestream* stm, sz min_capacity) {
   new_ptr = (u8*)allocator_realloc(&alloc, stm->memory_ptr, stm->memory_capacity, new_capacity);
   if (new_ptr == NULL) {
     filestream_set_error(stm, FILESTREAM_ERROR_ALLOC);
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
   stm->memory_ptr = new_ptr;
   stm->memory_capacity = new_capacity;
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return 1;
 }
 
 func filestream filestream_open(const path* src, u32 mode_flags) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   filestream stm = filestream_empty();
   SDL_IOStream* file_ptr = NULL;
   cstr8 mode_str = filestream_mode_string(mode_flags);
@@ -177,12 +177,12 @@ func filestream filestream_open(const path* src, u32 mode_flags) {
 
   if (file_ptr == NULL) {
     thread_log_debug("filestream_open: failed src=%s mode=%s", src != NULL ? src->buf : "<null>", mode_str);
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return stm;
   }
   if (src == NULL) {
     SDL_CloseIO(file_ptr);
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return filestream_empty();
   }
   assert(file_ptr != NULL);
@@ -200,17 +200,17 @@ func filestream filestream_open(const path* src, u32 mode_flags) {
                                                  });
   (void)msg_post(&lifecycle_msg);
   thread_log_trace("filestream_open: native src=%s flags=0x%08x", src->buf, mode_flags);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return stm;
 }
 
 func filestream filestream_open_archive(archive* arc, const path* src, u32 mode_flags) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   filestream stm = filestream_empty();
   archive_entry* ent = NULL;
 
   if (arc == NULL || src == NULL) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return stm;
   }
   assert(src->buf[0] != '\0');
@@ -218,7 +218,7 @@ func filestream filestream_open_archive(archive* arc, const path* src, u32 mode_
   ent = filestream_find_archive_entry(arc, src);
   if (ent == NULL && (mode_flags & FILESTREAM_OPEN_WRITE) == 0 &&
       (mode_flags & FILESTREAM_OPEN_APPEND) == 0) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return stm;
   }
 
@@ -230,7 +230,7 @@ func filestream filestream_open_archive(archive* arc, const path* src, u32 mode_
   if (ent != NULL && !ent->is_directory && ent->data_size > 0) {
     if (!filestream_reserve_memory(&stm, ent->data_size)) {
       filestream_close(&stm);
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return filestream_empty();
     }
 
@@ -256,30 +256,30 @@ func filestream filestream_open_archive(archive* arc, const path* src, u32 mode_
   (void)msg_post(&lifecycle_msg);
   thread_log_trace("filestream_open_archive: path=%s flags=0x%08x", stm.archive_path.buf, mode_flags);
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return stm;
 }
 
 func b32 filestream_flush(filestream* stm) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (!filestream_is_open(stm)) {
     if (stm != NULL) {
       filestream_set_error(stm, FILESTREAM_ERROR_NOT_OPEN);
     }
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
   if (stm->kind == FILESTREAM_KIND_NATIVE) {
     if (!SDL_FlushIO((SDL_IOStream*)stm->native_handle)) {
       filestream_set_error(stm, FILESTREAM_ERROR_IO);
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 0;
     }
 
     filestream_set_error(stm, FILESTREAM_ERROR_NONE);
     thread_log_trace("filestream_flush: native handle=%p", stm->native_handle);
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 1;
   }
 
@@ -287,7 +287,7 @@ func b32 filestream_flush(filestream* stm) {
     buffer data = buffer_from(stm->memory_ptr, stm->memory_size);
     if (!archive_write_all(stm->archive_ref, &stm->archive_path, data)) {
       filestream_set_error(stm, FILESTREAM_ERROR_IO);
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 0;
     }
 
@@ -295,17 +295,17 @@ func b32 filestream_flush(filestream* stm) {
   }
 
   filestream_set_error(stm, FILESTREAM_ERROR_NONE);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return 1;
 }
 
 func void filestream_close(filestream* stm) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   allocator alloc = filestream_allocator_resolve();
   SDL_IOStream* file_ptr = NULL;
 
   if (stm == NULL) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return;
   }
 
@@ -333,32 +333,32 @@ func void filestream_close(filestream* stm) {
 
   thread_log_trace("filestream_close: kind=%u", (u32)stm->kind);
   *stm = filestream_empty();
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func b32 filestream_is_open(const filestream* stm) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (stm == NULL) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
   if (stm->kind == FILESTREAM_KIND_NATIVE) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return stm->native_handle != NULL ? 1 : 0;
   }
 
   if (stm->kind == FILESTREAM_KIND_ARCHIVE) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return stm->archive_ref != NULL ? 1 : 0;
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return 0;
 }
 
 func sz filestream_read(filestream* stm, void* dst, sz size) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   sz available = 0;
   sz read_size = 0;
 
@@ -366,7 +366,7 @@ func sz filestream_read(filestream* stm, void* dst, sz size) {
     if (stm != NULL) {
       filestream_set_error(stm, FILESTREAM_ERROR_NOT_OPEN);
     }
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   assert(stm->kind == FILESTREAM_KIND_NATIVE || stm->kind == FILESTREAM_KIND_ARCHIVE);
@@ -382,19 +382,19 @@ func sz filestream_read(filestream* stm, void* dst, sz size) {
     } else {
       filestream_set_error(stm, FILESTREAM_ERROR_NONE);
     }
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return read_size;
   }
 
   if ((stm->mode_flags & FILESTREAM_OPEN_READ) == 0) {
     filestream_set_error(stm, FILESTREAM_ERROR_ACCESS);
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
   if (stm->cursor >= stm->memory_size) {
     filestream_set_error(stm, FILESTREAM_ERROR_EOF);
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
@@ -403,38 +403,38 @@ func sz filestream_read(filestream* stm, void* dst, sz size) {
   memcpy(dst, stm->memory_ptr + stm->cursor, read_size);
   stm->cursor += read_size;
   filestream_set_error(stm, FILESTREAM_ERROR_NONE);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return read_size;
 }
 
 func b32 filestream_read_exact(filestream* stm, void* dst, sz size) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   sz total_read = 0;
   u8* dst_ptr = (u8*)dst;
 
   while (total_read < size) {
     sz step_size = filestream_read(stm, dst_ptr + total_read, size - total_read);
     if (step_size == 0) {
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 0;
     }
 
     total_read += step_size;
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return 1;
 }
 
 func sz filestream_write(filestream* stm, const void* src, sz size) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   sz end_pos = 0;
 
   if (!filestream_is_open(stm) || (src == NULL && size > 0) || size == 0) {
     if (stm != NULL) {
       filestream_set_error(stm, FILESTREAM_ERROR_NOT_OPEN);
     }
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   assert(stm->kind == FILESTREAM_KIND_NATIVE || stm->kind == FILESTREAM_KIND_ARCHIVE);
@@ -446,14 +446,14 @@ func sz filestream_write(filestream* stm, const void* src, sz size) {
     } else {
       filestream_set_error(stm, FILESTREAM_ERROR_NONE);
     }
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return end_pos;
   }
 
   if ((stm->mode_flags & FILESTREAM_OPEN_WRITE) == 0 &&
       (stm->mode_flags & FILESTREAM_OPEN_APPEND) == 0) {
     filestream_set_error(stm, FILESTREAM_ERROR_ACCESS);
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
@@ -463,7 +463,7 @@ func sz filestream_write(filestream* stm, const void* src, sz size) {
 
   end_pos = stm->cursor + size;
   if (!filestream_reserve_memory(stm, end_pos)) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
@@ -474,31 +474,31 @@ func sz filestream_write(filestream* stm, const void* src, sz size) {
   }
   stm->dirty = 1;
   filestream_set_error(stm, FILESTREAM_ERROR_NONE);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return size;
 }
 
 func b32 filestream_write_exact(filestream* stm, const void* src, sz size) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   sz total_write = 0;
   const u8* src_ptr = (const u8*)src;
 
   while (total_write < size) {
     sz step_size = filestream_write(stm, src_ptr + total_write, size - total_write);
     if (step_size == 0) {
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 0;
     }
 
     total_write += step_size;
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return 1;
 }
 
 func b32 filestream_seek(filestream* stm, i64 offset, filestream_seek_basis basis) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   i64 base_pos = 0;
   i64 new_pos = 0;
   SDL_IOWhence io_basis = SDL_IO_SEEK_SET;
@@ -507,7 +507,7 @@ func b32 filestream_seek(filestream* stm, i64 offset, filestream_seek_basis basi
     if (stm != NULL) {
       filestream_set_error(stm, FILESTREAM_ERROR_NOT_OPEN);
     }
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   assert(basis == FILESTREAM_SEEK_BASIS_BEGIN || basis == FILESTREAM_SEEK_BASIS_CURRENT || basis == FILESTREAM_SEEK_BASIS_END);
@@ -521,12 +521,12 @@ func b32 filestream_seek(filestream* stm, i64 offset, filestream_seek_basis basi
 
     if (SDL_SeekIO((SDL_IOStream*)stm->native_handle, (Sint64)offset, io_basis) < 0) {
       filestream_set_error(stm, FILESTREAM_ERROR_SEEK);
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 0;
     }
 
     filestream_set_error(stm, FILESTREAM_ERROR_NONE);
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 1;
   }
 
@@ -539,78 +539,78 @@ func b32 filestream_seek(filestream* stm, i64 offset, filestream_seek_basis basi
   new_pos = base_pos + offset;
   if (new_pos < 0 || (sz)new_pos > stm->memory_size) {
     filestream_set_error(stm, FILESTREAM_ERROR_SEEK);
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
   stm->cursor = (sz)new_pos;
   filestream_set_error(stm, FILESTREAM_ERROR_NONE);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return 1;
 }
 
 func sz filestream_tell(const filestream* stm) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   Sint64 cur_pos = 0;
 
   if (!filestream_is_open(stm)) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
   if (stm->kind == FILESTREAM_KIND_NATIVE) {
     cur_pos = SDL_TellIO((SDL_IOStream*)stm->native_handle);
     if (cur_pos < 0) {
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 0;
     }
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return (sz)cur_pos;
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return stm->cursor;
 }
 
 func sz filestream_size(const filestream* stm) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (!filestream_is_open(stm)) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
   if (stm->kind == FILESTREAM_KIND_NATIVE) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return filestream_native_size((SDL_IOStream*)stm->native_handle);
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return stm->memory_size;
 }
 
 func b32 filestream_eof(const filestream* stm) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (!filestream_is_open(stm)) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 1;
   }
 
   if (stm->kind == FILESTREAM_KIND_NATIVE) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return filestream_tell(stm) >= filestream_size(stm) ? 1 : 0;
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return stm->cursor >= stm->memory_size ? 1 : 0;
 }
 
 func filestream_error filestream_get_error(const filestream* stm) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (stm == NULL) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return FILESTREAM_ERROR_NOT_OPEN;
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return stm->error_code;
 }

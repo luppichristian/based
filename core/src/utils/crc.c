@@ -6,15 +6,15 @@
 #include "basic/profiler.h"
 
 func u32 crc32_init(void) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_begin;
+  profile_func_end;
   return 0xFFFFFFFFU;
 }
 
 func u32 crc32_update(u32 crc, const void* data, sz size) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (size > 0 && data == NULL) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return crc;
   }
   assert(size == 0 || data != NULL);
@@ -29,32 +29,32 @@ func u32 crc32_update(u32 crc, const void* data, sz size) {
       }
     }
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return crc;
 }
 
 func u32 crc32_finalize(u32 crc) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_begin;
+  profile_func_end;
   return crc ^ 0xFFFFFFFFU;
 }
 
 func u32 crc32(const void* data, sz size) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_begin;
+  profile_func_end;
   return crc32_finalize(crc32_update(crc32_init(), data, size));
 }
 
 func u64 crc64_init(void) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_begin;
+  profile_func_end;
   return 0ULL;
 }
 
 func u64 crc64_update(u64 crc, const void* data, sz size) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (size > 0 && data == NULL) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return crc;
   }
   assert(size == 0 || data != NULL);
@@ -69,18 +69,18 @@ func u64 crc64_update(u64 crc, const void* data, sz size) {
       }
     }
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return crc;
 }
 
 func u64 crc64_finalize(u64 crc) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_begin;
+  profile_func_end;
   return crc;
 }
 
 func u64 crc64(const void* data, sz size) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_begin;
+  profile_func_end;
   return crc64_finalize(crc64_update(crc64_init(), data, size));
 }

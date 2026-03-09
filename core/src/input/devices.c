@@ -11,28 +11,28 @@
 const_var u64 DEVICES_AUDIO_RECORDING_BIT = 1ull << 63;
 
 func void devices_clear_name(c8* dst, sz capacity) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (!dst || !capacity) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return;
   }
 
   dst[0] = '\0';
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func void devices_copy_cstring(c8* dst, sz capacity, cstr8 src) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   sz idx = 0;
 
   if (!dst || !capacity) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return;
   }
 
   if (!src) {
     devices_clear_name(dst, capacity);
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return;
   }
 
@@ -42,21 +42,21 @@ func void devices_copy_cstring(c8* dst, sz capacity, cstr8 src) {
   }
 
   dst[idx] = '\0';
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func void devices_copy_wide_ascii(c8* dst, sz capacity, const wchar_t* src) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   sz idx = 0;
 
   if (!dst || !capacity) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return;
   }
 
   if (!src) {
     devices_clear_name(dst, capacity);
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return;
   }
 
@@ -67,16 +67,16 @@ func void devices_copy_wide_ascii(c8* dst, sz capacity, const wchar_t* src) {
   }
 
   dst[idx] = '\0';
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
 }
 
 func u64 devices_hash_path(cstr8 src) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   u64 hash_value = 1469598103934665603ULL;
   sz idx = 0;
 
   if (!src) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
@@ -86,93 +86,93 @@ func u64 devices_hash_path(cstr8 src) {
     idx += 1;
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return hash_value;
 }
 
 func device_id devices_make_id(device_type type, u64 instance) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   device_id result = {0};
   assert(type >= DEVICE_TYPE_UNKNOWN && type <= DEVICE_TYPE_AUDIO);
   result.type = type;
   result.instance = instance;
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return result;
 }
 
 func u64 devices_audio_encode_instance(u64 native_id, audio_device_type audio_type) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   u64 encoded = native_id & ~DEVICES_AUDIO_RECORDING_BIT;
   if (audio_type == AUDIO_DEVICE_TYPE_RECORDING) {
     encoded |= DEVICES_AUDIO_RECORDING_BIT;
   }
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return encoded;
 }
 
 func u64 devices_audio_decode_native_id(u64 instance) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_begin;
+  profile_func_end;
   return instance & ~DEVICES_AUDIO_RECORDING_BIT;
 }
 
 func b32 audio_device_type_is_valid(audio_device_type src) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_begin;
+  profile_func_end;
   return src == AUDIO_DEVICE_TYPE_PLAYBACK || src == AUDIO_DEVICE_TYPE_RECORDING;
 }
 
 func cstr8 devices_get_audio_type_name(audio_device_type audio_type) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   switch (audio_type) {
     case AUDIO_DEVICE_TYPE_PLAYBACK:
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return "playback";
     case AUDIO_DEVICE_TYPE_RECORDING:
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return "recording";
     case AUDIO_DEVICE_TYPE_UNKNOWN:
     default:
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return "unknown";
   }
 }
 
 func audio_device_type devices_get_audio_device_type(device_id id) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (id.type != DEVICE_TYPE_AUDIO) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return AUDIO_DEVICE_TYPE_UNKNOWN;
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return (id.instance & DEVICES_AUDIO_RECORDING_BIT) != 0 ? AUDIO_DEVICE_TYPE_RECORDING : AUDIO_DEVICE_TYPE_PLAYBACK;
 }
 
 func device_id devices_make_audio_device_id(u64 native_id, audio_device_type audio_type) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (!audio_device_type_is_valid(audio_type)) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return (device_id) {0};
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return devices_make_id(DEVICE_TYPE_AUDIO, devices_audio_encode_instance(native_id, audio_type));
 }
 
 func u64 devices_get_audio_native_id(device_id id) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (id.type != DEVICE_TYPE_AUDIO) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return devices_audio_decode_native_id(id.instance);
 }
 
 func sz devices_get_audio_count_for_type(audio_device_type audio_type) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   int count = 0;
 
   if (audio_type == AUDIO_DEVICE_TYPE_PLAYBACK) {
@@ -180,7 +180,7 @@ func sz devices_get_audio_count_for_type(audio_device_type audio_type) {
     if (ids) {
       SDL_free(ids);
     }
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return count > 0 ? (sz)count : 0;
   }
 
@@ -189,16 +189,16 @@ func sz devices_get_audio_count_for_type(audio_device_type audio_type) {
     if (ids) {
       SDL_free(ids);
     }
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return count > 0 ? (sz)count : 0;
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return 0;
 }
 
 func b32 devices_get_audio_device(audio_device_type audio_type, sz idx, device_id* out_id) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   int count = 0;
   SDL_AudioDeviceID* ids = NULL;
 
@@ -211,7 +211,7 @@ func b32 devices_get_audio_device(audio_device_type audio_type, sz idx, device_i
   } else if (audio_type == AUDIO_DEVICE_TYPE_RECORDING) {
     ids = SDL_GetAudioRecordingDevices(&count);
   } else {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
@@ -225,14 +225,14 @@ func b32 devices_get_audio_device(audio_device_type audio_type, sz idx, device_i
     SDL_free(ids);
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return found;
 }
 
 func b32 devices_try_fill_tablet_info(SDL_hid_device_info* entry, device_info* out_info) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (!entry || entry->usage_page != 0x0D || !out_info) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
@@ -250,12 +250,12 @@ func b32 devices_try_fill_tablet_info(SDL_hid_device_info* entry, device_info* o
     devices_copy_cstring(out_info->name, size_of(out_info->name), entry->path);
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return 1;
 }
 
 func b32 devices_find_tablet_by_idx(sz idx, device_id* out_id) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   SDL_hid_device_info* head = SDL_hid_enumerate(0, 0);
   SDL_hid_device_info* entry = head;
   sz current_idx = 0;
@@ -281,12 +281,12 @@ func b32 devices_find_tablet_by_idx(sz idx, device_id* out_id) {
     SDL_hid_free_enumeration(head);
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return found;
 }
 
 func b32 devices_find_tablet_info(device_id id, device_info* out_info) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   SDL_hid_device_info* head = SDL_hid_enumerate(0, 0);
   SDL_hid_device_info* entry = head;
   b32 found = 0;
@@ -308,49 +308,49 @@ func b32 devices_find_tablet_info(device_id id, device_info* out_info) {
     SDL_hid_free_enumeration(head);
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return found;
 }
 
 func b32 device_id_is_valid(device_id src) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_begin;
+  profile_func_end;
   return src.type != DEVICE_TYPE_UNKNOWN && src.instance != 0;
 }
 
 func cstr8 devices_get_type_name(device_type type) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   switch (type) {
     case DEVICE_TYPE_KEYBOARD:
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return "keyboard";
     case DEVICE_TYPE_MOUSE:
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return "mouse";
     case DEVICE_TYPE_GAMEPAD:
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return "gamepad";
     case DEVICE_TYPE_JOYSTICK:
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return "joystick";
     case DEVICE_TYPE_TABLET:
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return "tablet";
     case DEVICE_TYPE_TOUCH:
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return "touch";
     case DEVICE_TYPE_AUDIO:
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return "audio";
     case DEVICE_TYPE_UNKNOWN:
     default:
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return "unknown";
   }
 }
 
 func sz devices_get_count(device_type type) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   int count = 0;
 
   switch (type) {
@@ -359,7 +359,7 @@ func sz devices_get_count(device_type type) {
       if (ids) {
         SDL_free(ids);
       }
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return count > 0 ? (sz)count : 0;
     }
     case DEVICE_TYPE_MOUSE: {
@@ -367,7 +367,7 @@ func sz devices_get_count(device_type type) {
       if (ids) {
         SDL_free(ids);
       }
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return count > 0 ? (sz)count : 0;
     }
     case DEVICE_TYPE_GAMEPAD: {
@@ -375,7 +375,7 @@ func sz devices_get_count(device_type type) {
       if (ids) {
         SDL_free(ids);
       }
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return count > 0 ? (sz)count : 0;
     }
     case DEVICE_TYPE_JOYSTICK: {
@@ -383,7 +383,7 @@ func sz devices_get_count(device_type type) {
       if (ids) {
         SDL_free(ids);
       }
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return count > 0 ? (sz)count : 0;
     }
     case DEVICE_TYPE_TOUCH: {
@@ -391,7 +391,7 @@ func sz devices_get_count(device_type type) {
       if (ids) {
         SDL_free(ids);
       }
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return count > 0 ? (sz)count : 0;
     }
     case DEVICE_TYPE_TABLET: {
@@ -410,22 +410,22 @@ func sz devices_get_count(device_type type) {
         SDL_hid_free_enumeration(head);
       }
 
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return total;
     }
     case DEVICE_TYPE_AUDIO:
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return devices_get_audio_count_for_type(AUDIO_DEVICE_TYPE_PLAYBACK) +
              devices_get_audio_count_for_type(AUDIO_DEVICE_TYPE_RECORDING);
     case DEVICE_TYPE_UNKNOWN:
     default:
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 0;
   }
 }
 
 func b32 devices_get_device(device_type type, sz idx, device_id* out_id) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   int count = 0;
 
   if (out_id) {
@@ -443,7 +443,7 @@ func b32 devices_get_device(device_type type, sz idx, device_id* out_id) {
       if (ids) {
         SDL_free(ids);
       }
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return found;
     }
     case DEVICE_TYPE_MOUSE: {
@@ -456,7 +456,7 @@ func b32 devices_get_device(device_type type, sz idx, device_id* out_id) {
       if (ids) {
         SDL_free(ids);
       }
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return found;
     }
     case DEVICE_TYPE_GAMEPAD: {
@@ -469,7 +469,7 @@ func b32 devices_get_device(device_type type, sz idx, device_id* out_id) {
       if (ids) {
         SDL_free(ids);
       }
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return found;
     }
     case DEVICE_TYPE_JOYSTICK: {
@@ -482,7 +482,7 @@ func b32 devices_get_device(device_type type, sz idx, device_id* out_id) {
       if (ids) {
         SDL_free(ids);
       }
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return found;
     }
     case DEVICE_TYPE_TOUCH: {
@@ -495,41 +495,41 @@ func b32 devices_get_device(device_type type, sz idx, device_id* out_id) {
       if (ids) {
         SDL_free(ids);
       }
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return found;
     }
     case DEVICE_TYPE_TABLET:
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return devices_find_tablet_by_idx(idx, out_id);
     case DEVICE_TYPE_AUDIO: {
       sz playback_count = devices_get_audio_count_for_type(AUDIO_DEVICE_TYPE_PLAYBACK);
       if (idx < playback_count) {
-        TracyCZoneEnd(__tracy_zone_ctx);
+        profile_func_end;
         return devices_get_audio_device(AUDIO_DEVICE_TYPE_PLAYBACK, idx, out_id);
       }
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return devices_get_audio_device(AUDIO_DEVICE_TYPE_RECORDING, idx - playback_count, out_id);
     }
     case DEVICE_TYPE_UNKNOWN:
     default:
       assert(type == DEVICE_TYPE_UNKNOWN);
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 0;
   }
 }
 
 func b32 devices_is_connected(device_id id) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_begin;
+  profile_func_end;
   return devices_get_info(id, NULL);
 }
 
 func b32 devices_get_info(device_id id, device_info* out_info) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   int count = 0;
 
   if (!device_id_is_valid(id)) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
@@ -558,7 +558,7 @@ func b32 devices_get_info(device_id id, device_info* out_info) {
         SDL_free(ids);
       }
 
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return found;
     }
     case DEVICE_TYPE_MOUSE: {
@@ -580,7 +580,7 @@ func b32 devices_get_info(device_id id, device_info* out_info) {
         SDL_free(ids);
       }
 
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return found;
     }
     case DEVICE_TYPE_GAMEPAD: {
@@ -602,7 +602,7 @@ func b32 devices_get_info(device_id id, device_info* out_info) {
         SDL_free(ids);
       }
 
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return found;
     }
     case DEVICE_TYPE_JOYSTICK: {
@@ -624,7 +624,7 @@ func b32 devices_get_info(device_id id, device_info* out_info) {
         SDL_free(ids);
       }
 
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return found;
     }
     case DEVICE_TYPE_TOUCH: {
@@ -647,11 +647,11 @@ func b32 devices_get_info(device_id id, device_info* out_info) {
         SDL_free(ids);
       }
 
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return found;
     }
     case DEVICE_TYPE_TABLET:
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return devices_find_tablet_info(id, out_info);
     case DEVICE_TYPE_AUDIO: {
       int audio_count = 0;
@@ -665,7 +665,7 @@ func b32 devices_get_info(device_id id, device_info* out_info) {
       } else if (audio_type == AUDIO_DEVICE_TYPE_RECORDING) {
         ids = SDL_GetAudioRecordingDevices(&audio_count);
       } else {
-        TracyCZoneEnd(__tracy_zone_ctx);
+        profile_func_end;
         return 0;
       }
 
@@ -685,12 +685,12 @@ func b32 devices_get_info(device_id id, device_info* out_info) {
         SDL_free(ids);
       }
 
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return found;
     }
     case DEVICE_TYPE_UNKNOWN:
     default:
-      TracyCZoneEnd(__tracy_zone_ctx);
+      profile_func_end;
       return 0;
   }
 }

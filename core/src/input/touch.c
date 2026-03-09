@@ -7,13 +7,13 @@
 #include "basic/profiler.h"
 
 func b32 touch_is_available(void) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_begin;
+  profile_func_end;
   return touch_get_count() > 0;
 }
 
 func sz touch_get_count(void) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   int count = 0;
   SDL_TouchID* ids = SDL_GetTouchDevices(&count);
 
@@ -21,12 +21,12 @@ func sz touch_get_count(void) {
     SDL_free(ids);
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return count > 0 ? (sz)count : 0;
 }
 
 func b32 touch_get_device_id(sz idx, device_id* out_id) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   int count = 0;
   SDL_TouchID* ids = SDL_GetTouchDevices(&count);
   b32 found = ids && idx < (sz)count;
@@ -44,28 +44,28 @@ func b32 touch_get_device_id(sz idx, device_id* out_id) {
     SDL_free(ids);
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return found;
 }
 
 func touch_device_kind touch_get_device_kind(device_id id) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   if (id.type != DEVICE_TYPE_TOUCH) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return TOUCH_DEVICE_INVALID;
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return (touch_device_kind)SDL_GetTouchDeviceType((SDL_TouchID)id.instance);
 }
 
 func sz touch_get_finger_count(device_id id) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   int count = 0;
   SDL_Finger** fingers = NULL;
 
   if (id.type != DEVICE_TYPE_TOUCH) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
 
@@ -74,12 +74,12 @@ func sz touch_get_finger_count(device_id id) {
     SDL_free(fingers);
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return count > 0 ? (sz)count : 0;
 }
 
 func b32 touch_get_finger(device_id id, sz idx, touch_finger_state* out_finger) {
-  TracyCZoneN(__tracy_zone_ctx, __func__, 1);
+  profile_func_begin;
   int count = 0;
   SDL_Finger** fingers = NULL;
   b32 found = 0;
@@ -89,7 +89,7 @@ func b32 touch_get_finger(device_id id, sz idx, touch_finger_state* out_finger) 
   }
 
   if (id.type != DEVICE_TYPE_TOUCH || !out_finger) {
-    TracyCZoneEnd(__tracy_zone_ctx);
+    profile_func_end;
     return 0;
   }
   assert(out_finger != NULL);
@@ -107,6 +107,6 @@ func b32 touch_get_finger(device_id id, sz idx, touch_finger_state* out_finger) 
     SDL_free(fingers);
   }
 
-  TracyCZoneEnd(__tracy_zone_ctx);
+  profile_func_end;
   return found;
 }

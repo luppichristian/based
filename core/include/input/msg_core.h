@@ -5,7 +5,7 @@
 
 #include "../basic/assert.h"
 #include "../basic/codespace.h"
-#include "../basic/log.h"
+#include "../utils/log_state.h"
 #include "../basic/primitive_types.h"
 #include "../context/global_ctx.h"
 #include "../context/thread_ctx.h"
