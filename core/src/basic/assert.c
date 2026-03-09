@@ -3,6 +3,7 @@
 
 #include "basic/assert.h"
 #include "basic/log.h"
+#include "utils/stacktrace.h"
 #include "context/thread_ctx.h"
 #include "input/msg.h"
 #include "input/msg_core.h"
@@ -11,6 +12,7 @@
 #include "basic/utility_defines.h"
 #include "basic/profiler.h"
 #include "processes/process_current.h"
+#include <stdio.h>
 #include <stdlib.h>
 
 // =========================================================================
@@ -29,6 +31,35 @@ func void assert_log_msg(cstr8 msg, callsite site) {
   profile_func_end;
 }
 
+func void assert_log_stacktrace(callsite site) {
+  profile_func_begin;
+  if (ASSERT_STACKTRACE_DEPTH == 0) {
+    profile_func_end;
+    return;
+  }
+
+  stacktrace_frame frames[ASSERT_STACKTRACE_DEPTH] = {0};
+  sz captured_count = stacktrace_capture(frames, ASSERT_STACKTRACE_DEPTH, 1);
+  if (captured_count == 0) {
+    _log(thread_get_log_state(), LOG_LEVEL_FATAL, site, "Stack trace unavailable");
+    profile_func_end;
+    return;
+  }
+
+  _log(thread_get_log_state(), LOG_LEVEL_FATAL, site, "Stack trace:");
+  for (sz frame_idx = 0; frame_idx < captured_count; ++frame_idx) {
+    _log(
+        thread_get_log_state(),
+        LOG_LEVEL_FATAL,
+        site,
+        "  #%u 0x%p %s",
+        (u32)frame_idx,
+        (void*)frames[frame_idx].address,
+        frames[frame_idx].symbol);
+  }
+  profile_func_end;
+}
+
 // Action requested by user with assert_dialog
 typedef enum assert_action {
   ASSERT_ACTION_IGNORE = 0,
@@ -41,7 +72,52 @@ typedef enum assert_action {
 func assert_action assert_dialog(cstr8 msg, callsite site) {
   profile_func_begin;
   str8_long buf = {0};
-  cstr8_format(buf, size_of(buf), "Assertion failed: %s\n\nin %s() at %s:%u", msg, site.function, site.filename, site.line);
+  stacktrace_frame frames[ASSERT_STACKTRACE_DEPTH] = {0};
+  sz captured_count = stacktrace_capture(frames, ASSERT_STACKTRACE_DEPTH, 2);
+
+  i32 text_len = cstr8_format(
+      buf,
+      size_of(buf),
+      "Assertion failed\n"
+      "----------------\n"
+      "Condition: %s\n"
+      "Function : %s\n"
+      "Location : %s:%u\n"
+      "\n"
+      "Stack trace:\n",
+      msg,
+      site.function,
+      site.filename,
+      site.line);
+
+  if (text_len < 0) {
+    text_len = 0;
+  }
+
+  sz write_offset = (sz)text_len;
+  if (write_offset >= size_of(buf)) {
+    write_offset = size_of(buf) - 1;
+  }
+
+  if (captured_count == 0) {
+    cstr8_format(buf + write_offset, size_of(buf) - write_offset, "  <unavailable>\n");
+  } else {
+    for (sz frame_idx = 0; frame_idx < captured_count; ++frame_idx) {
+      i32 line_len = cstr8_format(
+          buf + write_offset,
+          size_of(buf) - write_offset,
+          "  #%02u %s\n",
+          (u32)frame_idx,
+          frames[frame_idx].symbol);
+      if (line_len < 0) {
+        break;
+      }
+      write_offset += (sz)line_len;
+      if (write_offset >= size_of(buf) - 1) {
+        break;
+      }
+    }
+  }
 
   SDL_MessageBoxButtonData buttons[] = {
       {SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT, 1, "Breakpoint"},
@@ -166,21 +242,25 @@ func void _assert(b32 condition, cstr8 cond_msg, callsite site) {
   switch (mode) {
     case ASSERT_MODE_DEBUG: {
       assert_log_msg(cond_msg, site);
+      assert_log_stacktrace(site);
       action = assert_dialog(cond_msg, site);
       break;
     }
     case ASSERT_MODE_QUIT: {
       assert_log_msg(cond_msg, site);
+      assert_log_stacktrace(site);
       action = ASSERT_ACTION_QUIT;
       break;
     }
     case ASSERT_MODE_ABORT: {
       assert_log_msg(cond_msg, site);
+      assert_log_stacktrace(site);
       action = ASSERT_ACTION_ABORT;
       break;
     }
     case ASSERT_MODE_LOG: {
       assert_log_msg(cond_msg, site);
+      assert_log_stacktrace(site);
       break;
     }
     case ASSERT_MODE_IGNORE: {

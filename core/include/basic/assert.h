@@ -26,6 +26,12 @@ func void _assert(b32 condition, const char* msg, callsite site);
 // Assert mode
 // =========================================================================
 
+// Set stacktrace depth logged and showed to the user.
+// If it's 0, stacktrace will be disabled.
+#ifndef ASSERT_STACKTRACE_DEPTH
+#  define ASSERT_STACKTRACE_DEPTH 8
+#endif
+
 // Different modes settable at runtime.
 typedef enum assert_mode {
   // On Desktop: Opens a debug window and waits for user input, in

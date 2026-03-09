@@ -94,6 +94,7 @@ extern "C" {
 #include "utils/crc.h"
 #include "utils/endian.h"
 #include "utils/id.h"
+#include "utils/stacktrace.h"
 #include "utils/timer.h"
 #include "utils/timestamp.h"
 #include "utils/uuid.h"

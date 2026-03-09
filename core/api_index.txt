@@ -1535,6 +1535,10 @@
 176: func b32 id64_to_cstr8(id64 ident, c8* dst, sz cap);
 179: func b32 id64_to_str8(id64 ident, str8* dst);
 
+=== include\utils\stacktrace.h ===
+10: #define STACKTRACE_CAPTURE_CAP 64
+24: func sz stacktrace_capture(stacktrace_frame* out_frames, sz out_capacity, sz skip_frames);
+
 === include\utils\timer.h ===
 13: func void timer_clear(f32* timer);
 16: func void timer_bump(f32* timer);

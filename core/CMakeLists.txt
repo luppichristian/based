@@ -34,6 +34,8 @@ target_link_libraries(based-core
     PRIVATE SDL3::SDL3 efsw miniz
     PUBLIC olib::static libmath2 Tracy::TracyClient
 )
+target_link_libraries(based-core PRIVATE $<$<PLATFORM_ID:Windows>:dbghelp>)
+target_link_libraries(based-core PRIVATE $<$<PLATFORM_ID:Linux>:dl>)
 target_compile_options(based-core PRIVATE ${BASED_CLANG_FOLDING_CONSTANT_WARNING})
 foreach(source_file IN LISTS BASED_CORE_SOURCES)
     get_filename_component(source_dir "${source_file}" DIRECTORY)

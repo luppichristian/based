@@ -7,7 +7,7 @@
 #include "basic/utility_defines.h"
 #include "processes/process.h"
 #include "../sdl3_include.h"
-
+#include "strings/cstrings.h"
 #include <stdio.h>
 
 func b32 common_processes_spawn_background(cstr8 const* args, cstr8 cwd_path) {
@@ -74,7 +74,7 @@ func b32 process_open_terminal(cstr8 location) {
 #if defined(PLATFORM_WINDOWS)
   c8 cmd_text[1024] = {0};
   cstr8 dir_path = location != NULL ? location : ".";
-  (void)snprintf(cmd_text, size_of(cmd_text), "cd /d \"%s\"", dir_path);
+  (void)cstr8_format(cmd_text, size_of(cmd_text), "cd /d \"%s\"", dir_path);
 
   cstr8 const args[] = {
       "cmd.exe",

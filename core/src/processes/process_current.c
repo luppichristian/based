@@ -72,12 +72,12 @@ func b32 process_unique_init_once(void) {
 
 #if defined(PLATFORM_WINDOWS)
   c8 mutex_name[96] = {0};
-  (void)snprintf(mutex_name, size_of(mutex_name), "based-process-%llu", (unsigned long long)key_hash);
+  (void)cstr8_format(mutex_name, size_of(mutex_name), "based-process-%llu", (unsigned long long)key_hash);
   process_unique_handle = CreateMutexA(NULL, TRUE, mutex_name);
   process_unique_is_single = process_unique_handle != NULL && GetLastError() != ERROR_ALREADY_EXISTS;
 #elif defined(PLATFORM_UNIX)
   c8 lock_path[128] = {0};
-  (void)snprintf(lock_path, size_of(lock_path), "/tmp/based-process-%llu.lock", (unsigned long long)key_hash);
+  (void)cstr8_format(lock_path, size_of(lock_path), "/tmp/based-process-%llu.lock", (unsigned long long)key_hash);
   process_unique_fd = open(lock_path, O_RDWR | O_CREAT, 0666);
   if (process_unique_fd < 0) {
     process_unique_is_single = false;
