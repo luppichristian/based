@@ -147,7 +147,7 @@ func void arena_destroy(arena* arn) {
   while (blk) {
     arena_block* nxt = blk->next;
     if (blk->owned && arn->parent.alloc_fn) {
-      _allocator_dealloc(&arn->parent, blk, blk->size, CALLSITE_HERE);
+      _allocator_dealloc(arn->parent, blk, blk->size, CALLSITE_HERE);
     }
     blk = nxt;
   }
@@ -271,7 +271,7 @@ func void* _arena_alloc(arena* arn, sz size, sz align, callsite site) {
   if (!result && arn->parent.alloc_fn) {
     sz needed = size_of(arena_block) + align + size;
     sz block_sz = arn->default_block_sz > needed ? arn->default_block_sz : needed;
-    arena_block* new_blk = (arena_block*)_allocator_alloc(&arn->parent, block_sz, site);
+    arena_block* new_blk = (arena_block*)_allocator_alloc(arn->parent, block_sz, site);
     if (new_blk) {
       arena_block_setup(new_blk, block_sz, 1);
       arena_chain_block(arn, new_blk);

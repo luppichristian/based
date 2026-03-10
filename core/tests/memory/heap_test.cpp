@@ -79,7 +79,7 @@ TEST(memory_heap_test, get_allocator) {
   heap hep = heap_create(zero_alloc, nullptr, 4096);
   allocator alloc = heap_get_allocator(&hep);
   EXPECT_NE(nullptr, alloc.alloc_fn);
-  void* ptr = allocator_alloc(&alloc, 100);
+  void* ptr = allocator_alloc(alloc, 100);
   EXPECT_NE(nullptr, ptr);
   heap_destroy(&hep);
 }

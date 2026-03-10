@@ -81,7 +81,7 @@ TEST(memory_pool_test, get_allocator) {
   pool pol = pool_create(zero_alloc, nullptr, 4096, 64, 8);
   allocator alloc = pool_get_allocator(&pol);
   EXPECT_NE(nullptr, alloc.alloc_fn);
-  void* ptr = allocator_alloc(&alloc, 64);
+  void* ptr = allocator_alloc(alloc, 64);
   EXPECT_NE(nullptr, ptr);
   pool_destroy(&pol);
 }

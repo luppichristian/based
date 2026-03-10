@@ -49,7 +49,7 @@ func ring ring_create_alloc(allocator parent_alloc, sz capacity, mutex opt_mutex
   rng.capacity = capacity;
   rng.opt_mutex = opt_mutex;
   if (parent_alloc.alloc_fn) {
-    rng.ptr = (u8*)_allocator_alloc(&parent_alloc, capacity, CALLSITE_HERE);
+    rng.ptr = (u8*)_allocator_alloc(parent_alloc, capacity, CALLSITE_HERE);
     rng.buf_owned = rng.ptr != NULL ? 1 : 0;
   }
   msg lifecycle_msg = {0};
@@ -95,7 +95,7 @@ func void ring_destroy(ring* rng) {
   }
 
   if (rng->buf_owned && rng->parent.alloc_fn) {
-    _allocator_dealloc(&rng->parent, rng->ptr, rng->capacity, CALLSITE_HERE);
+    _allocator_dealloc(rng->parent, rng->ptr, rng->capacity, CALLSITE_HERE);
     rng->ptr = NULL;
     rng->buf_owned = 0;
   }

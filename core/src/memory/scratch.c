@@ -53,7 +53,7 @@ func void scratch_end(scratch* scr) {
   while (blk) {
     arena_block* nxt = blk->next;
     if (blk->owned && arn->parent.alloc_fn) {
-      _allocator_dealloc(&arn->parent, blk, blk->size, CALLSITE_HERE);
+      _allocator_dealloc(arn->parent, blk, blk->size, CALLSITE_HERE);
     }
     blk = nxt;
   }

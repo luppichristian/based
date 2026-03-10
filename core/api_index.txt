@@ -763,10 +763,10 @@
 
 === include\memory\allocator.h ===
 24: typedef struct allocator {
-36: func void* _allocator_alloc(allocator* alloc, sz size, callsite site);
-39: func void* _allocator_calloc(allocator* alloc, sz count, sz size, callsite site);
-42: func void _allocator_dealloc(allocator* alloc, void* ptr, sz size, callsite site);
-45: func void* _allocator_realloc(allocator* alloc, void* ptr, sz old_size, sz new_size, callsite site);
+36: func void* _allocator_alloc(allocator alloc, sz size, callsite site);
+39: func void* _allocator_calloc(allocator alloc, sz count, sz size, callsite site);
+42: func void _allocator_dealloc(allocator alloc, void* ptr, sz size, callsite site);
+45: func void* _allocator_realloc(allocator alloc, void* ptr, sz old_size, sz new_size, callsite site);
 48: #define allocator_alloc(alloc, size) \
 50: #define allocator_dealloc(alloc, ptr, size) \
 52: #define allocator_calloc(alloc, count, size) \

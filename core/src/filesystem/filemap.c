@@ -186,7 +186,7 @@ func void filemap_close(filemap* map) {
     }
 
     if (map->data_ptr != NULL) {
-      allocator_dealloc(&alloc, map->data_ptr, map->data_size);
+      allocator_dealloc(alloc, map->data_ptr, map->data_size);
     }
     thread_log_trace("filemap_close: fallback path=%s", map->source_path.buf);
     *map = filemap_empty();

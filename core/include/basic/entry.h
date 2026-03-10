@@ -77,7 +77,7 @@ typedef enum app_result {
 // to the runtime entry implementation for app entry point.
 typedef app_result entry_app_init_fn(cmdline cmdl, void** state);
 typedef app_result entry_app_update_fn(void* state);
-typedef void entry_app_quit_fn(void* state);
+typedef void entry_app_quit_fn(void* state, app_result result);
 typedef struct entry_app_callbacks {
   entry_app_init_fn* init_fn;
   entry_app_update_fn* update_fn;

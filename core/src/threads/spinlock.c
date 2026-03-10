@@ -32,7 +32,7 @@ func spinlock _spinlock_create(callsite site) {
   assert(alloc.alloc_fn != NULL);
   assert(alloc.dealloc_fn != NULL);
 
-  SDL_SpinLock* spl = (SDL_SpinLock*)allocator_alloc(&alloc, size_of(SDL_SpinLock));
+  SDL_SpinLock* spl = (SDL_SpinLock*)allocator_alloc(alloc, size_of(SDL_SpinLock));
   if (spl) {
     *spl = 0;
   }
@@ -45,7 +45,7 @@ func spinlock _spinlock_create(callsite site) {
                                                        .object_ptr = spl,
                                                    });
     if (!msg_post(&lifecycle_msg)) {
-      allocator_dealloc(&alloc, spl, size_of(SDL_SpinLock));
+      allocator_dealloc(alloc, spl, size_of(SDL_SpinLock));
       profile_func_end;
       return NULL;
     }
@@ -81,7 +81,7 @@ func void _spinlock_destroy(spinlock sl, callsite site) {
     return;
   }
   thread_log_trace("spinlock_destroy: handle=%p", sl);
-  allocator_dealloc(&alloc, sl, size_of(SDL_SpinLock));
+  allocator_dealloc(alloc, sl, size_of(SDL_SpinLock));
   profile_func_end;
 }
 

@@ -197,7 +197,7 @@ func void pool_destroy(pool* pol) {
   while (blk) {
     pool_block* nxt = blk->next;
     if (blk->owned && pol->parent.alloc_fn) {
-      _allocator_dealloc(&pol->parent, blk, blk->size, CALLSITE_HERE);
+      _allocator_dealloc(pol->parent, blk, blk->size, CALLSITE_HERE);
     }
     blk = nxt;
   }
@@ -346,7 +346,7 @@ func void* _pool_alloc(pool* pol, callsite site) {
     sz overhead = size_of(pool_block) + pol->object_align;
     sz needed = overhead + stride;
     sz block_sz = pol->default_block_sz > needed ? pol->default_block_sz : needed;
-    pool_block* new_blk = (pool_block*)_allocator_alloc(&pol->parent, block_sz, site);
+    pool_block* new_blk = (pool_block*)_allocator_alloc(pol->parent, block_sz, site);
     if (new_blk) {
       new_blk->next = NULL;
       new_blk->size = block_sz;

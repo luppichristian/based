@@ -57,12 +57,12 @@ func thread_group create_impl(u32 count, thread_group_func entry, void* arg, cst
   }
 
   thread_group group = {0};
-  group.threads = (thread*)allocator_alloc(&alloc, (sz)count * size_of(thread));
-  group.slots = (thread_group_slot*)allocator_alloc(&alloc, (sz)count * size_of(thread_group_slot));
+  group.threads = (thread*)allocator_alloc(alloc, (sz)count * size_of(thread));
+  group.slots = (thread_group_slot*)allocator_alloc(alloc, (sz)count * size_of(thread_group_slot));
 
   if (!group.threads || !group.slots) {
-    allocator_dealloc(&alloc, group.threads, (sz)count * size_of(thread));
-    allocator_dealloc(&alloc, group.slots, (sz)count * size_of(thread_group_slot));
+    allocator_dealloc(alloc, group.threads, (sz)count * size_of(thread));
+    allocator_dealloc(alloc, group.slots, (sz)count * size_of(thread_group_slot));
     profile_func_end;
     return empty;
   }
@@ -84,8 +84,8 @@ func thread_group create_impl(u32 count, thread_group_func entry, void* arg, cst
       for (u32 join_idx = 0; join_idx < idx; join_idx += 1) {
         thread_detach(group.threads[join_idx]);
       }
-      allocator_dealloc(&alloc, group.threads, (sz)count * size_of(thread));
-      allocator_dealloc(&alloc, group.slots, (sz)count * size_of(thread_group_slot));
+      allocator_dealloc(alloc, group.threads, (sz)count * size_of(thread));
+      allocator_dealloc(alloc, group.slots, (sz)count * size_of(thread_group_slot));
       profile_func_end;
       return empty;
     }
@@ -155,8 +155,8 @@ func void _thread_group_destroy(thread_group* group, callsite site) {
                                                  });
   (void)msg_post(&lifecycle_msg);
 
-  allocator_dealloc(&alloc, group->threads, (sz)group->count * size_of(thread));
-  allocator_dealloc(&alloc, group->slots, (sz)group->count * size_of(thread_group_slot));
+  allocator_dealloc(alloc, group->threads, (sz)group->count * size_of(thread));
+  allocator_dealloc(alloc, group->slots, (sz)group->count * size_of(thread_group_slot));
   group->threads = NULL;
   group->slots = NULL;
   group->count = 0;

@@ -51,7 +51,7 @@ func void* archive_alloc_bytes(allocator* opt_alloc, sz size) {
 
   assert(resolved_alloc.alloc_fn != NULL);
   profile_func_end;
-  return allocator_alloc(&resolved_alloc, size);
+  return allocator_alloc(resolved_alloc, size);
 }
 
 func void* archive_realloc_bytes(allocator* opt_alloc, void* ptr, sz old_size, sz new_size) {
@@ -59,7 +59,7 @@ func void* archive_realloc_bytes(allocator* opt_alloc, void* ptr, sz old_size, s
   allocator resolved_alloc = archive_allocator_resolve(opt_alloc);
   if (new_size == 0) {
     if (ptr != NULL) {
-      allocator_dealloc(&resolved_alloc, ptr, old_size);
+      allocator_dealloc(resolved_alloc, ptr, old_size);
     }
     profile_func_end;
     return NULL;
@@ -68,7 +68,7 @@ func void* archive_realloc_bytes(allocator* opt_alloc, void* ptr, sz old_size, s
   assert(resolved_alloc.alloc_fn != NULL);
   assert(resolved_alloc.dealloc_fn != NULL);
   profile_func_end;
-  return allocator_realloc(&resolved_alloc, ptr, old_size, new_size);
+  return allocator_realloc(resolved_alloc, ptr, old_size, new_size);
 }
 
 func void archive_dealloc_bytes(allocator* opt_alloc, void* ptr, sz size) {
@@ -80,7 +80,7 @@ func void archive_dealloc_bytes(allocator* opt_alloc, void* ptr, sz size) {
   }
 
   assert(resolved_alloc.dealloc_fn != NULL);
-  allocator_dealloc(&resolved_alloc, ptr, size);
+  allocator_dealloc(resolved_alloc, ptr, size);
   profile_func_end;
 }
 
@@ -460,7 +460,7 @@ func b32 archive_read_all(const archive* arc, const path* src, allocator* alloc,
   }
 
   if (ent->data_size > 0) {
-    data_ptr = allocator_alloc(alloc, ent->data_size);
+    data_ptr = allocator_alloc(*alloc, ent->data_size);
     if (data_ptr == NULL) {
       profile_func_end;
       return 0;

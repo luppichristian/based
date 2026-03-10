@@ -137,7 +137,7 @@ func void log_state_unlock_pair(log_state* first, log_state* second) {
 func log_frame* log_frame_create(void) {
   profile_func_begin;
   allocator alloc = log_allocator_resolve();
-  log_frame* frame = (log_frame*)allocator_alloc(&alloc, size_of(*frame));
+  log_frame* frame = (log_frame*)allocator_alloc(alloc, size_of(*frame));
   if (!frame) {
     profile_func_end;
     return NULL;
@@ -159,7 +159,7 @@ func log_msg* log_msg_create(log_level level, callsite site, cstr8 text) {
   }
   text_len = cstr8_len(text);
   total_size = size_of(log_msg) + text_len + 1;
-  log_msg* msg = (log_msg*)allocator_alloc(&alloc, total_size);
+  log_msg* msg = (log_msg*)allocator_alloc(alloc, total_size);
   if (!msg) {
     profile_func_end;
     return NULL;
@@ -185,7 +185,7 @@ func void log_msg_destroy(log_msg* msg) {
   }
   assert(msg->text != NULL);
   text_len = cstr8_len(msg->text);
-  allocator_dealloc(&alloc, msg, size_of(*msg) + text_len + 1);
+  allocator_dealloc(alloc, msg, size_of(*msg) + text_len + 1);
   profile_func_end;
 }
 
@@ -240,7 +240,7 @@ func void log_frame_destroy_unsafe(log_frame* frame) {
   }
 
   log_frame_clear_msgs_unsafe(frame);
-  allocator_dealloc(&alloc, frame, size_of(*frame));
+  allocator_dealloc(alloc, frame, size_of(*frame));
   profile_func_end;
 }
 

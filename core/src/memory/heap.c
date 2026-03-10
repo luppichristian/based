@@ -253,7 +253,7 @@ func void heap_destroy(heap* hep) {
   while (blk) {
     heap_block* nxt = blk->next;
     if (blk->owned && hep->parent.alloc_fn) {
-      _allocator_dealloc(&hep->parent, blk, blk->size, CALLSITE_HERE);
+      _allocator_dealloc(hep->parent, blk, blk->size, CALLSITE_HERE);
     }
     blk = nxt;
   }
@@ -383,7 +383,7 @@ func void* _heap_alloc(heap* hep, sz size, sz align, callsite site) {
     sz overhead = size_of(heap_block) + size_of(heap_chunk) + HEAP_BACK_REF_SZ;
     sz needed = overhead + size;
     sz block_sz = hep->default_block_sz > needed ? hep->default_block_sz : needed;
-    heap_block* new_blk = (heap_block*)_allocator_alloc(&hep->parent, block_sz, site);
+    heap_block* new_blk = (heap_block*)_allocator_alloc(hep->parent, block_sz, site);
     if (new_blk) {
       heap_block_setup(hep, new_blk, block_sz, 1);
       heap_chain_block(hep, new_blk);

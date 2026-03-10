@@ -63,7 +63,7 @@ TEST(memory_arena_test, get_allocator) {
   arena arn = arena_create(zero_alloc, nullptr, 4096);
   allocator alloc = arena_get_allocator(&arn);
   EXPECT_NE(nullptr, alloc.alloc_fn);
-  void* ptr = allocator_alloc(&alloc, 100);
+  void* ptr = allocator_alloc(alloc, 100);
   EXPECT_NE(nullptr, ptr);
   EXPECT_EQ(1U, arena_block_count(&arn));
   arena_destroy(&arn);

@@ -266,7 +266,7 @@ func b32 file_read_all(const path* src, allocator* alloc, buffer* out_data) {
   }
 
   if (file_size > 0) {
-    data_ptr = allocator_alloc(alloc, file_size);
+    data_ptr = allocator_alloc(*alloc, file_size);
     if (data_ptr == NULL) {
       SDL_CloseIO(file_ptr);
       profile_func_end;
@@ -275,7 +275,7 @@ func b32 file_read_all(const path* src, allocator* alloc, buffer* out_data) {
 
     read_size = (sz)SDL_ReadIO(file_ptr, data_ptr, (size_t)file_size);
     if (read_size != file_size) {
-      allocator_dealloc(alloc, data_ptr, file_size);
+      allocator_dealloc(*alloc, data_ptr, file_size);
       SDL_CloseIO(file_ptr);
       profile_func_end;
       return 0;

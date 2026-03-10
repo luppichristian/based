@@ -148,7 +148,7 @@ func b32 filestream_reserve_memory(filestream* stm, sz min_capacity) {
     new_capacity *= 2;
   }
 
-  new_ptr = (u8*)allocator_realloc(&alloc, stm->memory_ptr, stm->memory_capacity, new_capacity);
+  new_ptr = (u8*)allocator_realloc(alloc, stm->memory_ptr, stm->memory_capacity, new_capacity);
   if (new_ptr == NULL) {
     filestream_set_error(stm, FILESTREAM_ERROR_ALLOC);
     profile_func_end;
@@ -327,7 +327,7 @@ func void filestream_close(filestream* stm) {
   } else if (stm->kind == FILESTREAM_KIND_ARCHIVE) {
     (void)filestream_flush(stm);
     if (stm->memory_ptr != NULL) {
-      allocator_dealloc(&alloc, stm->memory_ptr, stm->memory_capacity);
+      allocator_dealloc(alloc, stm->memory_ptr, stm->memory_capacity);
     }
   }
 

@@ -43,7 +43,7 @@ TEST(filesystem_archive_test, write_read_and_metadata_roundtrip) {
   for (sz data_idx = 0; data_idx < src_buff.size; data_idx += 1) {
     EXPECT_EQ(src_data[data_idx], ((u8*)read_buff.ptr)[data_idx]);
   }
-  allocator_dealloc(&alloc_val, read_buff.ptr, read_buff.size);
+  allocator_dealloc(alloc_val, read_buff.ptr, read_buff.size);
 
   archive_destroy(&arc_val);
 }

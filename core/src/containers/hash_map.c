@@ -68,7 +68,7 @@ func b32 hash_map_rehash(hash_map* map, sz new_cap) {
   }
   assert(map != NULL);
   hash_map_slot* new_slots =
-      (hash_map_slot*)allocator_calloc(&map->alloc, new_cap, size_of(hash_map_slot));
+      (hash_map_slot*)allocator_calloc(map->alloc, new_cap, size_of(hash_map_slot));
   if (!new_slots) {
     profile_func_end;
     return 0;
@@ -82,7 +82,7 @@ func b32 hash_map_rehash(hash_map* map, sz new_cap) {
   }
 
   if (map->slots) {
-    allocator_dealloc(&map->alloc, map->slots, map->cap * size_of(hash_map_slot));
+    allocator_dealloc(map->alloc, map->slots, map->cap * size_of(hash_map_slot));
   }
   map->slots = new_slots;
   map->cap = new_cap;
@@ -160,7 +160,7 @@ func hash_map hash_map_create(sz cap, allocator alloc) {
   }
   map.cap = actual;
   if (map.alloc.alloc_fn != NULL && map.alloc.dealloc_fn != NULL) {
-    map.slots = (hash_map_slot*)allocator_calloc(&map.alloc, actual, size_of(hash_map_slot));
+    map.slots = (hash_map_slot*)allocator_calloc(map.alloc, actual, size_of(hash_map_slot));
   }
   profile_func_end;
   return map;
@@ -173,7 +173,7 @@ func void hash_map_destroy(hash_map* map) {
     return;
   }
   if (map->slots) {
-    allocator_dealloc(&map->alloc, map->slots, map->cap * size_of(hash_map_slot));
+    allocator_dealloc(map->alloc, map->slots, map->cap * size_of(hash_map_slot));
     map->slots = NULL;
   }
   map->count = 0;
