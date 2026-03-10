@@ -129,7 +129,7 @@ func b32 system_info_query(system_info* out_info) {
   profile_func_begin;
   if (out_info == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(out_info != NULL);
 
@@ -171,7 +171,7 @@ func b32 system_info_query(system_info* out_info) {
 
   thread_log_trace("system_info_query: platform=windows arch=%s", out_info->architecture_name);
   profile_func_end;
-  return 1;
+  return true;
 #elif defined(PLATFORM_UNIX)
   struct utsname uname_info;
   if (uname(&uname_info) == 0) {
@@ -213,12 +213,12 @@ func b32 system_info_query(system_info* out_info) {
 
   thread_log_trace("system_info_query: platform=unix arch=%s", out_info->architecture_name);
   profile_func_end;
-  return 1;
+  return true;
 #else
   system_copy_string(out_info->os_name, size_of(out_info->os_name), "unknown");
   system_copy_string(out_info->os_version, size_of(out_info->os_version), "unknown");
   thread_log_warn("system_info_query: unknown platform");
   profile_func_end;
-  return 0;
+  return false;
 #endif
 }

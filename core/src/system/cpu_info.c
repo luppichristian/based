@@ -50,22 +50,17 @@ func void cpu_copy_string(c8* dst_ptr, sz dst_cap, cstr8 src_ptr) {
 }
 
 func u32 cpu_query_logical_cores(void) {
-  profile_func_begin;
 #if defined(PLATFORM_WINDOWS)
   SYSTEM_INFO native_info;
   GetNativeSystemInfo(&native_info);
-  profile_func_end;
   return (u32)native_info.dwNumberOfProcessors;
 #elif defined(PLATFORM_UNIX)
   sp core_count = (sp)sysconf(_SC_NPROCESSORS_ONLN);
   if (core_count > 0) {
-    profile_func_end;
-    return (u32)core_count;
+      return (u32)core_count;
   }
-  profile_func_end;
   return 1;
 #else
-  profile_func_end;
   return 1;
 #endif
 }
@@ -101,13 +96,13 @@ func b32 cpu_read_cpuid(u32 leaf_id, u32 subleaf_id, i32 out_regs[4]) {
   profile_func_begin;
   if (out_regs == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(out_regs != NULL);
 #  if defined(COMPILER_MSVC)
   __cpuidex(out_regs, (i32)leaf_id, (i32)subleaf_id);
   profile_func_end;
-  return 1;
+  return true;
 #  elif defined(COMPILER_GCC) || defined(COMPILER_CLANG) || defined(COMPILER_APPLE_CLANG)
   u32 eax_reg = 0;
   u32 ebx_reg = 0;
@@ -115,20 +110,20 @@ func b32 cpu_read_cpuid(u32 leaf_id, u32 subleaf_id, i32 out_regs[4]) {
   u32 edx_reg = 0;
   if (__get_cpuid_count(leaf_id, subleaf_id, &eax_reg, &ebx_reg, &ecx_reg, &edx_reg) == 0) {
     profile_func_end;
-    return 0;
+    return false;
   }
   out_regs[0] = (i32)eax_reg;
   out_regs[1] = (i32)ebx_reg;
   out_regs[2] = (i32)ecx_reg;
   out_regs[3] = (i32)edx_reg;
   profile_func_end;
-  return 1;
+  return true;
 #  else
   (void)leaf_id;
   (void)subleaf_id;
   (void)out_regs;
   profile_func_end;
-  return 0;
+  return false;
 #  endif
 }
 
@@ -222,7 +217,7 @@ func b32 cpu_info_query(cpu_info* out_info) {
   profile_func_begin;
   if (out_info == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(out_info != NULL);
 
@@ -238,5 +233,5 @@ func b32 cpu_info_query(cpu_info* out_info) {
 
   thread_log_trace("cpu_info_query: cores=%u cache_line=%u", out_info->logical_core_count, out_info->cache_line_bytes);
   profile_func_end;
-  return 1;
+  return true;
 }

@@ -89,7 +89,7 @@ func b32 input_state_capture(input_key key, input_state* out_state) {
   profile_func_begin;
   if (!out_state) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(out_state != NULL);
 
@@ -119,7 +119,7 @@ func b32 input_state_capture(input_key key, input_state* out_state) {
 
   input_state_sync_gamepads(out_state, key);
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func void input_state_apply_keyboard_msg(input_state* src, const msg* event_msg) {
@@ -283,7 +283,7 @@ func b32 input_state_serialize(const input_state* src, void* dst, sz dst_cap, sz
 
   if (!src || !dst) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(src != NULL);
   assert(dst != NULL);
@@ -291,7 +291,7 @@ func b32 input_state_serialize(const input_state* src, void* dst, sz dst_cap, sz
   sz total_size = input_state_serialized_size();
   if (dst_cap < total_size) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   input_state_blob_header header = {
@@ -309,14 +309,14 @@ func b32 input_state_serialize(const input_state* src, void* dst, sz dst_cap, sz
   }
 
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 input_state_deserialize(const void* src, sz src_size, input_state* out_state) {
   profile_func_begin;
   if (!src || !out_state || src_size < size_of(input_state_blob_header) + size_of(input_state)) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(src != NULL);
   assert(out_state != NULL);
@@ -327,10 +327,10 @@ func b32 input_state_deserialize(const void* src, sz src_size, input_state* out_
   if (header.magic != INPUT_STATE_SERIALIZATION_MAGIC || header.version != INPUT_STATE_SERIALIZATION_VERSION ||
       header.payload_size != (u32)size_of(input_state)) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   memcpy(out_state, (const u8*)src + size_of(header), size_of(input_state));
   profile_func_end;
-  return 1;
+  return true;
 }

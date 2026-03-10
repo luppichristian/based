@@ -39,11 +39,9 @@ func allocator filestream_allocator_resolve(void) {
 }
 
 func filestream filestream_empty(void) {
-  profile_func_begin;
   filestream stm;
   memset(&stm, 0, size_of(stm));
   stm.archive_path = path_from_cstr("");
-  profile_func_end;
   return stm;
 }
 
@@ -130,11 +128,11 @@ func b32 filestream_reserve_memory(filestream* stm, sz min_capacity) {
 
   if (stm == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   if (stm->memory_capacity >= min_capacity) {
     profile_func_end;
-    return 1;
+    return true;
   }
   assert(stm->memory_size <= stm->memory_capacity);
   alloc = filestream_allocator_resolve();
@@ -152,13 +150,13 @@ func b32 filestream_reserve_memory(filestream* stm, sz min_capacity) {
   if (new_ptr == NULL) {
     filestream_set_error(stm, FILESTREAM_ERROR_ALLOC);
     profile_func_end;
-    return 0;
+    return false;
   }
 
   stm->memory_ptr = new_ptr;
   stm->memory_capacity = new_capacity;
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func filestream filestream_open(const path* src, u32 mode_flags) {
@@ -267,20 +265,20 @@ func b32 filestream_flush(filestream* stm) {
       filestream_set_error(stm, FILESTREAM_ERROR_NOT_OPEN);
     }
     profile_func_end;
-    return 0;
+    return false;
   }
 
   if (stm->kind == FILESTREAM_KIND_NATIVE) {
     if (!SDL_FlushIO((SDL_IOStream*)stm->native_handle)) {
       filestream_set_error(stm, FILESTREAM_ERROR_IO);
       profile_func_end;
-      return 0;
+      return false;
     }
 
     filestream_set_error(stm, FILESTREAM_ERROR_NONE);
     thread_log_trace("filestream_flush: native handle=%p", stm->native_handle);
     profile_func_end;
-    return 1;
+    return true;
   }
 
   if (stm->dirty && stm->archive_ref != NULL) {
@@ -288,7 +286,7 @@ func b32 filestream_flush(filestream* stm) {
     if (!archive_write_all(stm->archive_ref, &stm->archive_path, data)) {
       filestream_set_error(stm, FILESTREAM_ERROR_IO);
       profile_func_end;
-      return 0;
+      return false;
     }
 
     stm->dirty = 0;
@@ -296,7 +294,7 @@ func b32 filestream_flush(filestream* stm) {
 
   filestream_set_error(stm, FILESTREAM_ERROR_NONE);
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func void filestream_close(filestream* stm) {
@@ -340,21 +338,21 @@ func b32 filestream_is_open(const filestream* stm) {
   profile_func_begin;
   if (stm == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   if (stm->kind == FILESTREAM_KIND_NATIVE) {
     profile_func_end;
-    return stm->native_handle != NULL ? 1 : 0;
+    return stm->native_handle != NULL ? true : false;
   }
 
   if (stm->kind == FILESTREAM_KIND_ARCHIVE) {
     profile_func_end;
-    return stm->archive_ref != NULL ? 1 : 0;
+    return stm->archive_ref != NULL ? true : false;
   }
 
   profile_func_end;
-  return 0;
+  return false;
 }
 
 func sz filestream_read(filestream* stm, void* dst, sz size) {
@@ -416,14 +414,14 @@ func b32 filestream_read_exact(filestream* stm, void* dst, sz size) {
     sz step_size = filestream_read(stm, dst_ptr + total_read, size - total_read);
     if (step_size == 0) {
       profile_func_end;
-      return 0;
+      return false;
     }
 
     total_read += step_size;
   }
 
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func sz filestream_write(filestream* stm, const void* src, sz size) {
@@ -487,14 +485,14 @@ func b32 filestream_write_exact(filestream* stm, const void* src, sz size) {
     sz step_size = filestream_write(stm, src_ptr + total_write, size - total_write);
     if (step_size == 0) {
       profile_func_end;
-      return 0;
+      return false;
     }
 
     total_write += step_size;
   }
 
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 filestream_seek(filestream* stm, i64 offset, filestream_seek_basis basis) {
@@ -508,7 +506,7 @@ func b32 filestream_seek(filestream* stm, i64 offset, filestream_seek_basis basi
       filestream_set_error(stm, FILESTREAM_ERROR_NOT_OPEN);
     }
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(basis == FILESTREAM_SEEK_BASIS_BEGIN || basis == FILESTREAM_SEEK_BASIS_CURRENT || basis == FILESTREAM_SEEK_BASIS_END);
 
@@ -522,12 +520,12 @@ func b32 filestream_seek(filestream* stm, i64 offset, filestream_seek_basis basi
     if (SDL_SeekIO((SDL_IOStream*)stm->native_handle, (Sint64)offset, io_basis) < 0) {
       filestream_set_error(stm, FILESTREAM_ERROR_SEEK);
       profile_func_end;
-      return 0;
+      return false;
     }
 
     filestream_set_error(stm, FILESTREAM_ERROR_NONE);
     profile_func_end;
-    return 1;
+    return true;
   }
 
   if (basis == FILESTREAM_SEEK_BASIS_CURRENT) {
@@ -540,13 +538,13 @@ func b32 filestream_seek(filestream* stm, i64 offset, filestream_seek_basis basi
   if (new_pos < 0 || (sz)new_pos > stm->memory_size) {
     filestream_set_error(stm, FILESTREAM_ERROR_SEEK);
     profile_func_end;
-    return 0;
+    return false;
   }
 
   stm->cursor = (sz)new_pos;
   filestream_set_error(stm, FILESTREAM_ERROR_NONE);
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func sz filestream_tell(const filestream* stm) {
@@ -592,25 +590,22 @@ func b32 filestream_eof(const filestream* stm) {
   profile_func_begin;
   if (!filestream_is_open(stm)) {
     profile_func_end;
-    return 1;
+    return true;
   }
 
   if (stm->kind == FILESTREAM_KIND_NATIVE) {
     profile_func_end;
-    return filestream_tell(stm) >= filestream_size(stm) ? 1 : 0;
+    return filestream_tell(stm) >= filestream_size(stm) ? true : false;
   }
 
   profile_func_end;
-  return stm->cursor >= stm->memory_size ? 1 : 0;
+  return stm->cursor >= stm->memory_size ? true : false;
 }
 
 func filestream_error filestream_get_error(const filestream* stm) {
-  profile_func_begin;
   if (stm == NULL) {
-    profile_func_end;
-    return FILESTREAM_ERROR_NOT_OPEN;
+      return FILESTREAM_ERROR_NOT_OPEN;
   }
 
-  profile_func_end;
   return stm->error_code;
 }

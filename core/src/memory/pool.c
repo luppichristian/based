@@ -222,13 +222,11 @@ func void pool_destroy(pool* pol) {
 }
 
 func allocator pool_get_allocator(pool* pol) {
-  profile_func_begin;
   allocator alloc;
   alloc.user_data = pol;
   alloc.alloc_fn = pool_alloc_callback;
   alloc.dealloc_fn = pool_dealloc_callback;
   alloc.realloc_fn = pool_realloc_callback;
-  profile_func_end;
   return alloc;
 }
 
@@ -263,13 +261,13 @@ func b32 pool_remove_block(pool* pol, void* ptr) {
   profile_func_begin;
   if (pol == NULL || ptr == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   if (pol->opt_mutex) {
     mutex_lock(pol->opt_mutex);
   }
 
-  b32 found = 0;
+  b32 found = false;
   pool_block* prev_blk = NULL;
   pool_block* blk = pol->blocks_head;
 
@@ -417,10 +415,8 @@ func void pool_clear(pool* pol) {
 }
 
 func sz pool_block_count(pool* pol) {
-  profile_func_begin;
   if (pol == NULL) {
-    profile_func_end;
-    return 0;
+      return 0;
   }
   if (pol->opt_mutex) {
     mutex_lock(pol->opt_mutex);
@@ -432,26 +428,20 @@ func sz pool_block_count(pool* pol) {
   if (pol->opt_mutex) {
     mutex_unlock(pol->opt_mutex);
   }
-  profile_func_end;
   return count;
 }
 
 func sz pool_slot_size(pool* pol) {
-  profile_func_begin;
   if (pol == NULL) {
-    profile_func_end;
-    return 0;
+      return 0;
   }
   sz result = pol->object_size;
-  profile_func_end;
   return result;
 }
 
 func sz pool_free_count(pool* pol) {
-  profile_func_begin;
   if (pol == NULL) {
-    profile_func_end;
-    return 0;
+      return 0;
   }
   if (pol->opt_mutex) {
     mutex_lock(pol->opt_mutex);
@@ -463,6 +453,5 @@ func sz pool_free_count(pool* pol) {
   if (pol->opt_mutex) {
     mutex_unlock(pol->opt_mutex);
   }
-  profile_func_end;
   return count;
 }

@@ -10,8 +10,6 @@
 // =========================================================================
 
 func b32 monitor_id_is_valid(monitor src) {
-  profile_func_begin;
-  profile_func_end;
   return src != NULL;
 }
 
@@ -67,19 +65,14 @@ func b32 monitor_get_id(sz idx, monitor* out_id) {
 }
 
 func monitor monitor_get_primary_id(void) {
-  profile_func_begin;
-  profile_func_end;
   return monitor_from_native_id((up)SDL_GetPrimaryDisplay());
 }
 
 func cstr8 monitor_get_name(monitor id) {
-  profile_func_begin;
   if (!monitor_id_is_valid(id)) {
-    profile_func_end;
-    return NULL;
+      return NULL;
   }
 
-  profile_func_end;
   return SDL_GetDisplayName((SDL_DisplayID)monitor_to_native_id(id));
 }
 
@@ -94,7 +87,7 @@ func b32 monitor_get_bounds(monitor id, monitor_rect* out_rect) {
   if (!monitor_id_is_valid(id) || out_rect == NULL ||
       !SDL_GetDisplayBounds((SDL_DisplayID)monitor_to_native_id(id), &bounds)) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   out_rect->x = bounds.x;
@@ -102,7 +95,7 @@ func b32 monitor_get_bounds(monitor id, monitor_rect* out_rect) {
   out_rect->width = bounds.w;
   out_rect->height = bounds.h;
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 monitor_get_usable_bounds(monitor id, monitor_rect* out_rect) {
@@ -112,7 +105,7 @@ func b32 monitor_get_usable_bounds(monitor id, monitor_rect* out_rect) {
   if (!monitor_id_is_valid(id) || out_rect == NULL ||
       !SDL_GetDisplayUsableBounds((SDL_DisplayID)monitor_to_native_id(id), &bounds)) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   out_rect->x = bounds.x;
@@ -120,7 +113,7 @@ func b32 monitor_get_usable_bounds(monitor id, monitor_rect* out_rect) {
   out_rect->width = bounds.w;
   out_rect->height = bounds.h;
   profile_func_end;
-  return 1;
+  return true;
 }
 
 // =========================================================================
@@ -131,7 +124,7 @@ func b32 monitor_mode_from_native(const SDL_DisplayMode* native_mode, monitor_mo
   profile_func_begin;
   if (native_mode == NULL || out_mode == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   out_mode->width = native_mode->w;
@@ -139,7 +132,7 @@ func b32 monitor_mode_from_native(const SDL_DisplayMode* native_mode, monitor_mo
   out_mode->pixel_format = native_mode->format;
   out_mode->refresh_rate = native_mode->refresh_rate;
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func sz monitor_get_mode_count(monitor id) {
@@ -163,7 +156,7 @@ func b32 monitor_get_mode(monitor id, sz idx, monitor_mode* out_mode) {
   profile_func_begin;
   if (out_mode == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   int mode_count = 0;
@@ -175,7 +168,7 @@ func b32 monitor_get_mode(monitor id, sz idx, monitor_mode* out_mode) {
       SDL_free(modes);
     }
     profile_func_end;
-    return 0;
+    return false;
   }
 
   b32 result = monitor_mode_from_native(modes[idx], out_mode);
@@ -188,7 +181,7 @@ func b32 monitor_get_current_mode(monitor id, monitor_mode* out_mode) {
   profile_func_begin;
   if (!monitor_id_is_valid(id) || out_mode == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   const SDL_DisplayMode* native_mode = SDL_GetCurrentDisplayMode((SDL_DisplayID)monitor_to_native_id(id));
@@ -201,7 +194,7 @@ func b32 monitor_get_desktop_mode(monitor id, monitor_mode* out_mode) {
   profile_func_begin;
   if (!monitor_id_is_valid(id) || out_mode == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   const SDL_DisplayMode* native_mode = SDL_GetDesktopDisplayMode((SDL_DisplayID)monitor_to_native_id(id));

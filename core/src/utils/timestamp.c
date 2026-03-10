@@ -104,7 +104,7 @@ func f64 timestamp_as_hours(timestamp value) {
 func b32 timestamp_is_zero(timestamp value) {
   profile_func_begin;
   profile_func_end;
-  return value.microseconds == 0 ? 1 : 0;
+  return value.microseconds == 0 ? true : false;
 }
 
 func timestamp timestamp_add(timestamp lhs, timestamp rhs) {

@@ -29,14 +29,11 @@ func mod module_empty(void) {
 }
 
 func b32 mod_is_open(const mod* mod_ptr) {
-  profile_func_begin;
   if (mod_ptr == NULL) {
-    profile_func_end;
-    return 0;
+      return false;
   }
 
-  profile_func_end;
-  return mod_ptr->native_handle != NULL ? 1 : 0;
+  return mod_ptr->native_handle != NULL ? true : false;
 }
 
 func void* mod_get_func(const mod* mod_ptr, cstr8 name) {

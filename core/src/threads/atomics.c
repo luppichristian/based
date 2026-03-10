@@ -97,17 +97,17 @@ func b32 atomic_i32_cmpex(atomic_i32* atom, i32* expected, i32 desired) {
   profile_func_begin;
   if (atom == NULL || expected == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(atom != NULL);
   assert(expected != NULL);
   if (SDL_CompareAndSwapAtomicInt((SDL_AtomicInt*)(void*)atom, (int)*expected, (int)desired)) {
     profile_func_end;
-    return 1;
+    return true;
   }
   *expected = (i32)SDL_GetAtomicInt((SDL_AtomicInt*)(void*)atom);
   profile_func_end;
-  return 0;
+  return false;
 }
 
 func i32 atomic_i32_add(atomic_i32* atom, i32 delta) {
@@ -249,17 +249,17 @@ func b32 atomic_u32_cmpex(atomic_u32* atom, u32* expected, u32 desired) {
   profile_func_begin;
   if (atom == NULL || expected == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(atom != NULL);
   assert(expected != NULL);
   if (SDL_CompareAndSwapAtomicU32((SDL_AtomicU32*)(void*)atom, (Uint32)*expected, (Uint32)desired)) {
     profile_func_end;
-    return 1;
+    return true;
   }
   *expected = (u32)SDL_GetAtomicU32((SDL_AtomicU32*)(void*)atom);
   profile_func_end;
-  return 0;
+  return false;
 }
 
 // SDL3 has no SDL_AddAtomicU32 — implement via CAS loop.
@@ -410,18 +410,18 @@ func b32 atomic_i64_cmpex(atomic_i64* atom, i64* expected, i64 desired) {
   profile_func_begin;
   if (atom == NULL || expected == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(atom != NULL);
   assert(expected != NULL);
   int64_t exp = (int64_t)*expected;
   if (atomic_compare_exchange_strong((_Atomic int64_t*)(void*)atom, &exp, (int64_t)desired)) {
     profile_func_end;
-    return 1;
+    return true;
   }
   *expected = (i64)exp;
   profile_func_end;
-  return 0;
+  return false;
 }
 
 func i64 atomic_i64_add(atomic_i64* atom, i64 delta) {
@@ -563,18 +563,18 @@ func b32 atomic_u64_cmpex(atomic_u64* atom, u64* expected, u64 desired) {
   profile_func_begin;
   if (atom == NULL || expected == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(atom != NULL);
   assert(expected != NULL);
   uint64_t exp = (uint64_t)*expected;
   if (atomic_compare_exchange_strong((_Atomic uint64_t*)(void*)atom, &exp, (uint64_t)desired)) {
     profile_func_end;
-    return 1;
+    return true;
   }
   *expected = (u64)exp;
   profile_func_end;
-  return 0;
+  return false;
 }
 
 func u64 atomic_u64_add(atomic_u64* atom, u64 delta) {
@@ -693,17 +693,17 @@ func b32 atomic_ptr_cmpex(atomic_ptr* atom, void** expected, void* desired) {
   profile_func_begin;
   if (atom == NULL || expected == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(atom != NULL);
   assert(expected != NULL);
   if (SDL_CompareAndSwapAtomicPointer(&atom->val, *expected, desired)) {
     profile_func_end;
-    return 1;
+    return true;
   }
   *expected = SDL_GetAtomicPointer(&atom->val);
   profile_func_end;
-  return 0;
+  return false;
 }
 
 func b32 atomic_ptr_eq(atomic_ptr* atom, void* val) {

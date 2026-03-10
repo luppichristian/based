@@ -20,29 +20,29 @@ func b32 file_paths_equal(const path* lhs, const path* rhs) {
   profile_func_begin;
   if (lhs == NULL || rhs == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   profile_func_end;
-  return cstr8_cmp(lhs->buf, rhs->buf) == 0 ? 1 : 0;
+  return cstr8_cmp(lhs->buf, rhs->buf) == 0 ? true : false;
 }
 
 func b32 file_replace_path(const path* src, const path* dst) {
   profile_func_begin;
 #if defined(PLATFORM_WINDOWS)
   profile_func_end;
-  return MoveFileExA(src->buf, dst->buf, MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH) ? 1 : 0;
+  return MoveFileExA(src->buf, dst->buf, MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH) ? true : false;
 #elif defined(PLATFORM_UNIX)
   profile_func_end;
-  return rename(src->buf, dst->buf) == 0 ? 1 : 0;
+  return rename(src->buf, dst->buf) == 0 ? true : false;
 #else
   if (path_exists(dst) && !path_remove(dst)) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   profile_func_end;
-  return SDL_RenamePath(src->buf, dst->buf) ? 1 : 0;
+  return SDL_RenamePath(src->buf, dst->buf) ? true : false;
 #endif
 }
 
@@ -53,25 +53,25 @@ func b32 file_make_temp_path(const path* src, path* out_path) {
 
   if (src == NULL || out_path == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   for (attempt_idx = 0; attempt_idx < 32; attempt_idx += 1) {
     tmp_path = *src;
     if (!cstr8_append_format(tmp_path.buf, size_of(tmp_path.buf), ".tmp.%u", attempt_idx)) {
       profile_func_end;
-      return 0;
+      return false;
     }
 
     if (!path_exists(&tmp_path)) {
       *out_path = tmp_path;
       profile_func_end;
-      return 1;
+      return true;
     }
   }
 
   profile_func_end;
-  return 0;
+  return false;
 }
 
 func cstr8 file_path_cstr(const path* src) {
@@ -88,48 +88,48 @@ func b32 file_create(const path* src) {
   profile_func_begin;
   if (src == NULL || src->buf[0] == '\0') {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(src->buf[0] != '\0');
   SDL_IOStream* file_ptr = SDL_IOFromFile(file_path_cstr(src), "wb");
   if (file_ptr == NULL) {
     thread_log_error("file_create: failed path=%s", src->buf);
     profile_func_end;
-    return 0;
+    return false;
   }
 
   SDL_CloseIO(file_ptr);
   thread_log_trace("file_create: path=%s", src->buf);
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 file_delete(const path* src) {
   profile_func_begin;
   if (!file_exists(src)) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(src != NULL);
 
   profile_func_end;
-  return SDL_RemovePath(file_path_cstr(src)) ? 1 : 0;
+  return SDL_RemovePath(file_path_cstr(src)) ? true : false;
 }
 
 func b32 file_rename(const path* old_src, const path* new_src) {
   profile_func_begin;
   if (!file_exists(old_src)) {
     profile_func_end;
-    return 0;
+    return false;
   }
   if (new_src == NULL || new_src->buf[0] == '\0') {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(new_src->buf[0] != '\0');
 
   profile_func_end;
-  return SDL_RenamePath(file_path_cstr(old_src), file_path_cstr(new_src)) ? 1 : 0;
+  return SDL_RenamePath(file_path_cstr(old_src), file_path_cstr(new_src)) ? true : false;
 }
 
 func b32 file_copy(const path* src, const path* dst, b32 overwrite_existing) {
@@ -141,34 +141,34 @@ func b32 file_copy(const path* src, const path* dst, b32 overwrite_existing) {
 
   if (!file_exists(src) || dst == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(src != NULL);
   assert(dst != NULL);
 
   if (file_paths_equal(src, dst)) {
     profile_func_end;
-    return 1;
+    return true;
   }
 
   if (path_exists(dst)) {
     if (!overwrite_existing || !file_exists(dst)) {
       profile_func_end;
-      return 0;
+      return false;
     }
   }
 
   src_file = SDL_IOFromFile(file_path_cstr(src), "rb");
   if (src_file == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   dst_file = SDL_IOFromFile(file_path_cstr(dst), "wb");
   if (dst_file == NULL) {
     SDL_CloseIO(src_file);
     profile_func_end;
-    return 0;
+    return false;
   }
 
   for (;;) {
@@ -181,19 +181,19 @@ func b32 file_copy(const path* src, const path* dst, b32 overwrite_existing) {
       SDL_CloseIO(dst_file);
       SDL_CloseIO(src_file);
       profile_func_end;
-      return 0;
+      return false;
     }
   }
 
   if (!SDL_CloseIO(dst_file)) {
     SDL_CloseIO(src_file);
     profile_func_end;
-    return 0;
+    return false;
   }
 
   SDL_CloseIO(src_file);
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 file_exists(const path* src) {
@@ -201,16 +201,16 @@ func b32 file_exists(const path* src) {
   SDL_PathInfo path_info;
   if (src == NULL || src->buf[0] == '\0') {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   if (!SDL_GetPathInfo(file_path_cstr(src), &path_info)) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   profile_func_end;
-  return path_info.type == SDL_PATHTYPE_FILE ? 1 : 0;
+  return path_info.type == SDL_PATHTYPE_FILE ? true : false;
 }
 
 func b32 file_get_size(const path* src, sz* out_size) {
@@ -219,18 +219,18 @@ func b32 file_get_size(const path* src, sz* out_size) {
 
   if (out_size == NULL || !file_exists(src)) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(out_size != NULL);
 
   if (!SDL_GetPathInfo(file_path_cstr(src), &path_info) || path_info.type != SDL_PATHTYPE_FILE) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   *out_size = (sz)path_info.size;
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 file_read_all(const path* src, allocator* alloc, buffer* out_data) {
@@ -242,11 +242,11 @@ func b32 file_read_all(const path* src, allocator* alloc, buffer* out_data) {
 
   if (alloc == NULL || out_data == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   if (alloc->alloc_fn == NULL || alloc->dealloc_fn == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(alloc->alloc_fn != NULL);
   assert(alloc->dealloc_fn != NULL);
@@ -256,13 +256,13 @@ func b32 file_read_all(const path* src, allocator* alloc, buffer* out_data) {
 
   if (!file_get_size(src, &file_size)) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   file_ptr = SDL_IOFromFile(file_path_cstr(src), "rb");
   if (file_ptr == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   if (file_size > 0) {
@@ -270,7 +270,7 @@ func b32 file_read_all(const path* src, allocator* alloc, buffer* out_data) {
     if (data_ptr == NULL) {
       SDL_CloseIO(file_ptr);
       profile_func_end;
-      return 0;
+      return false;
     }
 
     read_size = (sz)SDL_ReadIO(file_ptr, data_ptr, (size_t)file_size);
@@ -278,7 +278,7 @@ func b32 file_read_all(const path* src, allocator* alloc, buffer* out_data) {
       allocator_dealloc(*alloc, data_ptr, file_size);
       SDL_CloseIO(file_ptr);
       profile_func_end;
-      return 0;
+      return false;
     }
   }
 
@@ -287,14 +287,14 @@ func b32 file_read_all(const path* src, allocator* alloc, buffer* out_data) {
   out_data->size = file_size;
   thread_log_trace("file_read_all: path=%s size=%zu", src != NULL ? src->buf : "<null>", (size_t)file_size);
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 file_write_all(const path* src, buffer data) {
   profile_func_begin;
   if (src == NULL || src->buf[0] == '\0' || (data.size > 0 && data.ptr == NULL)) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(src->buf[0] != '\0');
   SDL_IOStream* file_ptr = SDL_IOFromFile(file_path_cstr(src), "wb");
@@ -302,7 +302,7 @@ func b32 file_write_all(const path* src, buffer data) {
 
   if (file_ptr == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   if (data.size > 0) {
@@ -310,24 +310,24 @@ func b32 file_write_all(const path* src, buffer data) {
     if (write_size != data.size) {
       SDL_CloseIO(file_ptr);
       profile_func_end;
-      return 0;
+      return false;
     }
   }
 
   if (!SDL_CloseIO(file_ptr)) {
     profile_func_end;
-    return 0;
+    return false;
   }
   thread_log_trace("file_write_all: path=%s size=%zu", src->buf, (size_t)data.size);
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 file_append_all(const path* src, buffer data) {
   profile_func_begin;
   if (src == NULL || src->buf[0] == '\0' || (data.size > 0 && data.ptr == NULL)) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(src->buf[0] != '\0');
   SDL_IOStream* file_ptr = SDL_IOFromFile(file_path_cstr(src), "ab");
@@ -335,7 +335,7 @@ func b32 file_append_all(const path* src, buffer data) {
 
   if (file_ptr == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   if (data.size > 0) {
@@ -343,16 +343,16 @@ func b32 file_append_all(const path* src, buffer data) {
     if (write_size != data.size) {
       SDL_CloseIO(file_ptr);
       profile_func_end;
-      return 0;
+      return false;
     }
   }
 
   if (!SDL_CloseIO(file_ptr)) {
     profile_func_end;
-    return 0;
+    return false;
   }
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 file_write_all_atomic(const path* src, buffer data) {
@@ -361,26 +361,26 @@ func b32 file_write_all_atomic(const path* src, buffer data) {
 
   if (src == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   if (!file_make_temp_path(src, &tmp_path)) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   if (!file_write_all(&tmp_path, data)) {
     (void)path_remove(&tmp_path);
     profile_func_end;
-    return 0;
+    return false;
   }
 
   if (!file_replace_path(&tmp_path, src)) {
     (void)path_remove(&tmp_path);
     profile_func_end;
-    return 0;
+    return false;
   }
 
   profile_func_end;
-  return 1;
+  return true;
 }

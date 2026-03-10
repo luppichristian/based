@@ -25,6 +25,7 @@ func void global_user_data_access_set_all_local(b8 has_access) {
 func b32 global_ctx_init(allocator main_allocator) {
   profile_func_begin;
   if (!main_allocator.alloc_fn) {
+    global_log_error("Missing global context allocator");
     profile_func_end;
     return false;
   }
@@ -32,12 +33,14 @@ func b32 global_ctx_init(allocator main_allocator) {
 
   i32 state = atomic_i32_get(&process_global_ctx_init);
   if (state == 2) {
+    global_log_verbose("Global context already initialized");
     profile_func_end;
     return true;
   }
 
   i32 expected = 0;
   if (atomic_i32_cmpex(&process_global_ctx_init, &expected, 1)) {
+    global_log_info("Initializing global context");
     msg lifecycle_msg = {0};
     lifecycle_msg.type = MSG_CORE_TYPE_GLOBAL_CTX;
     msg_core_fill_global_ctx(&lifecycle_msg, &(msg_core_global_ctx_data) {
@@ -50,6 +53,7 @@ func b32 global_ctx_init(allocator main_allocator) {
     process_global_ctx.mutex_handle = mutex_create();
     if (!process_global_ctx.mutex_handle ||
         !ctx_init(&process_global_ctx.shared_ctx, main_allocator, process_global_ctx.mutex_handle, true)) {
+      global_log_error("Global context initialization failed");
       if (process_global_ctx.mutex_handle) {
         mutex_destroy(process_global_ctx.mutex_handle);
       }
@@ -65,25 +69,32 @@ func b32 global_ctx_init(allocator main_allocator) {
     process_global_ctx.is_init = true;
     atomic_fence_release();
     atomic_i32_set(&process_global_ctx_init, 2);
+    global_log_info("Global context initialized");
     profile_func_end;
     return true;
   }
 
+  global_log_verbose("Waiting for global context initialization");
   while (atomic_i32_get(&process_global_ctx_init) == 1) {
     atomic_pause();
   }
   atomic_fence_acquire();
+  b32 is_init = atomic_i32_get(&process_global_ctx_init) == 2;
+  global_log_debug("Global context wait completed initialized=%u", (u32)is_init);
   profile_func_end;
-  return atomic_i32_get(&process_global_ctx_init) == 2;
+  return is_init;
 }
 
 func void global_ctx_quit(void) {
   profile_func_begin;
   i32 expected = 2;
   if (!atomic_i32_cmpex(&process_global_ctx_init, &expected, 1)) {
+    global_log_verbose("Global context quit skipped");
     profile_func_end;
     return;
   }
+
+  global_log_info("Shutting down global context");
 
   msg lifecycle_msg = {0};
   lifecycle_msg.type = MSG_CORE_TYPE_GLOBAL_CTX;
@@ -110,39 +121,30 @@ func void global_ctx_quit(void) {
   global_user_data_access_set_all_local(false);
   atomic_fence_release();
   atomic_i32_set(&process_global_ctx_init, 0);
+  global_log_info("Global context shut down");
   profile_func_end;
 }
 
 func b32 global_ctx_is_init(void) {
-  profile_func_begin;
-  profile_func_end;
   return atomic_i32_get(&process_global_ctx_init) == 2;
 }
 
 func global_ctx* global_ctx_get(void) {
-  profile_func_begin;
   if (!global_ctx_is_init()) {
-    profile_func_end;
     return NULL;
   }
-  profile_func_end;
   return &process_global_ctx;
 }
 
 func ctx* global_ctx_get_shared(void) {
-  profile_func_begin;
   global_ctx* wrapper = global_ctx_get();
   if (!wrapper) {
-    profile_func_end;
     return NULL;
   }
-  profile_func_end;
   return &wrapper->shared_ctx;
 }
 
 func log_state* global_get_log_state(void) {
-  profile_func_begin;
-  profile_func_end;
   return ctx_get_log_state(global_ctx_get_shared());
 }
 
@@ -165,8 +167,6 @@ func void global_ctx_unlock(void) {
 }
 
 func allocator global_get_allocator(void) {
-  profile_func_begin;
-  profile_func_end;
   return ctx_get_allocator(global_ctx_get_shared());
 }
 
@@ -184,26 +184,18 @@ func allocator global_get_main_allocator(void) {
 }
 
 func arena* global_get_perm_arena(void) {
-  profile_func_begin;
-  profile_func_end;
   return ctx_get_perm_arena(global_ctx_get_shared());
 }
 
 func arena* global_get_temp_arena(void) {
-  profile_func_begin;
-  profile_func_end;
   return ctx_get_temp_arena(global_ctx_get_shared());
 }
 
 func heap* global_get_perm_heap(void) {
-  profile_func_begin;
-  profile_func_end;
   return ctx_get_perm_heap(global_ctx_get_shared());
 }
 
 func heap* global_get_temp_heap(void) {
-  profile_func_begin;
-  profile_func_end;
   return ctx_get_temp_heap(global_ctx_get_shared());
 }
 
@@ -220,7 +212,7 @@ func void* global_get_user_data(ctx_user_data_idx idx) {
     mutex_lock(wrapper->mutex_handle);
   }
 
-  b32 has_access = global_user_data_access[idx] != 0;
+  b32 has_access = global_user_data_access[idx] != false;
   void* user_data = has_access ? wrapper->shared_ctx.user_data[idx] : NULL;
 
   if (wrapper->mutex_handle) {
@@ -244,7 +236,7 @@ func b32 global_set_user_data(ctx_user_data_idx idx, void* user_data) {
     mutex_lock(wrapper->mutex_handle);
   }
 
-  b32 has_access = global_user_data_access[idx] != 0;
+  b32 has_access = global_user_data_access[idx] != false;
   if (has_access) {
     wrapper->shared_ctx.user_data[idx] = user_data;
   }
@@ -258,13 +250,10 @@ func b32 global_set_user_data(ctx_user_data_idx idx, void* user_data) {
 }
 
 func b32 global_has_user_data_access(ctx_user_data_idx idx) {
-  profile_func_begin;
   if (!global_ctx_get() || idx >= CTX_USER_DATA_COUNT) {
-    profile_func_end;
     return false;
   }
-  profile_func_end;
-  return global_user_data_access[idx] != 0;
+  return global_user_data_access[idx] != false;
 }
 
 func b32 global_set_user_data_access(ctx_user_data_idx idx, b8 has_access) {
@@ -307,7 +296,5 @@ func void global_log_begin_frame(void) {
 }
 
 func log_frame* global_log_end_frame(u32 severity_mask) {
-  profile_func_begin;
-  profile_func_end;
   return log_state_end_frame(global_get_log_state(), severity_mask);
 }

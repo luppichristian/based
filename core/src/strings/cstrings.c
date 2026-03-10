@@ -56,11 +56,11 @@ func b32 cstr8_is_empty(cstr8 str) {
   profile_func_begin;
   if (str == NULL) {
     profile_func_end;
-    return 1;
+    return true;
   }
   assert(str != NULL);
   profile_func_end;
-  return str[0] == '\0' ? 1 : 0;
+  return str[0] == '\0' ? true : false;
 }
 
 func void cstr8_clear(c8* str) {
@@ -209,14 +209,14 @@ func b32 cstr8_format(c8* dst, sz dst_cap, cstr8 fmt, ...) {
   int result = vsnprintf(dst, dst_cap, fmt, args);
   va_end(args);
   profile_func_end;
-  return (result >= 0 && (sz)result < dst_cap) ? 1 : 0;
+  return (result >= 0 && (sz)result < dst_cap) ? true : false;
 }
 
 func b32 cstr8_vformat(c8* dst, sz dst_cap, cstr8 fmt, va_list args) {
   profile_func_begin;
   int result = vsnprintf(dst, dst_cap, fmt, args);
   profile_func_end;
-  return (result >= 0 && (sz)result < dst_cap) ? 1 : 0;
+  return (result >= 0 && (sz)result < dst_cap) ? true : false;
 }
 
 func b32 cstr8_append_format(c8* dst, sz dst_cap, cstr8 fmt, ...) {
@@ -224,7 +224,7 @@ func b32 cstr8_append_format(c8* dst, sz dst_cap, cstr8 fmt, ...) {
   sz len = cstr8_len(dst);
   if (len >= dst_cap) {
     profile_func_end;
-    return 0;
+    return false;
   }
   va_list args;
   va_start(args, fmt);
@@ -239,7 +239,7 @@ func b32 cstr8_append_vformat(c8* dst, sz dst_cap, cstr8 fmt, va_list args) {
   sz len = cstr8_len(dst);
   if (len >= dst_cap) {
     profile_func_end;
-    return 0;
+    return false;
   }
   b32 result = cstr8_vformat(dst + len, dst_cap - len, fmt, args);
   profile_func_end;
@@ -253,7 +253,7 @@ func b32 cstr8_scan(cstr8 str, cstr8 fmt, ...) {
   int result = vsscanf(str, fmt, args);
   va_end(args);
   profile_func_end;
-  return result > 0 ? 1 : 0;
+  return result > 0 ? true : false;
 }
 
 // =========================================================================
@@ -317,7 +317,7 @@ func b32 cstr8_starts_with(cstr8 str, cstr8 prefix) {
   profile_func_begin;
   sz prefix_len = cstr8_len(prefix);
   profile_func_end;
-  return strncmp(str, prefix, prefix_len) == 0 ? 1 : 0;
+  return strncmp(str, prefix, prefix_len) == 0 ? true : false;
 }
 
 func b32 cstr8_ends_with(cstr8 str, cstr8 suffix) {
@@ -326,10 +326,10 @@ func b32 cstr8_ends_with(cstr8 str, cstr8 suffix) {
   sz suffix_len = cstr8_len(suffix);
   if (suffix_len > str_len) {
     profile_func_end;
-    return 0;
+    return false;
   }
   profile_func_end;
-  return strcmp(str + str_len - suffix_len, suffix) == 0 ? 1 : 0;
+  return strcmp(str + str_len - suffix_len, suffix) == 0 ? true : false;
 }
 
 // =========================================================================
@@ -414,12 +414,12 @@ func b32 cstr8_remove_prefix(c8* str, cstr8 prefix) {
   sz prefix_len = cstr8_len(prefix);
   if (strncmp(str, prefix, prefix_len) != 0) {
     profile_func_end;
-    return 0;
+    return false;
   }
   sz str_len = cstr8_len(str);
   memmove(str, str + prefix_len, str_len - prefix_len + 1);
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 cstr8_remove_suffix(c8* str, cstr8 suffix) {
@@ -428,11 +428,11 @@ func b32 cstr8_remove_suffix(c8* str, cstr8 suffix) {
   sz suffix_len = cstr8_len(suffix);
   if (suffix_len > str_len || strcmp(str + str_len - suffix_len, suffix) != 0) {
     profile_func_end;
-    return 0;
+    return false;
   }
   str[str_len - suffix_len] = '\0';
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func sz cstr8_replace(c8* str, sz str_cap, cstr8 from, cstr8 rep) {
@@ -496,7 +496,7 @@ func b32 cstr8_to_i64(cstr8 str, i64* out) {
   profile_func_begin;
   if (str == NULL || out == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(str != NULL);
   assert(out != NULL);
@@ -505,18 +505,18 @@ func b32 cstr8_to_i64(cstr8 str, i64* out) {
   long long val = strtoll(str, &end, 10);
   if (errno != 0 || end == str || *end != '\0') {
     profile_func_end;
-    return 0;
+    return false;
   }
   *out = (i64)val;
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 cstr8_to_f64(cstr8 str, f64* out) {
   profile_func_begin;
   if (str == NULL || out == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(str != NULL);
   assert(out != NULL);
@@ -525,11 +525,11 @@ func b32 cstr8_to_f64(cstr8 str, f64* out) {
   double val = strtod(str, &end);
   if (errno != 0 || end == str || *end != '\0') {
     profile_func_end;
-    return 0;
+    return false;
   }
   *out = val;
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func cstr8_tokenizer cstr8_tokenizer_make(cstr8 src, cstr8 delim) {
@@ -546,21 +546,21 @@ func b32 cstr8_tokenizer_next(cstr8_tokenizer* tok, c8* out_buf, sz out_cap) {
   profile_func_begin;
   if (tok == NULL || out_buf == NULL || out_cap == 0) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   sz src_len = cstr8_len(tok->src);
   sz delim_len = cstr8_len(tok->delim);
   if (tok->cursor > src_len) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   if (tok->cursor == src_len) {
     out_buf[0] = '\0';
     tok->cursor = src_len + 1;
     profile_func_end;
-    return 1;
+    return true;
   }
 
   sz start = tok->cursor;
@@ -584,7 +584,7 @@ func b32 cstr8_tokenizer_next(cstr8_tokenizer* tok, c8* out_buf, sz out_cap) {
   memcpy(out_buf, tok->src + start, token_len);
   out_buf[token_len] = '\0';
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func sz cstr8_join(c8* dst, sz dst_cap, cstr8 const* parts, sz part_count, cstr8 delim) {
@@ -622,14 +622,14 @@ func b32 cstr16_to_ascii(cstr16 str, c8* buf, sz buf_size) {
   while (str[idx] != (c16)'\0') {
     if (str[idx] > 0x7FU || idx >= buf_size - 1) {
       profile_func_end;
-      return 0;
+      return false;
     }
     buf[idx] = (c8)(u8)str[idx];
     idx++;
   }
   buf[idx] = '\0';
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 cstr32_to_ascii(cstr32 str, c8* buf, sz buf_size) {
@@ -638,14 +638,14 @@ func b32 cstr32_to_ascii(cstr32 str, c8* buf, sz buf_size) {
   while (str[idx] != (c32)'\0') {
     if (str[idx] > 0x7FU || idx >= buf_size - 1) {
       profile_func_end;
-      return 0;
+      return false;
     }
     buf[idx] = (c8)(u8)str[idx];
     idx++;
   }
   buf[idx] = '\0';
   profile_func_end;
-  return 1;
+  return true;
 }
 
 // =========================================================================
@@ -661,7 +661,7 @@ func sz cstr16_len(cstr16 str) {
 func b32 cstr16_is_empty(cstr16 str) {
   profile_func_begin;
   profile_func_end;
-  return str[0] == (c16)'\0' ? 1 : 0;
+  return str[0] == (c16)'\0' ? true : false;
 }
 
 func void cstr16_clear(c16* str) {
@@ -908,7 +908,7 @@ func b32 cstr16_starts_with(cstr16 str, cstr16 prefix) {
   profile_func_begin;
   sz prefix_len = cstr16_len_impl(prefix);
   profile_func_end;
-  return cstr16_cmp_n(str, prefix, prefix_len) == 0 ? 1 : 0;
+  return cstr16_cmp_n(str, prefix, prefix_len) == 0 ? true : false;
 }
 
 func b32 cstr16_ends_with(cstr16 str, cstr16 suffix) {
@@ -917,10 +917,10 @@ func b32 cstr16_ends_with(cstr16 str, cstr16 suffix) {
   sz suffix_len = cstr16_len_impl(suffix);
   if (suffix_len > str_len) {
     profile_func_end;
-    return 0;
+    return false;
   }
   profile_func_end;
-  return memcmp(str + str_len - suffix_len, suffix, suffix_len * size_of(c16)) == 0 ? 1 : 0;
+  return memcmp(str + str_len - suffix_len, suffix, suffix_len * size_of(c16)) == 0 ? true : false;
 }
 
 // =========================================================================
@@ -1005,12 +1005,12 @@ func b32 cstr16_remove_prefix(c16* str, cstr16 prefix) {
   sz prefix_len = cstr16_len_impl(prefix);
   if (cstr16_cmp_n(str, prefix, prefix_len) != 0) {
     profile_func_end;
-    return 0;
+    return false;
   }
   sz str_len = cstr16_len_impl(str);
   memmove(str, str + prefix_len, (str_len - prefix_len + 1) * size_of(c16));
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 cstr16_remove_suffix(c16* str, cstr16 suffix) {
@@ -1019,15 +1019,15 @@ func b32 cstr16_remove_suffix(c16* str, cstr16 suffix) {
   sz suffix_len = cstr16_len_impl(suffix);
   if (suffix_len > str_len) {
     profile_func_end;
-    return 0;
+    return false;
   }
   if (memcmp(str + str_len - suffix_len, suffix, suffix_len * size_of(c16)) != 0) {
     profile_func_end;
-    return 0;
+    return false;
   }
   str[str_len - suffix_len] = (c16)'\0';
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func sz cstr16_replace(c16* str, sz str_cap, cstr16 from, cstr16 rep) {
@@ -1092,7 +1092,7 @@ func b32 cstr16_to_i64(cstr16 str, i64* out) {
   c8 buf[64];
   if (!cstr16_to_ascii(str, buf, size_of(buf))) {
     profile_func_end;
-    return 0;
+    return false;
   }
   profile_func_end;
   return cstr8_to_i64(buf, out);
@@ -1103,7 +1103,7 @@ func b32 cstr16_to_f64(cstr16 str, f64* out) {
   c8 buf[256];
   if (!cstr16_to_ascii(str, buf, size_of(buf))) {
     profile_func_end;
-    return 0;
+    return false;
   }
   profile_func_end;
   return cstr8_to_f64(buf, out);
@@ -1122,7 +1122,7 @@ func sz cstr32_len(cstr32 str) {
 func b32 cstr32_is_empty(cstr32 str) {
   profile_func_begin;
   profile_func_end;
-  return str[0] == (c32)'\0' ? 1 : 0;
+  return str[0] == (c32)'\0' ? true : false;
 }
 
 func void cstr32_clear(c32* str) {
@@ -1369,7 +1369,7 @@ func b32 cstr32_starts_with(cstr32 str, cstr32 prefix) {
   profile_func_begin;
   sz prefix_len = cstr32_len_impl(prefix);
   profile_func_end;
-  return cstr32_cmp_n(str, prefix, prefix_len) == 0 ? 1 : 0;
+  return cstr32_cmp_n(str, prefix, prefix_len) == 0 ? true : false;
 }
 
 func b32 cstr32_ends_with(cstr32 str, cstr32 suffix) {
@@ -1378,10 +1378,10 @@ func b32 cstr32_ends_with(cstr32 str, cstr32 suffix) {
   sz suffix_len = cstr32_len_impl(suffix);
   if (suffix_len > str_len) {
     profile_func_end;
-    return 0;
+    return false;
   }
   profile_func_end;
-  return memcmp(str + str_len - suffix_len, suffix, suffix_len * size_of(c32)) == 0 ? 1 : 0;
+  return memcmp(str + str_len - suffix_len, suffix, suffix_len * size_of(c32)) == 0 ? true : false;
 }
 
 // =========================================================================
@@ -1466,12 +1466,12 @@ func b32 cstr32_remove_prefix(c32* str, cstr32 prefix) {
   sz prefix_len = cstr32_len_impl(prefix);
   if (cstr32_cmp_n(str, prefix, prefix_len) != 0) {
     profile_func_end;
-    return 0;
+    return false;
   }
   sz str_len = cstr32_len_impl(str);
   memmove(str, str + prefix_len, (str_len - prefix_len + 1) * size_of(c32));
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 cstr32_remove_suffix(c32* str, cstr32 suffix) {
@@ -1480,15 +1480,15 @@ func b32 cstr32_remove_suffix(c32* str, cstr32 suffix) {
   sz suffix_len = cstr32_len_impl(suffix);
   if (suffix_len > str_len) {
     profile_func_end;
-    return 0;
+    return false;
   }
   if (memcmp(str + str_len - suffix_len, suffix, suffix_len * size_of(c32)) != 0) {
     profile_func_end;
-    return 0;
+    return false;
   }
   str[str_len - suffix_len] = (c32)'\0';
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func sz cstr32_replace(c32* str, sz str_cap, cstr32 from, cstr32 rep) {
@@ -1553,7 +1553,7 @@ func b32 cstr32_to_i64(cstr32 str, i64* out) {
   c8 buf[64];
   if (!cstr32_to_ascii(str, buf, size_of(buf))) {
     profile_func_end;
-    return 0;
+    return false;
   }
   profile_func_end;
   return cstr8_to_i64(buf, out);
@@ -1564,7 +1564,7 @@ func b32 cstr32_to_f64(cstr32 str, f64* out) {
   c8 buf[256];
   if (!cstr32_to_ascii(str, buf, size_of(buf))) {
     profile_func_end;
-    return 0;
+    return false;
   }
   profile_func_end;
   return cstr8_to_f64(buf, out);

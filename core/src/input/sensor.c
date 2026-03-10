@@ -38,8 +38,6 @@ func sensor_state_entry* sensor_find_state(SDL_SensorID sensor_id, b32 create_if
 }
 
 func b32 sensor_id_is_valid(sensor src) {
-  profile_func_begin;
-  profile_func_end;
   return src != NULL;
 }
 
@@ -56,7 +54,6 @@ func up sensor_to_native_id(sensor src) {
 }
 
 func sz sensor_get_count(void) {
-  profile_func_begin;
   int count = 0;
   SDL_SensorID* ids = SDL_GetSensors(&count);
 
@@ -64,7 +61,6 @@ func sz sensor_get_count(void) {
     SDL_free(ids);
   }
 
-  profile_func_end;
   return count > 0 ? (sz)count : 0;
 }
 
@@ -91,24 +87,18 @@ func b32 sensor_get_id(sz idx, sensor* out_id) {
 }
 
 func cstr8 sensor_get_name(sensor id) {
-  profile_func_begin;
   if (!sensor_id_is_valid(id)) {
-    profile_func_end;
-    return NULL;
+      return NULL;
   }
 
-  profile_func_end;
   return SDL_GetSensorNameForID((SDL_SensorID)sensor_to_native_id(id));
 }
 
 func sensor_kind sensor_get_kind(sensor id) {
-  profile_func_begin;
   if (!sensor_id_is_valid(id)) {
-    profile_func_end;
-    return SENSOR_KIND_INVALID;
+      return SENSOR_KIND_INVALID;
   }
 
-  profile_func_end;
   return (sensor_kind)SDL_GetSensorTypeForID((SDL_SensorID)sensor_to_native_id(id));
 }
 
@@ -127,64 +117,64 @@ func b32 sensor_open(sensor id) {
   profile_func_begin;
   if (!sensor_id_is_valid(id)) {
     profile_func_end;
-    return 0;
+    return false;
   }
   sensor_state_entry* state = sensor_find_state((SDL_SensorID)sensor_to_native_id(id), 1);
   if (state == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   state->is_open = 1;
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 sensor_close(sensor id) {
   profile_func_begin;
   if (!sensor_id_is_valid(id)) {
     profile_func_end;
-    return 0;
+    return false;
   }
   sensor_state_entry* state = sensor_find_state((SDL_SensorID)sensor_to_native_id(id), 0);
   if (state == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   *state = (sensor_state_entry) {0};
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 sensor_start(sensor id) {
   profile_func_begin;
   if (!sensor_id_is_valid(id)) {
     profile_func_end;
-    return 0;
+    return false;
   }
   sensor_state_entry* state = sensor_find_state((SDL_SensorID)sensor_to_native_id(id), 1);
   if (state == NULL || !state->is_open) {
     profile_func_end;
-    return 0;
+    return false;
   }
   state->is_started = 1;
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 sensor_stop(sensor id) {
   profile_func_begin;
   if (!sensor_id_is_valid(id)) {
     profile_func_end;
-    return 0;
+    return false;
   }
   sensor_state_entry* state = sensor_find_state((SDL_SensorID)sensor_to_native_id(id), 0);
   if (state == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   state->is_started = 0;
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 sensor_read(sensor id, buffer* out_samples) {
@@ -194,13 +184,13 @@ func b32 sensor_read(sensor id, buffer* out_samples) {
   }
   if (!sensor_id_is_valid(id) || out_samples == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   sensor_state_entry* state = sensor_find_state((SDL_SensorID)sensor_to_native_id(id), 0);
   if (state == NULL || !state->is_open || !state->is_started) {
     profile_func_end;
-    return 0;
+    return false;
   }
   profile_func_end;
-  return 0;
+  return false;
 }

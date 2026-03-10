@@ -22,15 +22,11 @@ func cmdline cmdline_build(sz count, c8** args) {
 }
 
 func sz cmdline_get_count(cmdline cmdl) {
-  profile_func_begin;
-  profile_func_end;
   return cmdl.count;
 }
 
 func b32 cmdline_is_empty(cmdline cmdl) {
-  profile_func_begin;
-  profile_func_end;
-  return cmdl.count == 0 ? 1 : 0;
+  return cmdl.count == 0 ? true : false;
 }
 
 func cstr8 cmdline_get_arg(cmdline cmdl, sz idx) {
@@ -45,8 +41,6 @@ func cstr8 cmdline_get_arg(cmdline cmdl, sz idx) {
 }
 
 func cstr8 cmdline_get_program(cmdline cmdl) {
-  profile_func_begin;
-  profile_func_end;
   return cmdline_get_arg(cmdl, 0);
 }
 
@@ -74,8 +68,6 @@ func b32 cmdline_find(cmdline cmdl, cstr8 arg, sz* out_idx) {
 }
 
 func b32 cmdline_has(cmdline cmdl, cstr8 arg) {
-  profile_func_begin;
-  profile_func_end;
   return cmdline_find(cmdl, arg, NULL);
 }
 

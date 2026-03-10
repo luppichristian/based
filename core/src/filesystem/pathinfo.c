@@ -14,40 +14,32 @@
 #  include <windows.h>
 
 func timestamp filesystem_timestamp_from_filetime(FILETIME value) {
-  profile_func_begin;
   ULARGE_INTEGER raw_value;
   u64 total_microseconds = 0;
 
   raw_value.LowPart = value.dwLowDateTime;
   raw_value.HighPart = value.dwHighDateTime;
   if (raw_value.QuadPart == 0) {
-    profile_func_end;
-    return timestamp_zero();
+      return timestamp_zero();
   }
 
   total_microseconds = raw_value.QuadPart / 10;
   if (total_microseconds < 11644473600000000ULL) {
-    profile_func_end;
-    return timestamp_zero();
+      return timestamp_zero();
   }
 
-  profile_func_end;
   return timestamp_from_microseconds((i64)(total_microseconds - 11644473600000000ULL));
 }
 
 func pathinfo_type filesystem_kind_from_attributes(DWORD attributes) {
-  profile_func_begin;
   if ((attributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0) {
-    profile_func_end;
-    return PATHINFO_TYPE_SYMLINK;
+      return PATHINFO_TYPE_SYMLINK;
   }
 
   if ((attributes & FILE_ATTRIBUTE_DIRECTORY) != 0) {
-    profile_func_end;
-    return PATHINFO_TYPE_DIRECTORY;
+      return PATHINFO_TYPE_DIRECTORY;
   }
 
-  profile_func_end;
   return PATHINFO_TYPE_FILE;
 }
 
@@ -84,23 +76,18 @@ func cstr8 filesystem_name_ptr(cstr8 src) {
 }
 
 func pathinfo_type filesystem_kind_from_mode(mode_t mode_value) {
-  profile_func_begin;
   if (S_ISLNK(mode_value)) {
-    profile_func_end;
-    return PATHINFO_TYPE_SYMLINK;
+      return PATHINFO_TYPE_SYMLINK;
   }
 
   if (S_ISDIR(mode_value)) {
-    profile_func_end;
-    return PATHINFO_TYPE_DIRECTORY;
+      return PATHINFO_TYPE_DIRECTORY;
   }
 
   if (S_ISREG(mode_value)) {
-    profile_func_end;
-    return PATHINFO_TYPE_FILE;
+      return PATHINFO_TYPE_FILE;
   }
 
-  profile_func_end;
   return PATHINFO_TYPE_OTHER;
 }
 
@@ -137,7 +124,6 @@ func cstr8 filesystem_name_ptr(cstr8 src) {
 #endif
 
 func pathinfo filesystem_info_empty(void) {
-  profile_func_begin;
   pathinfo info;
 
   info.kind = PATHINFO_TYPE_NONE;
@@ -148,7 +134,6 @@ func pathinfo filesystem_info_empty(void) {
   info.exists = 0;
   info.is_read_only = 0;
   info.hidden = 0;
-  profile_func_end;
   return info;
 }
 
@@ -159,7 +144,7 @@ func b32 pathinfo_get(const path* src, pathinfo* out_info) {
 
   if (out_info == NULL || src == NULL || src->buf[0] == '\0') {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(src->buf[0] != '\0');
 
@@ -168,7 +153,7 @@ func b32 pathinfo_get(const path* src, pathinfo* out_info) {
 
   if (!GetFileAttributesExA(src_str, GetFileExInfoStandard, &attr_data)) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   info.kind = filesystem_kind_from_attributes(attr_data.dwFileAttributes);
@@ -184,7 +169,7 @@ func b32 pathinfo_get(const path* src, pathinfo* out_info) {
 
   if (lstat(src_str, &stat_info) != 0) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   info.kind = filesystem_kind_from_mode(stat_info.st_mode);
@@ -199,15 +184,15 @@ func b32 pathinfo_get(const path* src, pathinfo* out_info) {
   info.write_time = filesystem_timestamp_from_timespec(stat_info.st_mtim);
   info.create_time = filesystem_timestamp_from_timespec(stat_info.st_ctim);
 #  endif
-  info.is_read_only = (stat_info.st_mode & (S_IWUSR | S_IWGRP | S_IWOTH)) == 0 ? 1 : 0;
+  info.is_read_only = (stat_info.st_mode & (S_IWUSR | S_IWGRP | S_IWOTH)) == 0 ? true : false;
 
   name_ptr = filesystem_name_ptr(src_str);
-  info.hidden = (name_ptr[0] == '.' && name_ptr[1] != '\0') ? 1 : 0;
+  info.hidden = (name_ptr[0] == '.' && name_ptr[1] != '\0') ? true : false;
 #else
   info.exists = path_exists(src);
   if (!info.exists) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   if (dir_exists(src)) {
@@ -223,10 +208,10 @@ func b32 pathinfo_get(const path* src, pathinfo* out_info) {
   info.create_time = info.write_time;
   info.access_time = info.write_time;
   info.is_read_only = 0;
-  info.hidden = (filesystem_name_ptr(src_str)[0] == '.') ? 1 : 0;
+  info.hidden = (filesystem_name_ptr(src_str)[0] == '.') ? true : false;
 #endif
 
   *out_info = info;
   profile_func_end;
-  return 1;
+  return true;
 }

@@ -72,7 +72,7 @@ func void* vmem_reserve(sz size) {
 func b32 vmem_commit(void* ptr, sz size) {
   profile_func_begin;
   g_vmem_stats.commit_calls += 1;
-  b32 success = VirtualAlloc(ptr, size, MEM_COMMIT, PAGE_READWRITE) != NULL ? 1 : 0;
+  b32 success = VirtualAlloc(ptr, size, MEM_COMMIT, PAGE_READWRITE) != NULL ? true : false;
   if (success) {
     g_vmem_stats.committed_bytes += size;
   }
@@ -83,7 +83,7 @@ func b32 vmem_commit(void* ptr, sz size) {
 func b32 vmem_decommit(void* ptr, sz size) {
   profile_func_begin;
   g_vmem_stats.decommit_calls += 1;
-  b32 success = VirtualFree(ptr, size, MEM_DECOMMIT) != 0 ? 1 : 0;
+  b32 success = VirtualFree(ptr, size, MEM_DECOMMIT) != 0 ? true : false;
   if (success) {
     g_vmem_stats.decommitted_bytes += size;
   }
@@ -94,7 +94,7 @@ func b32 vmem_decommit(void* ptr, sz size) {
 func b32 vmem_release(void* ptr, sz size) {
   profile_func_begin;
   g_vmem_stats.release_calls += 1;
-  b32 success = VirtualFree(ptr, 0, MEM_RELEASE) != 0 ? 1 : 0;
+  b32 success = VirtualFree(ptr, 0, MEM_RELEASE) != 0 ? true : false;
   if (success) {
     g_vmem_stats.released_bytes += size;
     TracyCFree(ptr);
@@ -116,7 +116,7 @@ func void* vmem_platform_alloc(sz size) {
 func b32 vmem_platform_free(void* ptr, sz size) {
   profile_func_begin;
   (void)size;
-  b32 success = VirtualFree(ptr, 0, MEM_RELEASE) != 0 ? 1 : 0;
+  b32 success = VirtualFree(ptr, 0, MEM_RELEASE) != 0 ? true : false;
   if (success) {
     TracyCFree(ptr);
   }
@@ -152,7 +152,7 @@ func void* vmem_reserve(sz size) {
 func b32 vmem_commit(void* ptr, sz size) {
   profile_func_begin;
   g_vmem_stats.commit_calls += 1;
-  b32 success = mprotect(ptr, size, PROT_READ | PROT_WRITE) == 0 ? 1 : 0;
+  b32 success = mprotect(ptr, size, PROT_READ | PROT_WRITE) == 0 ? true : false;
   if (success) {
     g_vmem_stats.committed_bytes += size;
   }
@@ -165,19 +165,19 @@ func b32 vmem_decommit(void* ptr, sz size) {
   g_vmem_stats.decommit_calls += 1;
   if (mprotect(ptr, size, PROT_NONE) != 0) {
     profile_func_end;
-    return 0;
+    return false;
   }
   // Hint to the OS to release the physical pages; best-effort, not checked.
   (void)madvise(ptr, size, MADV_DONTNEED);
   g_vmem_stats.decommitted_bytes += size;
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 vmem_release(void* ptr, sz size) {
   profile_func_begin;
   g_vmem_stats.release_calls += 1;
-  b32 success = munmap(ptr, size) == 0 ? 1 : 0;
+  b32 success = munmap(ptr, size) == 0 ? true : false;
   if (success) {
     g_vmem_stats.released_bytes += size;
     TracyCFree(ptr);
@@ -200,7 +200,7 @@ func void* vmem_platform_alloc(sz size) {
 
 func b32 vmem_platform_free(void* ptr, sz size) {
   profile_func_begin;
-  b32 success = munmap(ptr, size) == 0 ? 1 : 0;
+  b32 success = munmap(ptr, size) == 0 ? true : false;
   if (success) {
     TracyCFree(ptr);
   }
@@ -241,7 +241,7 @@ func b32 vmem_commit(void* ptr, sz size) {
   (void)ptr;
   g_vmem_stats.committed_bytes += size;
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 vmem_decommit(void* ptr, sz size) {
@@ -250,7 +250,7 @@ func b32 vmem_decommit(void* ptr, sz size) {
   (void)ptr;
   g_vmem_stats.decommitted_bytes += size;
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 vmem_release(void* ptr, sz size) {
@@ -262,7 +262,7 @@ func b32 vmem_release(void* ptr, sz size) {
   }
   free(ptr);
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func void* vmem_platform_alloc(sz size) {
@@ -283,7 +283,7 @@ func b32 vmem_platform_free(void* ptr, sz size) {
   }
   free(ptr);
   profile_func_end;
-  return 1;
+  return true;
 }
 
 #endif
@@ -425,7 +425,7 @@ func b32 vmem_free(void* ptr, sz size) {
   (void)size;
   if (!ptr) {
     profile_func_end;
-    return 1;
+    return true;
   }
 
   vmem_alloc_header* header = vmem_get_alloc_header(ptr);

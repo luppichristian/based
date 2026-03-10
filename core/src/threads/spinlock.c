@@ -86,8 +86,6 @@ func void _spinlock_destroy(spinlock sl, callsite site) {
 }
 
 func b32 spinlock_is_valid(spinlock sl) {
-  profile_func_begin;
-  profile_func_end;
   return sl != NULL;
 }
 
@@ -117,7 +115,7 @@ func b32 spinlock_try_lock(spinlock sl) {
   profile_func_begin;
   if (sl == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(sl != NULL);
   profile_func_end;

@@ -40,16 +40,12 @@ func cstr8 path_buf(const path* value) {
 }
 
 func path path_empty_value(void) {
-  profile_func_begin;
   path value;
   cstr8_clear(value.buf);
-  profile_func_end;
   return value;
 }
 
 func b32 path_is_separator(c8 chr) {
-  profile_func_begin;
-  profile_func_end;
   return chr == '/' || chr == '\\';
 }
 
@@ -143,22 +139,22 @@ func b32 path_is_absolute_cstr(cstr8 src) {
   profile_func_begin;
   if (src[0] == '\0') {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   if (path_is_separator(src[0])) {
     profile_func_end;
-    return 1;
+    return true;
   }
 
   if (c8_is_alpha(src[0]) && src[1] != '\0' && src[1] == ':' && src[2] != '\0' &&
       path_is_separator(src[2])) {
     profile_func_end;
-    return 1;
+    return true;
   }
 
   profile_func_end;
-  return 0;
+  return false;
 }
 
 func path path_from_cstr(cstr8 src) {
@@ -253,7 +249,7 @@ func void path_normalize(path* src) {
   sz root_len = path_root_length_cstr(path_buf(src));
   sz read_idx = 0;
   sz write_idx = 0;
-  b32 prev_sep = 0;
+  b32 prev_sep = false;
 
   while (src->buf[read_idx] != '\0') {
     c8 chr = src->buf[read_idx];
@@ -284,7 +280,7 @@ func b32 path_ends_with(const path* src, cstr8 suffix) {
   profile_func_begin;
   if (src == NULL || suffix == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(src != NULL);
   profile_func_end;
@@ -292,15 +288,11 @@ func b32 path_ends_with(const path* src, cstr8 suffix) {
 }
 
 func b32 path_is_absolute(const path* src) {
-  profile_func_begin;
-  profile_func_end;
   return path_is_absolute_cstr(path_buf(src));
 }
 
 func b32 path_is_relative(const path* src) {
-  profile_func_begin;
-  profile_func_end;
-  return !path_is_absolute(src) ? 1 : 0;
+  return !path_is_absolute(src) ? true : false;
 }
 
 func void path_remove_extension(path* src) {
@@ -363,29 +355,23 @@ func path path_get_extension(const path* src) {
 }
 
 func path path_get_name(const path* src) {
-  profile_func_begin;
   path result = path_empty_value();
   sz name_idx = path_name_start_cstr(path_buf(src));
   sz src_len = path_trimmed_length_cstr(path_buf(src));
 
   cstr8_copy_n(result.buf, size_of(result.buf), path_buf(src) + name_idx, src_len - name_idx);
-  profile_func_end;
   return result;
 }
 
 func path path_get_basename(const path* src) {
-  profile_func_begin;
   path result = path_get_name(src);
   path_remove_extension(&result);
-  profile_func_end;
   return result;
 }
 
 func path path_get_directory(const path* src) {
-  profile_func_begin;
   path result = *src;
   path_remove_name(&result);
-  profile_func_end;
   return result;
 }
 
@@ -443,18 +429,18 @@ func b32 path_set_current(const path* src) {
   profile_func_begin;
   if (src == NULL || src->buf[0] == '\0') {
     profile_func_end;
-    return 0;
+    return false;
   }
 
 #if defined(PLATFORM_WINDOWS)
   profile_func_end;
-  return _chdir(src->buf) == 0 ? 1 : 0;
+  return _chdir(src->buf) == 0 ? true : false;
 #elif defined(PLATFORM_UNIX)
   profile_func_end;
-  return chdir(src->buf) == 0 ? 1 : 0;
+  return chdir(src->buf) == 0 ? true : false;
 #else
   profile_func_end;
-  return 0;
+  return false;
 #endif
 }
 
@@ -528,30 +514,30 @@ func b32 path_exists(const path* src) {
   SDL_PathInfo path_info;
   if (src == NULL || src->buf[0] == '\0') {
     profile_func_end;
-    return 0;
+    return false;
   }
   profile_func_end;
-  return SDL_GetPathInfo(path_buf(src), &path_info) ? 1 : 0;
+  return SDL_GetPathInfo(path_buf(src), &path_info) ? true : false;
 }
 
 func b32 path_remove(const path* src) {
   profile_func_begin;
   if (src == NULL || src->buf[0] == '\0') {
     profile_func_end;
-    return 0;
+    return false;
   }
   profile_func_end;
-  return SDL_RemovePath(path_buf(src)) ? 1 : 0;
+  return SDL_RemovePath(path_buf(src)) ? true : false;
 }
 
 func b32 path_rename(const path* old_src, const path* new_src) {
   profile_func_begin;
   if (old_src == NULL || new_src == NULL || old_src->buf[0] == '\0' || new_src->buf[0] == '\0') {
     profile_func_end;
-    return 0;
+    return false;
   }
   profile_func_end;
-  return SDL_RenamePath(path_buf(old_src), path_buf(new_src)) ? 1 : 0;
+  return SDL_RenamePath(path_buf(old_src), path_buf(new_src)) ? true : false;
 }
 
 func timestamp path_get_last_write_time(const path* src) {

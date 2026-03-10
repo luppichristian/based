@@ -80,17 +80,15 @@ func b32 uuid_is_zero(uuid value) {
   for (sz idx = 0; idx < count_of(value.bytes); idx++) {
     if (value.bytes[idx] != 0U) {
       profile_func_end;
-      return 0;
+      return false;
     }
   }
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 uuid_equal(uuid lhs, uuid rhs) {
-  profile_func_begin;
-  profile_func_end;
-  return memcmp(lhs.bytes, rhs.bytes, size_of(lhs.bytes)) == 0 ? 1 : 0;
+  return memcmp(lhs.bytes, rhs.bytes, size_of(lhs.bytes)) == 0 ? true : false;
 }
 
 func i32 uuid_cmp(uuid lhs, uuid rhs) {
@@ -100,20 +98,14 @@ func i32 uuid_cmp(uuid lhs, uuid rhs) {
 }
 
 func u8 uuid_get_version(uuid value) {
-  profile_func_begin;
-  profile_func_end;
   return (u8)((value.bytes[6] >> 4U) & 0x0FU);
 }
 
 func u8 uuid_get_variant(uuid value) {
-  profile_func_begin;
-  profile_func_end;
   return (u8)((value.bytes[8] >> 6U) & 0x03U);
 }
 
 func sz uuid_string_length(void) {
-  profile_func_begin;
-  profile_func_end;
   return 36;
 }
 
@@ -121,13 +113,13 @@ func b32 uuid_parse_cstr8(cstr8 src, uuid* out) {
   profile_func_begin;
   if (src == NULL || out == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(src != NULL);
   assert(out != NULL);
   if (cstr8_len(src) != uuid_string_length()) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   uuid value = {0};
@@ -137,7 +129,7 @@ func b32 uuid_parse_cstr8(cstr8 src, uuid* out) {
     if (src_idx == 8 || src_idx == 13 || src_idx == 18 || src_idx == 23) {
       if (src[src_idx] != '-') {
         profile_func_end;
-        return 0;
+        return false;
       }
       src_idx++;
       continue;
@@ -147,7 +139,7 @@ func b32 uuid_parse_cstr8(cstr8 src, uuid* out) {
     i32 low = c8_hex_to_nibble(src[src_idx + 1]);
     if (high < 0 || low < 0) {
       profile_func_end;
-      return 0;
+      return false;
     }
 
     value.bytes[byte_idx] = (u8)((high << 4) | low);
@@ -157,14 +149,14 @@ func b32 uuid_parse_cstr8(cstr8 src, uuid* out) {
 
   *out = value;
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 uuid_to_cstr8(uuid value, c8* dst, sz cap) {
   profile_func_begin;
   if (dst == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(dst != NULL);
   sz needed = uuid_string_length() + 1;
@@ -173,7 +165,7 @@ func b32 uuid_to_cstr8(uuid value, c8* dst, sz cap) {
       dst[0] = '\0';
     }
     profile_func_end;
-    return 0;
+    return false;
   }
 
   sz dst_idx = 0;
@@ -189,14 +181,14 @@ func b32 uuid_to_cstr8(uuid value, c8* dst, sz cap) {
 
   dst[dst_idx] = '\0';
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 uuid_to_cstr16(uuid value, c16* dst, sz cap) {
   profile_func_begin;
   if (dst == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(dst != NULL);
   c8 buffer[37];
@@ -205,19 +197,19 @@ func b32 uuid_to_cstr16(uuid value, c16* dst, sz cap) {
       dst[0] = (c16)'\0';
     }
     profile_func_end;
-    return 0;
+    return false;
   }
 
   sz written = cstr8_to_cstr16(buffer, dst, cap);
   profile_func_end;
-  return written == uuid_string_length() ? 1 : 0;
+  return written == uuid_string_length() ? true : false;
 }
 
 func b32 uuid_to_cstr32(uuid value, c32* dst, sz cap) {
   profile_func_begin;
   if (dst == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(dst != NULL);
   c8 buffer[37];
@@ -226,25 +218,25 @@ func b32 uuid_to_cstr32(uuid value, c32* dst, sz cap) {
       dst[0] = (c32)'\0';
     }
     profile_func_end;
-    return 0;
+    return false;
   }
 
   sz written = cstr8_to_cstr32(buffer, dst, cap);
   profile_func_end;
-  return written == uuid_string_length() ? 1 : 0;
+  return written == uuid_string_length() ? true : false;
 }
 
 func b32 uuid_to_str8(uuid value, str8* dst) {
   profile_func_begin;
   if (dst == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(dst != NULL);
   if (dst->cap == 0) {
     dst->size = 0;
     profile_func_end;
-    return 0;
+    return false;
   }
 
   b32 success = uuid_to_cstr8(value, dst->ptr, dst->cap);
@@ -257,13 +249,13 @@ func b32 uuid_to_str16(uuid value, str16* dst) {
   profile_func_begin;
   if (dst == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(dst != NULL);
   if (dst->cap == 0) {
     dst->size = 0;
     profile_func_end;
-    return 0;
+    return false;
   }
 
   b32 success = uuid_to_cstr16(value, dst->ptr, dst->cap);
@@ -276,13 +268,13 @@ func b32 uuid_to_str32(uuid value, str32* dst) {
   profile_func_begin;
   if (dst == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(dst != NULL);
   if (dst->cap == 0) {
     dst->size = 0;
     profile_func_end;
-    return 0;
+    return false;
   }
 
   b32 success = uuid_to_cstr32(value, dst->ptr, dst->cap);
@@ -293,7 +285,7 @@ func b32 uuid_to_str32(uuid value, str32* dst) {
 
 func uuid uuid_generate_v4(void) {
   profile_func_begin;
-  local_persist b32 seeded = 0;
+  local_persist b32 seeded = false;
   if (!seeded) {
     srand((unsigned int)time(NULL));
     seeded = 1;

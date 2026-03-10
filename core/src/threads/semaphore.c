@@ -37,7 +37,7 @@ func b32 _semaphore_destroy(semaphore sem, callsite site) {
   (void)site;
   if (!sem) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   msg lifecycle_msg = {0};
@@ -49,17 +49,15 @@ func b32 _semaphore_destroy(semaphore sem, callsite site) {
                                                  });
   if (!msg_post(&lifecycle_msg)) {
     profile_func_end;
-    return 0;
+    return false;
   }
   thread_log_trace("semaphore_destroy: handle=%p", sem);
   SDL_DestroySemaphore((SDL_Semaphore*)sem);
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 semaphore_is_valid(semaphore sem) {
-  profile_func_begin;
-  profile_func_end;
   return sem != NULL;
 }
 
@@ -78,7 +76,7 @@ func b32 semaphore_try_wait(semaphore sem) {
   profile_func_begin;
   if (sem == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(sem != NULL);
   profile_func_end;
@@ -89,7 +87,7 @@ func b32 semaphore_wait_timeout(semaphore sem, u32 millis) {
   profile_func_begin;
   if (sem == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(sem != NULL);
   profile_func_end;

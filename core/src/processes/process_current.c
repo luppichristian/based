@@ -150,7 +150,7 @@ func b32 process_set_priority(process_priority priority) {
   profile_func_begin;
   if (priority < PROCESS_PRIORITY_LOW || priority > PROCESS_PRIORITY_REALTIME) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(priority >= PROCESS_PRIORITY_LOW && priority <= PROCESS_PRIORITY_REALTIME);
 
@@ -188,7 +188,7 @@ func b32 process_set_priority(process_priority priority) {
 #else
   (void)priority;
   profile_func_end;
-  return 0;
+  return false;
 #endif
 }
 

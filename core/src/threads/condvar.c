@@ -37,7 +37,7 @@ func b32 _condvar_destroy(condvar cond, callsite site) {
   (void)site;
   if (!cond) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   msg lifecycle_msg = {0};
@@ -49,17 +49,15 @@ func b32 _condvar_destroy(condvar cond, callsite site) {
                                                  });
   if (!msg_post(&lifecycle_msg)) {
     profile_func_end;
-    return 0;
+    return false;
   }
   thread_log_trace("condvar_destroy: handle=%p", cond);
   SDL_DestroyCondition((SDL_Condition*)cond);
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 condvar_is_valid(condvar cond) {
-  profile_func_begin;
-  profile_func_end;
   return cond != NULL;
 }
 
@@ -79,7 +77,7 @@ func b32 condvar_wait_timeout(condvar cond, mutex mtx, u32 millis) {
   profile_func_begin;
   if (cond == NULL || mtx == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(cond != NULL);
   assert(mtx != NULL);

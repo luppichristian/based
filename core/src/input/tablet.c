@@ -32,13 +32,10 @@ func u64 tablet_hash_path(cstr8 src) {
 }
 
 func b32 tablet_is_available(void) {
-  profile_func_begin;
-  profile_func_end;
   return tablet_get_count() > 0;
 }
 
 func sz tablet_get_count(void) {
-  profile_func_begin;
   SDL_hid_device_info* head = SDL_hid_enumerate(0, 0);
   SDL_hid_device_info* entry = head;
   sz total = 0;
@@ -54,7 +51,6 @@ func sz tablet_get_count(void) {
     SDL_hid_free_enumeration(head);
   }
 
-  profile_func_end;
   return total;
 }
 
@@ -63,7 +59,7 @@ func b32 tablet_get_device_id(sz idx, device_id* out_id) {
   SDL_hid_device_info* head = SDL_hid_enumerate(0, 0);
   SDL_hid_device_info* entry = head;
   sz current_idx = 0;
-  b32 found = 0;
+  b32 found = false;
 
   if (out_id) {
     *out_id = (device_id) {0};
@@ -98,13 +94,13 @@ func b32 tablet_get_last_pen_state(tablet_pen_state* out_state) {
   profile_func_begin;
   if (!out_state || !tablet_cached_pen_state.pen_id) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(out_state != NULL);
 
   *out_state = tablet_cached_pen_state;
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 tablet_read_hid_report(device_id id, void* dst, sz capacity, sz* out_size, i32 timeout_ms) {
@@ -124,7 +120,7 @@ func b32 tablet_read_hid_report(device_id id, void* dst, sz capacity, sz* out_si
       SDL_hid_free_enumeration(head);
     }
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(dst != NULL);
   assert(capacity > 0);
@@ -151,13 +147,13 @@ func b32 tablet_read_hid_report(device_id id, void* dst, sz capacity, sz* out_si
 
   if (!path_buf[0]) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   device = SDL_hid_open_path(path_buf);
   if (!device) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   read_size = SDL_hid_read_timeout(device, (unsigned char*)dst, (size_t)capacity, (int)timeout_ms);
@@ -165,7 +161,7 @@ func b32 tablet_read_hid_report(device_id id, void* dst, sz capacity, sz* out_si
 
   if (read_size <= 0) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   if (out_size) {
@@ -173,7 +169,7 @@ func b32 tablet_read_hid_report(device_id id, void* dst, sz capacity, sz* out_si
   }
 
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func void tablet_internal_on_msg(msg* src) {

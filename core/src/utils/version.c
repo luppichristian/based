@@ -41,33 +41,23 @@ func version version_make(u8 major, u8 minor, u16 patch) {
 }
 
 func u32 version_get_packed(version ver) {
-  profile_func_begin;
-  profile_func_end;
   return ver.packed;
 }
 
 func u8 version_get_major(version ver) {
-  profile_func_begin;
-  profile_func_end;
   return (u8)(ver.packed & 0xFFU);
 }
 
 func u8 version_get_minor(version ver) {
-  profile_func_begin;
-  profile_func_end;
   return (u8)((ver.packed >> 8) & 0xFFU);
 }
 
 func u16 version_get_patch(version ver) {
-  profile_func_begin;
-  profile_func_end;
   return (u16)((ver.packed >> 16) & 0xFFFFU);
 }
 
 func b32 version_is_zero(version ver) {
-  profile_func_begin;
-  profile_func_end;
-  return ver.packed == 0 ? 1 : 0;
+  return ver.packed == 0 ? true : false;
 }
 
 func sz version_string_length(version ver) {
@@ -112,7 +102,7 @@ func b32 version_to_cstr8(version ver, c8* dst, sz cap) {
   profile_func_begin;
   if (dst == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(dst != NULL);
   sz needed = version_string_length(ver) + 1;
@@ -121,7 +111,7 @@ func b32 version_to_cstr8(version ver, c8* dst, sz cap) {
       dst[0] = '\0';
     }
     profile_func_end;
-    return 0;
+    return false;
   }
 
   profile_func_end;
@@ -138,7 +128,7 @@ func b32 version_to_cstr16(version ver, c16* dst, sz cap) {
   profile_func_begin;
   if (dst == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(dst != NULL);
   c8 buffer[32];
@@ -147,20 +137,20 @@ func b32 version_to_cstr16(version ver, c16* dst, sz cap) {
       dst[0] = (c16)'\0';
     }
     profile_func_end;
-    return 0;
+    return false;
   }
 
   sz expected = cstr8_len(buffer);
   sz written = cstr8_to_cstr16(buffer, dst, cap);
   profile_func_end;
-  return written == expected ? 1 : 0;
+  return written == expected ? true : false;
 }
 
 func b32 version_to_cstr32(version ver, c32* dst, sz cap) {
   profile_func_begin;
   if (dst == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(dst != NULL);
   c8 buffer[32];
@@ -169,26 +159,26 @@ func b32 version_to_cstr32(version ver, c32* dst, sz cap) {
       dst[0] = (c32)'\0';
     }
     profile_func_end;
-    return 0;
+    return false;
   }
 
   sz expected = cstr8_len(buffer);
   sz written = cstr8_to_cstr32(buffer, dst, cap);
   profile_func_end;
-  return written == expected ? 1 : 0;
+  return written == expected ? true : false;
 }
 
 func b32 version_to_str8(version ver, str8* dst) {
   profile_func_begin;
   if (dst == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(dst != NULL);
   if (dst->cap == 0) {
     dst->size = 0;
     profile_func_end;
-    return 0;
+    return false;
   }
 
   b32 success = version_to_cstr8(ver, dst->ptr, dst->cap);
@@ -201,13 +191,13 @@ func b32 version_to_str16(version ver, str16* dst) {
   profile_func_begin;
   if (dst == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(dst != NULL);
   if (dst->cap == 0) {
     dst->size = 0;
     profile_func_end;
-    return 0;
+    return false;
   }
 
   b32 success = version_to_cstr16(ver, dst->ptr, dst->cap);
@@ -220,13 +210,13 @@ func b32 version_to_str32(version ver, str32* dst) {
   profile_func_begin;
   if (dst == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(dst != NULL);
   if (dst->cap == 0) {
     dst->size = 0;
     profile_func_end;
-    return 0;
+    return false;
   }
 
   b32 success = version_to_cstr32(ver, dst->ptr, dst->cap);
@@ -239,7 +229,7 @@ func b32 version_parse_cstr8(cstr8 src, version* out_ver) {
   profile_func_begin;
   if (src == NULL || out_ver == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   unsigned int major = 0;
@@ -247,15 +237,15 @@ func b32 version_parse_cstr8(cstr8 src, version* out_ver) {
   unsigned int patch = 0;
   if (!cstr8_scan(src, "%u.%u.%u", &major, &minor, &patch)) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   if (major > 0xFFU || minor > 0xFFU || patch > 0xFFFFU) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   *out_ver = version_make((u8)major, (u8)minor, (u16)patch);
   profile_func_end;
-  return 1;
+  return true;
 }

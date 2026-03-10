@@ -85,8 +85,6 @@ func pipe pipe_stderr(process prc) {
 }
 
 func b32 pipe_is_valid(pipe pip) {
-  profile_func_begin;
-  profile_func_end;
   return pip != NULL;
 }
 
@@ -132,23 +130,20 @@ func b32 pipe_poll_readable(pipe pip, i32 timeout_ms) {
   profile_func_begin;
   if (!pipe_is_valid(pip) || timeout_ms < 0) {
     profile_func_end;
-    return 0;
+    return false;
   }
   if (timeout_ms > 0) {
     SDL_Delay((u32)timeout_ms);
   }
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 pipe_flush(pipe pip) {
-  profile_func_begin;
   if (!pip) {
-    profile_func_end;
-    return 0;
+      return false;
   }
 
-  profile_func_end;
   return SDL_FlushIO((SDL_IOStream*)pip);
 }
 

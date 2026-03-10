@@ -180,7 +180,7 @@ func b32 dir_emit_entry(
 
   if (state->callback == NULL) {
     profile_func_end;
-    return 1;
+    return true;
   }
 
   entry.full_path = *full_path;
@@ -195,7 +195,7 @@ func b32 dir_pending_push(dir_iterate_state* state, const path* src) {
   dir_pending_dir* node = (dir_pending_dir*)SDL_malloc(size_of(dir_pending_dir));
   if (node == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   node->dir_path = *src;
@@ -209,7 +209,7 @@ func b32 dir_pending_push(dir_iterate_state* state, const path* src) {
   state->pending_tail = node;
 
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 dir_pending_pop(dir_iterate_state* state, path* out_path) {
@@ -217,7 +217,7 @@ func b32 dir_pending_pop(dir_iterate_state* state, path* out_path) {
   dir_pending_dir* node = state->pending_head;
   if (node == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   state->pending_head = node->next;
@@ -228,7 +228,7 @@ func b32 dir_pending_pop(dir_iterate_state* state, path* out_path) {
   SDL_free(node);
 
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func void dir_pending_clear(dir_iterate_state* state) {
@@ -365,7 +365,7 @@ func b32 dir_copy_entry(const dir_entry* entry, void* user_data) {
 
   if (state == NULL || entry == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   dst_path = path_join(&state->dst_root, &entry->relative_path);
@@ -390,21 +390,19 @@ func b32 dir_path_is_same_or_child(const path* root_path, const path* child_path
 
   if (root_len == 0) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   if (cstr8_cmp_n(root_abs.buf, child_abs.buf, root_len) != 0) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   profile_func_end;
-  return child_abs.buf[root_len] == '\0' || child_abs.buf[root_len] == '/' ? 1 : 0;
+  return child_abs.buf[root_len] == '\0' || child_abs.buf[root_len] == '/' ? true : false;
 }
 
 func path dir_get_base(void) {
-  profile_func_begin;
-  profile_func_end;
   return dir_path_from_string(SDL_GetBasePath());
 }
 
@@ -443,13 +441,13 @@ func b32 dir_create(const path* src) {
   profile_func_begin;
   if (src == NULL || src->buf[0] == '\0') {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(src->buf[0] != '\0');
   if (SDL_CreateDirectory(dir_path_cstr(src))) {
     thread_log_trace("dir_create: path=%s", src->buf);
     profile_func_end;
-    return 1;
+    return true;
   }
 
   profile_func_end;
@@ -460,28 +458,28 @@ func b32 dir_remove(const path* src) {
   profile_func_begin;
   if (!dir_exists(src)) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(src != NULL);
 
   profile_func_end;
-  return SDL_RemovePath(dir_path_cstr(src)) ? 1 : 0;
+  return SDL_RemovePath(dir_path_cstr(src)) ? true : false;
 }
 
 func b32 dir_rename(const path* old_src, const path* new_src) {
   profile_func_begin;
   if (!dir_exists(old_src)) {
     profile_func_end;
-    return 0;
+    return false;
   }
   if (new_src == NULL || new_src->buf[0] == '\0') {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(new_src->buf[0] != '\0');
 
   profile_func_end;
-  return SDL_RenamePath(dir_path_cstr(old_src), dir_path_cstr(new_src)) ? 1 : 0;
+  return SDL_RenamePath(dir_path_cstr(old_src), dir_path_cstr(new_src)) ? true : false;
 }
 
 func b32 dir_copy_recursive(const path* src, const path* dst, b32 overwrite_existing) {
@@ -492,7 +490,7 @@ func b32 dir_copy_recursive(const path* src, const path* dst, b32 overwrite_exis
 
   if (!dir_exists(src) || dst == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(src != NULL);
   assert(dst != NULL);
@@ -501,17 +499,17 @@ func b32 dir_copy_recursive(const path* src, const path* dst, b32 overwrite_exis
   dst_abs = path_resolve(dst);
   if (dir_path_is_same_or_child(&src_abs, &dst_abs)) {
     profile_func_end;
-    return cstr8_cmp(src_abs.buf, dst_abs.buf) == 0 ? 1 : 0;
+    return cstr8_cmp(src_abs.buf, dst_abs.buf) == 0 ? true : false;
   }
 
   if (path_exists(dst)) {
     if (!dir_exists(dst)) {
       profile_func_end;
-      return 0;
+      return false;
     }
   } else if (!dir_create_recursive(dst)) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   memset(&state, 0, size_of(state));
@@ -521,7 +519,7 @@ func b32 dir_copy_recursive(const path* src, const path* dst, b32 overwrite_exis
 
   if (!dir_iterate(src, dir_copy_entry, &state)) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   profile_func_end;
@@ -534,11 +532,11 @@ func b32 dir_exists(const path* src) {
 
   if (!SDL_GetPathInfo(dir_path_cstr(src), &path_info)) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   profile_func_end;
-  return path_info.type == SDL_PATHTYPE_DIRECTORY ? 1 : 0;
+  return path_info.type == SDL_PATHTYPE_DIRECTORY ? true : false;
 }
 
 func b32 dir_create_recursive(const path* src) {
@@ -552,7 +550,7 @@ func b32 dir_create_recursive(const path* src) {
 
   if (cstr8_is_empty(cur_path.buf)) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(cur_path.buf[0] != '\0');
 
@@ -564,7 +562,7 @@ func b32 dir_create_recursive(const path* src) {
       if (!cstr8_is_empty(cur_path.buf) && !dir_exists(&cur_path) && !dir_create(&cur_path)) {
         cur_path.buf[item_idx] = saved_chr;
         profile_func_end;
-        return 0;
+        return false;
       }
       cur_path.buf[item_idx] = saved_chr;
     }
@@ -572,11 +570,11 @@ func b32 dir_create_recursive(const path* src) {
 
   if (!dir_exists(&cur_path) && !dir_create(&cur_path)) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 dir_remove_recursive(const path* src) {
@@ -585,7 +583,7 @@ func b32 dir_remove_recursive(const path* src) {
 
   if (!dir_exists(src)) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(src != NULL);
 
@@ -594,16 +592,16 @@ func b32 dir_remove_recursive(const path* src) {
 
   if (!SDL_EnumerateDirectory(dir_path_cstr(src), dir_remove_callback, &state)) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   if (!state.success) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   profile_func_end;
-  return SDL_RemovePath(dir_path_cstr(src)) ? 1 : 0;
+  return SDL_RemovePath(dir_path_cstr(src)) ? true : false;
 }
 
 func b32 dir_iterate(const path* src, dir_iterate_callback* callback, void* user_data) {
@@ -612,7 +610,7 @@ func b32 dir_iterate(const path* src, dir_iterate_callback* callback, void* user
 
   if (!dir_exists(src) || callback == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(callback != NULL);
 
@@ -625,7 +623,7 @@ func b32 dir_iterate(const path* src, dir_iterate_callback* callback, void* user
 
   if (!SDL_EnumerateDirectory(dir_path_cstr(src), dir_enumerate_callback, &state)) {
     profile_func_end;
-    return state.stop_requested ? 1 : 0;
+    return state.stop_requested ? true : false;
   }
 
   profile_func_end;

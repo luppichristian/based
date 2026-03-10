@@ -51,7 +51,7 @@ func b32 runtime_query_windows_cpu(runtime_cpu_sample* out_sample) {
   profile_func_begin;
   if (out_sample == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(out_sample != NULL);
   FILETIME idle_time;
@@ -59,14 +59,14 @@ func b32 runtime_query_windows_cpu(runtime_cpu_sample* out_sample) {
   FILETIME user_time;
   if (GetSystemTimes(&idle_time, &kernel_time, &user_time) == 0) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   out_sample->idle_ticks = runtime_filetime_to_u64(idle_time);
   out_sample->kernel_ticks = runtime_filetime_to_u64(kernel_time);
   out_sample->user_ticks = runtime_filetime_to_u64(user_time);
   profile_func_end;
-  return 1;
+  return true;
 }
 #elif defined(PLATFORM_LINUX)
 typedef struct runtime_cpu_sample {
@@ -78,20 +78,20 @@ func b32 runtime_query_linux_cpu(runtime_cpu_sample* out_sample) {
   profile_func_begin;
   if (out_sample == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(out_sample != NULL);
   FILE* stat_file = fopen("/proc/stat", "r");
   if (stat_file == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   c8 line_buffer[256];
   if (fgets(line_buffer, size_of(line_buffer), stat_file) == NULL) {
     fclose(stat_file);
     profile_func_end;
-    return 0;
+    return false;
   }
   fclose(stat_file);
 
@@ -115,7 +115,7 @@ func b32 runtime_query_linux_cpu(runtime_cpu_sample* out_sample) {
                             &steal_ticks);
   if (parsed_count < 4) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   out_sample->idle_ticks = (u64)idle_ticks + (u64)io_wait_ticks;
@@ -123,7 +123,7 @@ func b32 runtime_query_linux_cpu(runtime_cpu_sample* out_sample) {
                             (u64)idle_ticks + (u64)io_wait_ticks + (u64)irq_ticks +
                             (u64)soft_irq_ticks + (u64)steal_ticks;
   profile_func_end;
-  return 1;
+  return true;
 }
 #elif defined(PLATFORM_MACOS)
 typedef struct runtime_cpu_sample {
@@ -135,7 +135,7 @@ func b32 runtime_query_apple_cpu(runtime_cpu_sample* out_sample) {
   profile_func_begin;
   if (out_sample == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(out_sample != NULL);
   host_cpu_load_info_data_t load_info;
@@ -144,7 +144,7 @@ func b32 runtime_query_apple_cpu(runtime_cpu_sample* out_sample) {
       host_statistics(mach_host_self(), HOST_CPU_LOAD_INFO, (host_info_t)&load_info, &load_count);
   if (query_result != KERN_SUCCESS) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   out_sample->idle_ticks = (u64)load_info.cpu_ticks[CPU_STATE_IDLE];
@@ -153,7 +153,7 @@ func b32 runtime_query_apple_cpu(runtime_cpu_sample* out_sample) {
                             (u64)load_info.cpu_ticks[CPU_STATE_IDLE] +
                             (u64)load_info.cpu_ticks[CPU_STATE_NICE];
   profile_func_end;
-  return 1;
+  return true;
 }
 #endif
 
@@ -161,7 +161,7 @@ func b32 system_runtime_query(system_runtime_info* out_info) {
   profile_func_begin;
   if (out_info == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(out_info != NULL);
 
@@ -173,7 +173,7 @@ func b32 system_runtime_query(system_runtime_info* out_info) {
   memory_status.dwLength = size_of(memory_status);
   if (GlobalMemoryStatusEx(&memory_status) == 0) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   out_info->memory_total = (sz)memory_status.ullTotalPhys;
@@ -208,7 +208,7 @@ func b32 system_runtime_query(system_runtime_info* out_info) {
 
   runtime_cpu_sample cpu_sample;
   if (runtime_query_windows_cpu(&cpu_sample)) {
-    local_persist b32 has_prev_sample = 0;
+    local_persist b32 has_prev_sample = false;
     local_persist runtime_cpu_sample prev_sample;
 
     if (has_prev_sample) {
@@ -228,12 +228,12 @@ func b32 system_runtime_query(system_runtime_info* out_info) {
 
   thread_log_trace("system_runtime_query: platform=windows mem_used=%zu", (size_t)out_info->memory_used);
   profile_func_end;
-  return 1;
+  return true;
 #elif defined(PLATFORM_LINUX)
   struct sysinfo sys_info;
   if (sysinfo(&sys_info) != 0) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   u64 total_memory = (u64)sys_info.totalram * (u64)sys_info.mem_unit;
@@ -268,7 +268,7 @@ func b32 system_runtime_query(system_runtime_info* out_info) {
 
   runtime_cpu_sample cpu_sample;
   if (runtime_query_linux_cpu(&cpu_sample)) {
-    local_persist b32 has_prev_sample = 0;
+    local_persist b32 has_prev_sample = false;
     local_persist runtime_cpu_sample prev_sample;
 
     if (has_prev_sample) {
@@ -286,7 +286,7 @@ func b32 system_runtime_query(system_runtime_info* out_info) {
 
   thread_log_trace("system_runtime_query: platform=linux mem_used=%zu", (size_t)out_info->memory_used);
   profile_func_end;
-  return 1;
+  return true;
 #elif defined(PLATFORM_MACOS)
   u64 total_memory = 0;
   sz total_size = size_of(total_memory);
@@ -319,7 +319,7 @@ func b32 system_runtime_query(system_runtime_info* out_info) {
 
   runtime_cpu_sample cpu_sample;
   if (runtime_query_apple_cpu(&cpu_sample)) {
-    local_persist b32 has_prev_sample = 0;
+    local_persist b32 has_prev_sample = false;
     local_persist runtime_cpu_sample prev_sample;
 
     if (has_prev_sample) {
@@ -337,10 +337,10 @@ func b32 system_runtime_query(system_runtime_info* out_info) {
 
   thread_log_trace("system_runtime_query: platform=apple mem_used=%zu", (size_t)out_info->memory_used);
   profile_func_end;
-  return 1;
+  return true;
 #else
   thread_log_warn("system_runtime_query: unsupported platform");
   profile_func_end;
-  return 0;
+  return false;
 #endif
 }

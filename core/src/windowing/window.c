@@ -25,8 +25,6 @@ func SDL_Window* window_resolve(window id) {
 // =========================================================================
 
 func b32 window_id_is_valid(window src) {
-  profile_func_begin;
-  profile_func_end;
   return src != NULL;
 }
 
@@ -86,8 +84,6 @@ func b32 window_get_id(sz idx, window* out_id) {
 // =========================================================================
 
 func b32 window_is_valid(window id) {
-  profile_func_begin;
-  profile_func_end;
   return window_resolve(id) != NULL;
 }
 
@@ -109,12 +105,12 @@ func b32 window_destroy(window id) {
   SDL_Window* window_ptr = window_resolve(id);
   if (window_ptr == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   SDL_DestroyWindow(window_ptr);
   profile_func_end;
-  return 1;
+  return true;
 }
 
 // =========================================================================
@@ -126,12 +122,12 @@ func b32 window_show(window id) {
   SDL_Window* window_ptr = window_resolve(id);
   if (window_ptr == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   SDL_ShowWindow(window_ptr);
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 window_hide(window id) {
@@ -139,12 +135,12 @@ func b32 window_hide(window id) {
   SDL_Window* window_ptr = window_resolve(id);
   if (window_ptr == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   SDL_HideWindow(window_ptr);
   profile_func_end;
-  return 1;
+  return true;
 }
 
 // =========================================================================
@@ -156,12 +152,12 @@ func b32 window_move(window id, i32 xpos, i32 ypos) {
   SDL_Window* window_ptr = window_resolve(id);
   if (window_ptr == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   SDL_SetWindowPosition(window_ptr, xpos, ypos);
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 window_get_position(window id, i32* out_xpos, i32* out_ypos) {
@@ -169,12 +165,12 @@ func b32 window_get_position(window id, i32* out_xpos, i32* out_ypos) {
   SDL_Window* window_ptr = window_resolve(id);
   if (window_ptr == NULL || out_xpos == NULL || out_ypos == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   SDL_GetWindowPosition(window_ptr, out_xpos, out_ypos);
   profile_func_end;
-  return 1;
+  return true;
 }
 
 // =========================================================================
@@ -186,12 +182,12 @@ func b32 window_resize(window id, i32 width, i32 height) {
   SDL_Window* window_ptr = window_resolve(id);
   if (window_ptr == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   SDL_SetWindowSize(window_ptr, width, height);
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 window_get_size(window id, i32* out_width, i32* out_height) {
@@ -199,12 +195,12 @@ func b32 window_get_size(window id, i32* out_width, i32* out_height) {
   SDL_Window* window_ptr = window_resolve(id);
   if (window_ptr == NULL || out_width == NULL || out_height == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   SDL_GetWindowSize(window_ptr, out_width, out_height);
   profile_func_end;
-  return 1;
+  return true;
 }
 
 // =========================================================================
@@ -216,7 +212,7 @@ func b32 window_set_fullscreen(window id, b32 enabled) {
   SDL_Window* window_ptr = window_resolve(id);
   if (window_ptr == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   b32 result = SDL_SetWindowFullscreen(window_ptr, enabled != 0);
@@ -229,10 +225,10 @@ func b32 window_is_fullscreen(window id) {
   SDL_Window* window_ptr = window_resolve(id);
   if (window_ptr == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
-  b32 result = (SDL_GetWindowFlags(window_ptr) & SDL_WINDOW_FULLSCREEN) != 0 ? 1 : 0;
+  b32 result = (SDL_GetWindowFlags(window_ptr) & SDL_WINDOW_FULLSCREEN) != 0 ? true : false;
   profile_func_end;
   return result;
 }
@@ -246,12 +242,12 @@ func b32 window_minimize(window id) {
   SDL_Window* window_ptr = window_resolve(id);
   if (window_ptr == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   SDL_MinimizeWindow(window_ptr);
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 window_maximize(window id) {
@@ -259,12 +255,12 @@ func b32 window_maximize(window id) {
   SDL_Window* window_ptr = window_resolve(id);
   if (window_ptr == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   SDL_MaximizeWindow(window_ptr);
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 window_restore(window id) {
@@ -272,12 +268,12 @@ func b32 window_restore(window id) {
   SDL_Window* window_ptr = window_resolve(id);
   if (window_ptr == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   SDL_RestoreWindow(window_ptr);
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 window_focus(window id) {
@@ -285,12 +281,12 @@ func b32 window_focus(window id) {
   SDL_Window* window_ptr = window_resolve(id);
   if (window_ptr == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   SDL_RaiseWindow(window_ptr);
   profile_func_end;
-  return 1;
+  return true;
 }
 
 // =========================================================================
@@ -314,12 +310,12 @@ func b32 window_set_title(window id, cstr8 title) {
   SDL_Window* window_ptr = window_resolve(id);
   if (window_ptr == NULL || title == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   SDL_SetWindowTitle(window_ptr, title);
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 window_get_monitor_id(window id, monitor* out_monitor_id) {
@@ -333,13 +329,13 @@ func b32 window_get_monitor_id(window id, monitor* out_monitor_id) {
 
   if (window_ptr == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   native_monitor_id = SDL_GetDisplayForWindow(window_ptr);
   if (native_monitor_id == 0) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   if (out_monitor_id) {
@@ -347,5 +343,5 @@ func b32 window_get_monitor_id(window id, monitor* out_monitor_id) {
   }
 
   profile_func_end;
-  return 1;
+  return true;
 }

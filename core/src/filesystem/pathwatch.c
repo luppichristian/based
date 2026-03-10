@@ -43,20 +43,16 @@ func pathwatch_watch_binding* pathwatch_watch_bindings(void) {
 }
 
 func pathwatch_id pathwatch_next_id(void) {
-  profile_func_begin;
   local_persist pathwatch_id next_id = 1;
   pathwatch_id value = next_id;
   next_id += 1;
-  profile_func_end;
   return value;
 }
 
 func pathwatch_watch_id pathwatch_next_watch_id(void) {
-  profile_func_begin;
   local_persist pathwatch_watch_id next_id = 1;
   pathwatch_watch_id value = next_id;
   next_id += 1;
-  profile_func_end;
   return value;
 }
 
@@ -85,11 +81,11 @@ func b32 pathwatch_bind_create(pathwatch_id pathwatch_id, void* native_handle) {
       bindings[item_idx].started = 0;
       bindings[item_idx].paused = 0;
       profile_func_end;
-      return 1;
+      return true;
     }
   }
   profile_func_end;
-  return 0;
+  return false;
 }
 
 func void pathwatch_bind_remove(void* native_handle) {
@@ -314,7 +310,7 @@ func pathwatch pathwatch_create(b32 use_generic_mode) {
   profile_func_begin;
   pathwatch watcher = {0};
   watcher.id = pathwatch_next_id();
-  watcher.native_handle = efsw_create(use_generic_mode ? 1 : 0);
+  watcher.native_handle = efsw_create(use_generic_mode ? true : false);
 
   if (watcher.native_handle == NULL || !pathwatch_bind_create(watcher.id, watcher.native_handle)) {
     if (watcher.native_handle != NULL) {
@@ -383,7 +379,7 @@ func b32 pathwatch_start(pathwatch* watcher) {
   profile_func_begin;
   if (watcher == NULL || watcher->native_handle == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(watcher->id > 0);
 
@@ -394,14 +390,14 @@ func b32 pathwatch_start(pathwatch* watcher) {
     binding->paused = 0;
   }
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 pathwatch_stop(pathwatch* watcher) {
   profile_func_begin;
   if (watcher == NULL || watcher->native_handle == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   pathwatch_watch_bind_remove_all_for_watcher(watcher->id, watcher->native_handle);
@@ -411,43 +407,43 @@ func b32 pathwatch_stop(pathwatch* watcher) {
     binding->paused = 0;
   }
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 pathwatch_pause(pathwatch* watcher) {
   profile_func_begin;
   if (watcher == NULL || watcher->native_handle == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   pathwatch_binding* binding = pathwatch_find_binding(watcher->native_handle);
   if (binding == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   binding->paused = 1;
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 pathwatch_resume(pathwatch* watcher) {
   profile_func_begin;
   if (watcher == NULL || watcher->native_handle == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   pathwatch_binding* binding = pathwatch_find_binding(watcher->native_handle);
   if (binding == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   binding->paused = 0;
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func i32 pathwatch_drain(void) {
@@ -462,7 +458,7 @@ func pathwatch_watch_id pathwatch_add(pathwatch* watcher, const path* src, b32 r
   profile_func_begin;
   if (watcher == NULL || watcher->native_handle == NULL || src == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(src->buf[0] != '\0');
 
@@ -470,14 +466,14 @@ func pathwatch_watch_id pathwatch_add(pathwatch* watcher, const path* src, b32 r
       (efsw_watcher)watcher->native_handle,
       src->buf,
       pathwatch_dispatch,
-      recursive ? 1 : 0,
+      recursive ? true : false,
       NULL,
       0,
       watcher,
       pathwatch_dispatch_missed);
   if (native_watch_id <= 0) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   pathwatch_watch_id watch_id = pathwatch_watch_bind_create(
@@ -496,80 +492,78 @@ func b32 pathwatch_remove(pathwatch* watcher, pathwatch_watch_id watch_id) {
   profile_func_begin;
   if (watcher == NULL || watcher->native_handle == NULL || watch_id <= 0) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   pathwatch_watch_binding* binding = pathwatch_find_watch_binding_by_public_id(watch_id);
   if (binding == NULL || binding->pathwatch_id != watcher->id ||
       binding->native_handle != watcher->native_handle) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   efsw_removewatch_byid((efsw_watcher)watcher->native_handle, (efsw_watchid)binding->native_watch_id);
   pathwatch_watch_bind_remove(watch_id);
   thread_log_trace("pathwatch_remove: watcher=%lld watch=%lld", (long long)watcher->id, (long long)watch_id);
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 pathwatch_remove_path(pathwatch* watcher, const path* src) {
   profile_func_begin;
   if (watcher == NULL || watcher->native_handle == NULL || src == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   efsw_removewatch((efsw_watcher)watcher->native_handle, src->buf);
   pathwatch_watch_bind_remove_by_path(watcher->id, watcher->native_handle, src);
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 pathwatch_get_path(pathwatch_watch_id watch_id, path* out_watch_path) {
   profile_func_begin;
   if (watch_id <= 0 || out_watch_path == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   pathwatch_watch_binding* binding = pathwatch_find_watch_binding_by_public_id(watch_id);
   if (binding == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   *out_watch_path = binding->watch_path;
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 pathwatch_follow_symlinks(pathwatch* watcher, b32 enabled) {
   profile_func_begin;
   if (watcher == NULL || watcher->native_handle == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
-  efsw_follow_symlinks((efsw_watcher)watcher->native_handle, enabled ? 1 : 0);
+  efsw_follow_symlinks((efsw_watcher)watcher->native_handle, enabled ? true : false);
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 pathwatch_allow_out_of_scope_links(pathwatch* watcher, b32 enabled) {
   profile_func_begin;
   if (watcher == NULL || watcher->native_handle == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
-  efsw_allow_outofscopelinks((efsw_watcher)watcher->native_handle, enabled ? 1 : 0);
+  efsw_allow_outofscopelinks((efsw_watcher)watcher->native_handle, enabled ? true : false);
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func cstr8 pathwatch_get_last_error(void) {
-  profile_func_begin;
-  profile_func_end;
   return efsw_getlasterror();
 }

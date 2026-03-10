@@ -48,7 +48,7 @@ func str8 str8_from_cstr(c8* ptr, sz cap, cstr8 src) {
 func b32 str8_is_empty(str8 str) {
   profile_func_begin;
   profile_func_end;
-  return str.size == 0 ? 1 : 0;
+  return str.size == 0 ? true : false;
 }
 
 func i32 str8_cmp(str8 lhs, str8 rhs) {
@@ -163,7 +163,7 @@ func b32 str8_format(str8* str, cstr8 fmt, ...) {
   profile_func_begin;
   if (str == NULL || str->ptr == NULL || fmt == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(fmt != NULL);
   va_list args;
@@ -281,7 +281,7 @@ func b32 str8_split_next(cstr8_tokenizer* tok, str8* out_token) {
   profile_func_begin;
   if (tok == NULL || out_token == NULL || out_token->ptr == NULL || out_token->cap == 0) {
     profile_func_end;
-    return 0;
+    return false;
   }
   b32 result = cstr8_tokenizer_next(tok, out_token->ptr, out_token->cap);
   out_token->size = cstr8_len(out_token->ptr);
@@ -293,11 +293,11 @@ func b32 str8_join(str8* dst, cstr8 const* parts, sz part_count, cstr8 delim) {
   profile_func_begin;
   if (dst == NULL || dst->ptr == NULL || dst->cap == 0) {
     profile_func_end;
-    return 0;
+    return false;
   }
   dst->size = cstr8_join(dst->ptr, dst->cap, parts, part_count, delim);
   profile_func_end;
-  return 1;
+  return true;
 }
 
 // =========================================================================
@@ -338,7 +338,7 @@ func str16 str16_from_cstr(c16* ptr, sz cap, cstr16 src) {
 func b32 str16_is_empty(str16 str) {
   profile_func_begin;
   profile_func_end;
-  return str.size == 0 ? 1 : 0;
+  return str.size == 0 ? true : false;
 }
 
 func i32 str16_cmp(str16 lhs, str16 rhs) {
@@ -557,7 +557,7 @@ func str32 str32_from_cstr(c32* ptr, sz cap, cstr32 src) {
 func b32 str32_is_empty(str32 str) {
   profile_func_begin;
   profile_func_end;
-  return str.size == 0 ? 1 : 0;
+  return str.size == 0 ? true : false;
 }
 
 func i32 str32_cmp(str32 lhs, str32 rhs) {

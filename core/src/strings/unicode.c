@@ -14,10 +14,10 @@ func b32 unicode_is_valid(c32 codepoint) {
   // Surrogates (U+D800..U+DFFF) and values above U+10FFFF are not scalar values.
   if (codepoint >= 0xD800U && codepoint <= 0xDFFFU) {
     profile_func_end;
-    return 0;
+    return false;
   }
   profile_func_end;
-  return codepoint <= 0x10FFFFU ? 1 : 0;
+  return codepoint <= 0x10FFFFU ? true : false;
 }
 
 // =========================================================================

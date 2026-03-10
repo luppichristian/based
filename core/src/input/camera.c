@@ -38,8 +38,6 @@ func camera_state_entry* camera_find_state(SDL_CameraID camera_id, b32 create_if
 }
 
 func b32 camera_id_is_valid(camera src) {
-  profile_func_begin;
-  profile_func_end;
   return src != NULL;
 }
 
@@ -56,7 +54,6 @@ func up camera_to_native_id(camera src) {
 }
 
 func sz camera_get_count(void) {
-  profile_func_begin;
   int count = 0;
   SDL_CameraID* ids = SDL_GetCameras(&count);
 
@@ -64,7 +61,6 @@ func sz camera_get_count(void) {
     SDL_free(ids);
   }
 
-  profile_func_end;
   return count > 0 ? (sz)count : 0;
 }
 
@@ -91,34 +87,26 @@ func b32 camera_get_id(sz idx, camera* out_id) {
 }
 
 func cstr8 camera_get_name(camera id) {
-  profile_func_begin;
   if (!camera_id_is_valid(id)) {
-    profile_func_end;
-    return NULL;
+      return NULL;
   }
 
-  profile_func_end;
   return SDL_GetCameraName((SDL_CameraID)camera_to_native_id(id));
 }
 
 func camera_position camera_get_position(camera id) {
-  profile_func_begin;
   if (!camera_id_is_valid(id)) {
-    profile_func_end;
-    return CAMERA_POSITION_UNKNOWN;
+      return CAMERA_POSITION_UNKNOWN;
   }
 
   switch (SDL_GetCameraPosition((SDL_CameraID)camera_to_native_id(id))) {
     case SDL_CAMERA_POSITION_FRONT_FACING:
-      profile_func_end;
-      return CAMERA_POSITION_FRONT_FACING;
+          return CAMERA_POSITION_FRONT_FACING;
     case SDL_CAMERA_POSITION_BACK_FACING:
-      profile_func_end;
-      return CAMERA_POSITION_BACK_FACING;
+          return CAMERA_POSITION_BACK_FACING;
     case SDL_CAMERA_POSITION_UNKNOWN:
     default:
-      profile_func_end;
-      return CAMERA_POSITION_UNKNOWN;
+          return CAMERA_POSITION_UNKNOWN;
   }
 }
 
@@ -126,64 +114,64 @@ func b32 camera_open(camera id) {
   profile_func_begin;
   if (!camera_id_is_valid(id)) {
     profile_func_end;
-    return 0;
+    return false;
   }
   camera_state_entry* state = camera_find_state((SDL_CameraID)camera_to_native_id(id), 1);
   if (state == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   state->is_open = 1;
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 camera_close(camera id) {
   profile_func_begin;
   if (!camera_id_is_valid(id)) {
     profile_func_end;
-    return 0;
+    return false;
   }
   camera_state_entry* state = camera_find_state((SDL_CameraID)camera_to_native_id(id), 0);
   if (state == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   *state = (camera_state_entry) {0};
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 camera_start(camera id) {
   profile_func_begin;
   if (!camera_id_is_valid(id)) {
     profile_func_end;
-    return 0;
+    return false;
   }
   camera_state_entry* state = camera_find_state((SDL_CameraID)camera_to_native_id(id), 1);
   if (state == NULL || !state->is_open) {
     profile_func_end;
-    return 0;
+    return false;
   }
   state->is_started = 1;
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 camera_stop(camera id) {
   profile_func_begin;
   if (!camera_id_is_valid(id)) {
     profile_func_end;
-    return 0;
+    return false;
   }
   camera_state_entry* state = camera_find_state((SDL_CameraID)camera_to_native_id(id), 0);
   if (state == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   state->is_started = 0;
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 camera_read(camera id, buffer* out_frame) {
@@ -193,13 +181,13 @@ func b32 camera_read(camera id, buffer* out_frame) {
   }
   if (!camera_id_is_valid(id) || out_frame == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   camera_state_entry* state = camera_find_state((SDL_CameraID)camera_to_native_id(id), 0);
   if (state == NULL || !state->is_open || !state->is_started) {
     profile_func_end;
-    return 0;
+    return false;
   }
   profile_func_end;
-  return 0;
+  return false;
 }

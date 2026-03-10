@@ -17,8 +17,6 @@ global_var u32 mouse_pressed_seen_epoch[INPUT_CAPTURE_MAX_KEYS][MOUSE_BUTTON_TRA
 global_var u32 mouse_released_seen_epoch[INPUT_CAPTURE_MAX_KEYS][MOUSE_BUTTON_TRACK_CAP] = {0};
 
 func b32 mouse_button_is_valid(u8 button) {
-  profile_func_begin;
-  profile_func_end;
   return button > 0 && button < MOUSE_BUTTON_TRACK_CAP;
 }
 
@@ -43,41 +41,31 @@ func mouse_state mouse_make_state(SDL_MouseButtonFlags buttons, f32 xpos, f32 yp
 }
 
 func b32 mouse_is_available(void) {
-  profile_func_begin;
-  profile_func_end;
-  return SDL_HasMouse() ? 1 : 0;
+  return SDL_HasMouse() ? true : false;
 }
 
 func b32 mouse_get_primary_device_id(device_id* out_id) {
-  profile_func_begin;
-  profile_func_end;
   return devices_get_device(DEVICE_TYPE_MOUSE, 0, out_id);
 }
 
 func mouse_state mouse_get_state(input_key key) {
-  profile_func_begin;
   (void)key;
   f32 xpos = 0.0f;
   f32 ypos = 0.0f;
-  profile_func_end;
   return mouse_make_state(SDL_GetMouseState(&xpos, &ypos), xpos, ypos);
 }
 
 func mouse_state mouse_get_global_state(input_key key) {
-  profile_func_begin;
   (void)key;
   f32 xpos = 0.0f;
   f32 ypos = 0.0f;
-  profile_func_end;
   return mouse_make_state(SDL_GetGlobalMouseState(&xpos, &ypos), xpos, ypos);
 }
 
 func mouse_state mouse_get_relative_state(input_key key) {
-  profile_func_begin;
   (void)key;
   f32 xpos = 0.0f;
   f32 ypos = 0.0f;
-  profile_func_end;
   return mouse_make_state(SDL_GetRelativeMouseState(&xpos, &ypos), xpos, ypos);
 }
 
@@ -86,26 +74,26 @@ func b32 mouse_is_button_down(input_key key, u8 button) {
   u32 mask = mouse_get_state(key).button_mask;
   if (!mouse_button_is_valid(button)) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(mouse_button_is_valid(button));
 
   profile_func_end;
-  return (mask & (1u << (button - 1))) != 0 ? 1 : 0;
+  return (mask & (1u << (button - 1))) != 0 ? true : false;
 }
 
 func b32 mouse_is_button_pressed(input_key key, u8 button) {
   profile_func_begin;
   if (!mouse_button_is_valid(button)) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(mouse_button_is_valid(button));
 
   sz slot_idx = input_capture_get_slot(key);
   if (slot_idx >= INPUT_CAPTURE_MAX_KEYS) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   u32 slot_epoch = input_capture_get_slot_epoch(slot_idx);
@@ -113,32 +101,32 @@ func b32 mouse_is_button_pressed(input_key key, u8 button) {
     mouse_pressed_seen_epoch[slot_idx][button] = slot_epoch;
     mouse_pressed_seen[slot_idx][button] = mouse_pressed_generation[button];
     profile_func_end;
-    return 0;
+    return false;
   }
 
   u32 generation = mouse_pressed_generation[button];
   if (generation == 0 || mouse_pressed_seen[slot_idx][button] == generation) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   mouse_pressed_seen[slot_idx][button] = generation;
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 mouse_is_button_released(input_key key, u8 button) {
   profile_func_begin;
   if (!mouse_button_is_valid(button)) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(mouse_button_is_valid(button));
 
   sz slot_idx = input_capture_get_slot(key);
   if (slot_idx >= INPUT_CAPTURE_MAX_KEYS) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   u32 slot_epoch = input_capture_get_slot_epoch(slot_idx);
@@ -146,31 +134,29 @@ func b32 mouse_is_button_released(input_key key, u8 button) {
     mouse_released_seen_epoch[slot_idx][button] = slot_epoch;
     mouse_released_seen[slot_idx][button] = mouse_released_generation[button];
     profile_func_end;
-    return 0;
+    return false;
   }
 
   u32 generation = mouse_released_generation[button];
   if (generation == 0 || mouse_released_seen[slot_idx][button] == generation) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   mouse_released_seen[slot_idx][button] = generation;
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 mouse_set_cursor_visible(b32 visible) {
   profile_func_begin;
   b32 result = visible != 0 ? (b32)SDL_ShowCursor() : (b32)SDL_HideCursor();
   profile_func_end;
-  return result != 0 ? 1 : 0;
+  return result != 0 ? true : false;
 }
 
 func b32 mouse_is_cursor_visible(void) {
-  profile_func_begin;
   b32 result = SDL_CursorVisible();
-  profile_func_end;
   return result;
 }
 
@@ -186,11 +172,11 @@ func b32 mouse_is_captured(void) {
   SDL_Window* focus_window = SDL_GetMouseFocus();
   if (focus_window == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   SDL_WindowFlags window_flags = SDL_GetWindowFlags(focus_window);
-  b32 result = (window_flags & SDL_WINDOW_MOUSE_CAPTURE) != 0 ? 1 : 0;
+  b32 result = (window_flags & SDL_WINDOW_MOUSE_CAPTURE) != 0 ? true : false;
   profile_func_end;
   return result;
 }
@@ -200,10 +186,10 @@ func b32 mouse_set_relative_mode(b32 enabled) {
   SDL_Window* focus_window = SDL_GetMouseFocus();
   if (focus_window == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
-  b32 result = SDL_SetWindowRelativeMouseMode(focus_window, enabled != 0) ? 1 : 0;
+  b32 result = SDL_SetWindowRelativeMouseMode(focus_window, enabled != 0) ? true : false;
   profile_func_end;
   return result;
 }
@@ -213,10 +199,10 @@ func b32 mouse_is_relative_mode(void) {
   SDL_Window* focus_window = SDL_GetMouseFocus();
   if (focus_window == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
-  b32 result = SDL_GetWindowRelativeMouseMode(focus_window) ? 1 : 0;
+  b32 result = SDL_GetWindowRelativeMouseMode(focus_window) ? true : false;
   profile_func_end;
   return result;
 }

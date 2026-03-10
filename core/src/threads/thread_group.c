@@ -165,14 +165,10 @@ func void _thread_group_destroy(thread_group* group, callsite site) {
 }
 
 func b32 thread_group_is_valid(thread_group* group) {
-  profile_func_begin;
-  profile_func_end;
   return group && group->threads != NULL;
 }
 
 func u32 thread_group_get_count(thread_group* group) {
-  profile_func_begin;
-  profile_func_end;
   return group ? group->count : 0;
 }
 
@@ -190,11 +186,11 @@ func b32 thread_group_join_all(thread_group* group, i32* out_exit_codes) {
   profile_func_begin;
   if (!group || !group->threads) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(group->count > 0);
 
-  b32 success = 1;
+  b32 success = true;
   for (u32 idx = 0; idx < group->count; idx += 1) {
     i32 exit_code = 0;
     if (!thread_join(group->threads[idx], &exit_code)) {

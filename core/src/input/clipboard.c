@@ -20,20 +20,18 @@ func void clipboard_clear_output(c8* out_text, sz out_capacity) {
 }
 
 func b32 clipboard_has_text(void) {
-  profile_func_begin;
-  profile_func_end;
-  return SDL_HasClipboardText() ? 1 : 0;
+  return SDL_HasClipboardText() ? true : false;
 }
 
 func b32 clipboard_set_text(cstr8 src) {
   profile_func_begin;
   if (!src) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(src != NULL);
 
-  b32 success = SDL_SetClipboardText(src) ? 1 : 0;
+  b32 success = SDL_SetClipboardText(src) ? true : false;
   if (!success) {
     thread_log_warn("clipboard_set_text: failed");
   }
@@ -44,11 +42,11 @@ func b32 clipboard_set_text(cstr8 src) {
 func b32 clipboard_get_text(c8* out_text, sz out_capacity) {
   profile_func_begin;
   c8* source_text = NULL;
-  b32 result = 0;
+  b32 result = false;
 
   if (!out_text || !out_capacity) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(out_text != NULL);
 
@@ -57,7 +55,7 @@ func b32 clipboard_get_text(c8* out_text, sz out_capacity) {
   source_text = SDL_GetClipboardText();
   if (!source_text) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   cstr8_copy(out_text, out_capacity, source_text);
@@ -69,7 +67,5 @@ func b32 clipboard_get_text(c8* out_text, sz out_capacity) {
 }
 
 func b32 clipboard_clear(void) {
-  profile_func_begin;
-  profile_func_end;
-  return SDL_ClearClipboardData() ? 1 : 0;
+  return SDL_ClearClipboardData() ? true : false;
 }

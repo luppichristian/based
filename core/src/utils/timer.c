@@ -42,24 +42,24 @@ func b32 timer_consume(f32* timer, f32 rate) {
   profile_func_begin;
   if (timer == NULL || rate <= 0.0f || *timer < rate) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(timer != NULL);
 
   *timer -= rate;
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 timer_consume_once(f32* timer, f32 rate) {
   profile_func_begin;
   if (timer == NULL || rate <= 0.0f || *timer < rate) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(timer != NULL);
 
   timer_clear(timer);
   profile_func_end;
-  return 1;
+  return true;
 }

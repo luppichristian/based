@@ -97,14 +97,14 @@ func b32 buffer_cmp(buffer aaa, buffer bbb) {
   profile_func_begin;
   if (aaa.size != bbb.size) {
     profile_func_end;
-    return 0;
+    return false;
   }
   if (aaa.size == 0) {
     profile_func_end;
-    return 1;
+    return true;
   }
   profile_func_end;
-  return memcmp(aaa.ptr, bbb.ptr, aaa.size) == 0 ? 1 : 0;
+  return memcmp(aaa.ptr, bbb.ptr, aaa.size) == 0 ? true : false;
 }
 
 func b32 buffer_cmp_common(buffer aaa, buffer bbb) {
@@ -112,10 +112,10 @@ func b32 buffer_cmp_common(buffer aaa, buffer bbb) {
   sz common_size = aaa.size < bbb.size ? aaa.size : bbb.size;
   if (common_size == 0) {
     profile_func_end;
-    return 1;
+    return true;
   }
   profile_func_end;
-  return memcmp(aaa.ptr, bbb.ptr, common_size) == 0 ? 1 : 0;
+  return memcmp(aaa.ptr, bbb.ptr, common_size) == 0 ? true : false;
 }
 
 func void* buffer_get_ptr(buffer buff, sz offset) {

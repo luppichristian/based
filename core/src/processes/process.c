@@ -11,8 +11,6 @@
 
 // Returns true if options matches process_options_default().
 func b32 process_options_is_default(process_options options) {
-  profile_func_begin;
-  profile_func_end;
   return !options.pipe_stdin && !options.pipe_stdout && !options.pipe_stderr &&
          !options.stderr_to_stdout && !options.background && options.cwd == NULL &&
          options.envp == NULL && options.timeout_ms == 0;
@@ -105,25 +103,19 @@ func process _process_create_with(cstr8 const* args, process_options options, ca
 }
 
 func b32 process_is_valid(process prc) {
-  profile_func_begin;
-  profile_func_end;
   return prc != NULL;
 }
 
 func u64 process_get_id(process prc) {
-  profile_func_begin;
   if (!prc) {
-    profile_func_end;
-    return 0;
+      return 0;
   }
 
   SDL_PropertiesID props = SDL_GetProcessProperties((SDL_Process*)prc);
   if (!props) {
-    profile_func_end;
-    return 0;
+      return 0;
   }
 
-  profile_func_end;
   return (u64)SDL_GetNumberProperty(props, SDL_PROP_PROCESS_PID_NUMBER, 0);
 }
 
@@ -163,7 +155,7 @@ func b32 process_wait(process prc, b32 block, i32* out_exit_code) {
   profile_func_begin;
   if (!prc) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(block == 0 || block == 1);
 
@@ -185,7 +177,7 @@ func b32 process_wait_timeout(process prc, i32 timeout_ms, i32* out_exit_code) {
   profile_func_begin;
   if (!prc || timeout_ms < 0) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   u64 start_ticks = SDL_GetTicks();
@@ -193,7 +185,7 @@ func b32 process_wait_timeout(process prc, i32 timeout_ms, i32* out_exit_code) {
   while (!process_wait(prc, 0, &exit_code)) {
     if ((i32)(SDL_GetTicks() - start_ticks) >= timeout_ms) {
       profile_func_end;
-      return 0;
+      return false;
     }
     SDL_Delay(1);
   }
@@ -202,14 +194,14 @@ func b32 process_wait_timeout(process prc, i32 timeout_ms, i32* out_exit_code) {
     *out_exit_code = exit_code;
   }
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 process_kill(process prc, b32 force) {
   profile_func_begin;
   if (!prc) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(force == 0 || force == 1);
 

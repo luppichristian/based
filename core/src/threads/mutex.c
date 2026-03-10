@@ -33,7 +33,7 @@ func b32 _mutex_destroy(mutex mtx, callsite site) {
   (void)site;
   if (!mtx) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   msg lifecycle_msg = {0};
@@ -47,12 +47,10 @@ func b32 _mutex_destroy(mutex mtx, callsite site) {
   thread_log_trace("mutex_destroy: handle=%p", mtx);
   SDL_DestroyMutex((SDL_Mutex*)mtx);
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 mutex_is_valid(mutex mtx) {
-  profile_func_begin;
-  profile_func_end;
   return mtx != NULL;
 }
 
@@ -71,7 +69,7 @@ func b32 mutex_trylock(mutex mtx) {
   profile_func_begin;
   if (mtx == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(mtx != NULL);
   profile_func_end;
@@ -82,20 +80,20 @@ func b32 mutex_timed_lock(mutex mtx, i32 timeout_ms) {
   profile_func_begin;
   if (mtx == NULL || timeout_ms < 0) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   u64 start_ticks = SDL_GetTicks();
   while (!mutex_trylock(mtx)) {
     if ((i32)(SDL_GetTicks() - start_ticks) >= timeout_ms) {
       profile_func_end;
-      return 0;
+      return false;
     }
     SDL_Delay(1);
   }
 
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func void mutex_unlock(mutex mtx) {

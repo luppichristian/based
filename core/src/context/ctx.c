@@ -19,7 +19,7 @@ func b32 ctx_init(ctx* context, allocator main_allocator, mutex allocator_mutex,
     return false;
   }
   assert(main_allocator.dealloc_fn != NULL);
-  assert(use_log_mutex == 0 || use_log_mutex == 1);
+  assert(use_log_mutex == false || use_log_mutex == true);
 
   memset(context, 0, size_of(*context));
   context->main_allocator = main_allocator;
@@ -35,7 +35,7 @@ func b32 ctx_init(ctx* context, allocator main_allocator, mutex allocator_mutex,
   context->perm_heap = heap_create(main_allocator, allocator_mutex, CTX_DEFAULT_BLOCK_SIZE);
   context->temp_heap = heap_create(main_allocator, allocator_mutex, CTX_DEFAULT_BLOCK_SIZE);
   context->is_init = true;
-  thread_log_trace("ctx_init: context=%p use_log_mutex=%u", (void*)context, (u32)use_log_mutex);
+  thread_log_trace("Context initialized context=%p use_log_mutex=%u", (void*)context, (u32)use_log_mutex);
   profile_func_end;
   return true;
 }
@@ -52,59 +52,43 @@ func void ctx_quit(ctx* context) {
   heap_destroy(&context->perm_heap);
   arena_destroy(&context->temp_arena);
   arena_destroy(&context->perm_arena);
-  thread_log_trace("ctx_quit: context=%p", (void*)context);
+  thread_log_trace("Context released context=%p", (void*)context);
   memset(context, 0, size_of(*context));
   profile_func_end;
 }
 
 func b32 ctx_is_init(ctx* context) {
-  profile_func_begin;
-  profile_func_end;
   return context != NULL && context->is_init;
 }
 
 func allocator ctx_get_allocator(ctx* context) {
-  profile_func_begin;
   allocator alloc = {0};
   if (!ctx_is_init(context)) {
-    profile_func_end;
     return alloc;
   }
-  profile_func_end;
   return heap_get_allocator(&context->perm_heap);
 }
 
 func log_state* ctx_get_log_state(ctx* context) {
-  profile_func_begin;
   if (!ctx_is_init(context)) {
-    profile_func_end;
     return NULL;
   }
-  profile_func_end;
   return &context->log;
 }
 
 func arena* ctx_get_perm_arena(ctx* context) {
-  profile_func_begin;
-  profile_func_end;
   return ctx_is_init(context) ? &context->perm_arena : NULL;
 }
 
 func arena* ctx_get_temp_arena(ctx* context) {
-  profile_func_begin;
-  profile_func_end;
   return ctx_is_init(context) ? &context->temp_arena : NULL;
 }
 
 func heap* ctx_get_perm_heap(ctx* context) {
-  profile_func_begin;
-  profile_func_end;
   return ctx_is_init(context) ? &context->perm_heap : NULL;
 }
 
 func heap* ctx_get_temp_heap(ctx* context) {
-  profile_func_begin;
-  profile_func_end;
   return ctx_is_init(context) ? &context->temp_heap : NULL;
 }
 

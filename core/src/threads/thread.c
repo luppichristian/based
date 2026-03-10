@@ -134,8 +134,6 @@ func thread _thread_create_named(
 }
 
 func b32 thread_is_valid(thread thd) {
-  profile_func_begin;
-  profile_func_end;
   return thd != NULL;
 }
 
@@ -143,7 +141,7 @@ func b32 thread_join(thread thd, i32* out_exit_code) {
   profile_func_begin;
   if (!thd) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(thread_is_valid(thd));
   msg lifecycle_msg = {0};
@@ -157,7 +155,7 @@ func b32 thread_join(thread thd, i32* out_exit_code) {
   SDL_WaitThread((SDL_Thread*)thd, (int*)out_exit_code);
   thread_log_trace("thread_join: thread=%p", thd);
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func void thread_detach(thread thd) {
@@ -180,13 +178,9 @@ func void thread_detach(thread thd) {
 }
 
 func u64 thread_get_id(thread thd) {
-  profile_func_begin;
-  profile_func_end;
   return (u64)SDL_GetThreadID((SDL_Thread*)thd);
 }
 
 func cstr8 thread_get_name(thread thd) {
-  profile_func_begin;
-  profile_func_end;
   return SDL_GetThreadName((SDL_Thread*)thd);
 }

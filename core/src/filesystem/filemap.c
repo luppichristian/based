@@ -37,11 +37,9 @@ func void filemap_set_error(filemap_error error_code) {
 }
 
 func filemap filemap_empty(void) {
-  profile_func_begin;
   filemap map;
   memset(&map, 0, size_of(map));
   map.source_path = path_from_cstr("");
-  profile_func_end;
   return map;
 }
 
@@ -60,22 +58,20 @@ func b32 filemap_is_open(const filemap* map) {
   profile_func_begin;
   if (map == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   if (map->native_file != NULL) {
     profile_func_end;
-    return 1;
+    return true;
   }
 
   profile_func_end;
-  return map->uses_fallback_copy && map->source_path.buf[0] != '\0' ? 1 : 0;
+  return map->uses_fallback_copy && map->source_path.buf[0] != '\0' ? true : false;
 }
 
 func b32 filemap_is_writable(const filemap* map) {
-  profile_func_begin;
   b32 result = map != NULL && map->writable != 0;
-  profile_func_end;
   return result;
 }
 
@@ -88,9 +84,7 @@ func void filemap_mark_dirty(filemap* map) {
 }
 
 func filemap_error filemap_get_last_error(void) {
-  profile_func_begin;
   filemap_error result = filemap_last_error;
-  profile_func_end;
   return result;
 }
 
@@ -99,19 +93,19 @@ func b32 filemap_flush(filemap* map) {
   if (!filemap_is_open(map)) {
     filemap_set_error(FILEMAP_ERROR_INVALID_ARGUMENT);
     profile_func_end;
-    return 0;
+    return false;
   }
 
   if (!map->writable) {
     filemap_set_error(FILEMAP_ERROR_NONE);
     profile_func_end;
-    return 1;
+    return true;
   }
 
   if (!map->dirty) {
     filemap_set_error(FILEMAP_ERROR_NONE);
     profile_func_end;
-    return 1;
+    return true;
   }
   assert(map->source_path.buf[0] != '\0');
 
@@ -120,45 +114,45 @@ func b32 filemap_flush(filemap* map) {
     if (!file_write_all(&map->source_path, data)) {
       filemap_set_error(FILEMAP_ERROR_IO_FAILED);
       profile_func_end;
-      return 0;
+      return false;
     }
     map->dirty = 0;
     filemap_set_error(FILEMAP_ERROR_NONE);
     profile_func_end;
-    return 1;
+    return true;
   }
 
 #if defined(PLATFORM_WINDOWS)
   if (map->data_ptr != NULL && map->data_size > 0 && !FlushViewOfFile(map->data_ptr, (SIZE_T)map->data_size)) {
     filemap_set_error(FILEMAP_ERROR_IO_FAILED);
     profile_func_end;
-    return 0;
+    return false;
   }
 
   if (map->native_file != NULL && !FlushFileBuffers((HANDLE)map->native_file)) {
     filemap_set_error(FILEMAP_ERROR_IO_FAILED);
     profile_func_end;
-    return 0;
+    return false;
   }
   map->dirty = 0;
   filemap_set_error(FILEMAP_ERROR_NONE);
   profile_func_end;
-  return 1;
+  return true;
 #elif defined(PLATFORM_UNIX)
   if (map->data_ptr != NULL && map->data_size > 0) {
     if (msync(map->data_ptr, map->data_size, MS_SYNC) != 0) {
       filemap_set_error(FILEMAP_ERROR_IO_FAILED);
       profile_func_end;
-      return 0;
+      return false;
     }
   }
   map->dirty = 0;
   filemap_set_error(FILEMAP_ERROR_NONE);
   profile_func_end;
-  return 1;
+  return true;
 #else
   profile_func_end;
-  return 1;
+  return true;
 #endif
 }
 

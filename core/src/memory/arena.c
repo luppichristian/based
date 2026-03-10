@@ -171,13 +171,11 @@ func void arena_destroy(arena* arn) {
 }
 
 func allocator arena_get_allocator(arena* arn) {
-  profile_func_begin;
   allocator alloc;
   alloc.user_data = arn;
   alloc.alloc_fn = arena_alloc_callback;
   alloc.dealloc_fn = arena_dealloc_callback;
   alloc.realloc_fn = arena_realloc_callback;
-  profile_func_end;
   return alloc;
 }
 
@@ -210,13 +208,13 @@ func b32 arena_remove_block(arena* arn, void* ptr) {
   profile_func_begin;
   if (arn == NULL || ptr == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   if (arn->opt_mutex) {
     mutex_lock(arn->opt_mutex);
   }
 
-  b32 found = 0;
+  b32 found = false;
   arena_block* prev = NULL;
   arena_block* blk = arn->blocks_head;
 
@@ -300,7 +298,7 @@ func void* _arena_realloc(
     return _arena_alloc(arn, new_size, align, site);
   }
 
-  b32 done = 0;
+  b32 done = false;
   void* result = ptr;
 
   if (arn->opt_mutex) {
@@ -370,10 +368,8 @@ func void arena_clear(arena* arn) {
 }
 
 func sz arena_block_count(arena* arn) {
-  profile_func_begin;
   if (arn == NULL) {
-    profile_func_end;
-    return 0;
+      return 0;
   }
   if (arn->opt_mutex) {
     mutex_lock(arn->opt_mutex);
@@ -385,15 +381,12 @@ func sz arena_block_count(arena* arn) {
   if (arn->opt_mutex) {
     mutex_unlock(arn->opt_mutex);
   }
-  profile_func_end;
   return count;
 }
 
 func sz arena_total_size(arena* arn) {
-  profile_func_begin;
   if (arn == NULL) {
-    profile_func_end;
-    return 0;
+      return 0;
   }
   if (arn->opt_mutex) {
     mutex_lock(arn->opt_mutex);
@@ -405,15 +398,12 @@ func sz arena_total_size(arena* arn) {
   if (arn->opt_mutex) {
     mutex_unlock(arn->opt_mutex);
   }
-  profile_func_end;
   return total;
 }
 
 func sz arena_total_used(arena* arn) {
-  profile_func_begin;
   if (arn == NULL) {
-    profile_func_end;
-    return 0;
+      return 0;
   }
   if (arn->opt_mutex) {
     mutex_lock(arn->opt_mutex);
@@ -425,15 +415,12 @@ func sz arena_total_used(arena* arn) {
   if (arn->opt_mutex) {
     mutex_unlock(arn->opt_mutex);
   }
-  profile_func_end;
   return total;
 }
 
 func sz arena_total_free(arena* arn) {
-  profile_func_begin;
   if (arn == NULL) {
-    profile_func_end;
-    return 0;
+      return 0;
   }
   if (arn->opt_mutex) {
     mutex_lock(arn->opt_mutex);
@@ -447,6 +434,5 @@ func sz arena_total_free(arena* arn) {
   if (arn->opt_mutex) {
     mutex_unlock(arn->opt_mutex);
   }
-  profile_func_end;
   return total;
 }

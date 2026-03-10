@@ -59,13 +59,13 @@ func b32 heap_free_list_remove(heap* hep, heap_chunk* chunk) {
       }
       cur->next_free = NULL;
       profile_func_end;
-      return 1;
+      return true;
     }
     prev = cur;
     cur = cur->next_free;
   }
   profile_func_end;
-  return 0;
+  return false;
 }
 
 // Initializes a block header and carves its remaining space into a single free chunk.
@@ -278,13 +278,11 @@ func void heap_destroy(heap* hep) {
 }
 
 func allocator heap_get_allocator(heap* hep) {
-  profile_func_begin;
   allocator alloc;
   alloc.user_data = hep;
   alloc.alloc_fn = heap_alloc_callback;
   alloc.dealloc_fn = heap_dealloc_callback;
   alloc.realloc_fn = heap_realloc_callback;
-  profile_func_end;
   return alloc;
 }
 
@@ -316,13 +314,13 @@ func b32 heap_remove_block(heap* hep, void* ptr) {
   profile_func_begin;
   if (hep == NULL || ptr == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   if (hep->opt_mutex) {
     mutex_lock(hep->opt_mutex);
   }
 
-  b32 found = 0;
+  b32 found = false;
   heap_block* prev = NULL;
   heap_block* blk = hep->blocks_head;
 
@@ -528,10 +526,8 @@ func void heap_clear(heap* hep) {
 }
 
 func sz heap_block_count(heap* hep) {
-  profile_func_begin;
   if (hep == NULL) {
-    profile_func_end;
-    return 0;
+      return 0;
   }
   if (hep->opt_mutex) {
     mutex_lock(hep->opt_mutex);
@@ -543,15 +539,12 @@ func sz heap_block_count(heap* hep) {
   if (hep->opt_mutex) {
     mutex_unlock(hep->opt_mutex);
   }
-  profile_func_end;
   return count;
 }
 
 func sz heap_total_size(heap* hep) {
-  profile_func_begin;
   if (hep == NULL) {
-    profile_func_end;
-    return 0;
+      return 0;
   }
   if (hep->opt_mutex) {
     mutex_lock(hep->opt_mutex);
@@ -563,7 +556,6 @@ func sz heap_total_size(heap* hep) {
   if (hep->opt_mutex) {
     mutex_unlock(hep->opt_mutex);
   }
-  profile_func_end;
   return total;
 }
 

@@ -14,14 +14,10 @@ typedef struct sort_range {
 } sort_range;
 
 func void* sort_elem_ptr(u8* base_ptr, sz idx, sz elem_size) {
-  profile_func_begin;
-  profile_func_end;
   return base_ptr + (idx * elem_size);
 }
 
 func const void* sort_elem_ptr_const(const u8* base_ptr, sz idx, sz elem_size) {
-  profile_func_begin;
-  profile_func_end;
   return base_ptr + (idx * elem_size);
 }
 
@@ -51,19 +47,19 @@ func b32 sort_is_invalid_input(
   profile_func_begin;
   if (elem_count < 2) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   if (!ptr || !compare || !elem_size) {
     profile_func_end;
-    return 1;
+    return true;
   }
   assert(ptr != NULL);
   assert(compare != NULL);
   assert(elem_size > 0);
 
   profile_func_end;
-  return 0;
+  return false;
 }
 
 func sz sort_partition(
@@ -281,12 +277,12 @@ func b32 sort_check(
   profile_func_begin;
   if (elem_count < 2) {
     profile_func_end;
-    return 1;
+    return true;
   }
 
   if (!ptr || !compare || !elem_size) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(ptr != NULL);
   assert(compare != NULL);
@@ -297,12 +293,12 @@ func b32 sort_check(
     const void* rhs_ptr = sort_elem_ptr_const(base_ptr, idx, elem_size);
     if (compare(lhs_ptr, rhs_ptr, user_data) > 0) {
       profile_func_end;
-      return 0;
+      return false;
     }
   }
 
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func sz sort_bubble(
@@ -324,7 +320,7 @@ func sz sort_bubble(
 
   u8* base_ptr = (u8*)ptr;
   for (sz out_idx = elem_count; out_idx > 1; --out_idx) {
-    b32 swapped = 0;
+    b32 swapped = false;
     for (sz idx = 1; idx < out_idx; ++idx) {
       void* lhs_ptr = sort_elem_ptr(base_ptr, idx - 1, elem_size);
       void* rhs_ptr = sort_elem_ptr(base_ptr, idx, elem_size);

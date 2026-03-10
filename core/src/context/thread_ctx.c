@@ -15,76 +15,53 @@
 thread_local global_var ctx thread_ctx = {0};
 
 func ctx* thread_ctx_get(void) {
-  profile_func_begin;
   if (!thread_ctx.is_init) {
-    profile_func_end;
     return NULL;
   }
-  profile_func_end;
   return &thread_ctx;
 }
 
 func b32 thread_ctx_is_init(void) {
-  profile_func_begin;
-  profile_func_end;
   return thread_ctx.is_init;
 }
 
 func allocator thread_get_allocator(void) {
-  profile_func_begin;
   ctx* context = thread_ctx_get();
   if (context == NULL) {
-    profile_func_end;
     return global_get_allocator();
   }
-  profile_func_end;
   return ctx_get_allocator(context);
 }
 
 func log_state* thread_get_log_state(void) {
-  profile_func_begin;
   log_state* state = ctx_get_log_state(thread_ctx_get());
   if (!state) {
-    profile_func_end;
     return global_get_log_state();
   }
-  profile_func_end;
   return state;
 }
 
 func arena* thread_get_perm_arena(void) {
-  profile_func_begin;
-  profile_func_end;
   return ctx_get_perm_arena(thread_ctx_get());
 }
 
 func arena* thread_get_temp_arena(void) {
-  profile_func_begin;
-  profile_func_end;
   return ctx_get_temp_arena(thread_ctx_get());
 }
 
 func heap* thread_get_perm_heap(void) {
-  profile_func_begin;
-  profile_func_end;
   return ctx_get_perm_heap(thread_ctx_get());
 }
 
 func heap* thread_get_temp_heap(void) {
-  profile_func_begin;
-  profile_func_end;
   return ctx_get_temp_heap(thread_ctx_get());
 }
 
 func void* thread_get_user_data(ctx_user_data_idx idx) {
-  profile_func_begin;
-  profile_func_end;
   return ctx_get_user_data(thread_ctx_get(), idx);
 }
 
 func b32 thread_set_user_data(ctx_user_data_idx idx, void* user_data) {
-  profile_func_begin;
-  profile_func_end;
   return ctx_set_user_data(thread_ctx_get(), idx, user_data);
 }
 
@@ -120,8 +97,6 @@ func void thread_log_begin_frame(void) {
 }
 
 func log_frame* thread_log_end_frame(u32 severity_mask) {
-  profile_func_begin;
-  profile_func_end;
   return log_state_end_frame(thread_get_log_state(), severity_mask);
 }
 
@@ -150,7 +125,7 @@ func b32 thread_ctx_init(allocator main_allocator) {
     return false;
   }
 
-  thread_log_trace("thread_ctx_init: thread_id=%llu", (unsigned long long)thread_id());
+  thread_log_trace("Thread context initialized thread_id=%llu", (unsigned long long)thread_id());
   profile_func_end;
   return true;
 }
@@ -172,7 +147,7 @@ func void thread_ctx_quit(void) {
   msg_core_fill_thread_ctx(&thread_ctx_msg, &thread_ctx_data);
   (void)msg_post(&thread_ctx_msg);
 
-  thread_log_trace("thread_ctx_quit: thread_id=%llu", (unsigned long long)thread_id());
+  thread_log_trace("Thread context released thread_id=%llu", (unsigned long long)thread_id());
   ctx_quit(&thread_ctx);
   profile_func_end;
 }

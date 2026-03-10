@@ -8,18 +8,14 @@
 #include "basic/profiler.h"
 
 func b32 endian_is_little(void) {
-  profile_func_begin;
   u16 value = 1;
   const u8* bytes = (const u8*)&value;
   assert(bytes != NULL);
-  profile_func_end;
-  return bytes[0] == 1U ? 1 : 0;
+  return bytes[0] == 1U ? true : false;
 }
 
 func b32 endian_is_big(void) {
-  profile_func_begin;
-  profile_func_end;
-  return endian_is_little() ? 0 : 1;
+  return endian_is_little() ? false : true;
 }
 
 func u16 endian_le16_to_native(u16 value) {

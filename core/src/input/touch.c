@@ -7,13 +7,10 @@
 #include "basic/profiler.h"
 
 func b32 touch_is_available(void) {
-  profile_func_begin;
-  profile_func_end;
   return touch_get_count() > 0;
 }
 
 func sz touch_get_count(void) {
-  profile_func_begin;
   int count = 0;
   SDL_TouchID* ids = SDL_GetTouchDevices(&count);
 
@@ -21,7 +18,6 @@ func sz touch_get_count(void) {
     SDL_free(ids);
   }
 
-  profile_func_end;
   return count > 0 ? (sz)count : 0;
 }
 
@@ -49,24 +45,19 @@ func b32 touch_get_device_id(sz idx, device_id* out_id) {
 }
 
 func touch_device_kind touch_get_device_kind(device_id id) {
-  profile_func_begin;
   if (id.type != DEVICE_TYPE_TOUCH) {
-    profile_func_end;
-    return TOUCH_DEVICE_INVALID;
+      return TOUCH_DEVICE_INVALID;
   }
 
-  profile_func_end;
   return (touch_device_kind)SDL_GetTouchDeviceType((SDL_TouchID)id.instance);
 }
 
 func sz touch_get_finger_count(device_id id) {
-  profile_func_begin;
   int count = 0;
   SDL_Finger** fingers = NULL;
 
   if (id.type != DEVICE_TYPE_TOUCH) {
-    profile_func_end;
-    return 0;
+      return 0;
   }
 
   fingers = SDL_GetTouchFingers((SDL_TouchID)id.instance, &count);
@@ -74,7 +65,6 @@ func sz touch_get_finger_count(device_id id) {
     SDL_free(fingers);
   }
 
-  profile_func_end;
   return count > 0 ? (sz)count : 0;
 }
 
@@ -82,7 +72,7 @@ func b32 touch_get_finger(device_id id, sz idx, touch_finger_state* out_finger) 
   profile_func_begin;
   int count = 0;
   SDL_Finger** fingers = NULL;
-  b32 found = 0;
+  b32 found = false;
 
   if (out_finger) {
     *out_finger = (touch_finger_state) {0};
@@ -90,7 +80,7 @@ func b32 touch_get_finger(device_id id, sz idx, touch_finger_state* out_finger) 
 
   if (id.type != DEVICE_TYPE_TOUCH || !out_finger) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(out_finger != NULL);
 

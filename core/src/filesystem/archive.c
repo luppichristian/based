@@ -94,11 +94,9 @@ func path archive_normalize_entry_path(const path* src) {
 }
 
 func b32 archive_path_equals(const path* lhs, const path* rhs) {
-  profile_func_begin;
   path lhs_norm = archive_normalize_entry_path(lhs);
   path rhs_norm = archive_normalize_entry_path(rhs);
-  profile_func_end;
-  return cstr8_cmp(lhs_norm.buf, rhs_norm.buf) == 0 ? 1 : 0;
+  return cstr8_cmp(lhs_norm.buf, rhs_norm.buf) == 0 ? true : false;
 }
 
 func sz archive_find_idx(const archive* arc, const path* src) {
@@ -127,13 +125,13 @@ func b32 archive_reserve(archive* arc, sz min_capacity) {
   sz new_capacity = 0;
   if (arc == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(arc->entry_count <= arc->entry_capacity);
 
   if (arc->entry_capacity >= min_capacity) {
     profile_func_end;
-    return 1;
+    return true;
   }
 
   new_capacity = arc->entry_capacity == 0 ? 8 : arc->entry_capacity;
@@ -152,13 +150,13 @@ func b32 archive_reserve(archive* arc, sz min_capacity) {
       new_capacity * size_of(archive_entry));
   if (new_entries == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   arc->entries = new_entries;
   arc->entry_capacity = new_capacity;
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func void archive_reset_entry(archive* arc, archive_entry* ent) {
@@ -179,7 +177,7 @@ func b32 archive_assign_entry_bytes(archive* arc, archive_entry* ent, buffer dat
   void* data_ptr = NULL;
   if (arc == NULL || ent == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(arc->entry_count <= arc->entry_capacity);
 
@@ -190,11 +188,11 @@ func b32 archive_assign_entry_bytes(archive* arc, archive_entry* ent, buffer dat
 
   if (data.size == 0) {
     profile_func_end;
-    return 1;
+    return true;
   }
   if (data.ptr == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(arc != NULL);
   assert(ent != NULL);
@@ -202,7 +200,7 @@ func b32 archive_assign_entry_bytes(archive* arc, archive_entry* ent, buffer dat
   data_ptr = archive_alloc_bytes(arc->opt_alloc, data.size);
   if (data_ptr == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   memcpy(data_ptr, data.ptr, data.size);
@@ -210,7 +208,7 @@ func b32 archive_assign_entry_bytes(archive* arc, archive_entry* ent, buffer dat
   ent->data_size = data.size;
   ent->data_capacity = data.size;
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 archive_add_empty_entry(archive* arc, const path* src, b32 is_directory, sz* out_idx) {
@@ -220,7 +218,7 @@ func b32 archive_add_empty_entry(archive* arc, const path* src, b32 is_directory
 
   if (arc == NULL || src == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(is_directory == 0 || is_directory == 1);
   item_idx = archive_find_idx(arc, src);
@@ -239,12 +237,12 @@ func b32 archive_add_empty_entry(archive* arc, const path* src, b32 is_directory
       *out_idx = item_idx;
     }
     profile_func_end;
-    return 1;
+    return true;
   }
 
   if (!archive_reserve(arc, arc->entry_count + 1)) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   ent = &arc->entries[arc->entry_count];
@@ -256,7 +254,7 @@ func b32 archive_add_empty_entry(archive* arc, const path* src, b32 is_directory
   }
   arc->entry_count += 1;
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 archive_read_disk_bytes(const path* src, allocator* alloc, void** out_ptr, sz* out_size) {
@@ -265,11 +263,11 @@ func b32 archive_read_disk_bytes(const path* src, allocator* alloc, void** out_p
 
   if (src == NULL || alloc == NULL || out_ptr == NULL || out_size == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   if (alloc->alloc_fn == NULL || alloc->dealloc_fn == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(src->buf[0] != '\0');
 
@@ -277,12 +275,12 @@ func b32 archive_read_disk_bytes(const path* src, allocator* alloc, void** out_p
   *out_size = 0;
   if (!file_read_all(src, alloc, &file_data)) {
     profile_func_end;
-    return 0;
+    return false;
   }
   *out_ptr = file_data.ptr;
   *out_size = file_data.size;
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 archive_write_disk_bytes(const path* dst, const void* data_ptr, sz data_size) {
@@ -290,7 +288,7 @@ func b32 archive_write_disk_bytes(const path* dst, const void* data_ptr, sz data
   buffer write_data = {0};
   if (dst == NULL || (data_size > 0 && data_ptr == NULL)) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(dst->buf[0] != '\0');
 
@@ -369,20 +367,15 @@ func void archive_destroy(archive* arc) {
 }
 
 func sz archive_count(const archive* arc) {
-  profile_func_begin;
   if (arc == NULL) {
-    profile_func_end;
-    return 0;
+      return 0;
   }
 
-  profile_func_end;
   return arc->entry_count;
 }
 
 func b32 archive_exists(const archive* arc, const path* src) {
-  profile_func_begin;
-  profile_func_end;
-  return archive_find_idx(arc, src) != SZ_MAX ? 1 : 0;
+  return archive_find_idx(arc, src) != SZ_MAX ? true : false;
 }
 
 func b32 archive_write_all(archive* arc, const path* src, buffer data) {
@@ -392,13 +385,13 @@ func b32 archive_write_all(archive* arc, const path* src, buffer data) {
 
   if (arc == NULL || src == NULL || (data.size > 0 && data.ptr == NULL)) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(arc->entry_count <= arc->entry_capacity);
 
   if (!archive_add_empty_entry(arc, src, 0, &item_idx)) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   ent = &arc->entries[item_idx];
@@ -413,7 +406,7 @@ func b32 archive_remove(archive* arc, const path* src) {
 
   if (arc == NULL || item_idx == SZ_MAX) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   archive_reset_entry(arc, &arc->entries[item_idx]);
@@ -425,7 +418,7 @@ func b32 archive_remove(archive* arc, const path* src) {
   }
   arc->entry_count -= 1;
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 archive_read_all(const archive* arc, const path* src, allocator* alloc, buffer* out_data) {
@@ -436,11 +429,11 @@ func b32 archive_read_all(const archive* arc, const path* src, allocator* alloc,
 
   if (arc == NULL || alloc == NULL || out_data == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   if (alloc->alloc_fn == NULL || alloc->dealloc_fn == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(arc->entry_count <= arc->entry_capacity);
 
@@ -450,20 +443,20 @@ func b32 archive_read_all(const archive* arc, const path* src, allocator* alloc,
   item_idx = archive_find_idx(arc, src);
   if (item_idx == SZ_MAX) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   ent = &arc->entries[item_idx];
   if (ent->is_directory) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   if (ent->data_size > 0) {
     data_ptr = allocator_alloc(*alloc, ent->data_size);
     if (data_ptr == NULL) {
       profile_func_end;
-      return 0;
+      return false;
     }
     memcpy(data_ptr, ent->data_ptr, ent->data_size);
   }
@@ -471,7 +464,7 @@ func b32 archive_read_all(const archive* arc, const path* src, allocator* alloc,
   out_data->ptr = data_ptr;
   out_data->size = ent->data_size;
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 archive_add_file(archive* arc, const path* archive_path, const path* disk_path) {
@@ -479,18 +472,18 @@ func b32 archive_add_file(archive* arc, const path* archive_path, const path* di
   allocator data_alloc = {0};
   void* data_ptr = NULL;
   sz data_size = 0;
-  b32 result = 0;
+  b32 result = false;
   buffer data = {0};
 
   if (arc == NULL || archive_path == NULL || disk_path == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   data_alloc = archive_allocator_resolve(arc->opt_alloc);
   if (!archive_read_disk_bytes(disk_path, &data_alloc, &data_ptr, &data_size)) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(data_size == 0 || data_ptr != NULL);
 
@@ -509,7 +502,7 @@ func b32 archive_iterate(const archive* arc, archive_iterate_callback* callback,
 
   if (arc == NULL || callback == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   for (item_idx = 0; item_idx < arc->entry_count; item_idx += 1) {
@@ -518,55 +511,55 @@ func b32 archive_iterate(const archive* arc, archive_iterate_callback* callback,
     info.is_directory = arc->entries[item_idx].is_directory;
     if (!callback(&info, user_data)) {
       profile_func_end;
-      return 0;
+      return false;
     }
   }
 
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 archive_get_entry_info(const archive* arc, const path* src, archive_entry_info* out_info) {
   profile_func_begin;
   if (arc == NULL || src == NULL || out_info == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   sz item_idx = archive_find_idx(arc, src);
   if (item_idx == SZ_MAX) {
     profile_func_end;
-    return 0;
+    return false;
   }
   archive_entry const* ent = &arc->entries[item_idx];
   out_info->item_path = ent->item_path;
   out_info->data_size = ent->data_size;
   out_info->is_directory = ent->is_directory;
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 archive_get_entry_data(const archive* arc, const path* src, buffer* out_data) {
   profile_func_begin;
   if (arc == NULL || src == NULL || out_data == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   out_data->ptr = NULL;
   out_data->size = 0;
   sz item_idx = archive_find_idx(arc, src);
   if (item_idx == SZ_MAX) {
     profile_func_end;
-    return 0;
+    return false;
   }
   archive_entry const* ent = &arc->entries[item_idx];
   if (ent->is_directory) {
     profile_func_end;
-    return 0;
+    return false;
   }
   out_data->ptr = ent->data_ptr;
   out_data->size = ent->data_size;
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 archive_load_file(archive* arc, const path* src) {
@@ -581,11 +574,11 @@ func b32 archive_load_file(archive* arc, const path* src) {
 
   if (arc == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   if (src == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(arc->entry_count <= arc->entry_capacity);
   thread_log_trace("archive_load_file: arc=%p src=%s", (void*)arc, src->buf);
@@ -595,7 +588,7 @@ func b32 archive_load_file(archive* arc, const path* src) {
 
   if (!archive_read_disk_bytes(src, &zip_alloc, &zip_ptr, &zip_size)) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(zip_size == 0 || zip_ptr != NULL);
 
@@ -603,7 +596,7 @@ func b32 archive_load_file(archive* arc, const path* src) {
   if (!mz_zip_reader_init_mem(&zip_archive, zip_ptr, (size_t)zip_size, 0)) {
     archive_dealloc_bytes(arc->opt_alloc, zip_ptr, zip_size);
     profile_func_end;
-    return 0;
+    return false;
   }
 
   file_count = mz_zip_reader_get_num_files(&zip_archive);
@@ -617,7 +610,7 @@ func b32 archive_load_file(archive* arc, const path* src) {
       archive_dealloc_bytes(arc->opt_alloc, zip_ptr, zip_size);
       archive_clear(arc);
       profile_func_end;
-      return 0;
+      return false;
     }
 
     item_path = path_from_cstr(file_stat.m_filename);
@@ -629,7 +622,7 @@ func b32 archive_load_file(archive* arc, const path* src) {
         archive_dealloc_bytes(arc->opt_alloc, zip_ptr, zip_size);
         archive_clear(arc);
         profile_func_end;
-        return 0;
+        return false;
       }
       continue;
     }
@@ -639,7 +632,7 @@ func b32 archive_load_file(archive* arc, const path* src) {
       archive_dealloc_bytes(arc->opt_alloc, zip_ptr, zip_size);
       archive_clear(arc);
       profile_func_end;
-      return 0;
+      return false;
     }
 
     if (file_stat.m_uncomp_size > 0) {
@@ -652,7 +645,7 @@ func b32 archive_load_file(archive* arc, const path* src) {
         archive_dealloc_bytes(arc->opt_alloc, zip_ptr, zip_size);
         archive_clear(arc);
         profile_func_end;
-        return 0;
+        return false;
       }
 
       data.ptr = item_ptr;
@@ -663,7 +656,7 @@ func b32 archive_load_file(archive* arc, const path* src) {
         archive_dealloc_bytes(arc->opt_alloc, zip_ptr, zip_size);
         archive_clear(arc);
         profile_func_end;
-        return 0;
+        return false;
       }
 
       mz_free(item_ptr);
@@ -673,12 +666,12 @@ func b32 archive_load_file(archive* arc, const path* src) {
   mz_zip_reader_end(&zip_archive);
   archive_dealloc_bytes(arc->opt_alloc, zip_ptr, zip_size);
   profile_func_end;
-  return 1;
+  return true;
 #else
   (void)arc;
   (void)src;
   profile_func_end;
-  return 0;
+  return false;
 #endif
 }
 
@@ -692,7 +685,7 @@ func b32 archive_save_file(const archive* arc, const path* dst) {
 
   if (arc == NULL || dst == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(arc->entry_count <= arc->entry_capacity);
   thread_log_trace("archive_save_file: arc=%p dst=%s entries=%zu", (void*)arc, dst->buf, (size_t)arc->entry_count);
@@ -700,7 +693,7 @@ func b32 archive_save_file(const archive* arc, const path* dst) {
   memset(&zip_archive, 0, size_of(zip_archive));
   if (!mz_zip_writer_init_heap(&zip_archive, 0, 0)) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   for (item_idx = 0; item_idx < arc->entry_count; item_idx += 1) {
@@ -721,14 +714,14 @@ func b32 archive_save_file(const archive* arc, const path* dst) {
             MZ_DEFAULT_COMPRESSION)) {
       mz_zip_writer_end(&zip_archive);
       profile_func_end;
-      return 0;
+      return false;
     }
   }
 
   if (!mz_zip_writer_finalize_heap_archive(&zip_archive, &zip_ptr, &zip_size)) {
     mz_zip_writer_end(&zip_archive);
     profile_func_end;
-    return 0;
+    return false;
   }
 
   mz_zip_writer_end(&zip_archive);
@@ -736,16 +729,16 @@ func b32 archive_save_file(const archive* arc, const path* dst) {
   if (!archive_write_disk_bytes(dst, zip_ptr, (sz)zip_size)) {
     mz_free(zip_ptr);
     profile_func_end;
-    return 0;
+    return false;
   }
 
   mz_free(zip_ptr);
   profile_func_end;
-  return 1;
+  return true;
 #else
   (void)arc;
   (void)dst;
   profile_func_end;
-  return 0;
+  return false;
 #endif
 }

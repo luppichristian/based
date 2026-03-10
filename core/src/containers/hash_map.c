@@ -35,13 +35,13 @@ func b32 hash_map_raw_insert(
     if (!slot->occupied) {
       *slot = incoming;
       profile_func_end;
-      return 1;
+      return true;
     }
 
     if (slot->key == incoming.key) {
       slot->value = incoming.value;
       profile_func_end;
-      return 0;
+      return false;
     }
 
     // Robin Hood: steal the slot from the luckier resident.
@@ -64,14 +64,14 @@ func b32 hash_map_rehash(hash_map* map, sz new_cap) {
   profile_func_begin;
   if (map == NULL || new_cap < 2) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(map != NULL);
   hash_map_slot* new_slots =
       (hash_map_slot*)allocator_calloc(map->alloc, new_cap, size_of(hash_map_slot));
   if (!new_slots) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   for (sz idx = 0; idx < map->cap; idx++) {
@@ -87,14 +87,14 @@ func b32 hash_map_rehash(hash_map* map, sz new_cap) {
   map->slots = new_slots;
   map->cap = new_cap;
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func b32 hash_map_reserve(hash_map* map, sz min_cap) {
   profile_func_begin;
   if (map == NULL) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   sz target_cap = map->cap > 0 ? map->cap : 16;
@@ -104,7 +104,7 @@ func b32 hash_map_reserve(hash_map* map, sz min_cap) {
 
   if (target_cap <= map->cap) {
     profile_func_end;
-    return 1;
+    return true;
   }
 
   b32 result = hash_map_rehash(map, target_cap);
@@ -199,33 +199,24 @@ func void hash_map_clear(hash_map* map) {
 // =========================================================================
 
 func sz hash_map_count(hash_map const* map) {
-  profile_func_begin;
   if (map == NULL) {
-    profile_func_end;
-    return 0;
+      return 0;
   }
-  profile_func_end;
   return map->count;
 }
 
 func sz hash_map_capacity(hash_map const* map) {
-  profile_func_begin;
   if (map == NULL) {
-    profile_func_end;
-    return 0;
+      return 0;
   }
-  profile_func_end;
   return map->cap;
 }
 
 func f32 hash_map_load_factor(hash_map const* map) {
-  profile_func_begin;
   if (map == NULL || map->cap == 0) {
-    profile_func_end;
-    return 0.0F;
+      return 0.0F;
   }
   f32 result = (f32)map->count / (f32)map->cap;
-  profile_func_end;
   return result;
 }
 
@@ -237,7 +228,7 @@ func b32 hash_map_set(hash_map* map, u64 key, void* value) {
   profile_func_begin;
   if (map == NULL || !map->slots) {
     profile_func_end;
-    return 0;
+    return false;
   }
   assert(map->cap > 0);
 
@@ -245,7 +236,7 @@ func b32 hash_map_set(hash_map* map, u64 key, void* value) {
   if (map->count >= map->cap - (map->cap / 4)) {
     if (!hash_map_reserve(map, map->cap * 2)) {
       profile_func_end;
-      return 0;
+      return false;
     }
   }
 
@@ -254,7 +245,7 @@ func b32 hash_map_set(hash_map* map, u64 key, void* value) {
     map->count++;
   }
   profile_func_end;
-  return 1;
+  return true;
 }
 
 func void* hash_map_get(hash_map* map, u64 key) {
@@ -269,12 +260,9 @@ func void* hash_map_get(hash_map* map, u64 key) {
 }
 
 func b32 hash_map_has(hash_map* map, u64 key) {
-  profile_func_begin;
   if (map == NULL || !map->slots || map->count == 0) {
-    profile_func_end;
-    return 0;
+      return false;
   }
-  profile_func_end;
   return hash_map_find_slot(map, key) != NULL;
 }
 
@@ -282,7 +270,7 @@ func b32 hash_map_remove(hash_map* map, u64 key) {
   profile_func_begin;
   if (map == NULL || !map->slots || map->count == 0) {
     profile_func_end;
-    return 0;
+    return false;
   }
 
   sz pos = (sz)(hash_u64(key) & (u64)(map->cap - 1));
@@ -292,7 +280,7 @@ func b32 hash_map_remove(hash_map* map, u64 key) {
     hash_map_slot* slot = &map->slots[pos];
     if (!slot->occupied || slot->probe_dist < dist) {
       profile_func_end;
-      return 0;
+      return false;
     }
     if (slot->key == key) {
       // Backward-shift deletion: pull subsequent entries one step closer to
@@ -312,7 +300,7 @@ func b32 hash_map_remove(hash_map* map, u64 key) {
       }
       map->count--;
       profile_func_end;
-      return 1;
+      return true;
     }
     pos = (pos + 1) & (map->cap - 1);
     dist++;
