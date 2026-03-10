@@ -3,73 +3,28 @@
 
 #include "utils/log_state.h"
 #include "basic/assert.h"
-#include "context/global_ctx.h"
-#include "context/thread_ctx.h"
+#include "containers/singly_list.h"
+#include "containers/stack_list.h"
 #include "input/msg.h"
 #include "input/msg_core.h"
-#include "threads/atomics.h"
 #include "basic/profiler.h"
 
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
 
-global_var mutex log_emit_mutex = NULL;
-global_var atomic_i32 log_emit_mutex_init = {0};
-
 // =========================================================================
 // Internal helpers
 // =========================================================================
 
-func mutex log_shared_mutex_get(atomic_i32* init_state, mutex* out_mutex) {
-  profile_func_begin;
-  if (atomic_i32_get(init_state) == 2) {
-    profile_func_end;
-    return *out_mutex;
-  }
-
-  i32 expected = 0;
-  if (atomic_i32_cmpex(init_state, &expected, 1)) {
-    *out_mutex = mutex_create();
-    atomic_fence_release();
-    atomic_i32_set(init_state, 2);
-    profile_func_end;
-    return *out_mutex;
-  }
-
-  while (atomic_i32_get(init_state) != 2) {
-    atomic_pause();
-  }
-  atomic_fence_acquire();
-  profile_func_end;
-  return *out_mutex;
-}
-
 func log_state* log_state_resolve(log_state* state) {
-  profile_func_begin;
-  profile_func_end;
   return (state && state->is_init) ? state : NULL;
 }
 
-func allocator log_allocator_resolve(void) {
-  profile_func_begin;
-  allocator alloc = {0};
-  alloc = global_get_main_allocator();
-  if (alloc.alloc_fn != NULL && alloc.dealloc_fn != NULL) {
-    profile_func_end;
-    return alloc;
+func void log_frame_reset(log_frame* frame) {
+  if (frame) {
+    memset(frame, 0, size_of(*frame));
   }
-
-  ctx* context = thread_ctx_get();
-  if (context != NULL &&
-      context->main_allocator.alloc_fn != NULL &&
-      context->main_allocator.dealloc_fn != NULL) {
-    profile_func_end;
-    return context->main_allocator;
-  }
-
-  profile_func_end;
-  return thread_get_allocator();
 }
 
 func void log_state_lock(log_state* state) {
@@ -88,85 +43,36 @@ func void log_state_unlock(log_state* state) {
   profile_func_end;
 }
 
-func void log_state_lock_pair(log_state* first, log_state* second) {
+func log_frame* log_frame_create(log_state* state) {
   profile_func_begin;
-  if (!first && !second) {
-    profile_func_end;
-    return;
-  }
-
-  if (first == second) {
-    log_state_lock(first);
-    profile_func_end;
-    return;
-  }
-
-  if ((up)first < (up)second) {
-    log_state_lock(first);
-    log_state_lock(second);
-  } else {
-    log_state_lock(second);
-    log_state_lock(first);
-  }
-  profile_func_end;
-}
-
-func void log_state_unlock_pair(log_state* first, log_state* second) {
-  profile_func_begin;
-  if (!first && !second) {
-    profile_func_end;
-    return;
-  }
-
-  if (first == second) {
-    log_state_unlock(first);
-    profile_func_end;
-    return;
-  }
-
-  if ((up)first < (up)second) {
-    log_state_unlock(second);
-    log_state_unlock(first);
-  } else {
-    log_state_unlock(first);
-    log_state_unlock(second);
-  }
-  profile_func_end;
-}
-
-func log_frame* log_frame_create(void) {
-  profile_func_begin;
-  allocator alloc = log_allocator_resolve();
-  log_frame* frame = (log_frame*)allocator_alloc(alloc, size_of(*frame));
+  log_frame* frame = arena_alloc_type(&state->arena_alloc, log_frame);
   if (!frame) {
     profile_func_end;
     return NULL;
   }
-  assert(alloc.alloc_fn != NULL);
-  memset(frame, 0, size_of(*frame));
+  log_frame_reset(frame);
   profile_func_end;
   return frame;
 }
 
-func log_msg* log_msg_create(log_level level, callsite site, cstr8 text) {
+func log_msg* log_msg_create(log_state* state, log_level level, callsite site, cstr8 text) {
   profile_func_begin;
   sz text_len = 0;
   sz total_size = 0;
-  allocator alloc = log_allocator_resolve();
   if (text == NULL) {
     profile_func_end;
     return NULL;
   }
+
   text_len = cstr8_len(text);
   total_size = size_of(log_msg) + text_len + 1;
-  log_msg* msg = (log_msg*)allocator_alloc(alloc, total_size);
+  log_msg* msg = arena_alloc(&state->arena_alloc, total_size, align_of(log_msg));
   if (!msg) {
     profile_func_end;
     return NULL;
   }
 
-  assert(msg != NULL);
-  memset(msg, 0, size_of(*msg));
+  msg->next = NULL;
   msg->level = level;
   msg->site = site;
   msg->text = (cstr8)(msg + 1);
@@ -175,72 +81,29 @@ func log_msg* log_msg_create(log_level level, callsite site, cstr8 text) {
   return msg;
 }
 
-func void log_msg_destroy(log_msg* msg) {
-  profile_func_begin;
-  allocator alloc = log_allocator_resolve();
-  sz text_len = 0;
-  if (msg == NULL) {
-    profile_func_end;
-    return;
-  }
-  assert(msg->text != NULL);
-  text_len = cstr8_len(msg->text);
-  allocator_dealloc(alloc, msg, size_of(*msg) + text_len + 1);
-  profile_func_end;
-}
-
-func void log_msg_list_destroy(log_msg* head) {
-  profile_func_begin;
-  while (head) {
-    log_msg* next_msg = head->next;
-    log_msg_destroy(head);
-    head = next_msg;
-  }
-  profile_func_end;
-}
-
-func void log_frame_append_msg_unsafe(log_frame* frame, log_msg* msg) {
+func void log_frame_append_msg(log_frame* frame, log_msg* msg) {
   profile_func_begin;
   if (!frame || !msg) {
     profile_func_end;
     return;
   }
 
-  if (frame->msgs_tail) {
-    frame->msgs_tail->next = msg;
-    frame->msgs_tail = msg;
-  } else {
-    frame->msgs_head = msg;
-    frame->msgs_tail = msg;
-  }
+  SINGLY_LIST_PUSH_BACK(frame->msgs_head, frame->msgs_tail, msg);
   frame->msg_count += 1;
   profile_func_end;
 }
 
-func void log_frame_clear_msgs_unsafe(log_frame* frame) {
+func void log_state_reset_frames(log_state* state) {
   profile_func_begin;
-  if (!frame) {
+  if (!state) {
     profile_func_end;
     return;
   }
 
-  log_msg_list_destroy(frame->msgs_head);
-  frame->msgs_head = NULL;
-  frame->msgs_tail = NULL;
-  frame->msg_count = 0;
-  profile_func_end;
-}
-
-func void log_frame_destroy_unsafe(log_frame* frame) {
-  profile_func_begin;
-  allocator alloc = log_allocator_resolve();
-  if (!frame) {
-    profile_func_end;
-    return;
-  }
-
-  log_frame_clear_msgs_unsafe(frame);
-  allocator_dealloc(alloc, frame, size_of(*frame));
+  arena_clear(&state->arena_alloc);
+  log_frame_reset(&state->root_frame_storage);
+  state->root_frame = &state->root_frame_storage;
+  state->active_frame = NULL;
   profile_func_end;
 }
 
@@ -255,35 +118,20 @@ func void log_state_store_msg(log_state* state, log_level level, callsite site, 
 
   log_state_lock(state);
 
-  log_msg* root_msg = log_msg_create(level, site, msg);
+  log_msg* root_msg = log_msg_create(state, level, site, msg);
   if (root_msg) {
-    log_frame_append_msg_unsafe(state->root_frame, root_msg);
+    log_frame_append_msg(state->root_frame, root_msg);
   }
 
-  for (log_frame* frame = state->active_frame; frame != NULL; frame = frame->prev_active) {
-    log_msg* frame_msg = log_msg_create(level, site, msg);
+  STACK_LIST_FOREACH(state->active_frame, frame) {
+    log_msg* frame_msg = log_msg_create(state, level, site, msg);
     if (!frame_msg) {
       continue;
     }
-    log_frame_append_msg_unsafe(frame, frame_msg);
+    log_frame_append_msg(frame, frame_msg);
   }
 
   log_state_unlock(state);
-  profile_func_end;
-}
-
-func void log_state_clear_frames_unsafe(log_state* state) {
-  profile_func_begin;
-  assert(state != NULL);
-  while (state->active_frame) {
-    log_frame* frame = state->active_frame;
-    state->active_frame = frame->prev_active;
-    log_frame_destroy_unsafe(frame);
-  }
-
-  if (state->root_frame) {
-    log_frame_clear_msgs_unsafe(state->root_frame);
-  }
   profile_func_end;
 }
 
@@ -293,61 +141,32 @@ func b32 log_level_matches_mask(log_level level, u32 severity_mask) {
     profile_func_end;
     return true;
   }
+
+  b32 res = (severity_mask & bit(level)) != 0;
   profile_func_end;
-  return (severity_mask & log_level_mask(level)) != 0;
+  return res;
 }
 
-// Returns the ANSI foreground-color escape sequence for the given log level.
-func cstr8 log_level_to_color(log_level level) {
-  profile_func_begin;
-  switch (level) {
-    case LOG_LEVEL_FATAL:
-      profile_func_end;
-      return "\033[1;31m";  // bold red
-    case LOG_LEVEL_ERROR:
-      profile_func_end;
-      return "\033[0;31m";  // red
-    case LOG_LEVEL_WARN:
-      profile_func_end;
-      return "\033[0;33m";  // yellow
-    case LOG_LEVEL_INFO:
-      profile_func_end;
-      return "\033[0;32m";  // green
-    case LOG_LEVEL_DEBUG:
-      profile_func_end;
-      return "\033[0;36m";  // cyan
-    case LOG_LEVEL_VERBOSE:
-      profile_func_end;
-      return "\033[0;34m";  // blue
-    case LOG_LEVEL_TRACE:
-      profile_func_end;
-      return "\033[0;37m";  // gray
-    case LOG_LEVEL_MAX:
-      profile_func_end;
-      return "\033[0m";
-  }
-  profile_func_end;
-  return "\033[0m";
-}
-
-// Emits a single formatted log line to stderr.
+// Emits a single formatted log line.
 func void log_emit(log_level level, callsite site, cstr8 msg) {
   profile_func_begin;
-  mutex emit_lock = log_shared_mutex_get(&log_emit_mutex_init, &log_emit_mutex);
   assert(level < LOG_LEVEL_MAX);
   assert(msg != NULL);
-  if (emit_lock) {
-    mutex_lock(emit_lock);
-  }
-
-  cstr8 color = log_level_to_color(level);
   cstr8 label = log_level_to_str(level);
-  fprintf(stderr, "%s[%s]\033[0m %s  \033[0;90m(%s() %s:%u)\033[0m\n", color, label, msg, site.function, site.filename, site.line);
-  fflush(stderr);
 
-  if (emit_lock) {
-    mutex_unlock(emit_lock);
+  FILE* out = stdout;
+  switch (level) {
+    case LOG_LEVEL_ERROR:
+    case LOG_LEVEL_FATAL:
+    case LOG_LEVEL_WARN:
+      out = stderr;
+      break;
+    default:
+      break;
   }
+
+  fprintf(out, "[%s] %s (%s() %s:%u)\n", label, msg, site.function, site.filename, site.line);
+  fflush(out);
   profile_func_end;
 }
 
@@ -387,7 +206,7 @@ func cstr8 log_level_to_str(log_level level) {
   return NULL;
 }
 
-func b32 log_state_init(log_state* state, b32 use_mutex) {
+func b32 log_state_init(log_state* state, b32 use_mutex, allocator alloc) {
   profile_func_begin;
   if (!state) {
     profile_func_end;
@@ -397,15 +216,12 @@ func b32 log_state_init(log_state* state, b32 use_mutex) {
 
   memset(state, 0, size_of(*state));
   state->level = LOG_LEVEL_DEFAULT;
-  state->root_frame = log_frame_create();
-  if (!state->root_frame) {
-    profile_func_end;
-    return false;
-  }
+  state->arena_alloc = arena_create(alloc, NULL, LOG_STATE_ARENA_MIN_SIZE);
+  state->root_frame = &state->root_frame_storage;
   if (use_mutex) {
     state->mutex_handle = mutex_create();
     if (!state->mutex_handle) {
-      log_frame_destroy_unsafe(state->root_frame);
+      arena_destroy(&state->arena_alloc);
       state->root_frame = NULL;
       profile_func_end;
       return false;
@@ -442,18 +258,16 @@ func void log_state_quit(log_state* state) {
   msg_core_fill_object_lifecycle(&lifecycle_msg, &lifecycle_data);
   (void)msg_post(&lifecycle_msg);
 
-  mutex state_mutex = state->mutex_handle;
-  log_frame* root_frame = state->root_frame;
-  if (state_mutex) {
-    mutex_lock(state_mutex);
-  }
-  log_state_clear_frames_unsafe(state);
+  log_state_lock(state);
+  arena_destroy(&state->arena_alloc);
+  log_frame_reset(&state->root_frame_storage);
+  state->root_frame = NULL;
+  state->active_frame = NULL;
+  state->is_init = false;
+  log_state_unlock(state);
+
+  mutex_destroy(state->mutex_handle);
   memset(state, 0, size_of(*state));
-  if (state_mutex) {
-    mutex_unlock(state_mutex);
-    mutex_destroy(state_mutex);
-  }
-  log_frame_destroy_unsafe(root_frame);
   profile_func_end;
 }
 
@@ -461,6 +275,21 @@ func b32 log_state_is_init(log_state* state) {
   profile_func_begin;
   profile_func_end;
   return state != NULL && state->is_init;
+}
+
+func b32 log_state_clear(log_state* state) {
+  profile_func_begin;
+  log_state* resolved = log_state_resolve(state);
+  if (!resolved) {
+    profile_func_end;
+    return false;
+  }
+
+  log_state_lock(resolved);
+  log_state_reset_frames(resolved);
+  log_state_unlock(resolved);
+  profile_func_end;
+  return true;
 }
 
 func void log_state_set_level(log_state* state, log_level level) {
@@ -493,22 +322,35 @@ func void log_state_sync(log_state* dst, log_state* src) {
     return;
   }
 
-  log_state_lock_pair(resolved_dst, resolved_src);
+  log_state_lock(resolved_dst);
+  log_state_lock(resolved_src);
   if (resolved_src->root_frame->msgs_head) {
-    if (resolved_dst->root_frame->msgs_tail) {
-      resolved_dst->root_frame->msgs_tail->next = resolved_src->root_frame->msgs_head;
-      resolved_dst->root_frame->msgs_tail = resolved_src->root_frame->msgs_tail;
-    } else {
-      resolved_dst->root_frame->msgs_head = resolved_src->root_frame->msgs_head;
-      resolved_dst->root_frame->msgs_tail = resolved_src->root_frame->msgs_tail;
+    b32 copy_ok = true;
+    log_frame copied_frame = {0};
+    SINGLY_LIST_FOREACH(resolved_src->root_frame->msgs_head, resolved_src->root_frame->msgs_tail, src_msg) {
+      log_msg* dst_msg = log_msg_create(resolved_dst, src_msg->level, src_msg->site, src_msg->text);
+      if (!dst_msg) {
+        copy_ok = false;
+        break;
+      }
+      SINGLY_LIST_PUSH_BACK(copied_frame.msgs_head, copied_frame.msgs_tail, dst_msg);
+      copied_frame.msg_count += 1;
     }
-    resolved_dst->root_frame->msg_count += resolved_src->root_frame->msg_count;
 
-    resolved_src->root_frame->msgs_head = NULL;
-    resolved_src->root_frame->msgs_tail = NULL;
-    resolved_src->root_frame->msg_count = 0;
+    if (copy_ok) {
+      if (resolved_dst->root_frame->msgs_tail) {
+        resolved_dst->root_frame->msgs_tail->next = copied_frame.msgs_head;
+      } else {
+        resolved_dst->root_frame->msgs_head = copied_frame.msgs_head;
+      }
+      resolved_dst->root_frame->msgs_tail = copied_frame.msgs_tail;
+      resolved_dst->root_frame->msg_count += copied_frame.msg_count;
+      log_frame_reset(resolved_src->root_frame);
+    }
   }
-  log_state_unlock_pair(resolved_dst, resolved_src);
+  log_state_unlock(resolved_dst);
+  log_state_unlock(resolved_src);
+
   profile_func_end;
 }
 
@@ -521,15 +363,14 @@ func void log_state_begin_frame(log_state* state) {
   }
   assert(resolved->root_frame != NULL);
 
-  log_frame* frame = log_frame_create();
+  log_frame* frame = log_frame_create(state);
   if (!frame) {
     profile_func_end;
     return;
   }
 
   log_state_lock(resolved);
-  frame->prev_active = resolved->active_frame;
-  resolved->active_frame = frame;
+  STACK_LIST_PUSH(resolved->active_frame, frame);
   log_state_unlock(resolved);
   profile_func_end;
 }
@@ -544,40 +385,33 @@ func log_frame* log_state_end_frame(log_state* state, u32 severity_mask) {
   assert(resolved->root_frame != NULL);
 
   log_state_lock(resolved);
-  log_frame* frame = resolved->active_frame;
+  log_frame* frame = NULL;
+  STACK_LIST_POP(resolved->active_frame, frame);
   if (!frame) {
     log_state_unlock(resolved);
     profile_func_end;
     return NULL;
   }
 
-  resolved->active_frame = frame->prev_active;
-  frame->prev_active = NULL;
-
-  log_msg* prev_msg = NULL;
-  log_msg* msg = frame->msgs_head;
-  while (msg) {
-    log_msg* next_msg = msg->next;
+  log_msg* kept_head = NULL;
+  log_msg* kept_tail = NULL;
+  sz kept_count = 0;
+  log_msg* msg = NULL;
+  while (frame->msgs_head) {
+    SINGLY_LIST_POP_FRONT(frame->msgs_head, frame->msgs_tail, msg);
     if (!log_level_matches_mask(msg->level, severity_mask)) {
-      if (prev_msg) {
-        prev_msg->next = next_msg;
-      } else {
-        frame->msgs_head = next_msg;
-      }
-      if (frame->msgs_tail == msg) {
-        frame->msgs_tail = prev_msg;
-      }
-      log_msg_destroy(msg);
-      frame->msg_count -= 1;
-    } else {
-      prev_msg = msg;
+      continue;
     }
-    msg = next_msg;
+
+    SINGLY_LIST_PUSH_BACK(kept_head, kept_tail, msg);
+    kept_count += 1;
   }
+  frame->msgs_head = kept_head;
+  frame->msgs_tail = kept_tail;
+  frame->msg_count = kept_count;
   log_state_unlock(resolved);
 
   if (!frame->msg_count) {
-    log_frame_destroy(frame);
     profile_func_end;
     return NULL;
   }
@@ -585,65 +419,42 @@ func log_frame* log_state_end_frame(log_state* state, u32 severity_mask) {
   return frame;
 }
 
-func void log_frame_destroy(log_frame* frame) {
-  profile_func_begin;
-  if (!frame) {
-    profile_func_end;
-    return;
-  }
-
-  log_frame_destroy_unsafe(frame);
-  profile_func_end;
-}
-
 func b32 log_frame_has_msgs(log_frame* frame) {
-  profile_func_begin;
-  profile_func_end;
   return frame != NULL && frame->msg_count > 0;
 }
 
 func sz log_frame_msg_count(log_frame* frame) {
-  profile_func_begin;
-  profile_func_end;
   return frame ? frame->msg_count : 0;
 }
 
 func log_msg* log_frame_first(log_frame* frame) {
-  profile_func_begin;
-  profile_func_end;
   return frame ? frame->msgs_head : NULL;
 }
 
 func log_msg* log_frame_last(log_frame* frame) {
-  profile_func_begin;
-  profile_func_end;
   return frame ? frame->msgs_tail : NULL;
 }
 
 func log_msg* log_msg_next(log_msg* msg) {
-  profile_func_begin;
-  profile_func_end;
   return msg ? msg->next : NULL;
 }
 
 func log_level log_msg_level(log_msg* msg) {
-  profile_func_begin;
-  profile_func_end;
   return msg ? msg->level : LOG_LEVEL_MAX;
 }
 
 func callsite log_msg_site(log_msg* msg) {
-  profile_func_begin;
   callsite empty_site = {0};
-  profile_func_end;
   return msg ? msg->site : empty_site;
 }
 
 func cstr8 log_msg_text(log_msg* msg) {
-  profile_func_begin;
-  profile_func_end;
   return msg ? msg->text : NULL;
 }
+
+// =========================================================================
+// Log function
+// =========================================================================
 
 func void _log(log_state* state, log_level level, callsite site, cstr8 msg, ...) {
   profile_func_begin;

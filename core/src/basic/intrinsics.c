@@ -4,6 +4,7 @@
 #include "basic/intrinsics.h"
 #include "basic/assert.h"
 #include "basic/profiler.h"
+#include "../sdl3_include.h"
 
 #if defined(COMPILER_MSVC)
 #  include <intrin.h>
@@ -21,8 +22,9 @@ func i32 popcount_u32(u32 val) {
   return (i32)__popcnt(val);
 #elif defined(COMPILER_GCC) || defined(COMPILER_CLANG) || \
     defined(COMPILER_APPLE_CLANG) || defined(COMPILER_INTEL)
+  i32 res = __builtin_popcount(val);
   profile_func_end;
-  return __builtin_popcount(val);
+  return res;
 #else
   i32 cnt = 0;
   while (val) {
@@ -41,8 +43,9 @@ func i32 popcount_u64(u64 val) {
   return (i32)__popcnt64(val);
 #elif defined(COMPILER_GCC) || defined(COMPILER_CLANG) || \
     defined(COMPILER_APPLE_CLANG) || defined(COMPILER_INTEL)
+  i32 res = __builtin_popcountll(val);
   profile_func_end;
-  return __builtin_popcountll(val);
+  return res;
 #else
   i32 cnt = 0;
   while (val) {
@@ -72,8 +75,9 @@ func i32 ctz_u32(u32 val) {
   return (i32)idx;
 #elif defined(COMPILER_GCC) || defined(COMPILER_CLANG) || \
     defined(COMPILER_APPLE_CLANG) || defined(COMPILER_INTEL)
+  i32 res = __builtin_ctz(val);
   profile_func_end;
-  return __builtin_ctz(val);
+  return res;
 #else
   i32 cnt = 0;
   while ((val & 1U) == 0U) {
@@ -99,8 +103,9 @@ func i32 ctz_u64(u64 val) {
   return (i32)idx;
 #elif defined(COMPILER_GCC) || defined(COMPILER_CLANG) || \
     defined(COMPILER_APPLE_CLANG) || defined(COMPILER_INTEL)
+  u32 res = __builtin_ctzll(val);
   profile_func_end;
-  return __builtin_ctzll(val);
+  return res;
 #else
   i32 cnt = 0;
   while ((val & 1ULL) == 0ULL) {
@@ -130,8 +135,9 @@ func i32 clz_u32(u32 val) {
   return 31 - (i32)idx;
 #elif defined(COMPILER_GCC) || defined(COMPILER_CLANG) || \
     defined(COMPILER_APPLE_CLANG) || defined(COMPILER_INTEL)
+  i32 res = __builtin_clz(val);
   profile_func_end;
-  return __builtin_clz(val);
+  return res;
 #else
   i32 cnt = 0;
   u32 msk = 0x80000000U;
@@ -158,8 +164,9 @@ func i32 clz_u64(u64 val) {
   return 63 - (i32)idx;
 #elif defined(COMPILER_GCC) || defined(COMPILER_CLANG) || \
     defined(COMPILER_APPLE_CLANG) || defined(COMPILER_INTEL)
+  i32 res = __builtin_clzll(val);
   profile_func_end;
-  return __builtin_clzll(val);
+  return res;
 #else
   i32 cnt = 0;
   u64 msk = 0x8000000000000000ULL;
@@ -190,8 +197,9 @@ func i32 bsr_u32(u32 val) {
   return (i32)idx;
 #elif defined(COMPILER_GCC) || defined(COMPILER_CLANG) || \
     defined(COMPILER_APPLE_CLANG) || defined(COMPILER_INTEL)
+  i32 res = 31 - __builtin_clz(val);
   profile_func_end;
-  return 31 - __builtin_clz(val);
+  return res;
 #else
   i32 pos = 31;
   u32 msk = 0x80000000U;
@@ -222,8 +230,9 @@ func i32 bsr_u64(u64 val) {
   return (i32)idx;
 #elif defined(COMPILER_GCC) || defined(COMPILER_CLANG) || \
     defined(COMPILER_APPLE_CLANG) || defined(COMPILER_INTEL)
+  i32 res = 63 - __builtin_clzll(val);
   profile_func_end;
-  return 63 - __builtin_clzll(val);
+  return res;
 #else
   i32 pos = 63;
   u64 msk = 0x8000000000000000ULL;
@@ -247,53 +256,62 @@ func i32 bsr_u64(u64 val) {
 func u16 bswap_u16(u16 val) {
   profile_func_begin;
 #if defined(COMPILER_MSVC)
+  u16 res = _byteswap_ushort(val);
   profile_func_end;
-  return _byteswap_ushort(val);
+  return res;
 #elif defined(COMPILER_GCC) || defined(COMPILER_CLANG) || \
     defined(COMPILER_APPLE_CLANG) || defined(COMPILER_INTEL)
+  u16 res = __builtin_bswap16(val);
   profile_func_end;
-  return __builtin_bswap16(val);
+  return res;
 #else
+  u16 res = (u16)((val >> 8U) | (val << 8U));
   profile_func_end;
-  return (u16)((val >> 8U) | (val << 8U));
+  return res;
 #endif
 }
 
 func u32 bswap_u32(u32 val) {
   profile_func_begin;
 #if defined(COMPILER_MSVC)
+  u32 res = _byteswap_ulong(val);
   profile_func_end;
-  return _byteswap_ulong(val);
+  return res;
 #elif defined(COMPILER_GCC) || defined(COMPILER_CLANG) || \
     defined(COMPILER_APPLE_CLANG) || defined(COMPILER_INTEL)
+  u32 res = __builtin_bswap32(val);
   profile_func_end;
-  return __builtin_bswap32(val);
+  return res;
 #else
+  u32 res = ((val & 0xFF000000U) >> 24U) | ((val & 0x00FF0000U) >> 8U) |
+            ((val & 0x0000FF00U) << 8U) | ((val & 0x000000FFU) << 24U);
   profile_func_end;
-  return ((val & 0xFF000000U) >> 24U) | ((val & 0x00FF0000U) >> 8U) |
-         ((val & 0x0000FF00U) << 8U) | ((val & 0x000000FFU) << 24U);
+  return res;
 #endif
 }
 
 func u64 bswap_u64(u64 val) {
   profile_func_begin;
 #if defined(COMPILER_MSVC)
+  u64 res = _byteswap_uint64(val);
   profile_func_end;
-  return _byteswap_uint64(val);
+  return res;
 #elif defined(COMPILER_GCC) || defined(COMPILER_CLANG) || \
     defined(COMPILER_APPLE_CLANG) || defined(COMPILER_INTEL)
+  u64 res = __builtin_bswap64(val);
   profile_func_end;
-  return __builtin_bswap64(val);
+  return res;
 #else
+  u64 res = ((val & 0xFF00000000000000ULL) >> 56U) |
+            ((val & 0x00FF000000000000ULL) >> 40U) |
+            ((val & 0x0000FF0000000000ULL) >> 24U) |
+            ((val & 0x000000FF00000000ULL) >> 8U) |
+            ((val & 0x00000000FF000000ULL) << 8U) |
+            ((val & 0x0000000000FF0000ULL) << 24U) |
+            ((val & 0x000000000000FF00ULL) << 40U) |
+            ((val & 0x00000000000000FFULL) << 56U);
   profile_func_end;
-  return ((val & 0xFF00000000000000ULL) >> 56U) |
-         ((val & 0x00FF000000000000ULL) >> 40U) |
-         ((val & 0x0000FF0000000000ULL) >> 24U) |
-         ((val & 0x000000FF00000000ULL) >> 8U) |
-         ((val & 0x00000000FF000000ULL) << 8U) |
-         ((val & 0x0000000000FF0000ULL) << 24U) |
-         ((val & 0x000000000000FF00ULL) << 40U) |
-         ((val & 0x00000000000000FFULL) << 56U);
+  return res;
 #endif
 }
 
@@ -304,47 +322,55 @@ func u64 bswap_u64(u64 val) {
 func u32 rotl_u32(u32 val, i32 cnt) {
   profile_func_begin;
 #if defined(COMPILER_MSVC)
+  u32 res = _rotl(val, cnt);
   profile_func_end;
-  return _rotl(val, cnt);
+  return res;
 #else
   u32 ucnt = (u32)cnt & 31U;
+  u32 res = (ucnt != 0U) ? ((val << ucnt) | (val >> (32U - ucnt))) : val;
   profile_func_end;
-  return (ucnt != 0U) ? ((val << ucnt) | (val >> (32U - ucnt))) : val;
+  return res;
 #endif
 }
 
 func u64 rotl_u64(u64 val, i32 cnt) {
   profile_func_begin;
 #if defined(COMPILER_MSVC)
+  u64 res = _rotl64(val, cnt);
   profile_func_end;
-  return _rotl64(val, cnt);
+  return res;
 #else
   u32 ucnt = (u32)cnt & 63U;
+  u64 res = (ucnt != 0U) ? ((val << ucnt) | (val >> (64U - ucnt))) : val;
   profile_func_end;
-  return (ucnt != 0U) ? ((val << ucnt) | (val >> (64U - ucnt))) : val;
+  return res;
 #endif
 }
 
 func u32 rotr_u32(u32 val, i32 cnt) {
   profile_func_begin;
 #if defined(COMPILER_MSVC)
+  u32 res = _rotr(val, cnt);
   profile_func_end;
-  return _rotr(val, cnt);
+  return res;
 #else
   u32 ucnt = (u32)cnt & 31U;
+  u32 res = (ucnt != 0U) ? ((val >> ucnt) | (val << (32U - ucnt))) : val;
   profile_func_end;
-  return (ucnt != 0U) ? ((val >> ucnt) | (val << (32U - ucnt))) : val;
+  return res;
 #endif
 }
 
 func u64 rotr_u64(u64 val, i32 cnt) {
   profile_func_begin;
 #if defined(COMPILER_MSVC)
+  u64 res = _rotr64(val, cnt);
   profile_func_end;
-  return _rotr64(val, cnt);
+  return res;
 #else
   u32 ucnt = (u32)cnt & 63U;
+  u64 res = (ucnt != 0U) ? ((val >> ucnt) | (val << (64U - ucnt))) : val;
   profile_func_end;
-  return (ucnt != 0U) ? ((val >> ucnt) | (val << (64U - ucnt))) : val;
+  return res;
 #endif
 }

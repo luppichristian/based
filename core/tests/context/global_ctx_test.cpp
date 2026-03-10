@@ -46,7 +46,7 @@ TEST(context_global_ctx_test, global_log_frame_helpers_capture_messages) {
 
   global_log_begin_frame();
   global_log_info("global frame message");
-  log_frame* info_frame = global_log_end_frame(log_level_mask(LOG_LEVEL_INFO));
+  log_frame* info_frame = global_log_end_frame(bit(LOG_LEVEL_INFO));
 
   ASSERT_NE(info_frame, nullptr);
   EXPECT_EQ(log_frame_msg_count(info_frame), 1U);
@@ -55,6 +55,6 @@ TEST(context_global_ctx_test, global_log_frame_helpers_capture_messages) {
   EXPECT_EQ(log_msg_level(frame_msg), LOG_LEVEL_INFO);
   EXPECT_NE(cstr8_find(log_msg_text(frame_msg), "global frame message"), nullptr);
 
-  log_frame_destroy(info_frame);
+  ASSERT_TRUE(log_state_clear(global_get_log_state()) != 0);
   global_log_set_level(old_level);
 }

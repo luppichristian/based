@@ -27,7 +27,7 @@ func b32 ctx_init(ctx* context, allocator main_allocator, mutex allocator_mutex,
 
   memset(context, 0, size_of(*context));
   context->main_allocator = main_allocator;
-  if (!log_state_init(&context->log, use_log_mutex)) {
+  if (!log_state_init(&context->log, use_log_mutex, main_allocator)) {
     thread_log_error("Failed to initialize context log state context=%p use_log_mutex=%u",
                      (void*)context,
                      (u32)use_log_mutex);

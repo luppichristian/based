@@ -47,7 +47,7 @@ TEST(context_thread_ctx_test, log_helpers_capture_and_filter_messages) {
   EXPECT_EQ(log_msg_level(first_msg), LOG_LEVEL_WARN);
   EXPECT_NE(cstr8_find(log_msg_text(first_msg), "thread warn message"), nullptr);
 
-  log_frame_destroy(warn_frame);
+  ASSERT_TRUE(log_state_clear(thread_get_log_state()) != 0);
   thread_log_set_level(old_level);
 }
 

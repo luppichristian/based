@@ -58,14 +58,10 @@ set_target_properties(based-core PROPERTIES UNITY_BUILD ON UNITY_BUILD_MODE GROU
 
 if(BASED_BUILD_TESTS)
     enable_testing()
-
-    # Ignore a placeholder test registered by libmath2 when its test binary
-    # is intentionally disabled in this workspace configuration.
-    file(WRITE "${CMAKE_BINARY_DIR}/CTestCustom.cmake" "set(CTEST_CUSTOM_TESTS_IGNORE libmath2-tests_NOT_BUILT)\n")
-
     fetch_googletest()
+    include(GoogleTest)
 
-    file(GLOB_RECURSE TEST_SOURCES CONFIGURE_DEPENDS "tests/**.cpp")
+    file(GLOB_RECURSE TEST_SOURCES "tests/**.cpp")
     add_executable(based-core-tests ${TEST_SOURCES})
     list(LENGTH TEST_SOURCES TEST_SOURCE_COUNT)
     if(TEST_SOURCE_COUNT GREATER 0)
@@ -78,15 +74,5 @@ if(BASED_BUILD_TESTS)
     target_include_directories(based-core-tests PRIVATE tests)
     target_compile_options(based-core-tests PRIVATE ${BASED_CLANG_FOLDING_CONSTANT_WARNING})
 
-    include(GoogleTest)
-    gtest_add_tests(TARGET based-core-tests TEST_LIST based-core-tests_TESTS)
-    if(based-core-tests_TESTS)
-        set_tests_properties(${based-core-tests_TESTS} PROPERTIES RUN_SERIAL TRUE)
-    endif()
-
-    # libmath2 may register a gtest_discover placeholder when its test binary
-    # is not built in this workspace configuration; ignore that non-project test.
-    if(TEST libmath2-tests_NOT_BUILT)
-        set_tests_properties(libmath2-tests_NOT_BUILT PROPERTIES DISABLED TRUE)
-    endif()
+    gtest_discover_tests(based-core-tests DISCOVERY_MODE PRE_TEST)
 endif()
