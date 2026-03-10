@@ -15,6 +15,10 @@ const_var sz CTX_DEFAULT_BLOCK_SIZE = kb(64);
 func b32 ctx_init(ctx* context, allocator main_allocator, mutex allocator_mutex, b32 use_log_mutex) {
   profile_func_begin;
   if (!context || !main_allocator.alloc_fn || context->is_init) {
+    thread_log_error("Invalid context initialization request context=%p has_alloc=%u is_init=%u",
+                     (void*)context,
+                     (u32)(main_allocator.alloc_fn != NULL),
+                     (u32)(context != NULL && context->is_init));
     profile_func_end;
     return false;
   }
@@ -24,6 +28,9 @@ func b32 ctx_init(ctx* context, allocator main_allocator, mutex allocator_mutex,
   memset(context, 0, size_of(*context));
   context->main_allocator = main_allocator;
   if (!log_state_init(&context->log, use_log_mutex)) {
+    thread_log_error("Failed to initialize context log state context=%p use_log_mutex=%u",
+                     (void*)context,
+                     (u32)use_log_mutex);
     memset(context, 0, size_of(*context));
     profile_func_end;
     return false;
@@ -119,6 +126,7 @@ func b32 ctx_set_user_data(ctx* context, ctx_user_data_idx idx, void* user_data)
 func void ctx_clear_temp(ctx* context) {
   profile_func_begin;
   if (!ctx_is_init(context)) {
+    thread_log_warn("Skipping context temp clear for uninitialized context context=%p", (void*)context);
     profile_func_end;
     return;
   }

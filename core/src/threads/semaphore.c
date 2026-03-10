@@ -26,7 +26,9 @@ func semaphore _semaphore_create(u32 initial_count, callsite site) {
       profile_func_end;
       return NULL;
     }
-    thread_log_trace("semaphore_create: handle=%p count=%u", handle, initial_count);
+    thread_log_trace("Created semaphore handle=%p count=%u", handle, initial_count);
+  } else {
+    thread_log_error("Failed to create semaphore count=%u error=%s", initial_count, SDL_GetError());
   }
   profile_func_end;
   return handle;
@@ -36,6 +38,7 @@ func b32 _semaphore_destroy(semaphore sem, callsite site) {
   profile_func_begin;
   (void)site;
   if (!sem) {
+    thread_log_warn("Skipping semaphore destroy for invalid handle");
     profile_func_end;
     return false;
   }
@@ -51,7 +54,7 @@ func b32 _semaphore_destroy(semaphore sem, callsite site) {
     profile_func_end;
     return false;
   }
-  thread_log_trace("semaphore_destroy: handle=%p", sem);
+  thread_log_trace("Destroyed semaphore handle=%p", sem);
   SDL_DestroySemaphore((SDL_Semaphore*)sem);
   profile_func_end;
   return true;
@@ -64,6 +67,7 @@ func b32 semaphore_is_valid(semaphore sem) {
 func void semaphore_wait(semaphore sem) {
   profile_func_begin;
   if (sem == NULL) {
+    thread_log_error("Rejected semaphore wait for invalid handle");
     profile_func_end;
     return;
   }
@@ -75,6 +79,7 @@ func void semaphore_wait(semaphore sem) {
 func b32 semaphore_try_wait(semaphore sem) {
   profile_func_begin;
   if (sem == NULL) {
+    thread_log_error("Rejected semaphore try wait for invalid handle");
     profile_func_end;
     return false;
   }
@@ -86,6 +91,7 @@ func b32 semaphore_try_wait(semaphore sem) {
 func b32 semaphore_wait_timeout(semaphore sem, u32 millis) {
   profile_func_begin;
   if (sem == NULL) {
+    thread_log_error("Rejected semaphore wait timeout for invalid handle");
     profile_func_end;
     return false;
   }
@@ -97,6 +103,7 @@ func b32 semaphore_wait_timeout(semaphore sem, u32 millis) {
 func void semaphore_signal(semaphore sem) {
   profile_func_begin;
   if (sem == NULL) {
+    thread_log_error("Rejected semaphore signal for invalid handle");
     profile_func_end;
     return;
   }

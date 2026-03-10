@@ -3,6 +3,7 @@
 
 #include "processes/common_processes.h"
 #include "basic/env_defines.h"
+#include "context/thread_ctx.h"
 #include "basic/profiler.h"
 #include "basic/utility_defines.h"
 #include "processes/process.h"
@@ -13,6 +14,7 @@
 func b32 common_processes_spawn_background(cstr8 const* args, cstr8 cwd_path) {
   profile_func_begin;
   if (args == NULL || args[0] == NULL) {
+    thread_log_error("Rejected background process spawn without arguments");
     profile_func_end;
     return false;
   }
@@ -22,10 +24,16 @@ func b32 common_processes_spawn_background(cstr8 const* args, cstr8 cwd_path) {
   options.cwd = cwd_path;
   process prc = process_create_with(args, options);
   if (!process_is_valid(prc)) {
+    thread_log_error("Failed to spawn background process command=%s cwd=%s",
+                     args[0],
+                     cwd_path != NULL ? cwd_path : "<inherit>");
     profile_func_end;
     return false;
   }
 
+  thread_log_info("Spawned background process command=%s cwd=%s",
+                  args[0],
+                  cwd_path != NULL ? cwd_path : "<inherit>");
   process_destroy(prc);
   profile_func_end;
   return true;
@@ -34,11 +42,17 @@ func b32 common_processes_spawn_background(cstr8 const* args, cstr8 cwd_path) {
 func b32 process_open_weblink(cstr8 url) {
   profile_func_begin;
   if (url == NULL || url[0] == '\0') {
+    thread_log_error("Rejected web link open for empty URL");
     profile_func_end;
     return false;
   }
 
   b32 result = SDL_OpenURL(url);
+  if (!result) {
+    thread_log_error("Failed to open web link url=%s error=%s", url, SDL_GetError());
+  } else {
+    thread_log_info("Opened web link url=%s", url);
+  }
   profile_func_end;
   return result;
 }
@@ -65,6 +79,9 @@ func b32 process_open_file_window(cstr8 location) {
   };
 #endif
   b32 result = common_processes_spawn_background(args, NULL);
+  if (!result) {
+    thread_log_error("Failed to open file window location=%s", location != NULL ? location : ".");
+  }
   profile_func_end;
   return result;
 }
@@ -83,6 +100,9 @@ func b32 process_open_terminal(cstr8 location) {
       NULL,
   };
   b32 result = common_processes_spawn_background(args, NULL);
+  if (!result) {
+    thread_log_error("Failed to open terminal location=%s", dir_path);
+  }
   profile_func_end;
   return result;
 #elif defined(PLATFORM_MACOS)
@@ -94,6 +114,9 @@ func b32 process_open_terminal(cstr8 location) {
       NULL,
   };
   b32 result = common_processes_spawn_background(args, NULL);
+  if (!result) {
+    thread_log_error("Failed to open terminal location=%s", location != NULL ? location : ".");
+  }
   profile_func_end;
   return result;
 #else
@@ -133,6 +156,9 @@ func b32 process_open_terminal(cstr8 location) {
       NULL,
   };
   b32 result = common_processes_spawn_background(xterm_plain_args, location);
+  if (!result) {
+    thread_log_error("Failed to open terminal location=%s", location != NULL ? location : ".");
+  }
   profile_func_end;
   return result;
 #endif

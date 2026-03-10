@@ -203,6 +203,7 @@ func void* global_get_user_data(ctx_user_data_idx idx) {
   profile_func_begin;
   global_ctx* wrapper = global_ctx_get();
   if (!wrapper || idx >= CTX_USER_DATA_COUNT) {
+    global_log_warn("Rejected global user data read idx=%u", (u32)idx);
     profile_func_end;
     return NULL;
   }
@@ -214,6 +215,9 @@ func void* global_get_user_data(ctx_user_data_idx idx) {
 
   b32 has_access = global_user_data_access[idx] != false;
   void* user_data = has_access ? wrapper->shared_ctx.user_data[idx] : NULL;
+  if (!has_access) {
+    global_log_warn("Denied global user data read idx=%u", (u32)idx);
+  }
 
   if (wrapper->mutex_handle) {
     mutex_unlock(wrapper->mutex_handle);
@@ -227,6 +231,7 @@ func b32 global_set_user_data(ctx_user_data_idx idx, void* user_data) {
   profile_func_begin;
   global_ctx* wrapper = global_ctx_get();
   if (!wrapper || idx >= CTX_USER_DATA_COUNT) {
+    global_log_warn("Rejected global user data write idx=%u", (u32)idx);
     profile_func_end;
     return false;
   }
@@ -239,6 +244,8 @@ func b32 global_set_user_data(ctx_user_data_idx idx, void* user_data) {
   b32 has_access = global_user_data_access[idx] != false;
   if (has_access) {
     wrapper->shared_ctx.user_data[idx] = user_data;
+  } else {
+    global_log_warn("Denied global user data write idx=%u", (u32)idx);
   }
 
   if (wrapper->mutex_handle) {

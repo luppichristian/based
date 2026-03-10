@@ -46,6 +46,9 @@ func i32 thread_entry_wrapper(void* raw) {
   i32 exit_code = 0;
 
   if (payload == NULL || payload->entry == NULL) {
+    thread_log_error("Rejected thread entry wrapper payload=%p has_entry=%u",
+                     raw,
+                     (u32)(payload != NULL && payload->entry != NULL));
     profile_func_end;
     return 0;
   }
@@ -53,10 +56,16 @@ func i32 thread_entry_wrapper(void* raw) {
 
   if (payload->should_init_thread_ctx) {
     has_thread_ctx = thread_ctx_init(payload->main_allocator);
-    thread_log_trace("thread_entry_wrapper: thread_ctx_init=%u", (u32)has_thread_ctx);
+    if (!has_thread_ctx) {
+      thread_log_warn("Thread entry running without thread context");
+    } else {
+      thread_log_trace("Initialized thread context for worker thread");
+    }
   }
 
+  thread_log_trace("Entering worker thread payload=%p", raw);
   exit_code = payload->entry(payload->arg);
+  thread_log_trace("Leaving worker thread exit_code=%d", exit_code);
 
   if (has_thread_ctx) {
     thread_ctx_quit();
@@ -71,6 +80,7 @@ func thread thread_create_impl(thread_func entry, void* arg, cstr8 name, allocat
   profile_func_begin;
   allocator payload_allocator = {0};
   if (!entry) {
+    thread_log_error("Rejected thread creation without entry callback");
     profile_func_end;
     return NULL;
   }
@@ -89,6 +99,7 @@ func thread thread_create_impl(thread_func entry, void* arg, cstr8 name, allocat
 
   thread_entry_payload* payload = (thread_entry_payload*)allocator_alloc(payload_allocator, size_of(*payload));
   if (!payload) {
+    thread_log_error("Failed to allocate thread payload name=%s", name != NULL ? name : "<null>");
     profile_func_end;
     return NULL;
   }
@@ -105,11 +116,11 @@ func thread thread_create_impl(thread_func entry, void* arg, cstr8 name, allocat
   thread thd = (thread)SDL_CreateThread(thread_entry_wrapper, name, payload);
   if (!thd) {
     allocator_dealloc(payload_allocator, payload, size_of(*payload));
-    thread_log_error("thread_create_impl: SDL_CreateThread failed name=%s", name != NULL ? name : "<null>");
+    thread_log_error("Failed to create thread name=%s error=%s", name != NULL ? name : "<null>", SDL_GetError());
     profile_func_end;
     return NULL;
   }
-  thread_log_trace("thread_create_impl: created thread=%p name=%s", thd, name != NULL ? name : "<null>");
+  thread_log_trace("Created thread handle=%p name=%s", thd, name != NULL ? name : "<null>");
   profile_func_end;
   return thd;
 }
@@ -140,6 +151,7 @@ func b32 thread_is_valid(thread thd) {
 func b32 thread_join(thread thd, i32* out_exit_code) {
   profile_func_begin;
   if (!thd) {
+    thread_log_error("Cannot join invalid thread");
     profile_func_end;
     return false;
   }
@@ -153,7 +165,7 @@ func b32 thread_join(thread thd, i32* out_exit_code) {
                                                  });
   (void)msg_post(&lifecycle_msg);
   SDL_WaitThread((SDL_Thread*)thd, (int*)out_exit_code);
-  thread_log_trace("thread_join: thread=%p", thd);
+  thread_log_trace("Joined thread handle=%p", thd);
   profile_func_end;
   return true;
 }
@@ -161,6 +173,7 @@ func b32 thread_join(thread thd, i32* out_exit_code) {
 func void thread_detach(thread thd) {
   profile_func_begin;
   if (!thd) {
+    thread_log_warn("Skipping detach for invalid thread");
     profile_func_end;
     return;
   }
@@ -173,7 +186,7 @@ func void thread_detach(thread thd) {
                                                  });
   (void)msg_post(&lifecycle_msg);
   SDL_DetachThread((SDL_Thread*)thd);
-  thread_log_trace("thread_detach: thread=%p", thd);
+  thread_log_trace("Detached thread handle=%p", thd);
   profile_func_end;
 }
 

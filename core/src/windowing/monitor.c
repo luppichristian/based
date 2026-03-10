@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "windowing/monitor.h"
+#include "context/thread_ctx.h"
 #include "../sdl3_include.h"
 #include "basic/profiler.h"
 
@@ -34,6 +35,10 @@ func sz monitor_get_count(void) {
   int count = 0;
   SDL_DisplayID* ids = SDL_GetDisplays(&count);
 
+  if (ids == NULL && count != 0) {
+    thread_log_warn("Failed to enumerate monitors error=%s", SDL_GetError());
+  }
+
   if (ids) {
     SDL_free(ids);
   }
@@ -65,12 +70,18 @@ func b32 monitor_get_id(sz idx, monitor* out_id) {
 }
 
 func monitor monitor_get_primary_id(void) {
-  return monitor_from_native_id((up)SDL_GetPrimaryDisplay());
+  profile_func_begin;
+  monitor result = monitor_from_native_id((up)SDL_GetPrimaryDisplay());
+  if (!monitor_id_is_valid(result)) {
+    thread_log_warn("Primary monitor is unavailable");
+  }
+  profile_func_end;
+  return result;
 }
 
 func cstr8 monitor_get_name(monitor id) {
   if (!monitor_id_is_valid(id)) {
-      return NULL;
+    return NULL;
   }
 
   return SDL_GetDisplayName((SDL_DisplayID)monitor_to_native_id(id));
@@ -86,6 +97,10 @@ func b32 monitor_get_bounds(monitor id, monitor_rect* out_rect) {
 
   if (!monitor_id_is_valid(id) || out_rect == NULL ||
       !SDL_GetDisplayBounds((SDL_DisplayID)monitor_to_native_id(id), &bounds)) {
+    thread_log_error("Failed to query monitor bounds id=%llu out_rect=%p error=%s",
+                     (unsigned long long)monitor_to_native_id(id),
+                     (void*)out_rect,
+                     SDL_GetError());
     profile_func_end;
     return false;
   }
@@ -104,6 +119,10 @@ func b32 monitor_get_usable_bounds(monitor id, monitor_rect* out_rect) {
 
   if (!monitor_id_is_valid(id) || out_rect == NULL ||
       !SDL_GetDisplayUsableBounds((SDL_DisplayID)monitor_to_native_id(id), &bounds)) {
+    thread_log_error("Failed to query monitor usable bounds id=%llu out_rect=%p error=%s",
+                     (unsigned long long)monitor_to_native_id(id),
+                     (void*)out_rect,
+                     SDL_GetError());
     profile_func_end;
     return false;
   }
@@ -138,6 +157,7 @@ func b32 monitor_mode_from_native(const SDL_DisplayMode* native_mode, monitor_mo
 func sz monitor_get_mode_count(monitor id) {
   profile_func_begin;
   if (!monitor_id_is_valid(id)) {
+    thread_log_warn("Rejected monitor mode count query for invalid monitor");
     profile_func_end;
     return 0;
   }
@@ -164,6 +184,10 @@ func b32 monitor_get_mode(monitor id, sz idx, monitor_mode* out_mode) {
   b32 ok = modes != NULL && idx < (sz)mode_count;
 
   if (!ok) {
+    thread_log_error("Failed to query monitor mode id=%llu idx=%zu count=%d",
+                     (unsigned long long)monitor_to_native_id(id),
+                     (size_t)idx,
+                     mode_count);
     if (modes != NULL) {
       SDL_free(modes);
     }
@@ -180,6 +204,9 @@ func b32 monitor_get_mode(monitor id, sz idx, monitor_mode* out_mode) {
 func b32 monitor_get_current_mode(monitor id, monitor_mode* out_mode) {
   profile_func_begin;
   if (!monitor_id_is_valid(id) || out_mode == NULL) {
+    thread_log_error("Rejected current monitor mode query id=%llu out_mode=%p",
+                     (unsigned long long)monitor_to_native_id(id),
+                     (void*)out_mode);
     profile_func_end;
     return false;
   }
@@ -193,6 +220,9 @@ func b32 monitor_get_current_mode(monitor id, monitor_mode* out_mode) {
 func b32 monitor_get_desktop_mode(monitor id, monitor_mode* out_mode) {
   profile_func_begin;
   if (!monitor_id_is_valid(id) || out_mode == NULL) {
+    thread_log_error("Rejected desktop monitor mode query id=%llu out_mode=%p",
+                     (unsigned long long)monitor_to_native_id(id),
+                     (void*)out_mode);
     profile_func_end;
     return false;
   }

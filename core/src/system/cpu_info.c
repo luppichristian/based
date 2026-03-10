@@ -57,10 +57,12 @@ func u32 cpu_query_logical_cores(void) {
 #elif defined(PLATFORM_UNIX)
   sp core_count = (sp)sysconf(_SC_NPROCESSORS_ONLN);
   if (core_count > 0) {
-      return (u32)core_count;
+    return (u32)core_count;
   }
+  thread_log_warn("Falling back to one logical core after sysconf failure");
   return 1;
 #else
+  thread_log_warn("Falling back to one logical core on unsupported platform");
   return 1;
 #endif
 }
@@ -109,6 +111,7 @@ func b32 cpu_read_cpuid(u32 leaf_id, u32 subleaf_id, i32 out_regs[4]) {
   u32 ecx_reg = 0;
   u32 edx_reg = 0;
   if (__get_cpuid_count(leaf_id, subleaf_id, &eax_reg, &ebx_reg, &ecx_reg, &edx_reg) == 0) {
+    thread_log_debug("CPUID leaf unavailable leaf=0x%08X subleaf=0x%08X", leaf_id, subleaf_id);
     profile_func_end;
     return false;
   }
@@ -146,10 +149,12 @@ func void cpu_fill_x86_strings(cpu_info* out_info) {
 
   i32 ext_regs[4];
   if (!cpu_read_cpuid(0x80000000U, 0, ext_regs)) {
+    thread_log_debug("CPU extended CPUID range unavailable");
     profile_func_end;
     return;
   }
   if ((u32)ext_regs[0] < 0x80000004U) {
+    thread_log_debug("CPU brand string leaves unavailable max_leaf=0x%08X", (u32)ext_regs[0]);
     profile_func_end;
     return;
   }
@@ -175,6 +180,7 @@ func void cpu_fill_x86_features(cpu_info* out_info) {
   assert(out_info != NULL);
   i32 base_regs[4];
   if (!cpu_read_cpuid(1, 0, base_regs)) {
+    thread_log_warn("Failed to query primary CPU feature leaf");
     profile_func_end;
     return;
   }
@@ -231,7 +237,7 @@ func b32 cpu_info_query(cpu_info* out_info) {
   cpu_fill_x86_features(out_info);
 #endif
 
-  thread_log_trace("cpu_info_query: cores=%u cache_line=%u", out_info->logical_core_count, out_info->cache_line_bytes);
+  thread_log_trace("Queried CPU info cores=%u cache_line=%u", out_info->logical_core_count, out_info->cache_line_bytes);
   profile_func_end;
   return true;
 }

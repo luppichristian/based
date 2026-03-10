@@ -245,10 +245,15 @@ func void pathwatch_dispatch(
 
   pathwatch_binding* binding = pathwatch_find_binding(native_handle);
   if (binding == NULL) {
+    thread_log_warn("Dropping pathwatch event for unknown watcher native=%p", native_handle);
     profile_func_end;
     return;
   }
   if (binding->paused || !binding->started) {
+    thread_log_verbose("Dropping pathwatch event watcher=%lld started=%u paused=%u",
+                       (long long)binding->pathwatch_id,
+                       (u32)binding->started,
+                       (u32)binding->paused);
     profile_func_end;
     return;
   }
@@ -256,6 +261,7 @@ func void pathwatch_dispatch(
   pathwatch_watch_binding* watch_binding =
       pathwatch_find_watch_binding_by_native(native_handle, (i64)native_watch_id);
   if (watch_binding == NULL) {
+    thread_log_warn("Dropping pathwatch event for unknown watch native=%lld", (long long)native_watch_id);
     profile_func_end;
     return;
   }
@@ -269,7 +275,11 @@ func void pathwatch_dispatch(
       .action = pathwatch_map_action(action),
   };
   msg_core_fill_pathwatch(&event_msg, &pathwatch_data);
-  (void)msg_post(&event_msg);
+  if (!msg_post(&event_msg)) {
+    thread_log_error("Failed to post pathwatch item event watcher=%lld watch=%lld",
+                     (long long)binding->pathwatch_id,
+                     (long long)watch_binding->watch_id);
+  }
   profile_func_end;
 }
 
@@ -282,10 +292,15 @@ func void pathwatch_dispatch_missed(
 
   pathwatch_binding* binding = pathwatch_find_binding(native_handle);
   if (binding == NULL) {
+    thread_log_warn("Dropping missed pathwatch event for unknown watcher native=%p", native_handle);
     profile_func_end;
     return;
   }
   if (binding->paused || !binding->started) {
+    thread_log_verbose("Dropping missed pathwatch event watcher=%lld started=%u paused=%u",
+                       (long long)binding->pathwatch_id,
+                       (u32)binding->started,
+                       (u32)binding->paused);
     profile_func_end;
     return;
   }
@@ -302,7 +317,11 @@ func void pathwatch_dispatch_missed(
       .action = (pathwatch_action)0,
   };
   msg_core_fill_pathwatch(&event_msg, &pathwatch_data);
-  (void)msg_post(&event_msg);
+  if (!msg_post(&event_msg)) {
+    thread_log_error("Failed to post missed pathwatch event watcher=%lld watch=%lld",
+                     (long long)binding->pathwatch_id,
+                     (long long)pathwatch_data.watch_id);
+  }
   profile_func_end;
 }
 
@@ -318,7 +337,7 @@ func pathwatch pathwatch_create(b32 use_generic_mode) {
     }
     watcher.id = 0;
     watcher.native_handle = NULL;
-    thread_log_error("pathwatch_create: failed");
+    thread_log_error("Failed to create pathwatch watcher");
     profile_func_end;
     return watcher;
   }
@@ -332,13 +351,14 @@ func pathwatch pathwatch_create(b32 use_generic_mode) {
   };
   msg_core_fill_object_lifecycle(&lifecycle_msg, &lifecycle_data);
   if (!msg_post(&lifecycle_msg)) {
+    thread_log_error("Failed to post pathwatch create lifecycle watcher=%lld", (long long)watcher.id);
     pathwatch_bind_remove(watcher.native_handle);
     efsw_release((efsw_watcher)watcher.native_handle);
     watcher.id = 0;
     watcher.native_handle = NULL;
   }
   if (watcher.native_handle != NULL) {
-    thread_log_trace("pathwatch_create: id=%lld", (long long)watcher.id);
+    thread_log_trace("Created pathwatch watcher=%lld", (long long)watcher.id);
   }
 
   profile_func_end;
@@ -362,6 +382,7 @@ func void pathwatch_destroy(pathwatch* watcher) {
   };
   msg_core_fill_object_lifecycle(&lifecycle_msg, &lifecycle_data);
   if (!msg_post(&lifecycle_msg)) {
+    thread_log_error("Failed to post pathwatch destroy lifecycle watcher=%lld", (long long)watcher->id);
     profile_func_end;
     return;
   }
@@ -369,7 +390,7 @@ func void pathwatch_destroy(pathwatch* watcher) {
   pathwatch_watch_bind_remove_all_for_watcher(watcher->id, watcher->native_handle);
   pathwatch_bind_remove(watcher->native_handle);
   efsw_release((efsw_watcher)watcher->native_handle);
-  thread_log_trace("pathwatch_destroy: id=%lld", (long long)watcher->id);
+  thread_log_trace("Destroyed pathwatch watcher=%lld", (long long)watcher->id);
   watcher->id = 0;
   watcher->native_handle = NULL;
   profile_func_end;
@@ -378,6 +399,7 @@ func void pathwatch_destroy(pathwatch* watcher) {
 func b32 pathwatch_start(pathwatch* watcher) {
   profile_func_begin;
   if (watcher == NULL || watcher->native_handle == NULL) {
+    thread_log_error("Rejected pathwatch start for invalid watcher");
     profile_func_end;
     return false;
   }
@@ -389,6 +411,7 @@ func b32 pathwatch_start(pathwatch* watcher) {
     binding->started = 1;
     binding->paused = 0;
   }
+  thread_log_info("Started pathwatch watcher=%lld", (long long)watcher->id);
   profile_func_end;
   return true;
 }
@@ -396,6 +419,7 @@ func b32 pathwatch_start(pathwatch* watcher) {
 func b32 pathwatch_stop(pathwatch* watcher) {
   profile_func_begin;
   if (watcher == NULL || watcher->native_handle == NULL) {
+    thread_log_error("Rejected pathwatch stop for invalid watcher");
     profile_func_end;
     return false;
   }
@@ -406,6 +430,7 @@ func b32 pathwatch_stop(pathwatch* watcher) {
     binding->started = 0;
     binding->paused = 0;
   }
+  thread_log_info("Stopped pathwatch watcher=%lld", (long long)watcher->id);
   profile_func_end;
   return true;
 }
@@ -413,17 +438,20 @@ func b32 pathwatch_stop(pathwatch* watcher) {
 func b32 pathwatch_pause(pathwatch* watcher) {
   profile_func_begin;
   if (watcher == NULL || watcher->native_handle == NULL) {
+    thread_log_error("Rejected pathwatch pause for invalid watcher");
     profile_func_end;
     return false;
   }
 
   pathwatch_binding* binding = pathwatch_find_binding(watcher->native_handle);
   if (binding == NULL) {
+    thread_log_warn("Cannot pause unbound pathwatch watcher=%lld", (long long)watcher->id);
     profile_func_end;
     return false;
   }
 
   binding->paused = 1;
+  thread_log_info("Paused pathwatch watcher=%lld", (long long)watcher->id);
   profile_func_end;
   return true;
 }
@@ -431,17 +459,20 @@ func b32 pathwatch_pause(pathwatch* watcher) {
 func b32 pathwatch_resume(pathwatch* watcher) {
   profile_func_begin;
   if (watcher == NULL || watcher->native_handle == NULL) {
+    thread_log_error("Rejected pathwatch resume for invalid watcher");
     profile_func_end;
     return false;
   }
 
   pathwatch_binding* binding = pathwatch_find_binding(watcher->native_handle);
   if (binding == NULL) {
+    thread_log_warn("Cannot resume unbound pathwatch watcher=%lld", (long long)watcher->id);
     profile_func_end;
     return false;
   }
 
   binding->paused = 0;
+  thread_log_info("Resumed pathwatch watcher=%lld", (long long)watcher->id);
   profile_func_end;
   return true;
 }
@@ -457,6 +488,9 @@ func i32 pathwatch_drain(void) {
 func pathwatch_watch_id pathwatch_add(pathwatch* watcher, const path* src, b32 recursive) {
   profile_func_begin;
   if (watcher == NULL || watcher->native_handle == NULL || src == NULL) {
+    thread_log_error("Rejected pathwatch add watcher=%p path=%s",
+                     (void*)watcher,
+                     src != NULL ? src->buf : "<null>");
     profile_func_end;
     return false;
   }
@@ -472,6 +506,7 @@ func pathwatch_watch_id pathwatch_add(pathwatch* watcher, const path* src, b32 r
       watcher,
       pathwatch_dispatch_missed);
   if (native_watch_id <= 0) {
+    thread_log_error("Failed to add pathwatch path=%s watcher=%lld", src->buf, (long long)watcher->id);
     profile_func_end;
     return false;
   }
@@ -482,7 +517,9 @@ func pathwatch_watch_id pathwatch_add(pathwatch* watcher, const path* src, b32 r
       (i64)native_watch_id,
       src);
   if (watch_id > 0) {
-    thread_log_trace("pathwatch_add: watcher=%lld watch=%lld path=%s", (long long)watcher->id, (long long)watch_id, src->buf);
+    thread_log_trace("Added pathwatch watcher=%lld watch=%lld path=%s", (long long)watcher->id, (long long)watch_id, src->buf);
+  } else {
+    thread_log_error("Failed to bind added pathwatch watcher=%lld path=%s", (long long)watcher->id, src->buf);
   }
   profile_func_end;
   return watch_id;
@@ -491,6 +528,7 @@ func pathwatch_watch_id pathwatch_add(pathwatch* watcher, const path* src, b32 r
 func b32 pathwatch_remove(pathwatch* watcher, pathwatch_watch_id watch_id) {
   profile_func_begin;
   if (watcher == NULL || watcher->native_handle == NULL || watch_id <= 0) {
+    thread_log_error("Rejected pathwatch remove watcher=%p watch=%lld", (void*)watcher, (long long)watch_id);
     profile_func_end;
     return false;
   }
@@ -498,13 +536,14 @@ func b32 pathwatch_remove(pathwatch* watcher, pathwatch_watch_id watch_id) {
   pathwatch_watch_binding* binding = pathwatch_find_watch_binding_by_public_id(watch_id);
   if (binding == NULL || binding->pathwatch_id != watcher->id ||
       binding->native_handle != watcher->native_handle) {
+    thread_log_warn("Cannot remove unknown pathwatch watcher=%lld watch=%lld", (long long)watcher->id, (long long)watch_id);
     profile_func_end;
     return false;
   }
 
   efsw_removewatch_byid((efsw_watcher)watcher->native_handle, (efsw_watchid)binding->native_watch_id);
   pathwatch_watch_bind_remove(watch_id);
-  thread_log_trace("pathwatch_remove: watcher=%lld watch=%lld", (long long)watcher->id, (long long)watch_id);
+  thread_log_trace("Removed pathwatch watcher=%lld watch=%lld", (long long)watcher->id, (long long)watch_id);
   profile_func_end;
   return true;
 }
@@ -512,12 +551,16 @@ func b32 pathwatch_remove(pathwatch* watcher, pathwatch_watch_id watch_id) {
 func b32 pathwatch_remove_path(pathwatch* watcher, const path* src) {
   profile_func_begin;
   if (watcher == NULL || watcher->native_handle == NULL || src == NULL) {
+    thread_log_error("Rejected pathwatch remove-by-path watcher=%p path=%s",
+                     (void*)watcher,
+                     src != NULL ? src->buf : "<null>");
     profile_func_end;
     return false;
   }
 
   efsw_removewatch((efsw_watcher)watcher->native_handle, src->buf);
   pathwatch_watch_bind_remove_by_path(watcher->id, watcher->native_handle, src);
+  thread_log_trace("Removed pathwatch by path watcher=%lld path=%s", (long long)watcher->id, src->buf);
   profile_func_end;
   return true;
 }

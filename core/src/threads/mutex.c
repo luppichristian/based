@@ -22,7 +22,9 @@ func mutex _mutex_create(callsite site) {
                                                        .object_ptr = handle,
                                                    });
     (void)msg_post(&lifecycle_msg);
-    thread_log_trace("mutex_create: handle=%p", handle);
+    thread_log_trace("Created mutex handle=%p", handle);
+  } else {
+    thread_log_error("Failed to create mutex error=%s", SDL_GetError());
   }
   profile_func_end;
   return handle;
@@ -32,6 +34,7 @@ func b32 _mutex_destroy(mutex mtx, callsite site) {
   profile_func_begin;
   (void)site;
   if (!mtx) {
+    thread_log_warn("Skipping mutex destroy for invalid handle");
     profile_func_end;
     return false;
   }
@@ -44,7 +47,7 @@ func b32 _mutex_destroy(mutex mtx, callsite site) {
                                                      .object_ptr = mtx,
                                                  });
   (void)msg_post(&lifecycle_msg);
-  thread_log_trace("mutex_destroy: handle=%p", mtx);
+  thread_log_trace("Destroyed mutex handle=%p", mtx);
   SDL_DestroyMutex((SDL_Mutex*)mtx);
   profile_func_end;
   return true;
@@ -57,6 +60,7 @@ func b32 mutex_is_valid(mutex mtx) {
 func void mutex_lock(mutex mtx) {
   profile_func_begin;
   if (mtx == NULL) {
+    thread_log_error("Rejected mutex lock for invalid handle");
     profile_func_end;
     return;
   }
@@ -68,6 +72,7 @@ func void mutex_lock(mutex mtx) {
 func b32 mutex_trylock(mutex mtx) {
   profile_func_begin;
   if (mtx == NULL) {
+    thread_log_error("Rejected mutex try lock for invalid handle");
     profile_func_end;
     return false;
   }
@@ -79,6 +84,7 @@ func b32 mutex_trylock(mutex mtx) {
 func b32 mutex_timed_lock(mutex mtx, i32 timeout_ms) {
   profile_func_begin;
   if (mtx == NULL || timeout_ms < 0) {
+    thread_log_error("Rejected mutex timed lock handle=%p timeout_ms=%d", mtx, timeout_ms);
     profile_func_end;
     return false;
   }
@@ -86,6 +92,7 @@ func b32 mutex_timed_lock(mutex mtx, i32 timeout_ms) {
   u64 start_ticks = SDL_GetTicks();
   while (!mutex_trylock(mtx)) {
     if ((i32)(SDL_GetTicks() - start_ticks) >= timeout_ms) {
+      thread_log_warn("Mutex timed lock expired handle=%p timeout_ms=%d", mtx, timeout_ms);
       profile_func_end;
       return false;
     }
@@ -99,6 +106,7 @@ func b32 mutex_timed_lock(mutex mtx, i32 timeout_ms) {
 func void mutex_unlock(mutex mtx) {
   profile_func_begin;
   if (mtx == NULL) {
+    thread_log_error("Rejected mutex unlock for invalid handle");
     profile_func_end;
     return;
   }

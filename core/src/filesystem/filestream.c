@@ -148,6 +148,9 @@ func b32 filestream_reserve_memory(filestream* stm, sz min_capacity) {
 
   new_ptr = (u8*)allocator_realloc(alloc, stm->memory_ptr, stm->memory_capacity, new_capacity);
   if (new_ptr == NULL) {
+    thread_log_error("Failed to grow filestream buffer current=%zu requested=%zu",
+                     (size_t)stm->memory_capacity,
+                     (size_t)new_capacity);
     filestream_set_error(stm, FILESTREAM_ERROR_ALLOC);
     profile_func_end;
     return false;
@@ -174,11 +177,15 @@ func filestream filestream_open(const path* src, u32 mode_flags) {
   }
 
   if (file_ptr == NULL) {
-    thread_log_debug("filestream_open: failed src=%s mode=%s", src != NULL ? src->buf : "<null>", mode_str);
+    thread_log_error("Failed to open filestream path=%s mode=%s error=%s",
+                     src != NULL ? src->buf : "<null>",
+                     mode_str,
+                     SDL_GetError());
     profile_func_end;
     return stm;
   }
   if (src == NULL) {
+    thread_log_error("Rejected filestream open for NULL path after SDL open");
     SDL_CloseIO(file_ptr);
     profile_func_end;
     return filestream_empty();
@@ -197,7 +204,7 @@ func filestream filestream_open(const path* src, u32 mode_flags) {
                                                      .object_ptr = &stm,
                                                  });
   (void)msg_post(&lifecycle_msg);
-  thread_log_trace("filestream_open: native src=%s flags=0x%08x", src->buf, mode_flags);
+  thread_log_trace("Opened native filestream path=%s flags=0x%08x", src->buf, mode_flags);
   profile_func_end;
   return stm;
 }
@@ -208,6 +215,7 @@ func filestream filestream_open_archive(archive* arc, const path* src, u32 mode_
   archive_entry* ent = NULL;
 
   if (arc == NULL || src == NULL) {
+    thread_log_error("Rejected archive filestream open path=%s", src != NULL ? src->buf : "<null>");
     profile_func_end;
     return stm;
   }
@@ -216,6 +224,7 @@ func filestream filestream_open_archive(archive* arc, const path* src, u32 mode_
   ent = filestream_find_archive_entry(arc, src);
   if (ent == NULL && (mode_flags & FILESTREAM_OPEN_WRITE) == 0 &&
       (mode_flags & FILESTREAM_OPEN_APPEND) == 0) {
+    thread_log_warn("Missing archive entry for filestream path=%s", src->buf);
     profile_func_end;
     return stm;
   }
@@ -227,6 +236,9 @@ func filestream filestream_open_archive(archive* arc, const path* src, u32 mode_
 
   if (ent != NULL && !ent->is_directory && ent->data_size > 0) {
     if (!filestream_reserve_memory(&stm, ent->data_size)) {
+      thread_log_error("Failed to allocate archive filestream buffer path=%s size=%zu",
+                       src->buf,
+                       (size_t)ent->data_size);
       filestream_close(&stm);
       profile_func_end;
       return filestream_empty();
@@ -252,7 +264,7 @@ func filestream filestream_open_archive(archive* arc, const path* src, u32 mode_
                                                      .object_ptr = &stm,
                                                  });
   (void)msg_post(&lifecycle_msg);
-  thread_log_trace("filestream_open_archive: path=%s flags=0x%08x", stm.archive_path.buf, mode_flags);
+  thread_log_trace("Opened archive filestream path=%s flags=0x%08x", stm.archive_path.buf, mode_flags);
 
   profile_func_end;
   return stm;
@@ -264,26 +276,34 @@ func b32 filestream_flush(filestream* stm) {
     if (stm != NULL) {
       filestream_set_error(stm, FILESTREAM_ERROR_NOT_OPEN);
     }
+    thread_log_error("Cannot flush closed filestream");
     profile_func_end;
     return false;
   }
 
   if (stm->kind == FILESTREAM_KIND_NATIVE) {
     if (!SDL_FlushIO((SDL_IOStream*)stm->native_handle)) {
+      thread_log_error("Failed to flush native filestream handle=%p error=%s",
+                       stm->native_handle,
+                       SDL_GetError());
       filestream_set_error(stm, FILESTREAM_ERROR_IO);
       profile_func_end;
       return false;
     }
 
     filestream_set_error(stm, FILESTREAM_ERROR_NONE);
-    thread_log_trace("filestream_flush: native handle=%p", stm->native_handle);
+    thread_log_trace("Flushed native filestream handle=%p", stm->native_handle);
     profile_func_end;
     return true;
   }
 
   if (stm->dirty && stm->archive_ref != NULL) {
+    thread_log_verbose("Flushing archive filestream path=%s size=%zu",
+                       stm->archive_path.buf,
+                       (size_t)stm->memory_size);
     buffer data = buffer_from(stm->memory_ptr, stm->memory_size);
     if (!archive_write_all(stm->archive_ref, &stm->archive_path, data)) {
+      thread_log_error("Failed to flush archive filestream path=%s", stm->archive_path.buf);
       filestream_set_error(stm, FILESTREAM_ERROR_IO);
       profile_func_end;
       return false;
@@ -329,7 +349,7 @@ func void filestream_close(filestream* stm) {
     }
   }
 
-  thread_log_trace("filestream_close: kind=%u", (u32)stm->kind);
+  thread_log_trace("Closed filestream kind=%u", (u32)stm->kind);
   *stm = filestream_empty();
   profile_func_end;
 }
@@ -364,6 +384,7 @@ func sz filestream_read(filestream* stm, void* dst, sz size) {
     if (stm != NULL) {
       filestream_set_error(stm, FILESTREAM_ERROR_NOT_OPEN);
     }
+    thread_log_error("Rejected filestream read handle=%p size=%zu", (void*)stm, (size_t)size);
     profile_func_end;
     return 0;
   }
@@ -374,8 +395,12 @@ func sz filestream_read(filestream* stm, void* dst, sz size) {
     if (read_size == 0 && size > 0) {
       if (filestream_eof(stm)) {
         filestream_set_error(stm, FILESTREAM_ERROR_EOF);
+        thread_log_debug("Reached native filestream EOF handle=%p", stm->native_handle);
       } else {
         filestream_set_error(stm, FILESTREAM_ERROR_IO);
+        thread_log_error("Failed to read native filestream handle=%p error=%s",
+                         stm->native_handle,
+                         SDL_GetError());
       }
     } else {
       filestream_set_error(stm, FILESTREAM_ERROR_NONE);
@@ -386,12 +411,14 @@ func sz filestream_read(filestream* stm, void* dst, sz size) {
 
   if ((stm->mode_flags & FILESTREAM_OPEN_READ) == 0) {
     filestream_set_error(stm, FILESTREAM_ERROR_ACCESS);
+    thread_log_warn("Rejected archive filestream read without read access path=%s", stm->archive_path.buf);
     profile_func_end;
     return 0;
   }
 
   if (stm->cursor >= stm->memory_size) {
     filestream_set_error(stm, FILESTREAM_ERROR_EOF);
+    thread_log_debug("Reached archive filestream EOF path=%s", stm->archive_path.buf);
     profile_func_end;
     return 0;
   }
@@ -432,6 +459,7 @@ func sz filestream_write(filestream* stm, const void* src, sz size) {
     if (stm != NULL) {
       filestream_set_error(stm, FILESTREAM_ERROR_NOT_OPEN);
     }
+    thread_log_error("Rejected filestream write handle=%p size=%zu", (void*)stm, (size_t)size);
     profile_func_end;
     return 0;
   }
@@ -441,6 +469,11 @@ func sz filestream_write(filestream* stm, const void* src, sz size) {
     end_pos = (sz)SDL_WriteIO((SDL_IOStream*)stm->native_handle, src, (size_t)size);
     if (end_pos != size) {
       filestream_set_error(stm, FILESTREAM_ERROR_IO);
+      thread_log_error("Failed to write native filestream handle=%p expected=%zu actual=%zu error=%s",
+                       stm->native_handle,
+                       (size_t)size,
+                       (size_t)end_pos,
+                       SDL_GetError());
     } else {
       filestream_set_error(stm, FILESTREAM_ERROR_NONE);
     }
@@ -451,6 +484,7 @@ func sz filestream_write(filestream* stm, const void* src, sz size) {
   if ((stm->mode_flags & FILESTREAM_OPEN_WRITE) == 0 &&
       (stm->mode_flags & FILESTREAM_OPEN_APPEND) == 0) {
     filestream_set_error(stm, FILESTREAM_ERROR_ACCESS);
+    thread_log_warn("Rejected archive filestream write without write access path=%s", stm->archive_path.buf);
     profile_func_end;
     return 0;
   }
@@ -461,6 +495,9 @@ func sz filestream_write(filestream* stm, const void* src, sz size) {
 
   end_pos = stm->cursor + size;
   if (!filestream_reserve_memory(stm, end_pos)) {
+    thread_log_error("Failed to reserve archive filestream capacity path=%s size=%zu",
+                     stm->archive_path.buf,
+                     (size_t)end_pos);
     profile_func_end;
     return 0;
   }
@@ -505,6 +542,7 @@ func b32 filestream_seek(filestream* stm, i64 offset, filestream_seek_basis basi
     if (stm != NULL) {
       filestream_set_error(stm, FILESTREAM_ERROR_NOT_OPEN);
     }
+    thread_log_error("Cannot seek closed filestream");
     profile_func_end;
     return false;
   }
@@ -519,6 +557,10 @@ func b32 filestream_seek(filestream* stm, i64 offset, filestream_seek_basis basi
 
     if (SDL_SeekIO((SDL_IOStream*)stm->native_handle, (Sint64)offset, io_basis) < 0) {
       filestream_set_error(stm, FILESTREAM_ERROR_SEEK);
+      thread_log_error("Failed to seek native filestream handle=%p offset=%lld error=%s",
+                       stm->native_handle,
+                       (long long)offset,
+                       SDL_GetError());
       profile_func_end;
       return false;
     }
@@ -537,6 +579,10 @@ func b32 filestream_seek(filestream* stm, i64 offset, filestream_seek_basis basi
   new_pos = base_pos + offset;
   if (new_pos < 0 || (sz)new_pos > stm->memory_size) {
     filestream_set_error(stm, FILESTREAM_ERROR_SEEK);
+    thread_log_warn("Rejected archive filestream seek path=%s offset=%lld basis=%u",
+                    stm->archive_path.buf,
+                    (long long)offset,
+                    (u32)basis);
     profile_func_end;
     return false;
   }
@@ -604,7 +650,7 @@ func b32 filestream_eof(const filestream* stm) {
 
 func filestream_error filestream_get_error(const filestream* stm) {
   if (stm == NULL) {
-      return FILESTREAM_ERROR_NOT_OPEN;
+    return FILESTREAM_ERROR_NOT_OPEN;
   }
 
   return stm->error_code;

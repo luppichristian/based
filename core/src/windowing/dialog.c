@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "windowing/dialog.h"
+#include "context/thread_ctx.h"
 #include "basic/profiler.h"
 #include "windowing/window.h"
 #include "../sdl3_include.h"
@@ -18,6 +19,7 @@ typedef struct dialog_callback_ctx {
 func SDL_Window* dialog_resolve_window(window owner) {
   profile_func_begin;
   if (!window_id_is_valid(owner)) {
+    thread_log_warn("Dialog owner window is invalid");
     profile_func_end;
     return NULL;
   }
@@ -93,6 +95,7 @@ func dialog_callback_ctx* dialog_make_callback_ctx(dialog_file_callback* callbac
 
   dialog_callback_ctx* callback_ctx = (dialog_callback_ctx*)SDL_malloc(size_of(dialog_callback_ctx));
   if (callback_ctx == NULL) {
+    thread_log_error("Failed to allocate dialog callback context");
     profile_func_end;
     return NULL;
   }
@@ -107,6 +110,7 @@ func void SDLCALL dialog_file_callback_bridge(void* user_data, const c8* const* 
   profile_func_begin;
   dialog_callback_ctx* callback_ctx = (dialog_callback_ctx*)user_data;
   if (callback_ctx == NULL || callback_ctx->callback == NULL) {
+    thread_log_error("Dialog callback bridge received invalid context user_data=%p", user_data);
     if (callback_ctx != NULL) {
       SDL_free(callback_ctx);
     }
@@ -116,6 +120,10 @@ func void SDLCALL dialog_file_callback_bridge(void* user_data, const c8* const* 
 
   b32 has_error = file_list == NULL;
   b32 is_cancelled = file_list != NULL && file_list[0] == NULL;
+  thread_log_trace("Dialog callback completed filter_idx=%d cancelled=%u error=%u",
+                   filter_idx,
+                   (u32)is_cancelled,
+                   (u32)has_error);
   callback_ctx->callback(callback_ctx->user_data, (cstr8 const*)file_list, (i32)filter_idx, is_cancelled, has_error);
   SDL_free(callback_ctx);
   profile_func_end;
@@ -133,6 +141,11 @@ func b32 dialog_show_message(window owner, dialog_message_kind message_kind, cst
       title != NULL ? title : "Message",
       message != NULL ? message : "",
       owner_window);
+  if (!result) {
+    thread_log_error("Failed to show simple dialog title=%s error=%s",
+                     title != NULL ? title : "Message",
+                     SDL_GetError());
+  }
   profile_func_end;
   return result;
 }
@@ -140,14 +153,17 @@ func b32 dialog_show_message(window owner, dialog_message_kind message_kind, cst
 func b32 dialog_show_message_box(window owner, const dialog_message_box* message_box, i32* out_button_id) {
   profile_func_begin;
   if (message_box == NULL) {
+    thread_log_error("Rejected dialog message box because descriptor is NULL");
     profile_func_end;
     return false;
   }
   if (message_box->button_count > 0 && message_box->buttons == NULL) {
+    thread_log_error("Rejected dialog message box because buttons are missing count=%zu", (size_t)message_box->button_count);
     profile_func_end;
     return false;
   }
   if (message_box->button_count > (sz)I32_MAX) {
+    thread_log_error("Rejected dialog message box because button count is too large count=%zu", (size_t)message_box->button_count);
     profile_func_end;
     return false;
   }
@@ -159,6 +175,7 @@ func b32 dialog_show_message_box(window owner, const dialog_message_box* message
   if (button_count > 0) {
     sdl_buttons = (SDL_MessageBoxButtonData*)SDL_malloc((sz)button_count * size_of(SDL_MessageBoxButtonData));
     if (sdl_buttons == NULL) {
+      thread_log_error("Failed to allocate dialog buttons count=%d", button_count);
       profile_func_end;
       return false;
     }
@@ -199,6 +216,11 @@ func b32 dialog_show_message_box(window owner, const dialog_message_box* message
 
   int selected_button_id = -1;
   b32 result = SDL_ShowMessageBox(&sdl_message_box_data, &selected_button_id);
+  if (!result) {
+    thread_log_error("Failed to show dialog message box title=%s error=%s",
+                     message_box->title != NULL ? message_box->title : "Message",
+                     SDL_GetError());
+  }
   if (result && out_button_id != NULL) {
     *out_button_id = (i32)selected_button_id;
   }
@@ -222,6 +244,7 @@ func b32 dialog_open_file(
   SDL_Window* owner_window = dialog_resolve_window(owner);
   dialog_callback_ctx* callback_ctx = dialog_make_callback_ctx(callback, user_data);
   if (callback != NULL && callback_ctx == NULL) {
+    thread_log_error("Failed to create open file dialog callback context");
     profile_func_end;
     return false;
   }
@@ -249,6 +272,7 @@ func b32 dialog_save_file(
   SDL_Window* owner_window = dialog_resolve_window(owner);
   dialog_callback_ctx* callback_ctx = dialog_make_callback_ctx(callback, user_data);
   if (callback != NULL && callback_ctx == NULL) {
+    thread_log_error("Failed to create save file dialog callback context");
     profile_func_end;
     return false;
   }
@@ -274,6 +298,7 @@ func b32 dialog_open_folder(
   SDL_Window* owner_window = dialog_resolve_window(owner);
   dialog_callback_ctx* callback_ctx = dialog_make_callback_ctx(callback, user_data);
   if (callback != NULL && callback_ctx == NULL) {
+    thread_log_error("Failed to create open folder dialog callback context");
     profile_func_end;
     return false;
   }

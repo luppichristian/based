@@ -74,6 +74,7 @@ func b32 msg_user_space_ensure(void) {
   for (msg_category category = MSG_CATEGORY_GRAPHICS; category < MSG_CATEGORY_MAX; category += 1) {
     u32 base_type = SDL_RegisterEvents((int)MSG_CATEGORY_USER_TYPE_COUNT);
     if (base_type == (u32)-1) {
+      thread_log_error("Failed to register SDL user event range category=%u error=%s", (u32)category, SDL_GetError());
       for (sz idx = 0; idx < MSG_CATEGORY_MAX; idx += 1) {
         msg_user_space_bases[idx] = 0;
       }
@@ -85,6 +86,7 @@ func b32 msg_user_space_ensure(void) {
   }
 
   msg_user_spaces_ready = true;
+  thread_log_info("Registered SDL user event spaces");
   profile_func_end;
   return true;
 }
@@ -350,23 +352,23 @@ func b32 msg_handler_should_run_for_stage(u32 options, msg_handler_stage stage) 
 
   switch (stage) {
     case MSG_HANDLER_STAGE_BEFORE_POST:
-          return (stage_options & MSG_HANDLER_OPTION_STAGE_BEFORE_POST) != 0;
+      return (stage_options & MSG_HANDLER_OPTION_STAGE_BEFORE_POST) != 0;
     case MSG_HANDLER_STAGE_AFTER_POST:
-          return (stage_options & MSG_HANDLER_OPTION_STAGE_AFTER_POST) != 0;
+      return (stage_options & MSG_HANDLER_OPTION_STAGE_AFTER_POST) != 0;
     case MSG_HANDLER_STAGE_POST_FAILED:
-          return (stage_options & MSG_HANDLER_OPTION_STAGE_POST_FAILED) != 0;
+      return (stage_options & MSG_HANDLER_OPTION_STAGE_POST_FAILED) != 0;
     default:
-          return false;
+      return false;
   }
 }
 
 func b32 msg_handler_should_run_for_type(const msg_handler_entry* entry, u32 type) {
   if (entry->type_min == 0 && entry->type_max == 0) {
-      return true;
+    return true;
   }
 
   if (entry->type_min <= entry->type_max) {
-      return in_range(type, entry->type_min, entry->type_max);
+    return in_range(type, entry->type_min, entry->type_max);
   }
 
   return in_range(type, entry->type_max, entry->type_min);
@@ -1467,6 +1469,7 @@ func b32 msg_poll(msg* out_msg) {
 
   msg_refresh_synthetic_device_msgs();
   if (!out_msg) {
+    thread_log_error("Rejected message poll because output buffer is NULL");
     profile_func_end;
     return false;
   }
@@ -1474,9 +1477,11 @@ func b32 msg_poll(msg* out_msg) {
 
   while (SDL_PollEvent(&native_event)) {
     if (!msg_from_sdl(&native_event, out_msg)) {
+      thread_log_verbose("Skipped SDL event during poll type=%u because translation failed", (u32)native_event.type);
       continue;
     }
     if (!msg_filter_accept(out_msg)) {
+      thread_log_trace("Filtered polled message type=%u", out_msg->type);
       continue;
     }
     msg_notify_internal_listeners(out_msg);
@@ -1493,6 +1498,7 @@ func b32 msg_wait(msg* out_msg) {
   SDL_Event native_event;
 
   if (!out_msg) {
+    thread_log_error("Rejected message wait because output buffer is NULL");
     profile_func_end;
     return false;
   }
@@ -1513,13 +1519,16 @@ func b32 msg_wait(msg* out_msg) {
 
   for (;;) {
     if (!SDL_WaitEvent(&native_event)) {
+      thread_log_error("SDL_WaitEvent failed error=%s", SDL_GetError());
       profile_func_end;
       return false;
     }
     if (!msg_from_sdl(&native_event, out_msg)) {
+      thread_log_verbose("Skipped SDL event during wait type=%u because translation failed", (u32)native_event.type);
       continue;
     }
     if (!msg_filter_accept(out_msg)) {
+      thread_log_trace("Filtered waited message type=%u", out_msg->type);
       continue;
     }
     msg_notify_internal_listeners(out_msg);
@@ -1533,10 +1542,12 @@ func b32 msg_wait_timeout(msg* out_msg, i32 timeout_ms) {
   SDL_Event native_event;
 
   if (!out_msg) {
+    thread_log_error("Rejected message wait timeout because output buffer is NULL");
     profile_func_end;
     return false;
   }
   if (timeout_ms < 0) {
+    thread_log_error("Rejected message wait timeout because timeout is negative timeout_ms=%d", timeout_ms);
     profile_func_end;
     return false;
   }
@@ -1557,6 +1568,7 @@ func b32 msg_wait_timeout(msg* out_msg, i32 timeout_ms) {
 
   if (!SDL_WaitEventTimeout(&native_event, (Sint32)timeout_ms) || !msg_from_sdl(&native_event, out_msg) ||
       !msg_filter_accept(out_msg)) {
+    thread_log_trace("Message wait timeout completed without accepted event timeout_ms=%d", timeout_ms);
     profile_func_end;
     return false;
   }
@@ -1570,11 +1582,13 @@ func b32 msg_peek(msg* out_msg) {
   profile_func_begin;
   SDL_Event native_event = {0};
   if (out_msg == NULL) {
+    thread_log_error("Rejected message peek because output buffer is NULL");
     profile_func_end;
     return false;
   }
 
   if (SDL_PeepEvents(&native_event, 1, SDL_PEEKEVENT, SDL_EVENT_FIRST, SDL_EVENT_LAST) <= 0) {
+    thread_log_trace("No message available to peek");
     profile_func_end;
     return false;
   }
@@ -1619,6 +1633,7 @@ func b32 _msg_post(const msg* src, callsite site) {
   msg* payload = NULL;
 
   if (!src) {
+    thread_log_error("Rejected message post because source is NULL");
     profile_func_end;
     return false;
   }
@@ -1627,11 +1642,15 @@ func b32 _msg_post(const msg* src, callsite site) {
   posted_msg = *src;
   posted_msg.post_site = site;
   if (!msg_category_is_valid(posted_msg.category)) {
+    thread_log_error("Rejected message post because category is invalid category=%u type=%u",
+                     (u32)posted_msg.category,
+                     posted_msg.type);
     profile_func_end;
     return false;
   }
 
   if (!msg_filter_accept(&posted_msg)) {
+    thread_log_trace("Filtered message before post type=%u", posted_msg.type);
     profile_func_end;
     return false;
   }
@@ -1647,6 +1666,9 @@ func b32 _msg_post(const msg* src, callsite site) {
     u32 native_event_type = posted_msg.type;
     if (msg_category_needs_user_space(posted_msg.category)) {
       if (!msg_user_space_get_sdl_type(posted_msg.category, posted_msg.type, &native_event_type)) {
+        thread_log_error("Failed to map message type to SDL user event category=%u type=%u",
+                         (u32)posted_msg.category,
+                         posted_msg.type);
         profile_func_end;
         return false;
       }
@@ -1667,6 +1689,7 @@ func b32 _msg_post(const msg* src, callsite site) {
     native_event.user.data1 = payload;
     native_event.user.data2 = NULL;
   } else if (!msg_to_sdl_event(&posted_msg, &native_event)) {
+    thread_log_error("Failed to convert message to SDL event type=%u", posted_msg.type);
     profile_func_end;
     return false;
   }
@@ -1691,6 +1714,11 @@ func b32 _msg_post(const msg* src, callsite site) {
 func u64 msg_add_handler(const msg_handler_desc* desc) {
   profile_func_begin;
   if (desc == NULL || desc->handler_fn == NULL || msg_handler_count >= MSG_HANDLER_CAP) {
+    thread_log_error("Rejected message handler add desc=%p has_fn=%u count=%u cap=%u",
+                     (void*)desc,
+                     (u32)(desc != NULL && desc->handler_fn != NULL),
+                     msg_handler_count,
+                     MSG_HANDLER_CAP);
     profile_func_end;
     return 0;
   }
@@ -1744,6 +1772,7 @@ func b32 msg_remove_handler(u64 handler_id) {
     return true;
   }
 
+  thread_log_warn("Message handler removal missed id=%llu", (unsigned long long)handler_id);
   profile_func_end;
   return false;
 }
@@ -1764,6 +1793,7 @@ func void msg_set_filter(msg_filter_fn filter_fn, void* user_data) {
   profile_func_begin;
   msg_filter_current = filter_fn;
   msg_filter_user_data = user_data;
+  thread_log_trace("Updated message filter enabled=%u user_data=%p", (u32)(filter_fn != NULL), user_data);
   profile_func_end;
 }
 

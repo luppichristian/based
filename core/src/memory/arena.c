@@ -109,7 +109,7 @@ func arena arena_create(allocator parent_alloc, mutex opt_mutex, sz default_bloc
                                                      .object_ptr = &arn,
                                                  });
   (void)msg_post(&lifecycle_msg);
-  thread_log_trace("arena_create: block_sz=%zu", (size_t)default_block_sz);
+  thread_log_trace("Created arena default_block_size=%zu", (size_t)default_block_sz);
   profile_func_end;
   return arn;
 }
@@ -166,7 +166,7 @@ func void arena_destroy(arena* arn) {
 
   arn->opt_mutex = NULL;
   arn->mutex_owned = 0;
-  thread_log_trace("arena_destroy: arn=%p", (void*)arn);
+  thread_log_trace("Destroyed arena handle=%p", (void*)arn);
   profile_func_end;
 }
 
@@ -228,7 +228,7 @@ func b32 arena_remove_block(arena* arn, void* ptr) {
       if (arn->blocks_tail == blk) {
         arn->blocks_tail = prev;
       }
-      found = 1;
+      found = true;
       break;
     }
     prev = blk;
@@ -273,7 +273,10 @@ func void* _arena_alloc(arena* arn, sz size, sz align, callsite site) {
     if (new_blk) {
       arena_block_setup(new_blk, block_sz, 1);
       arena_chain_block(arn, new_blk);
+      thread_log_verbose("Added arena block size=%zu request=%zu", (size_t)block_sz, (size_t)size);
       result = arena_block_alloc(new_blk, size, align);
+    } else {
+      thread_log_error("Failed to allocate arena block size=%zu request=%zu", (size_t)block_sz, (size_t)size);
     }
   }
 
@@ -356,20 +359,23 @@ func void arena_clear(arena* arn) {
   }
 
   arena_block* blk = arn->blocks_head;
+  sz cleared_blocks = 0;
   while (blk) {
     blk->used = size_of(arena_block);
+    cleared_blocks += 1;
     blk = blk->next;
   }
 
   if (arn->opt_mutex) {
     mutex_unlock(arn->opt_mutex);
   }
+  thread_log_verbose("Cleared arena blocks=%zu", (size_t)cleared_blocks);
   profile_func_end;
 }
 
 func sz arena_block_count(arena* arn) {
   if (arn == NULL) {
-      return 0;
+    return 0;
   }
   if (arn->opt_mutex) {
     mutex_lock(arn->opt_mutex);
@@ -386,7 +392,7 @@ func sz arena_block_count(arena* arn) {
 
 func sz arena_total_size(arena* arn) {
   if (arn == NULL) {
-      return 0;
+    return 0;
   }
   if (arn->opt_mutex) {
     mutex_lock(arn->opt_mutex);
@@ -403,7 +409,7 @@ func sz arena_total_size(arena* arn) {
 
 func sz arena_total_used(arena* arn) {
   if (arn == NULL) {
-      return 0;
+    return 0;
   }
   if (arn->opt_mutex) {
     mutex_lock(arn->opt_mutex);
@@ -420,7 +426,7 @@ func sz arena_total_used(arena* arn) {
 
 func sz arena_total_free(arena* arn) {
   if (arn == NULL) {
-      return 0;
+    return 0;
   }
   if (arn->opt_mutex) {
     mutex_lock(arn->opt_mutex);

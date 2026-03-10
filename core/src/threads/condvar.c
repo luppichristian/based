@@ -26,7 +26,9 @@ func condvar _condvar_create(callsite site) {
       profile_func_end;
       return NULL;
     }
-    thread_log_trace("condvar_create: handle=%p", handle);
+    thread_log_trace("Created condvar handle=%p", handle);
+  } else {
+    thread_log_error("Failed to create condvar error=%s", SDL_GetError());
   }
   profile_func_end;
   return handle;
@@ -36,6 +38,7 @@ func b32 _condvar_destroy(condvar cond, callsite site) {
   profile_func_begin;
   (void)site;
   if (!cond) {
+    thread_log_warn("Skipping condvar destroy for invalid handle");
     profile_func_end;
     return false;
   }
@@ -51,7 +54,7 @@ func b32 _condvar_destroy(condvar cond, callsite site) {
     profile_func_end;
     return false;
   }
-  thread_log_trace("condvar_destroy: handle=%p", cond);
+  thread_log_trace("Destroyed condvar handle=%p", cond);
   SDL_DestroyCondition((SDL_Condition*)cond);
   profile_func_end;
   return true;
@@ -64,6 +67,7 @@ func b32 condvar_is_valid(condvar cond) {
 func void condvar_wait(condvar cond, mutex mtx) {
   profile_func_begin;
   if (cond == NULL || mtx == NULL) {
+    thread_log_error("Rejected condvar wait cond=%p mutex=%p", cond, mtx);
     profile_func_end;
     return;
   }
@@ -76,6 +80,7 @@ func void condvar_wait(condvar cond, mutex mtx) {
 func b32 condvar_wait_timeout(condvar cond, mutex mtx, u32 millis) {
   profile_func_begin;
   if (cond == NULL || mtx == NULL) {
+    thread_log_error("Rejected condvar wait timeout cond=%p mutex=%p millis=%u", cond, mtx, millis);
     profile_func_end;
     return false;
   }
@@ -88,6 +93,7 @@ func b32 condvar_wait_timeout(condvar cond, mutex mtx, u32 millis) {
 func void condvar_signal(condvar cond) {
   profile_func_begin;
   if (cond == NULL) {
+    thread_log_error("Rejected condvar signal for invalid handle");
     profile_func_end;
     return;
   }
@@ -99,6 +105,7 @@ func void condvar_signal(condvar cond) {
 func void condvar_broadcast(condvar cond) {
   profile_func_begin;
   if (cond == NULL) {
+    thread_log_error("Rejected condvar broadcast for invalid handle");
     profile_func_end;
     return;
   }

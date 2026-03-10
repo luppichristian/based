@@ -81,6 +81,7 @@ func b32 thread_log_sync(void) {
   profile_func_begin;
   ctx* context = thread_ctx_get();
   if (!context) {
+    thread_log_warn("Cannot sync thread log without thread context");
     profile_func_end;
     return false;
   }
@@ -103,6 +104,9 @@ func log_frame* thread_log_end_frame(u32 severity_mask) {
 func b32 thread_ctx_init(allocator main_allocator) {
   profile_func_begin;
   if (!main_allocator.alloc_fn || thread_ctx.is_init) {
+    thread_log_error("Invalid thread context initialization request has_alloc=%u is_init=%u",
+                     (u32)(main_allocator.alloc_fn != NULL),
+                     (u32)thread_ctx.is_init);
     profile_func_end;
     return false;
   }
@@ -120,6 +124,8 @@ func b32 thread_ctx_init(allocator main_allocator) {
 
   memset(&thread_ctx, 0, size_of(thread_ctx));
   if (!ctx_init(&thread_ctx, main_allocator, NULL, false)) {
+    thread_log_error("Failed to initialize thread context thread_id=%llu",
+                     (unsigned long long)thread_id());
     memset(&thread_ctx, 0, size_of(thread_ctx));
     profile_func_end;
     return false;

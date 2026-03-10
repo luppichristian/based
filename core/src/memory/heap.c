@@ -215,7 +215,7 @@ func heap heap_create(allocator parent_alloc, mutex opt_mutex, sz default_block_
                                                      .object_ptr = &hep,
                                                  });
   (void)msg_post(&lifecycle_msg);
-  thread_log_trace("heap_create: block_sz=%zu", (size_t)default_block_sz);
+  thread_log_trace("Created heap default_block_size=%zu", (size_t)default_block_sz);
   profile_func_end;
   return hep;
 }
@@ -273,7 +273,7 @@ func void heap_destroy(heap* hep) {
 
   hep->opt_mutex = NULL;
   hep->mutex_owned = 0;
-  thread_log_trace("heap_destroy: hep=%p", (void*)hep);
+  thread_log_trace("Destroyed heap handle=%p", (void*)hep);
   profile_func_end;
 }
 
@@ -343,7 +343,7 @@ func b32 heap_remove_block(heap* hep, void* ptr) {
       if (hep->blocks_tail == blk) {
         hep->blocks_tail = prev;
       }
-      found = 1;
+      found = true;
       break;
     }
     prev = blk;
@@ -385,7 +385,10 @@ func void* _heap_alloc(heap* hep, sz size, sz align, callsite site) {
     if (new_blk) {
       heap_block_setup(hep, new_blk, block_sz, 1);
       heap_chain_block(hep, new_blk);
+      thread_log_verbose("Added heap block size=%zu request=%zu", (size_t)block_sz, (size_t)size);
       result = heap_try_alloc(hep, size, eff_align);
+    } else {
+      thread_log_error("Failed to allocate heap block size=%zu request=%zu", (size_t)block_sz, (size_t)size);
     }
   }
 
@@ -505,6 +508,7 @@ func void heap_clear(heap* hep) {
   hep->free_head = NULL;
 
   heap_block* blk = hep->blocks_head;
+  sz rebuilt_blocks = 0;
   while (blk) {
     sz body = blk->size - size_of(heap_block);
     if (body > size_of(heap_chunk)) {
@@ -516,18 +520,20 @@ func void heap_clear(heap* hep) {
       chunk->is_free = 1;
       hep->free_head = chunk;
     }
+    rebuilt_blocks += 1;
     blk = blk->next;
   }
 
   if (hep->opt_mutex) {
     mutex_unlock(hep->opt_mutex);
   }
+  thread_log_verbose("Cleared heap blocks=%zu", (size_t)rebuilt_blocks);
   profile_func_end;
 }
 
 func sz heap_block_count(heap* hep) {
   if (hep == NULL) {
-      return 0;
+    return 0;
   }
   if (hep->opt_mutex) {
     mutex_lock(hep->opt_mutex);
@@ -544,7 +550,7 @@ func sz heap_block_count(heap* hep) {
 
 func sz heap_total_size(heap* hep) {
   if (hep == NULL) {
-      return 0;
+    return 0;
   }
   if (hep->opt_mutex) {
     mutex_lock(hep->opt_mutex);

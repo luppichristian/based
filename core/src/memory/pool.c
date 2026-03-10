@@ -154,7 +154,7 @@ func pool pool_create(
                                                      .object_ptr = &pol,
                                                  });
   (void)msg_post(&lifecycle_msg);
-  thread_log_trace("pool_create: obj_size=%zu obj_align=%zu", (size_t)object_size, (size_t)object_align);
+  thread_log_trace("Created pool object_size=%zu object_align=%zu", (size_t)object_size, (size_t)object_align);
   profile_func_end;
   return pol;
 }
@@ -217,7 +217,7 @@ func void pool_destroy(pool* pol) {
 
   pol->opt_mutex = NULL;
   pol->mutex_owned = 0;
-  thread_log_trace("pool_destroy: pol=%p", (void*)pol);
+  thread_log_trace("Destroyed pool handle=%p", (void*)pol);
   profile_func_end;
 }
 
@@ -281,7 +281,7 @@ func b32 pool_remove_block(pool* pol, void* ptr) {
       if (pol->blocks_tail == blk) {
         pol->blocks_tail = prev_blk;
       }
-      found = 1;
+      found = true;
       break;
     }
     prev_blk = blk;
@@ -348,13 +348,16 @@ func void* _pool_alloc(pool* pol, callsite site) {
     if (new_blk) {
       new_blk->next = NULL;
       new_blk->size = block_sz;
-      new_blk->owned = 1;
+      new_blk->owned = true;
       pool_chain_block(pol, new_blk);
       pool_block_carve(pol, new_blk);
+      thread_log_verbose("Added pool block size=%zu object_size=%zu", (size_t)block_sz, (size_t)pol->object_size);
       if (pol->free_head) {
         result = pol->free_head;
         pol->free_head = pool_slot_read_next(result);
       }
+    } else {
+      thread_log_error("Failed to allocate pool block size=%zu object_size=%zu", (size_t)block_sz, (size_t)pol->object_size);
     }
   }
 
@@ -403,20 +406,23 @@ func void pool_clear(pool* pol) {
 
   pol->free_head = NULL;
   pool_block* blk = pol->blocks_head;
+  sz rebuilt_blocks = 0;
   while (blk) {
     pool_block_carve(pol, blk);
+    rebuilt_blocks += 1;
     blk = blk->next;
   }
 
   if (pol->opt_mutex) {
     mutex_unlock(pol->opt_mutex);
   }
+  thread_log_verbose("Cleared pool blocks=%zu", (size_t)rebuilt_blocks);
   profile_func_end;
 }
 
 func sz pool_block_count(pool* pol) {
   if (pol == NULL) {
-      return 0;
+    return 0;
   }
   if (pol->opt_mutex) {
     mutex_lock(pol->opt_mutex);
@@ -433,7 +439,7 @@ func sz pool_block_count(pool* pol) {
 
 func sz pool_slot_size(pool* pol) {
   if (pol == NULL) {
-      return 0;
+    return 0;
   }
   sz result = pol->object_size;
   return result;
@@ -441,7 +447,7 @@ func sz pool_slot_size(pool* pol) {
 
 func sz pool_free_count(pool* pol) {
   if (pol == NULL) {
-      return 0;
+    return 0;
   }
   if (pol->opt_mutex) {
     mutex_lock(pol->opt_mutex);

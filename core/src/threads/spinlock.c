@@ -26,6 +26,7 @@ func spinlock _spinlock_create(callsite site) {
   allocator alloc = spinlock_allocator_resolve();
   (void)site;
   if (alloc.alloc_fn == NULL || alloc.dealloc_fn == NULL) {
+    thread_log_error("Failed to resolve allocator for spinlock creation");
     profile_func_end;
     return NULL;
   }
@@ -49,7 +50,9 @@ func spinlock _spinlock_create(callsite site) {
       profile_func_end;
       return NULL;
     }
-    thread_log_trace("spinlock_create: handle=%p", spl);
+    thread_log_trace("Created spinlock handle=%p", spl);
+  } else {
+    thread_log_error("Failed to allocate spinlock storage");
   }
   profile_func_end;
   return (spinlock)spl;
@@ -60,10 +63,12 @@ func void _spinlock_destroy(spinlock sl, callsite site) {
   allocator alloc = spinlock_allocator_resolve();
   (void)site;
   if (!sl) {
+    thread_log_warn("Skipping spinlock destroy for invalid handle");
     profile_func_end;
     return;
   }
   if (alloc.dealloc_fn == NULL) {
+    thread_log_error("Failed to resolve deallocator for spinlock handle=%p", sl);
     profile_func_end;
     return;
   }
@@ -80,7 +85,7 @@ func void _spinlock_destroy(spinlock sl, callsite site) {
     profile_func_end;
     return;
   }
-  thread_log_trace("spinlock_destroy: handle=%p", sl);
+  thread_log_trace("Destroyed spinlock handle=%p", sl);
   allocator_dealloc(alloc, sl, size_of(SDL_SpinLock));
   profile_func_end;
 }
@@ -92,6 +97,7 @@ func b32 spinlock_is_valid(spinlock sl) {
 func void spinlock_lock(spinlock sl) {
   profile_func_begin;
   if (sl == NULL) {
+    thread_log_error("Rejected spinlock lock for invalid handle");
     profile_func_end;
     return;
   }
@@ -103,6 +109,7 @@ func void spinlock_lock(spinlock sl) {
 func void spinlock_unlock(spinlock sl) {
   profile_func_begin;
   if (sl == NULL) {
+    thread_log_error("Rejected spinlock unlock for invalid handle");
     profile_func_end;
     return;
   }
@@ -114,6 +121,7 @@ func void spinlock_unlock(spinlock sl) {
 func b32 spinlock_try_lock(spinlock sl) {
   profile_func_begin;
   if (sl == NULL) {
+    thread_log_error("Rejected spinlock try lock for invalid handle");
     profile_func_end;
     return false;
   }

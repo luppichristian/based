@@ -40,10 +40,12 @@ func thread_group create_impl(u32 count, thread_group_func entry, void* arg, cst
   allocator alloc = thread_group_allocator_resolve();
   thread_group empty = {0};
   if (!count || !entry) {
+    thread_log_error("Rejected thread group creation count=%u has_entry=%u", count, (u32)(entry != NULL));
     profile_func_end;
     return empty;
   }
   if (alloc.alloc_fn == NULL || alloc.dealloc_fn == NULL) {
+    thread_log_error("Failed to resolve allocator for thread group count=%u", count);
     profile_func_end;
     return empty;
   }
@@ -61,6 +63,7 @@ func thread_group create_impl(u32 count, thread_group_func entry, void* arg, cst
   group.slots = (thread_group_slot*)allocator_alloc(alloc, (sz)count * size_of(thread_group_slot));
 
   if (!group.threads || !group.slots) {
+    thread_log_error("Failed to allocate thread group storage count=%u", count);
     allocator_dealloc(alloc, group.threads, (sz)count * size_of(thread));
     allocator_dealloc(alloc, group.slots, (sz)count * size_of(thread_group_slot));
     profile_func_end;
@@ -81,6 +84,9 @@ func thread_group create_impl(u32 count, thread_group_func entry, void* arg, cst
     }
 
     if (!group.threads[idx]) {
+      thread_log_error("Failed to create thread group worker idx=%u base_name=%s",
+                       idx,
+                       base_name != NULL ? base_name : "<null>");
       for (u32 join_idx = 0; join_idx < idx; join_idx += 1) {
         thread_detach(group.threads[join_idx]);
       }
@@ -92,7 +98,7 @@ func thread_group create_impl(u32 count, thread_group_func entry, void* arg, cst
   }
 
   group.count = count;
-  thread_log_trace("thread_group_create: count=%u base_name=%s", count, base_name != NULL ? base_name : "<null>");
+  thread_log_info("Created thread group count=%u base_name=%s", count, base_name != NULL ? base_name : "<null>");
   profile_func_end;
   return group;
 }
@@ -137,10 +143,12 @@ func void _thread_group_destroy(thread_group* group, callsite site) {
   allocator alloc = thread_group_allocator_resolve();
   (void)site;
   if (!group) {
+    thread_log_warn("Skipping thread group destroy for NULL group");
     profile_func_end;
     return;
   }
   if (alloc.dealloc_fn == NULL) {
+    thread_log_error("Failed to resolve deallocator for thread group group=%p", (void*)group);
     profile_func_end;
     return;
   }
@@ -160,7 +168,7 @@ func void _thread_group_destroy(thread_group* group, callsite site) {
   group->threads = NULL;
   group->slots = NULL;
   group->count = 0;
-  thread_log_trace("thread_group_destroy: group=%p", (void*)group);
+  thread_log_info("Destroyed thread group group=%p", (void*)group);
   profile_func_end;
 }
 
@@ -185,6 +193,7 @@ func thread thread_group_get(thread_group* group, u32 idx) {
 func b32 thread_group_join_all(thread_group* group, i32* out_exit_codes) {
   profile_func_begin;
   if (!group || !group->threads) {
+    thread_log_error("Rejected thread group join for invalid group group=%p", (void*)group);
     profile_func_end;
     return false;
   }
@@ -194,6 +203,7 @@ func b32 thread_group_join_all(thread_group* group, i32* out_exit_codes) {
   for (u32 idx = 0; idx < group->count; idx += 1) {
     i32 exit_code = 0;
     if (!thread_join(group->threads[idx], &exit_code)) {
+      thread_log_error("Failed to join thread group worker idx=%u group=%p", idx, (void*)group);
       success = 0;
     }
     if (out_exit_codes) {
@@ -201,6 +211,7 @@ func b32 thread_group_join_all(thread_group* group, i32* out_exit_codes) {
     }
     group->threads[idx] = NULL;
   }
+  thread_log_info("Joined thread group count=%u success=%u", group->count, (u32)success);
   profile_func_end;
   return success;
 }
@@ -208,6 +219,7 @@ func b32 thread_group_join_all(thread_group* group, i32* out_exit_codes) {
 func void thread_group_detach_all(thread_group* group) {
   profile_func_begin;
   if (!group || !group->threads) {
+    thread_log_warn("Skipping thread group detach for invalid group group=%p", (void*)group);
     profile_func_end;
     return;
   }
@@ -215,5 +227,6 @@ func void thread_group_detach_all(thread_group* group) {
     thread_detach(group->threads[idx]);
     group->threads[idx] = NULL;
   }
+  thread_log_info("Detached thread group count=%u", group->count);
   profile_func_end;
 }

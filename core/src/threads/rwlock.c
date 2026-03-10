@@ -26,7 +26,9 @@ func rwlock _rwlock_create(callsite site) {
       profile_func_end;
       return NULL;
     }
-    thread_log_trace("rwlock_create: handle=%p", handle);
+    thread_log_trace("Created rwlock handle=%p", handle);
+  } else {
+    thread_log_error("Failed to create rwlock error=%s", SDL_GetError());
   }
   profile_func_end;
   return handle;
@@ -36,6 +38,7 @@ func b32 _rwlock_destroy(rwlock rw, callsite site) {
   profile_func_begin;
   (void)site;
   if (!rw) {
+    thread_log_warn("Skipping rwlock destroy for invalid handle");
     profile_func_end;
     return false;
   }
@@ -51,7 +54,7 @@ func b32 _rwlock_destroy(rwlock rw, callsite site) {
     profile_func_end;
     return false;
   }
-  thread_log_trace("rwlock_destroy: handle=%p", rw);
+  thread_log_trace("Destroyed rwlock handle=%p", rw);
   SDL_DestroyRWLock((SDL_RWLock*)rw);
   profile_func_end;
   return true;
@@ -64,6 +67,7 @@ func b32 rwlock_is_valid(rwlock rw) {
 func void rwlock_read_lock(rwlock rw) {
   profile_func_begin;
   if (rw == NULL) {
+    thread_log_error("Rejected rwlock read lock for invalid handle");
     profile_func_end;
     return;
   }
@@ -75,6 +79,7 @@ func void rwlock_read_lock(rwlock rw) {
 func void rwlock_read_unlock(rwlock rw) {
   profile_func_begin;
   if (rw == NULL) {
+    thread_log_error("Rejected rwlock read unlock for invalid handle");
     profile_func_end;
     return;
   }
@@ -86,6 +91,7 @@ func void rwlock_read_unlock(rwlock rw) {
 func void rwlock_write_lock(rwlock rw) {
   profile_func_begin;
   if (rw == NULL) {
+    thread_log_error("Rejected rwlock write lock for invalid handle");
     profile_func_end;
     return;
   }
@@ -97,6 +103,7 @@ func void rwlock_write_lock(rwlock rw) {
 func void rwlock_write_unlock(rwlock rw) {
   profile_func_begin;
   if (rw == NULL) {
+    thread_log_error("Rejected rwlock write unlock for invalid handle");
     profile_func_end;
     return;
   }
@@ -108,6 +115,7 @@ func void rwlock_write_unlock(rwlock rw) {
 func b32 rwlock_try_read_lock(rwlock rw) {
   profile_func_begin;
   if (rw == NULL) {
+    thread_log_error("Rejected rwlock try read lock for invalid handle");
     profile_func_end;
     return false;
   }
@@ -119,6 +127,7 @@ func b32 rwlock_try_read_lock(rwlock rw) {
 func b32 rwlock_try_write_lock(rwlock rw) {
   profile_func_begin;
   if (rw == NULL) {
+    thread_log_error("Rejected rwlock try write lock for invalid handle");
     profile_func_end;
     return false;
   }
@@ -130,6 +139,7 @@ func b32 rwlock_try_write_lock(rwlock rw) {
 func b32 rwlock_timed_read_lock(rwlock rw, i32 timeout_ms) {
   profile_func_begin;
   if (rw == NULL || timeout_ms < 0) {
+    thread_log_error("Rejected rwlock timed read lock handle=%p timeout_ms=%d", rw, timeout_ms);
     profile_func_end;
     return false;
   }
@@ -137,6 +147,7 @@ func b32 rwlock_timed_read_lock(rwlock rw, i32 timeout_ms) {
   u64 start_ticks = SDL_GetTicks();
   while (!rwlock_try_read_lock(rw)) {
     if ((i32)(SDL_GetTicks() - start_ticks) >= timeout_ms) {
+      thread_log_warn("Rwlock timed read lock expired handle=%p timeout_ms=%d", rw, timeout_ms);
       profile_func_end;
       return false;
     }
@@ -150,6 +161,7 @@ func b32 rwlock_timed_read_lock(rwlock rw, i32 timeout_ms) {
 func b32 rwlock_timed_write_lock(rwlock rw, i32 timeout_ms) {
   profile_func_begin;
   if (rw == NULL || timeout_ms < 0) {
+    thread_log_error("Rejected rwlock timed write lock handle=%p timeout_ms=%d", rw, timeout_ms);
     profile_func_end;
     return false;
   }
@@ -157,6 +169,7 @@ func b32 rwlock_timed_write_lock(rwlock rw, i32 timeout_ms) {
   u64 start_ticks = SDL_GetTicks();
   while (!rwlock_try_write_lock(rw)) {
     if ((i32)(SDL_GetTicks() - start_ticks) >= timeout_ms) {
+      thread_log_warn("Rwlock timed write lock expired handle=%p timeout_ms=%d", rw, timeout_ms);
       profile_func_end;
       return false;
     }

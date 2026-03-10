@@ -91,6 +91,7 @@ func void system_query_windows_version(system_info* out_info) {
   profile_func_begin;
   HMODULE module_handle = GetModuleHandleA("ntdll.dll");
   if (module_handle == NULL) {
+    thread_log_debug("Falling back to generic Windows version name");
     system_copy_string(out_info->os_name, size_of(out_info->os_name), "Windows");
     profile_func_end;
     return;
@@ -99,6 +100,7 @@ func void system_query_windows_version(system_info* out_info) {
   rtl_get_version_fn get_version =
       (rtl_get_version_fn)GetProcAddress(module_handle, "RtlGetVersion");
   if (get_version == NULL) {
+    thread_log_debug("RtlGetVersion unavailable, using generic Windows version name");
     system_copy_string(out_info->os_name, size_of(out_info->os_name), "Windows");
     profile_func_end;
     return;
@@ -109,6 +111,7 @@ func void system_query_windows_version(system_info* out_info) {
   version_info.dwOSVersionInfoSize = size_of(version_info);
 
   if (get_version(&version_info) != 0) {
+    thread_log_warn("Failed to query Windows version through RtlGetVersion");
     system_copy_string(out_info->os_name, size_of(out_info->os_name), "Windows");
     profile_func_end;
     return;
@@ -148,11 +151,13 @@ func b32 system_info_query(system_info* out_info) {
 
   DWORD computer_size = (DWORD)size_of(out_info->computer_name);
   if (GetComputerNameA(out_info->computer_name, &computer_size) == 0) {
+    thread_log_warn("Failed to query Windows computer name");
     out_info->computer_name[0] = '\0';
   }
 
   DWORD user_size = (DWORD)size_of(out_info->user_name);
   if (GetUserNameA(out_info->user_name, &user_size) == 0) {
+    thread_log_warn("Failed to query Windows user name");
     out_info->user_name[0] = '\0';
   } else if (user_size > 0) {
     out_info->user_name[user_size - 1] = '\0';
@@ -160,6 +165,7 @@ func b32 system_info_query(system_info* out_info) {
 
   cstr8 home_path = getenv("USERPROFILE");
   if (home_path == NULL) {
+    thread_log_debug("USERPROFILE unavailable, trying HOMEDRIVE and HOMEPATH");
     cstr8 home_drive = getenv("HOMEDRIVE");
     cstr8 home_part = getenv("HOMEPATH");
     if (home_drive != NULL && home_part != NULL) {
@@ -169,7 +175,7 @@ func b32 system_info_query(system_info* out_info) {
     system_copy_string(out_info->user_home, size_of(out_info->user_home), home_path);
   }
 
-  thread_log_trace("system_info_query: platform=windows arch=%s", out_info->architecture_name);
+  thread_log_trace("Queried system info platform=windows arch=%s", out_info->architecture_name);
   profile_func_end;
   return true;
 #elif defined(PLATFORM_UNIX)
@@ -182,21 +188,29 @@ func b32 system_info_query(system_info* out_info) {
                  uname_info.release,
                  uname_info.version);
     system_copy_string(out_info->computer_name, size_of(out_info->computer_name), uname_info.nodename);
+  } else {
+    thread_log_warn("Failed to query Unix uname information");
   }
 
   sp page_size = (sp)sysconf(_SC_PAGESIZE);
   if (page_size > 0) {
     out_info->page_size = (sz)page_size;
     out_info->allocation_granularity = (sz)page_size;
+  } else {
+    thread_log_warn("Failed to query Unix page size");
   }
 
   cstr8 user_name = getenv("USER");
   cstr8 home_path = getenv("HOME");
   if (user_name != NULL) {
     system_copy_string(out_info->user_name, size_of(out_info->user_name), user_name);
+  } else {
+    thread_log_debug("USER environment variable unavailable");
   }
   if (home_path != NULL) {
     system_copy_string(out_info->user_home, size_of(out_info->user_home), home_path);
+  } else {
+    thread_log_debug("HOME environment variable unavailable");
   }
 
   if (out_info->user_name[0] == '\0' || out_info->user_home[0] == '\0') {
@@ -208,16 +222,18 @@ func b32 system_info_query(system_info* out_info) {
       if (out_info->user_home[0] == '\0') {
         system_copy_string(out_info->user_home, size_of(out_info->user_home), pass_info->pw_dir);
       }
+    } else {
+      thread_log_warn("Failed to query Unix passwd fallback information");
     }
   }
 
-  thread_log_trace("system_info_query: platform=unix arch=%s", out_info->architecture_name);
+  thread_log_trace("Queried system info platform=unix arch=%s", out_info->architecture_name);
   profile_func_end;
   return true;
 #else
   system_copy_string(out_info->os_name, size_of(out_info->os_name), "unknown");
   system_copy_string(out_info->os_version, size_of(out_info->os_version), "unknown");
-  thread_log_warn("system_info_query: unknown platform");
+  thread_log_warn("System info query is unsupported on this platform");
   profile_func_end;
   return false;
 #endif

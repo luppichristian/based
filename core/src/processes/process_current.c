@@ -62,6 +62,7 @@ func u64 process_hash_str(cstr8 src) {
 func b32 process_unique_init_once(void) {
   profile_func_begin;
   if (process_unique_init_done) {
+    thread_log_trace("Reusing cached unique process result is_single=%u", (u32)process_unique_is_single);
     profile_func_end;
     return process_unique_is_single;
   }
@@ -74,21 +75,32 @@ func b32 process_unique_init_once(void) {
   c8 mutex_name[96] = {0};
   (void)cstr8_format(mutex_name, size_of(mutex_name), "based-process-%llu", (unsigned long long)key_hash);
   process_unique_handle = CreateMutexA(NULL, TRUE, mutex_name);
+  if (process_unique_handle == NULL) {
+    thread_log_error("Failed to create single instance mutex name=%s error=%lu",
+                     mutex_name,
+                     (unsigned long)GetLastError());
+  }
   process_unique_is_single = process_unique_handle != NULL && GetLastError() != ERROR_ALREADY_EXISTS;
 #elif defined(PLATFORM_UNIX)
   c8 lock_path[128] = {0};
   (void)cstr8_format(lock_path, size_of(lock_path), "/tmp/based-process-%llu.lock", (unsigned long long)key_hash);
   process_unique_fd = open(lock_path, O_RDWR | O_CREAT, 0666);
   if (process_unique_fd < 0) {
+    thread_log_error("Failed to open single instance lock path=%s errno=%d", lock_path, errno);
     process_unique_is_single = false;
   } else {
     process_unique_is_single = flock(process_unique_fd, LOCK_EX | LOCK_NB) == 0;
+    if (!process_unique_is_single) {
+      thread_log_warn("Single instance lock is already held path=%s errno=%d", lock_path, errno);
+    }
   }
 #else
+  thread_log_warn("Single instance check is unsupported on this platform");
   process_unique_is_single = false;
 #endif
 
   process_unique_init_done = true;
+  thread_log_info("Initialized single instance state is_single=%u", (u32)process_unique_is_single);
   profile_func_end;
   return process_unique_is_single;
 }
@@ -149,6 +161,7 @@ func process_priority process_get_priority(void) {
 func b32 process_set_priority(process_priority priority) {
   profile_func_begin;
   if (priority < PROCESS_PRIORITY_LOW || priority > PROCESS_PRIORITY_REALTIME) {
+    thread_log_error("Rejected process priority change priority=%u", (u32)priority);
     profile_func_end;
     return false;
   }
@@ -156,7 +169,13 @@ func b32 process_set_priority(process_priority priority) {
 
 #if defined(PLATFORM_WINDOWS)
   b32 success = SetPriorityClass(GetCurrentProcess(), win32_process_priorities[priority]) != 0;
-  thread_log_trace("process_set_priority: priority=%u success=%u", (u32)priority, (u32)success);
+  if (!success) {
+    thread_log_error("Failed to set process priority priority=%u error=%lu",
+                     (u32)priority,
+                     (unsigned long)GetLastError());
+  } else {
+    thread_log_info("Set process priority priority=%u", (u32)priority);
+  }
   profile_func_end;
   return success;
 #elif defined(PLATFORM_UNIX)
@@ -182,11 +201,19 @@ func b32 process_set_priority(process_priority priority) {
   }
 
   b32 success = setpriority(PRIO_PROCESS, 0, (int)nice_value) == 0;
-  thread_log_trace("process_set_priority: priority=%u success=%u", (u32)priority, (u32)success);
+  if (!success) {
+    thread_log_error("Failed to set process priority priority=%u nice=%d errno=%d",
+                     (u32)priority,
+                     nice_value,
+                     errno);
+  } else {
+    thread_log_info("Set process priority priority=%u nice=%d", (u32)priority, nice_value);
+  }
   profile_func_end;
   return success;
 #else
   (void)priority;
+  thread_log_warn("Process priority changes are unsupported on this platform");
   profile_func_end;
   return false;
 #endif
@@ -203,6 +230,7 @@ func b32 process_restart(void) {
   profile_func_begin;
   cmdline cmdl = entry_get_cmdline();
   if (cmdl.count == 0 || cmdl.args == NULL || cmdline_get_program(cmdl) == NULL) {
+    thread_log_error("Cannot restart process because command line is unavailable");
     profile_func_end;
     return false;
   }
@@ -211,10 +239,12 @@ func b32 process_restart(void) {
   options.background = true;
   process spawned = process_create_with((cstr8 const*)cmdl.args, options);
   if (!process_is_valid(spawned)) {
+    thread_log_error("Failed to spawn restart process program=%s", cmdline_get_program(cmdl));
     profile_func_end;
     return false;
   }
 
+  thread_log_info("Spawned restart process program=%s", cmdline_get_program(cmdl));
   process_destroy(spawned);
   profile_func_end;
   process_exit(0);
@@ -237,7 +267,7 @@ func u64 process_id(void) {
 
 func no_return void process_exit(i32 exit_code) {
   profile_func_begin;
-  thread_log_fatal("process_exit: code=%d", exit_code);
+  thread_log_info("Exiting process exit_code=%d", exit_code);
   profile_func_end;
 #if defined(PLATFORM_WINDOWS)
   ExitProcess((UINT)exit_code);
@@ -248,7 +278,7 @@ func no_return void process_exit(i32 exit_code) {
 
 func no_return void process_abort(void) {
   profile_func_begin;
-  thread_log_fatal("process_abort");
+  thread_log_fatal("Aborting process");
   profile_func_end;
   abort();
 }

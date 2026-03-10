@@ -58,6 +58,7 @@ func b32 runtime_query_windows_cpu(runtime_cpu_sample* out_sample) {
   FILETIME kernel_time;
   FILETIME user_time;
   if (GetSystemTimes(&idle_time, &kernel_time, &user_time) == 0) {
+    thread_log_warn("Failed to query Windows CPU times");
     profile_func_end;
     return false;
   }
@@ -83,12 +84,14 @@ func b32 runtime_query_linux_cpu(runtime_cpu_sample* out_sample) {
   assert(out_sample != NULL);
   FILE* stat_file = fopen("/proc/stat", "r");
   if (stat_file == NULL) {
+    thread_log_warn("Failed to open Linux CPU stats at /proc/stat");
     profile_func_end;
     return false;
   }
 
   c8 line_buffer[256];
   if (fgets(line_buffer, size_of(line_buffer), stat_file) == NULL) {
+    thread_log_warn("Failed to read Linux CPU stats at /proc/stat");
     fclose(stat_file);
     profile_func_end;
     return false;
@@ -114,6 +117,7 @@ func b32 runtime_query_linux_cpu(runtime_cpu_sample* out_sample) {
                             &soft_irq_ticks,
                             &steal_ticks);
   if (parsed_count < 4) {
+    thread_log_warn("Failed to parse Linux CPU stats line");
     profile_func_end;
     return false;
   }
@@ -143,6 +147,7 @@ func b32 runtime_query_apple_cpu(runtime_cpu_sample* out_sample) {
   kern_return_t query_result =
       host_statistics(mach_host_self(), HOST_CPU_LOAD_INFO, (host_info_t)&load_info, &load_count);
   if (query_result != KERN_SUCCESS) {
+    thread_log_warn("Failed to query Apple CPU stats result=%d", (i32)query_result);
     profile_func_end;
     return false;
   }
@@ -172,6 +177,7 @@ func b32 system_runtime_query(system_runtime_info* out_info) {
   memset(&memory_status, 0, size_of(memory_status));
   memory_status.dwLength = size_of(memory_status);
   if (GlobalMemoryStatusEx(&memory_status) == 0) {
+    thread_log_error("Failed to query Windows memory status");
     profile_func_end;
     return false;
   }
@@ -201,6 +207,8 @@ func b32 system_runtime_query(system_runtime_info* out_info) {
       get_memory_info(GetCurrentProcess(), &memory_counters, size_of(memory_counters)) != 0) {
     out_info->process_memory_used = (sz)memory_counters.WorkingSetSize;
     out_info->process_memory_peak = (sz)memory_counters.PeakWorkingSetSize;
+  } else {
+    thread_log_warn("Failed to query Windows process memory usage");
   }
   if (psapi_module != NULL) {
     FreeLibrary(psapi_module);
@@ -223,15 +231,18 @@ func b32 system_runtime_query(system_runtime_info* out_info) {
     }
 
     prev_sample = cpu_sample;
-    has_prev_sample = 1;
+    has_prev_sample = true;
+  } else {
+    thread_log_warn("Failed to query Windows CPU sample");
   }
 
-  thread_log_trace("system_runtime_query: platform=windows mem_used=%zu", (size_t)out_info->memory_used);
+  thread_log_trace("Queried runtime info platform=windows mem_used=%zu", (size_t)out_info->memory_used);
   profile_func_end;
   return true;
 #elif defined(PLATFORM_LINUX)
   struct sysinfo sys_info;
   if (sysinfo(&sys_info) != 0) {
+    thread_log_error("Failed to query Linux sysinfo");
     profile_func_end;
     return false;
   }
@@ -257,6 +268,8 @@ func b32 system_runtime_query(system_runtime_info* out_info) {
         out_info->process_memory_used = (sz)((u64)resident_pages * (u64)page_size);
       }
       fclose(statm_file);
+    } else {
+      thread_log_warn("Failed to open Linux process memory stats at /proc/self/statm");
     }
   }
 
@@ -264,6 +277,8 @@ func b32 system_runtime_query(system_runtime_info* out_info) {
   memset(&usage_info, 0, size_of(usage_info));
   if (getrusage(RUSAGE_SELF, &usage_info) == 0) {
     out_info->process_memory_peak = (sz)((u64)usage_info.ru_maxrss * 1024ULL);
+  } else {
+    thread_log_warn("Failed to query Linux process peak memory usage");
   }
 
   runtime_cpu_sample cpu_sample;
@@ -281,10 +296,12 @@ func b32 system_runtime_query(system_runtime_info* out_info) {
     }
 
     prev_sample = cpu_sample;
-    has_prev_sample = 1;
+    has_prev_sample = true;
+  } else {
+    thread_log_warn("Failed to query Linux CPU sample");
   }
 
-  thread_log_trace("system_runtime_query: platform=linux mem_used=%zu", (size_t)out_info->memory_used);
+  thread_log_trace("Queried runtime info platform=linux mem_used=%zu", (size_t)out_info->memory_used);
   profile_func_end;
   return true;
 #elif defined(PLATFORM_MACOS)
@@ -292,6 +309,8 @@ func b32 system_runtime_query(system_runtime_info* out_info) {
   sz total_size = size_of(total_memory);
   if (sysctlbyname("hw.memsize", &total_memory, &total_size, NULL, 0) == 0) {
     out_info->memory_total = (sz)total_memory;
+  } else {
+    thread_log_warn("Failed to query Apple total memory");
   }
 
   vm_statistics64_data_t vm_info;
@@ -305,6 +324,8 @@ func b32 system_runtime_query(system_runtime_info* out_info) {
     if (out_info->memory_total >= out_info->memory_available) {
       out_info->memory_used = out_info->memory_total - out_info->memory_available;
     }
+  } else {
+    thread_log_warn("Failed to query Apple VM statistics");
   }
 
   mach_task_basic_info_data_t task_data;
@@ -315,6 +336,8 @@ func b32 system_runtime_query(system_runtime_info* out_info) {
                 &task_count) == KERN_SUCCESS) {
     out_info->process_memory_used = (sz)task_data.resident_size;
     out_info->process_memory_peak = (sz)task_data.resident_size_max;
+  } else {
+    thread_log_warn("Failed to query Apple task memory info");
   }
 
   runtime_cpu_sample cpu_sample;
@@ -332,14 +355,16 @@ func b32 system_runtime_query(system_runtime_info* out_info) {
     }
 
     prev_sample = cpu_sample;
-    has_prev_sample = 1;
+    has_prev_sample = true;
+  } else {
+    thread_log_warn("Failed to query Apple CPU sample");
   }
 
-  thread_log_trace("system_runtime_query: platform=apple mem_used=%zu", (size_t)out_info->memory_used);
+  thread_log_trace("Queried runtime info platform=apple mem_used=%zu", (size_t)out_info->memory_used);
   profile_func_end;
   return true;
 #else
-  thread_log_warn("system_runtime_query: unsupported platform");
+  thread_log_warn("Runtime query is unsupported on this platform");
   profile_func_end;
   return false;
 #endif

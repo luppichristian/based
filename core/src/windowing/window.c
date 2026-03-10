@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "windowing/window.h"
+#include "context/thread_ctx.h"
 #include "../sdl3_include.h"
 #include "basic/profiler.h"
 
@@ -12,10 +13,14 @@
 func SDL_Window* window_resolve(window id) {
   profile_func_begin;
   if (!window_id_is_valid(id)) {
+    thread_log_warn("Rejected window resolve for invalid id");
     profile_func_end;
     return NULL;
   }
   SDL_Window* window_ptr = SDL_GetWindowFromID((SDL_WindowID)window_to_native_id(id));
+  if (window_ptr == NULL) {
+    thread_log_warn("Failed to resolve window id=%llu", (unsigned long long)window_to_native_id(id));
+  }
   profile_func_end;
   return window_ptr;
 }
@@ -91,11 +96,22 @@ func window window_create(cstr8 title, i32 width, i32 height, u64 flags) {
   profile_func_begin;
   SDL_Window* window_ptr = SDL_CreateWindow(title != NULL ? title : "", width, height, (SDL_WindowFlags)flags);
   if (window_ptr == NULL) {
+    thread_log_error("Failed to create window title=%s width=%d height=%d flags=0x%llx error=%s",
+                     title != NULL ? title : "",
+                     width,
+                     height,
+                     (unsigned long long)flags,
+                     SDL_GetError());
     profile_func_end;
     return NULL;
   }
 
   window result = window_from_native_id((up)SDL_GetWindowID(window_ptr));
+  thread_log_info("Created window id=%llu title=%s width=%d height=%d",
+                  (unsigned long long)window_to_native_id(result),
+                  title != NULL ? title : "",
+                  width,
+                  height);
   profile_func_end;
   return result;
 }
@@ -104,11 +120,13 @@ func b32 window_destroy(window id) {
   profile_func_begin;
   SDL_Window* window_ptr = window_resolve(id);
   if (window_ptr == NULL) {
+    thread_log_error("Rejected window destroy for invalid window id=%llu", (unsigned long long)window_to_native_id(id));
     profile_func_end;
     return false;
   }
 
   SDL_DestroyWindow(window_ptr);
+  thread_log_info("Destroyed window id=%llu", (unsigned long long)window_to_native_id(id));
   profile_func_end;
   return true;
 }
@@ -216,6 +234,12 @@ func b32 window_set_fullscreen(window id, b32 enabled) {
   }
 
   b32 result = SDL_SetWindowFullscreen(window_ptr, enabled != 0);
+  if (!result) {
+    thread_log_error("Failed to set window fullscreen id=%llu enabled=%u error=%s",
+                     (unsigned long long)window_to_native_id(id),
+                     (u32)enabled,
+                     SDL_GetError());
+  }
   profile_func_end;
   return result;
 }
@@ -334,6 +358,9 @@ func b32 window_get_monitor_id(window id, monitor* out_monitor_id) {
 
   native_monitor_id = SDL_GetDisplayForWindow(window_ptr);
   if (native_monitor_id == 0) {
+    thread_log_error("Failed to resolve monitor for window id=%llu error=%s",
+                     (unsigned long long)window_to_native_id(id),
+                     SDL_GetError());
     profile_func_end;
     return false;
   }

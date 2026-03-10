@@ -43,6 +43,7 @@ func process _process_create_with(cstr8 const* args, process_options options, ca
   (void)site;
 
   if (!args || !args[0]) {
+    thread_log_error("Rejected process create without arguments");
     profile_func_end;
     return NULL;
   }
@@ -60,9 +61,9 @@ func process _process_create_with(cstr8 const* args, process_options options, ca
   if (process_options_is_default(options)) {
     process prc = (process)SDL_CreateProcess(args, false);
     if (prc == NULL) {
-      thread_log_error("process_create: SDL_CreateProcess failed for '%s'", args[0]);
+      thread_log_error("Failed to create process command=%s error=%s", args[0], SDL_GetError());
     } else {
-      thread_log_trace("process_create: '%s' options=default", args[0]);
+      thread_log_trace("Created process command=%s options=default", args[0]);
     }
     profile_func_end;
     return prc;
@@ -70,6 +71,7 @@ func process _process_create_with(cstr8 const* args, process_options options, ca
 
   SDL_PropertiesID props = SDL_CreateProperties();
   if (!props) {
+    thread_log_error("Failed to create process properties command=%s error=%s", args[0], SDL_GetError());
     profile_func_end;
     return NULL;
   }
@@ -93,10 +95,13 @@ func process _process_create_with(cstr8 const* args, process_options options, ca
 
   process prc = ok ? (process)SDL_CreateProcessWithProperties(props) : NULL;
   SDL_DestroyProperties(props);
+  if (!ok) {
+    thread_log_error("Failed to configure process properties command=%s", args[0]);
+  }
   if (prc == NULL) {
-    thread_log_error("process_create_with: failed for '%s'", args[0]);
+    thread_log_error("Failed to create configured process command=%s error=%s", args[0], SDL_GetError());
   } else {
-    thread_log_trace("process_create_with: '%s'", args[0]);
+    thread_log_trace("Created configured process command=%s", args[0]);
   }
   profile_func_end;
   return prc;
@@ -108,12 +113,12 @@ func b32 process_is_valid(process prc) {
 
 func u64 process_get_id(process prc) {
   if (!prc) {
-      return 0;
+    return 0;
   }
 
   SDL_PropertiesID props = SDL_GetProcessProperties((SDL_Process*)prc);
   if (!props) {
-      return 0;
+    return 0;
   }
 
   return (u64)SDL_GetNumberProperty(props, SDL_PROP_PROCESS_PID_NUMBER, 0);
@@ -122,6 +127,7 @@ func u64 process_get_id(process prc) {
 func void* process_read(process prc, sz* out_size, i32* out_exit_code) {
   profile_func_begin;
   if (!prc) {
+    thread_log_error("Cannot read invalid process handle");
     profile_func_end;
     return NULL;
   }
@@ -141,6 +147,12 @@ func void* process_read(process prc, sz* out_size, i32* out_exit_code) {
     *out_exit_code = (i32)exit_code;
   }
 
+  if (data == NULL) {
+    thread_log_warn("Process read returned no data handle=%p", prc);
+  } else {
+    thread_log_trace("Read process output handle=%p size=%zu", prc, (size_t)read_size);
+  }
+
   profile_func_end;
   return data;
 }
@@ -154,6 +166,7 @@ func void process_read_free(void* ptr) {
 func b32 process_wait(process prc, b32 block, i32* out_exit_code) {
   profile_func_begin;
   if (!prc) {
+    thread_log_error("Cannot wait on invalid process");
     profile_func_end;
     return false;
   }
@@ -167,7 +180,7 @@ func b32 process_wait(process prc, b32 block, i32* out_exit_code) {
   if (finished && out_exit_code) {
     *out_exit_code = (i32)exit_code;
   }
-  thread_log_trace("process_wait: prc=%p finished=%u", prc, (u32)finished);
+  thread_log_trace("Waited on process handle=%p finished=%u block=%u", prc, (u32)finished, (u32)block);
 
   profile_func_end;
   return finished;
@@ -176,6 +189,7 @@ func b32 process_wait(process prc, b32 block, i32* out_exit_code) {
 func b32 process_wait_timeout(process prc, i32 timeout_ms, i32* out_exit_code) {
   profile_func_begin;
   if (!prc || timeout_ms < 0) {
+    thread_log_error("Rejected process wait timeout handle=%p timeout_ms=%d", prc, timeout_ms);
     profile_func_end;
     return false;
   }
@@ -184,6 +198,7 @@ func b32 process_wait_timeout(process prc, i32 timeout_ms, i32* out_exit_code) {
   i32 exit_code = 0;
   while (!process_wait(prc, 0, &exit_code)) {
     if ((i32)(SDL_GetTicks() - start_ticks) >= timeout_ms) {
+      thread_log_warn("Process wait timed out handle=%p timeout_ms=%d", prc, timeout_ms);
       profile_func_end;
       return false;
     }
@@ -193,6 +208,7 @@ func b32 process_wait_timeout(process prc, i32 timeout_ms, i32* out_exit_code) {
   if (out_exit_code != NULL) {
     *out_exit_code = exit_code;
   }
+  thread_log_trace("Process wait completed within timeout handle=%p timeout_ms=%d", prc, timeout_ms);
   profile_func_end;
   return true;
 }
@@ -200,18 +216,26 @@ func b32 process_wait_timeout(process prc, i32 timeout_ms, i32* out_exit_code) {
 func b32 process_kill(process prc, b32 force) {
   profile_func_begin;
   if (!prc) {
+    thread_log_error("Cannot kill invalid process");
     profile_func_end;
     return false;
   }
   assert(force == 0 || force == 1);
 
+  b32 success = SDL_KillProcess((SDL_Process*)prc, force != 0);
+  if (!success) {
+    thread_log_error("Failed to kill process handle=%p force=%u error=%s", prc, (u32)force, SDL_GetError());
+  } else {
+    thread_log_info("Killed process handle=%p force=%u", prc, (u32)force);
+  }
   profile_func_end;
-  return SDL_KillProcess((SDL_Process*)prc, force != 0);
+  return success;
 }
 
 func void process_destroy(process prc) {
   profile_func_begin;
   if (!prc) {
+    thread_log_warn("Skipping process destroy for invalid handle");
     profile_func_end;
     return;
   }
@@ -225,7 +249,7 @@ func void process_destroy(process prc) {
                                                  });
   (void)msg_post(&lifecycle_msg);
 
-  thread_log_trace("process_destroy: prc=%p", prc);
+  thread_log_trace("Destroyed process handle=%p", prc);
   SDL_DestroyProcess((SDL_Process*)prc);
   profile_func_end;
 }

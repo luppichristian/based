@@ -279,24 +279,27 @@ func SDL_EnumerationResult SDLCALL dir_enumerate_callback(
   full_path = path_join(&dir_path, &name_path);
 
   if (!SDL_GetPathInfo(full_path.buf, &path_info)) {
-    thread_log_error("dir_iterate: SDL_GetPathInfo failed for '%s'", full_path.buf);
-    state->success = 0;
+    thread_log_error("Failed to query directory entry path=%s", full_path.buf);
+    state->success = false;
     profile_func_end;
     return SDL_ENUM_FAILURE;
   }
 
   if (!dir_emit_entry(state, &full_path, path_info.type == SDL_PATHTYPE_DIRECTORY ? 1 : 0)) {
-    state->stop_requested = 1;
+    thread_log_verbose("Directory iteration callback requested stop path=%s", full_path.buf);
+    state->stop_requested = true;
     profile_func_end;
     return SDL_ENUM_SUCCESS;
   }
 
   if (state->recursive && path_info.type == SDL_PATHTYPE_DIRECTORY) {
     if (!dir_pending_push(state, &full_path)) {
-      state->success = 0;
+      thread_log_error("Failed to queue recursive directory path=%s", full_path.buf);
+      state->success = false;
       profile_func_end;
       return SDL_ENUM_FAILURE;
     }
+    thread_log_trace("Queued recursive directory path=%s", full_path.buf);
   }
 
   profile_func_end;
@@ -335,21 +338,24 @@ func SDL_EnumerationResult SDLCALL dir_remove_callback(
   full_path = path_join(&dir_path, &name_path);
 
   if (!SDL_GetPathInfo(full_path.buf, &path_info)) {
-    state->success = 0;
+    thread_log_error("Failed to query directory entry during recursive remove path=%s", full_path.buf);
+    state->success = false;
     profile_func_end;
     return SDL_ENUM_FAILURE;
   }
 
   if (path_info.type == SDL_PATHTYPE_DIRECTORY) {
     if (!SDL_EnumerateDirectory(full_path.buf, dir_remove_callback, state)) {
-      state->success = 0;
+      thread_log_error("Failed to enumerate directory during recursive remove path=%s", full_path.buf);
+      state->success = false;
       profile_func_end;
       return SDL_ENUM_FAILURE;
     }
   }
 
   if (!SDL_RemovePath(full_path.buf)) {
-    state->success = 0;
+    thread_log_error("Failed to remove directory entry path=%s error=%s", full_path.buf, SDL_GetError());
+    state->success = false;
     profile_func_end;
     return SDL_ENUM_FAILURE;
   }
@@ -440,16 +446,18 @@ func path dir_get_system(dir_system_path location) {
 func b32 dir_create(const path* src) {
   profile_func_begin;
   if (src == NULL || src->buf[0] == '\0') {
+    thread_log_error("Rejected directory create for invalid path");
     profile_func_end;
     return false;
   }
   assert(src->buf[0] != '\0');
   if (SDL_CreateDirectory(dir_path_cstr(src))) {
-    thread_log_trace("dir_create: path=%s", src->buf);
+    thread_log_trace("Created directory path=%s", src->buf);
     profile_func_end;
     return true;
   }
 
+  thread_log_warn("Directory create fallback to existing path=%s error=%s", src->buf, SDL_GetError());
   profile_func_end;
   return dir_exists(src);
 }
@@ -457,29 +465,44 @@ func b32 dir_create(const path* src) {
 func b32 dir_remove(const path* src) {
   profile_func_begin;
   if (!dir_exists(src)) {
+    thread_log_warn("Cannot remove missing directory path=%s", src != NULL ? src->buf : "<null>");
     profile_func_end;
     return false;
   }
   assert(src != NULL);
 
+  b32 success = SDL_RemovePath(dir_path_cstr(src)) ? true : false;
+  if (!success) {
+    thread_log_error("Failed to remove directory path=%s error=%s", src->buf, SDL_GetError());
+  }
   profile_func_end;
-  return SDL_RemovePath(dir_path_cstr(src)) ? true : false;
+  return success;
 }
 
 func b32 dir_rename(const path* old_src, const path* new_src) {
   profile_func_begin;
   if (!dir_exists(old_src)) {
+    thread_log_warn("Cannot rename missing directory path=%s", old_src != NULL ? old_src->buf : "<null>");
     profile_func_end;
     return false;
   }
   if (new_src == NULL || new_src->buf[0] == '\0') {
+    thread_log_error("Rejected directory rename for invalid destination source=%s",
+                     old_src != NULL ? old_src->buf : "<null>");
     profile_func_end;
     return false;
   }
   assert(new_src->buf[0] != '\0');
 
+  b32 success = SDL_RenamePath(dir_path_cstr(old_src), dir_path_cstr(new_src)) ? true : false;
+  if (!success) {
+    thread_log_error("Failed to rename directory from=%s to=%s error=%s",
+                     old_src->buf,
+                     new_src->buf,
+                     SDL_GetError());
+  }
   profile_func_end;
-  return SDL_RenamePath(dir_path_cstr(old_src), dir_path_cstr(new_src)) ? true : false;
+  return success;
 }
 
 func b32 dir_copy_recursive(const path* src, const path* dst, b32 overwrite_existing) {
@@ -489,6 +512,9 @@ func b32 dir_copy_recursive(const path* src, const path* dst, b32 overwrite_exis
   path dst_abs;
 
   if (!dir_exists(src) || dst == NULL) {
+    thread_log_error("Rejected recursive directory copy source=%s destination=%s",
+                     src != NULL ? src->buf : "<null>",
+                     dst != NULL ? dst->buf : "<null>");
     profile_func_end;
     return false;
   }
@@ -498,16 +524,21 @@ func b32 dir_copy_recursive(const path* src, const path* dst, b32 overwrite_exis
   src_abs = path_resolve(src);
   dst_abs = path_resolve(dst);
   if (dir_path_is_same_or_child(&src_abs, &dst_abs)) {
+    thread_log_warn("Rejected recursive directory copy into descendant source=%s destination=%s",
+                    src_abs.buf,
+                    dst_abs.buf);
     profile_func_end;
     return cstr8_cmp(src_abs.buf, dst_abs.buf) == 0 ? true : false;
   }
 
   if (path_exists(dst)) {
     if (!dir_exists(dst)) {
+      thread_log_error("Cannot copy directory into non-directory destination path=%s", dst->buf);
       profile_func_end;
       return false;
     }
   } else if (!dir_create_recursive(dst)) {
+    thread_log_error("Failed to create destination directory tree path=%s", dst->buf);
     profile_func_end;
     return false;
   }
@@ -518,10 +549,16 @@ func b32 dir_copy_recursive(const path* src, const path* dst, b32 overwrite_exis
   state.success = 1;
 
   if (!dir_iterate(src, dir_copy_entry, &state)) {
+    thread_log_error("Failed while recursively copying directory source=%s destination=%s", src->buf, dst->buf);
     profile_func_end;
     return false;
   }
 
+  if (!state.success) {
+    thread_log_error("Directory copy callback failed source=%s destination=%s", src->buf, dst->buf);
+  } else {
+    thread_log_info("Copied directory recursively from=%s to=%s", src->buf, dst->buf);
+  }
   profile_func_end;
   return state.success;
 }
@@ -582,6 +619,7 @@ func b32 dir_remove_recursive(const path* src) {
   dir_remove_state state;
 
   if (!dir_exists(src)) {
+    thread_log_warn("Cannot recursively remove missing directory path=%s", src != NULL ? src->buf : "<null>");
     profile_func_end;
     return false;
   }
@@ -591,17 +629,25 @@ func b32 dir_remove_recursive(const path* src) {
   state.success = 1;
 
   if (!SDL_EnumerateDirectory(dir_path_cstr(src), dir_remove_callback, &state)) {
+    thread_log_error("Failed to enumerate directory for recursive remove path=%s", src->buf);
     profile_func_end;
     return false;
   }
 
   if (!state.success) {
+    thread_log_error("Failed to remove directory contents path=%s", src->buf);
     profile_func_end;
     return false;
   }
 
+  b32 success = SDL_RemovePath(dir_path_cstr(src)) ? true : false;
+  if (!success) {
+    thread_log_error("Failed to remove directory root path=%s error=%s", src->buf, SDL_GetError());
+  } else {
+    thread_log_info("Removed directory recursively path=%s", src->buf);
+  }
   profile_func_end;
-  return SDL_RemovePath(dir_path_cstr(src)) ? true : false;
+  return success;
 }
 
 func b32 dir_iterate(const path* src, dir_iterate_callback* callback, void* user_data) {
@@ -609,6 +655,9 @@ func b32 dir_iterate(const path* src, dir_iterate_callback* callback, void* user
   dir_iterate_state state;
 
   if (!dir_exists(src) || callback == NULL) {
+    thread_log_error("Rejected directory iteration path=%s has_callback=%u",
+                     src != NULL ? src->buf : "<null>",
+                     (u32)(callback != NULL));
     profile_func_end;
     return false;
   }
@@ -622,6 +671,7 @@ func b32 dir_iterate(const path* src, dir_iterate_callback* callback, void* user
   state.success = 1;
 
   if (!SDL_EnumerateDirectory(dir_path_cstr(src), dir_enumerate_callback, &state)) {
+    thread_log_error("Failed to enumerate directory path=%s", src->buf);
     profile_func_end;
     return state.stop_requested ? true : false;
   }

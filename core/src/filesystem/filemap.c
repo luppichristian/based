@@ -91,6 +91,7 @@ func filemap_error filemap_get_last_error(void) {
 func b32 filemap_flush(filemap* map) {
   profile_func_begin;
   if (!filemap_is_open(map)) {
+    thread_log_error("Cannot flush unopened file map");
     filemap_set_error(FILEMAP_ERROR_INVALID_ARGUMENT);
     profile_func_end;
     return false;
@@ -110,8 +111,10 @@ func b32 filemap_flush(filemap* map) {
   assert(map->source_path.buf[0] != '\0');
 
   if (map->uses_fallback_copy) {
+    thread_log_warn("Flushing file map through fallback copy path=%s", map->source_path.buf);
     buffer data = buffer_from(map->data_ptr, map->data_size);
     if (!file_write_all(&map->source_path, data)) {
+      thread_log_error("Failed to flush fallback file map path=%s", map->source_path.buf);
       filemap_set_error(FILEMAP_ERROR_IO_FAILED);
       profile_func_end;
       return false;
@@ -124,12 +127,14 @@ func b32 filemap_flush(filemap* map) {
 
 #if defined(PLATFORM_WINDOWS)
   if (map->data_ptr != NULL && map->data_size > 0 && !FlushViewOfFile(map->data_ptr, (SIZE_T)map->data_size)) {
+    thread_log_error("Failed to flush mapped view path=%s", map->source_path.buf);
     filemap_set_error(FILEMAP_ERROR_IO_FAILED);
     profile_func_end;
     return false;
   }
 
   if (map->native_file != NULL && !FlushFileBuffers((HANDLE)map->native_file)) {
+    thread_log_error("Failed to flush mapped file handle path=%s", map->source_path.buf);
     filemap_set_error(FILEMAP_ERROR_IO_FAILED);
     profile_func_end;
     return false;
@@ -141,6 +146,7 @@ func b32 filemap_flush(filemap* map) {
 #elif defined(PLATFORM_UNIX)
   if (map->data_ptr != NULL && map->data_size > 0) {
     if (msync(map->data_ptr, map->data_size, MS_SYNC) != 0) {
+      thread_log_error("Failed to flush mapped file path=%s", map->source_path.buf);
       filemap_set_error(FILEMAP_ERROR_IO_FAILED);
       profile_func_end;
       return false;
@@ -182,7 +188,7 @@ func void filemap_close(filemap* map) {
     if (map->data_ptr != NULL) {
       allocator_dealloc(alloc, map->data_ptr, map->data_size);
     }
-    thread_log_trace("filemap_close: fallback path=%s", map->source_path.buf);
+    thread_log_trace("Closed fallback file map path=%s", map->source_path.buf);
     *map = filemap_empty();
     profile_func_end;
     return;
@@ -211,7 +217,7 @@ func void filemap_close(filemap* map) {
 #endif
 
   *map = filemap_empty();
-  thread_log_trace("filemap_close: mapped");
+  thread_log_trace("Closed mapped file path=%s", map->source_path.buf);
   profile_func_end;
 }
 
@@ -221,6 +227,7 @@ func filemap filemap_open(const path* src, filemap_access access) {
   filemap map = filemap_empty();
 
   if (src == NULL || !file_exists(src)) {
+    thread_log_error("Cannot open file map for missing path=%s", src != NULL ? src->buf : "<null>");
     filemap_set_error(FILEMAP_ERROR_OPEN_FAILED);
     profile_func_end;
     return map;
@@ -258,12 +265,14 @@ func filemap filemap_open(const path* src, filemap_access access) {
       FILE_ATTRIBUTE_NORMAL,
       NULL);
   if (file_handle == INVALID_HANDLE_VALUE) {
+    thread_log_error("Failed to open file map path=%s", src->buf);
     filemap_set_error(FILEMAP_ERROR_OPEN_FAILED);
     profile_func_end;
     return filemap_empty();
   }
 
   if (!GetFileSizeEx(file_handle, &file_size)) {
+    thread_log_error("Failed to query mapped file size path=%s", src->buf);
     filemap_set_error(FILEMAP_ERROR_IO_FAILED);
     CloseHandle(file_handle);
     profile_func_end;
@@ -285,6 +294,7 @@ func filemap filemap_open(const path* src, filemap_access access) {
       (DWORD)(file_size.QuadPart & 0xffffffff),
       NULL);
   if (mapping_handle == NULL) {
+    thread_log_error("Failed to create file mapping path=%s", src->buf);
     filemap_set_error(FILEMAP_ERROR_MAP_FAILED);
     filemap_close(&map);
     profile_func_end;
@@ -294,6 +304,7 @@ func filemap filemap_open(const path* src, filemap_access access) {
   map.native_mapping = mapping_handle;
   map.data_ptr = MapViewOfFile(mapping_handle, view_access, 0, 0, (SIZE_T)map.data_size);
   if (map.data_ptr == NULL) {
+    thread_log_error("Failed to map file view path=%s", src->buf);
     filemap_set_error(FILEMAP_ERROR_MAP_FAILED);
     filemap_close(&map);
     profile_func_end;
@@ -308,7 +319,7 @@ func filemap filemap_open(const path* src, filemap_access access) {
                                                      .object_ptr = &map,
                                                  });
   (void)msg_post(&lifecycle_msg);
-  thread_log_trace("filemap_open: windows path=%s size=%zu writable=%u", src->buf, (size_t)map.data_size, (u32)map.writable);
+  thread_log_trace("Opened Windows file map path=%s size=%zu writable=%u", src->buf, (size_t)map.data_size, (u32)map.writable);
   profile_func_end;
   return map;
 #elif defined(PLATFORM_UNIX)
@@ -329,12 +340,14 @@ func filemap filemap_open(const path* src, filemap_access access) {
 
   file_desc = open(src->buf, open_flags);
   if (file_desc < 0) {
+    thread_log_error("Failed to open file map path=%s", src->buf);
     filemap_set_error(FILEMAP_ERROR_OPEN_FAILED);
     profile_func_end;
     return filemap_empty();
   }
 
   if (fstat(file_desc, &stat_info) != 0) {
+    thread_log_error("Failed to query mapped file size path=%s", src->buf);
     filemap_set_error(FILEMAP_ERROR_IO_FAILED);
     close(file_desc);
     profile_func_end;
@@ -350,6 +363,7 @@ func filemap filemap_open(const path* src, filemap_access access) {
 
   map.data_ptr = mmap(NULL, map.data_size, prot_flags, map_flags, file_desc, 0);
   if (map.data_ptr == MAP_FAILED) {
+    thread_log_error("Failed to map file path=%s", src->buf);
     filemap_set_error(FILEMAP_ERROR_MAP_FAILED);
     filemap_close(&map);
     profile_func_end;
@@ -365,13 +379,14 @@ func filemap filemap_open(const path* src, filemap_access access) {
                                                      .object_ptr = &map,
                                                  });
   (void)msg_post(&lifecycle_msg);
-  thread_log_trace("filemap_open: unix path=%s size=%zu writable=%u", src->buf, (size_t)map.data_size, (u32)map.writable);
+  thread_log_trace("Opened Unix file map path=%s size=%zu writable=%u", src->buf, (size_t)map.data_size, (u32)map.writable);
   profile_func_end;
   return map;
 #else
   buffer file_data = {0};
 
   if (!file_read_all(src, &alloc, &file_data)) {
+    thread_log_error("Failed to open fallback file map path=%s", src->buf);
     filemap_set_error(FILEMAP_ERROR_IO_FAILED);
     profile_func_end;
     return filemap_empty();
@@ -379,6 +394,7 @@ func filemap filemap_open(const path* src, filemap_access access) {
   map.data_ptr = file_data.ptr;
   map.data_size = file_data.size;
   map.uses_fallback_copy = 1;
+  thread_log_warn("Using fallback file map copy path=%s writable=%u", src->buf, (u32)map.writable);
   msg lifecycle_msg = {0};
   lifecycle_msg.type = MSG_CORE_TYPE_OBJECT_LIFECYCLE;
   msg_core_fill_object_lifecycle(&lifecycle_msg, &(msg_core_object_lifecycle_data) {
@@ -387,7 +403,7 @@ func filemap filemap_open(const path* src, filemap_access access) {
                                                      .object_ptr = &map,
                                                  });
   (void)msg_post(&lifecycle_msg);
-  thread_log_trace("filemap_open: fallback path=%s size=%zu writable=%u", src->buf, (size_t)map.data_size, (u32)map.writable);
+  thread_log_trace("Opened fallback file map path=%s size=%zu writable=%u", src->buf, (size_t)map.data_size, (u32)map.writable);
   profile_func_end;
   return map;
 #endif
