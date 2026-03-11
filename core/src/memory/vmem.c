@@ -473,13 +473,12 @@ func void* vmem_realloc_callback(
     void* user_data,
     callsite site,
     void* ptr,
-    sz old_size,
     sz new_size) {
   profile_func_begin;
   (void)user_data;
   (void)site;
   profile_func_end;
-  return vmem_realloc(ptr, old_size, new_size);
+  return vmem_realloc(ptr, 0, new_size);
 }
 
 func allocator vmem_get_allocator(void) {

@@ -54,12 +54,12 @@ func void* archive_alloc_bytes(allocator* opt_alloc, sz size) {
   return allocator_alloc(resolved_alloc, size);
 }
 
-func void* archive_realloc_bytes(allocator* opt_alloc, void* ptr, sz old_size, sz new_size) {
+func void* archive_realloc_bytes(allocator* opt_alloc, void* ptr, sz new_size) {
   profile_func_begin;
   allocator resolved_alloc = archive_allocator_resolve(opt_alloc);
   if (new_size == 0) {
     if (ptr != NULL) {
-      allocator_dealloc(resolved_alloc, ptr, old_size);
+      allocator_dealloc(resolved_alloc, ptr);
     }
     profile_func_end;
     return NULL;
@@ -68,10 +68,10 @@ func void* archive_realloc_bytes(allocator* opt_alloc, void* ptr, sz old_size, s
   assert(resolved_alloc.alloc_fn != NULL);
   assert(resolved_alloc.dealloc_fn != NULL);
   profile_func_end;
-  return allocator_realloc(resolved_alloc, ptr, old_size, new_size);
+  return allocator_realloc(resolved_alloc, ptr, new_size);
 }
 
-func void archive_dealloc_bytes(allocator* opt_alloc, void* ptr, sz size) {
+func void archive_dealloc_bytes(allocator* opt_alloc, void* ptr) {
   profile_func_begin;
   allocator resolved_alloc = archive_allocator_resolve(opt_alloc);
   if (ptr == NULL) {
@@ -80,7 +80,7 @@ func void archive_dealloc_bytes(allocator* opt_alloc, void* ptr, sz size) {
   }
 
   assert(resolved_alloc.dealloc_fn != NULL);
-  allocator_dealloc(resolved_alloc, ptr, size);
+  allocator_dealloc(resolved_alloc, ptr);
   profile_func_end;
 }
 
@@ -146,7 +146,6 @@ func b32 archive_reserve(archive* arc, sz min_capacity) {
   new_entries = (archive_entry*)archive_realloc_bytes(
       arc->opt_alloc,
       arc->entries,
-      arc->entry_capacity * size_of(archive_entry),
       new_capacity * size_of(archive_entry));
   if (new_entries == NULL) {
     thread_log_error("Failed to grow archive entries min_capacity=%zu", (size_t)min_capacity);
@@ -164,7 +163,7 @@ func void archive_reset_entry(archive* arc, archive_entry* ent) {
   profile_func_begin;
   assert(arc != NULL);
   assert(ent != NULL);
-  archive_dealloc_bytes(arc->opt_alloc, ent->data_ptr, ent->data_capacity);
+  archive_dealloc_bytes(arc->opt_alloc, ent->data_ptr);
   ent->data_ptr = NULL;
   ent->data_size = 0;
   ent->data_capacity = 0;
@@ -182,7 +181,7 @@ func b32 archive_assign_entry_bytes(archive* arc, archive_entry* ent, buffer dat
   }
   assert(arc->entry_count <= arc->entry_capacity);
 
-  archive_dealloc_bytes(arc->opt_alloc, ent->data_ptr, ent->data_capacity);
+  archive_dealloc_bytes(arc->opt_alloc, ent->data_ptr);
   ent->data_ptr = NULL;
   ent->data_size = 0;
   ent->data_capacity = 0;
@@ -231,7 +230,7 @@ func b32 archive_add_empty_entry(archive* arc, const path* src, b32 is_directory
     ent->item_path = archive_normalize_entry_path(src);
     ent->is_directory = is_directory;
     if (is_directory) {
-      archive_dealloc_bytes(arc->opt_alloc, ent->data_ptr, ent->data_capacity);
+      archive_dealloc_bytes(arc->opt_alloc, ent->data_ptr);
       ent->data_ptr = NULL;
       ent->data_size = 0;
       ent->data_capacity = 0;
@@ -365,10 +364,7 @@ func void archive_destroy(archive* arc) {
   }
 
   archive_clear(arc);
-  archive_dealloc_bytes(
-      arc->opt_alloc,
-      arc->entries,
-      arc->entry_capacity * size_of(archive_entry));
+  archive_dealloc_bytes(arc->opt_alloc, arc->entries);
   arc->entries = NULL;
   arc->entry_capacity = 0;
   profile_func_end;
@@ -507,7 +503,7 @@ func b32 archive_add_file(archive* arc, const path* archive_path, const path* di
   data.ptr = data_ptr;
   data.size = data_size;
   result = archive_write_all(arc, archive_path, data);
-  archive_dealloc_bytes(arc->opt_alloc, data_ptr, data_size);
+  archive_dealloc_bytes(arc->opt_alloc, data_ptr);
   profile_func_end;
   return result;
 }
@@ -613,7 +609,7 @@ func b32 archive_load_file(archive* arc, const path* src) {
   memset(&zip_archive, 0, size_of(zip_archive));
   if (!mz_zip_reader_init_mem(&zip_archive, zip_ptr, (size_t)zip_size, 0)) {
     thread_log_error("Failed to initialize zip reader path=%s", src->buf);
-    archive_dealloc_bytes(arc->opt_alloc, zip_ptr, zip_size);
+    archive_dealloc_bytes(arc->opt_alloc, zip_ptr);
     profile_func_end;
     return false;
   }
@@ -627,7 +623,7 @@ func b32 archive_load_file(archive* arc, const path* src) {
     if (!mz_zip_reader_file_stat(&zip_archive, file_idx, &file_stat)) {
       thread_log_error("Failed to query zip entry stat path=%s index=%u", src->buf, (u32)file_idx);
       mz_zip_reader_end(&zip_archive);
-      archive_dealloc_bytes(arc->opt_alloc, zip_ptr, zip_size);
+      archive_dealloc_bytes(arc->opt_alloc, zip_ptr);
       archive_clear(arc);
       profile_func_end;
       return false;
@@ -640,7 +636,7 @@ func b32 archive_load_file(archive* arc, const path* src) {
       if (!archive_add_empty_entry(arc, &item_path, 1, &item_idx)) {
         thread_log_error("Failed to add archive directory entry path=%s", item_path.buf);
         mz_zip_reader_end(&zip_archive);
-        archive_dealloc_bytes(arc->opt_alloc, zip_ptr, zip_size);
+        archive_dealloc_bytes(arc->opt_alloc, zip_ptr);
         archive_clear(arc);
         profile_func_end;
         return false;
@@ -651,7 +647,7 @@ func b32 archive_load_file(archive* arc, const path* src) {
     if (!archive_add_empty_entry(arc, &item_path, 0, &item_idx)) {
       thread_log_error("Failed to add archive file entry path=%s", item_path.buf);
       mz_zip_reader_end(&zip_archive);
-      archive_dealloc_bytes(arc->opt_alloc, zip_ptr, zip_size);
+      archive_dealloc_bytes(arc->opt_alloc, zip_ptr);
       archive_clear(arc);
       profile_func_end;
       return false;
@@ -665,7 +661,7 @@ func b32 archive_load_file(archive* arc, const path* src) {
       if (item_ptr == NULL) {
         thread_log_error("Failed to extract zip entry path=%s", item_path.buf);
         mz_zip_reader_end(&zip_archive);
-        archive_dealloc_bytes(arc->opt_alloc, zip_ptr, zip_size);
+        archive_dealloc_bytes(arc->opt_alloc, zip_ptr);
         archive_clear(arc);
         profile_func_end;
         return false;
@@ -677,7 +673,7 @@ func b32 archive_load_file(archive* arc, const path* src) {
         thread_log_error("Failed to store extracted zip entry path=%s", item_path.buf);
         mz_free(item_ptr);
         mz_zip_reader_end(&zip_archive);
-        archive_dealloc_bytes(arc->opt_alloc, zip_ptr, zip_size);
+        archive_dealloc_bytes(arc->opt_alloc, zip_ptr);
         archive_clear(arc);
         profile_func_end;
         return false;
@@ -688,7 +684,7 @@ func b32 archive_load_file(archive* arc, const path* src) {
   }
 
   mz_zip_reader_end(&zip_archive);
-  archive_dealloc_bytes(arc->opt_alloc, zip_ptr, zip_size);
+  archive_dealloc_bytes(arc->opt_alloc, zip_ptr);
   profile_func_end;
   return true;
 #else

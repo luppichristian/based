@@ -46,7 +46,7 @@ func spinlock _spinlock_create(callsite site) {
                                                        .object_ptr = spl,
                                                    });
     if (!msg_post(&lifecycle_msg)) {
-      allocator_dealloc(alloc, spl, size_of(SDL_SpinLock));
+      allocator_dealloc(alloc, spl);
       profile_func_end;
       return NULL;
     }
@@ -86,7 +86,7 @@ func void _spinlock_destroy(spinlock sl, callsite site) {
     return;
   }
   thread_log_trace("Destroyed spinlock handle=%p", sl);
-  allocator_dealloc(alloc, sl, size_of(SDL_SpinLock));
+  allocator_dealloc(alloc, sl);
   profile_func_end;
 }
 

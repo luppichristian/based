@@ -316,7 +316,7 @@ func b32 file_read_all(const path* src, allocator* alloc, buffer* out_data) {
                        (size_t)file_size,
                        (size_t)read_size,
                        SDL_GetError());
-      allocator_dealloc(*alloc, data_ptr, file_size);
+      allocator_dealloc(*alloc, data_ptr);
       SDL_CloseIO(file_ptr);
       profile_func_end;
       return false;

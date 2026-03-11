@@ -50,7 +50,7 @@ TEST(filesystem_file_test, create_write_read_append_copy_and_delete) {
   ASSERT_EQ(5U, read_buff.size);
   EXPECT_EQ(1U, ((u8*)read_buff.ptr)[0]);
   EXPECT_EQ(5U, ((u8*)read_buff.ptr)[4]);
-  allocator_dealloc(alloc_val, read_buff.ptr, read_buff.size);
+  allocator_dealloc(alloc_val, read_buff.ptr);
 
   ASSERT_TRUE(file_copy(&src_path, &dst_path, 1) != 0);
   EXPECT_TRUE(file_exists(&dst_path) != 0);

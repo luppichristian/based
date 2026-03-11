@@ -30,7 +30,7 @@ func b32 file_exists(const path* src);
 func b32 file_get_size(const path* src, sz* out_size);
 
 // Reads the entire file into memory allocated from alloc.
-// On success out_data receives an owned buffer. Caller frees it with allocator_dealloc(alloc, ptr, size).
+// On success out_data receives an owned buffer. Caller frees it with allocator_dealloc(alloc, ptr).
 func b32 file_read_all(const path* src, allocator* alloc, buffer* out_data);
 
 // Overwrites the file at src with data. Returns 1 on success, 0 otherwise.

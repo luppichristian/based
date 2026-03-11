@@ -60,8 +60,15 @@ func void* arena_block_alloc(arena_block* blk, sz size, sz align) {
 func void* arena_alloc_callback(void* user_data, callsite site, sz size) {
   profile_func_begin;
   arena* arn = (arena*)user_data;
+  sz total_size = size + size_of(sz);
+  u8* raw_ptr = (u8*)_arena_alloc(arn, total_size, size_of(void*), site);
+  if (raw_ptr == NULL) {
+    profile_func_end;
+    return NULL;
+  }
+  *((sz*)raw_ptr) = size;
   profile_func_end;
-  return _arena_alloc(arn, size, size_of(void*), site);
+  return raw_ptr + size_of(sz);
 }
 
 func void arena_dealloc_callback(void* user_data, callsite site, void* ptr) {
@@ -76,12 +83,25 @@ func void* arena_realloc_callback(
     void* user_data,
     callsite site,
     void* ptr,
-    sz old_size,
     sz new_size) {
   profile_func_begin;
   arena* arn = (arena*)user_data;
+  if (ptr == NULL) {
+    profile_func_end;
+    return arena_alloc_callback(user_data, site, new_size);
+  }
+  u8* raw_ptr = ((u8*)ptr) - size_of(sz);
+  sz old_size = *((sz*)raw_ptr);
+  sz old_total_size = old_size + size_of(sz);
+  sz new_total_size = new_size + size_of(sz);
+  u8* new_raw_ptr = (u8*)_arena_realloc(arn, raw_ptr, old_total_size, new_total_size, size_of(void*), site);
+  if (new_raw_ptr == NULL) {
+    profile_func_end;
+    return NULL;
+  }
+  *((sz*)new_raw_ptr) = new_size;
   profile_func_end;
-  return _arena_realloc(arn, ptr, old_size, new_size, size_of(void*), site);
+  return new_raw_ptr + size_of(sz);
 }
 
 // =========================================================================
@@ -147,7 +167,7 @@ func void arena_destroy(arena* arn) {
   while (blk) {
     arena_block* nxt = blk->next;
     if (blk->owned && arn->parent.alloc_fn) {
-      _allocator_dealloc(arn->parent, blk, blk->size, CALLSITE_HERE);
+      _allocator_dealloc(arn->parent, blk, CALLSITE_HERE);
     }
     blk = nxt;
   }

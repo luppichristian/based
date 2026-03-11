@@ -146,7 +146,7 @@ func b32 filestream_reserve_memory(filestream* stm, sz min_capacity) {
     new_capacity *= 2;
   }
 
-  new_ptr = (u8*)allocator_realloc(alloc, stm->memory_ptr, stm->memory_capacity, new_capacity);
+  new_ptr = (u8*)allocator_realloc(alloc, stm->memory_ptr, new_capacity);
   if (new_ptr == NULL) {
     thread_log_error("Failed to grow filestream buffer current=%zu requested=%zu",
                      (size_t)stm->memory_capacity,
@@ -345,7 +345,7 @@ func void filestream_close(filestream* stm) {
   } else if (stm->kind == FILESTREAM_KIND_ARCHIVE) {
     (void)filestream_flush(stm);
     if (stm->memory_ptr != NULL) {
-      allocator_dealloc(alloc, stm->memory_ptr, stm->memory_capacity);
+      allocator_dealloc(alloc, stm->memory_ptr);
     }
   }
 

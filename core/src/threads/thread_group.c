@@ -64,8 +64,8 @@ func thread_group create_impl(u32 count, thread_group_func entry, void* arg, cst
 
   if (!group.threads || !group.slots) {
     thread_log_error("Failed to allocate thread group storage count=%u", count);
-    allocator_dealloc(alloc, group.threads, (sz)count * size_of(thread));
-    allocator_dealloc(alloc, group.slots, (sz)count * size_of(thread_group_slot));
+    allocator_dealloc(alloc, group.threads);
+    allocator_dealloc(alloc, group.slots);
     profile_func_end;
     return empty;
   }
@@ -90,8 +90,8 @@ func thread_group create_impl(u32 count, thread_group_func entry, void* arg, cst
       for (u32 join_idx = 0; join_idx < idx; join_idx += 1) {
         thread_detach(group.threads[join_idx]);
       }
-      allocator_dealloc(alloc, group.threads, (sz)count * size_of(thread));
-      allocator_dealloc(alloc, group.slots, (sz)count * size_of(thread_group_slot));
+      allocator_dealloc(alloc, group.threads);
+      allocator_dealloc(alloc, group.slots);
       profile_func_end;
       return empty;
     }
@@ -163,8 +163,8 @@ func void _thread_group_destroy(thread_group* group, callsite site) {
                                                  });
   (void)msg_post(&lifecycle_msg);
 
-  allocator_dealloc(alloc, group->threads, (sz)group->count * size_of(thread));
-  allocator_dealloc(alloc, group->slots, (sz)group->count * size_of(thread_group_slot));
+  allocator_dealloc(alloc, group->threads);
+  allocator_dealloc(alloc, group->slots);
   group->threads = NULL;
   group->slots = NULL;
   group->count = 0;

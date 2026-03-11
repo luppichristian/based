@@ -107,11 +107,9 @@ func void* pool_realloc_callback(
     void* user_data,
     callsite site,
     void* ptr,
-    sz old_size,
     sz new_size) {
   profile_func_begin;
   (void)site;
-  (void)old_size;
   pool* pol = (pool*)user_data;
   // Pools are fixed-size: realloc only makes sense when the sizes match.
   if (new_size == pol->object_size) {
@@ -197,7 +195,7 @@ func void pool_destroy(pool* pol) {
   while (blk) {
     pool_block* nxt = blk->next;
     if (blk->owned && pol->parent.alloc_fn) {
-      _allocator_dealloc(pol->parent, blk, blk->size, CALLSITE_HERE);
+      _allocator_dealloc(pol->parent, blk, CALLSITE_HERE);
     }
     blk = nxt;
   }

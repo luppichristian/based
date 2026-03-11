@@ -98,7 +98,7 @@ func void ring_destroy(ring* rng) {
   }
 
   if (rng->buf_owned && rng->parent.alloc_fn) {
-    _allocator_dealloc(rng->parent, rng->ptr, rng->capacity, CALLSITE_HERE);
+    _allocator_dealloc(rng->parent, rng->ptr, CALLSITE_HERE);
     rng->ptr = NULL;
     rng->buf_owned = 0;
   }

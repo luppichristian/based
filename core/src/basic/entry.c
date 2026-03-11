@@ -38,7 +38,7 @@ func void entry_pipeline_free(void* ptr) {
     return;
   }
   allocator alloc = thread_get_allocator();
-  allocator_dealloc(alloc, ptr, 0);  // TODO: Remove last parameter from dealloc...
+  allocator_dealloc(alloc, ptr);
   profile_func_end;
 }
 
@@ -58,7 +58,7 @@ func void* entry_pipeline_calloc(sz count, sz size) {
 func void* entry_pipeline_realloc(void* ptr, sz size) {
   profile_func_begin;
   allocator alloc = thread_get_allocator();
-  void* new_ptr = allocator_realloc(alloc, ptr, 0, size);
+  void* new_ptr = allocator_realloc(alloc, ptr, size);
   if (new_ptr == NULL && size > 0) {
     global_log_warn("Entry pipeline reallocation failed size=%zu", (size_t)size);
   }

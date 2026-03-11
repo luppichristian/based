@@ -37,9 +37,8 @@ func void* _allocator_calloc(allocator alloc, sz count, sz size, callsite site) 
   return ptr;
 }
 
-func void _allocator_dealloc(allocator alloc, void* ptr, sz size, callsite site) {
+func void _allocator_dealloc(allocator alloc, void* ptr, callsite site) {
   profile_func_begin;
-  (void)size;
   if (ptr == NULL) {
     profile_func_end;
     return;
@@ -51,22 +50,21 @@ func void _allocator_dealloc(allocator alloc, void* ptr, sz size, callsite site)
   profile_func_end;
 }
 
-func void* _allocator_realloc(allocator alloc, void* ptr, sz old_size, sz new_size, callsite site) {
+func void* _allocator_realloc(allocator alloc, void* ptr, sz new_size, callsite site) {
   profile_func_begin;
   if (new_size == 0) {
     profile_func_end;
     return NULL;
   }
+  if (ptr == NULL) {
+    profile_func_end;
+    return _allocator_alloc(alloc, new_size, site);
+  }
+  assert(alloc.realloc_fn != NULL);
   if (alloc.realloc_fn) {
     profile_func_end;
-    return alloc.realloc_fn(alloc.user_data, site, ptr, old_size, new_size);
-  }
-  void* new_ptr = _allocator_alloc(alloc, new_size, site);
-  if (new_ptr && ptr) {
-    sz copy_size = old_size < new_size ? old_size : new_size;
-    memcpy(new_ptr, ptr, copy_size);
-    _allocator_dealloc(alloc, ptr, old_size, site);
+    return alloc.realloc_fn(alloc.user_data, site, ptr, new_size);
   }
   profile_func_end;
-  return new_ptr;
+  return NULL;
 }

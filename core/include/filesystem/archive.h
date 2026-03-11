@@ -63,7 +63,7 @@ func b32 archive_write_all(archive* arc, const path* src, buffer data);
 func b32 archive_remove(archive* arc, const path* src);
 
 // Reads a file entry into memory allocated from alloc.
-// On success out_data receives an owned buffer. Caller frees it with allocator_dealloc(alloc, ptr, size).
+// On success out_data receives an owned buffer. Caller frees it with allocator_dealloc(alloc, ptr).
 func b32 archive_read_all(const archive* arc, const path* src, allocator* alloc, buffer* out_data);
 
 // Copies a disk file into arc at archive_path.

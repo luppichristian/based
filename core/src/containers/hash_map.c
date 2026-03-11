@@ -82,7 +82,7 @@ func b32 hash_map_rehash(hash_map* map, sz new_cap) {
   }
 
   if (map->slots) {
-    allocator_dealloc(map->alloc, map->slots, map->cap * size_of(hash_map_slot));
+    allocator_dealloc(map->alloc, map->slots);
   }
   map->slots = new_slots;
   map->cap = new_cap;
@@ -173,7 +173,7 @@ func void hash_map_destroy(hash_map* map) {
     return;
   }
   if (map->slots) {
-    allocator_dealloc(map->alloc, map->slots, map->cap * size_of(hash_map_slot));
+    allocator_dealloc(map->alloc, map->slots);
     map->slots = NULL;
   }
   map->count = 0;
@@ -200,21 +200,21 @@ func void hash_map_clear(hash_map* map) {
 
 func sz hash_map_count(hash_map const* map) {
   if (map == NULL) {
-      return 0;
+    return 0;
   }
   return map->count;
 }
 
 func sz hash_map_capacity(hash_map const* map) {
   if (map == NULL) {
-      return 0;
+    return 0;
   }
   return map->cap;
 }
 
 func f32 hash_map_load_factor(hash_map const* map) {
   if (map == NULL || map->cap == 0) {
-      return 0.0F;
+    return 0.0F;
   }
   f32 result = (f32)map->count / (f32)map->cap;
   return result;
@@ -261,7 +261,7 @@ func void* hash_map_get(hash_map* map, u64 key) {
 
 func b32 hash_map_has(hash_map* map, u64 key) {
   if (map == NULL || !map->slots || map->count == 0) {
-      return false;
+    return false;
   }
   return hash_map_find_slot(map, key) != NULL;
 }

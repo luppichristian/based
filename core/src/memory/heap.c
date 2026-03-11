@@ -182,10 +182,14 @@ func void* heap_realloc_callback(
     void* user_data,
     callsite site,
     void* ptr,
-    sz old_size,
     sz new_size) {
   profile_func_begin;
   heap* hap = (heap*)user_data;
+  sz old_size = 0;
+  if (ptr != NULL) {
+    heap_chunk* chunk = heap_read_back_ref(ptr);
+    old_size = chunk->size;
+  }
   profile_func_end;
   return _heap_realloc(hap, ptr, old_size, new_size, size_of(void*), site);
 }
@@ -253,7 +257,7 @@ func void heap_destroy(heap* hep) {
   while (blk) {
     heap_block* nxt = blk->next;
     if (blk->owned && hep->parent.alloc_fn) {
-      _allocator_dealloc(hep->parent, blk, blk->size, CALLSITE_HERE);
+      _allocator_dealloc(hep->parent, blk, CALLSITE_HERE);
     }
     blk = nxt;
   }

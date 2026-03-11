@@ -41,7 +41,7 @@ TEST(memory_allocator_test, custom_callbacks) {
   void* ptr = allocator_alloc(alloc, 100);
   EXPECT_NE(nullptr, ptr);
   EXPECT_EQ(100U, test_allocated_size);
-  allocator_dealloc(alloc, ptr, 100);
+  allocator_dealloc(alloc, ptr);
 }
 
 TEST(memory_allocator_test, alloc_zero) {
@@ -50,7 +50,7 @@ TEST(memory_allocator_test, alloc_zero) {
   alloc.dealloc_fn = test_free;
   void* ptr = allocator_alloc(alloc, 0);
   EXPECT_NE(nullptr, ptr);
-  allocator_dealloc(alloc, ptr, 0);
+  allocator_dealloc(alloc, ptr);
 }
 
 TEST(memory_allocator_test, dealloc) {
@@ -59,6 +59,6 @@ TEST(memory_allocator_test, dealloc) {
   alloc.dealloc_fn = test_free;
   test_deallocated_size = 0;
   void* ptr = allocator_alloc(alloc, 100);
-  allocator_dealloc(alloc, ptr, 100);
+  allocator_dealloc(alloc, ptr);
   EXPECT_EQ(1U, test_deallocated_size);
 }
