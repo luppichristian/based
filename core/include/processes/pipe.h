@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "../basic/codespace.h"
 #include "process.h"
 
 // =========================================================================
@@ -18,15 +19,15 @@ typedef void* pipe;
 
 // Returns the stdin pipe for a spawned process when pipe_stdin was enabled.
 // Returns NULL when stdin is not available.
-func pipe pipe_stdin(process prc);
+func pipe _pipe_stdin(process prc, callsite site);
 
 // Returns the stdout pipe for a spawned process when pipe_stdout was enabled.
 // Returns NULL when stdout is not available.
-func pipe pipe_stdout(process prc);
+func pipe _pipe_stdout(process prc, callsite site);
 
 // Returns the stderr pipe for a spawned process when pipe_stderr was enabled.
 // Returns NULL when stderr is not available.
-func pipe pipe_stderr(process prc);
+func pipe _pipe_stderr(process prc, callsite site);
 
 // Returns true if pip is a valid pipe handle.
 func b32 pipe_is_valid(pipe pip);
@@ -48,7 +49,16 @@ func b32 pipe_flush(pipe pip);
 
 // Closes a pipe.
 // Closing stdin is the portable way to signal EOF to the child process.
-func void pipe_close(pipe pip);
+func void _pipe_close(pipe pip, callsite site);
+
+#define pipe_stdin(prc) \
+  _pipe_stdin(prc, CALLSITE_HERE)
+#define pipe_stdout(prc) \
+  _pipe_stdout(prc, CALLSITE_HERE)
+#define pipe_stderr(prc) \
+  _pipe_stderr(prc, CALLSITE_HERE)
+#define pipe_close(pip) \
+  _pipe_close(pip, CALLSITE_HERE)
 
 // =========================================================================
 c_end;

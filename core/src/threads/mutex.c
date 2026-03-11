@@ -10,11 +10,8 @@
 #include "basic/profiler.h"
 #include "threads/atomics.h"
 
-// TODO: For all object creation/destructions log messages, we should also print the callsite.
-
 func mutex _mutex_create(callsite site) {
   profile_func_begin;
-  (void)site;
   mutex handle = (mutex)SDL_CreateMutex();
   if (handle == NULL) {
     thread_log_error("Failed to create mutex error=%s", SDL_GetError());
@@ -32,7 +29,7 @@ func mutex _mutex_create(callsite site) {
   msg lifecycle_msg = {0};
   msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
   if (!msg_post(&lifecycle_msg)) {
-    thread_log_trace("Mutex creation cancelled");
+    thread_log_trace("Mutex creation was suspended handle=%p", handle);
     SDL_DestroyMutex((SDL_Mutex*)handle);
     profile_func_end;
     return NULL;
@@ -45,7 +42,6 @@ func mutex _mutex_create(callsite site) {
 
 func b32 _mutex_destroy(mutex mtx, callsite site) {
   profile_func_begin;
-  (void)site;
   if (!mtx) {
     thread_log_warn("Skipping mutex destroy for invalid handle");
     profile_func_end;
@@ -62,7 +58,7 @@ func b32 _mutex_destroy(mutex mtx, callsite site) {
   msg lifecycle_msg = {0};
   msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
   if (!msg_post(&lifecycle_msg)) {
-    thread_log_trace("Mutex destruction cancelled");
+    thread_log_trace("Mutex destruction was suspended handle=%p", mtx);
     profile_func_end;
     return false;
   }

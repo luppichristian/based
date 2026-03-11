@@ -14,35 +14,42 @@
 // Create / Destroy
 // =========================================================================
 
-func ring ring_create(void* ptr, sz capacity, mutex opt_mutex) {
+func ring _ring_create(void* ptr, sz capacity, mutex opt_mutex, callsite site) {
   profile_func_begin;
   ring rng;
   mem_zero(&rng, size_of(rng));
   rng.ptr = (u8*)ptr;
   rng.capacity = capacity;
   rng.opt_mutex = opt_mutex;
+  msg_core_object_lifecycle_data msg_data = {
+      .event_kind = MSG_CORE_OBJECT_EVENT_CREATE,
+      .object_type = MSG_CORE_OBJECT_TYPE_RING,
+      .object_ptr = &rng,
+      .site = site,
+  };
+
   msg lifecycle_msg = {0};
-  lifecycle_msg.type = MSG_CORE_TYPE_OBJECT_LIFECYCLE;
-  msg_core_fill_object_lifecycle(&lifecycle_msg, &(msg_core_object_lifecycle_data) {
-                                                     .event_kind = MSG_CORE_OBJECT_EVENT_CREATE,
-                                                     .object_type = MSG_CORE_OBJECT_TYPE_RING,
-                                                     .object_ptr = &rng,
-                                                 });
-  (void)msg_post(&lifecycle_msg);
+  msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
+  if (!msg_post(&lifecycle_msg)) {
+    mem_zero(&rng, size_of(rng));
+    thread_log_trace("Ring creation was suspended");
+    profile_func_end;
+    return rng;
+  }
   thread_log_trace("Created ring capacity=%zu", (size_t)capacity);
   profile_func_end;
   return rng;
 }
 
-func ring ring_create_mutexed(void* ptr, sz capacity) {
+func ring _ring_create_mutexed(void* ptr, sz capacity, callsite site) {
   profile_func_begin;
-  ring rng = ring_create(ptr, capacity, mutex_create());
+  ring rng = _ring_create(ptr, capacity, mutex_create(), site);
   rng.mutex_owned = 1;
   profile_func_end;
   return rng;
 }
 
-func ring ring_create_alloc(allocator parent_alloc, sz capacity, mutex opt_mutex) {
+func ring _ring_create_alloc(allocator parent_alloc, sz capacity, mutex opt_mutex, callsite site) {
   profile_func_begin;
   ring rng;
   mem_zero(&rng, size_of(rng));
@@ -56,28 +63,38 @@ func ring ring_create_alloc(allocator parent_alloc, sz capacity, mutex opt_mutex
       thread_log_error("Failed to allocate ring buffer capacity=%zu", (size_t)capacity);
     }
   }
+  msg_core_object_lifecycle_data msg_data = {
+      .event_kind = MSG_CORE_OBJECT_EVENT_CREATE,
+      .object_type = MSG_CORE_OBJECT_TYPE_RING,
+      .object_ptr = &rng,
+      .site = site,
+  };
+
   msg lifecycle_msg = {0};
-  lifecycle_msg.type = MSG_CORE_TYPE_OBJECT_LIFECYCLE;
-  msg_core_fill_object_lifecycle(&lifecycle_msg, &(msg_core_object_lifecycle_data) {
-                                                     .event_kind = MSG_CORE_OBJECT_EVENT_CREATE,
-                                                     .object_type = MSG_CORE_OBJECT_TYPE_RING,
-                                                     .object_ptr = &rng,
-                                                 });
-  (void)msg_post(&lifecycle_msg);
+  msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
+  if (!msg_post(&lifecycle_msg)) {
+    if (rng.buf_owned && rng.parent.dealloc_fn) {
+      _allocator_dealloc(rng.parent, rng.ptr, site);
+    }
+    rng = (ring) {0};
+    thread_log_trace("Allocated ring creation was suspended");
+    profile_func_end;
+    return rng;
+  }
   thread_log_trace("Created allocated ring capacity=%zu", (size_t)capacity);
   profile_func_end;
   return rng;
 }
 
-func ring ring_create_alloc_mutexed(allocator parent_alloc, sz capacity) {
+func ring _ring_create_alloc_mutexed(allocator parent_alloc, sz capacity, callsite site) {
   profile_func_begin;
-  ring rng = ring_create_alloc(parent_alloc, capacity, mutex_create());
+  ring rng = _ring_create_alloc(parent_alloc, capacity, mutex_create(), site);
   rng.mutex_owned = 1;
   profile_func_end;
   return rng;
 }
 
-func void ring_destroy(ring* rng) {
+func void _ring_destroy(ring* rng, callsite site) {
   profile_func_begin;
   if (rng == NULL) {
     profile_func_end;
@@ -85,14 +102,20 @@ func void ring_destroy(ring* rng) {
   }
   assert(rng != NULL);
 
+  msg_core_object_lifecycle_data msg_data = {
+      .event_kind = MSG_CORE_OBJECT_EVENT_DESTROY,
+      .object_type = MSG_CORE_OBJECT_TYPE_RING,
+      .object_ptr = rng,
+      .site = site,
+  };
+
   msg lifecycle_msg = {0};
-  lifecycle_msg.type = MSG_CORE_TYPE_OBJECT_LIFECYCLE;
-  msg_core_fill_object_lifecycle(&lifecycle_msg, &(msg_core_object_lifecycle_data) {
-                                                     .event_kind = MSG_CORE_OBJECT_EVENT_DESTROY,
-                                                     .object_type = MSG_CORE_OBJECT_TYPE_RING,
-                                                     .object_ptr = rng,
-                                                 });
-  (void)msg_post(&lifecycle_msg);
+  msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
+  if (!msg_post(&lifecycle_msg)) {
+    thread_log_trace("Ring destruction was suspended handle=%p", (void*)rng);
+    profile_func_end;
+    return;
+  }
 
   if (rng->opt_mutex) {
     mutex_lock(rng->opt_mutex);

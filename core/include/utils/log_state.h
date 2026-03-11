@@ -103,11 +103,16 @@ typedef struct log_state {
 
 // Initializes a log state with LOG_LEVEL_DEFAULT.
 // When use_mutex is true the state creates and owns a mutex; otherwise it is lock-free.
-func b32 log_state_init(log_state* state, b32 use_mutex, allocator alloc);
+func b32 _log_state_init(log_state* state, b32 use_mutex, allocator alloc, callsite site);
 
 // Releases resources owned by the log state and zeroes it.
 // Safe to call on NULL or zero-initialized states.
-func void log_state_quit(log_state* state);
+func void _log_state_quit(log_state* state, callsite site);
+
+#define log_state_init(state, use_mutex, alloc) \
+  _log_state_init(state, use_mutex, alloc, CALLSITE_HERE)
+#define log_state_quit(state) \
+  _log_state_quit(state, CALLSITE_HERE)
 
 // Returns true if the state is non-NULL and has been initialized.
 func b32 log_state_is_init(log_state* state);

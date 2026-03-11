@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "../basic/codespace.h"
 #include "../basic/utility_defines.h"
 #include "path.h"
 
@@ -57,13 +58,20 @@ typedef struct filestream {
 } filestream;
 
 // Opens a native filesystem stream from src.
-func filestream filestream_open(const path* src, u32 mode_flags);
+func filestream _filestream_open(const path* src, u32 mode_flags, callsite site);
 
 // Opens a stream that targets a file entry inside arc.
-func filestream filestream_open_archive(archive* arc, const path* src, u32 mode_flags);
+func filestream _filestream_open_archive(archive* arc, const path* src, u32 mode_flags, callsite site);
 
 // Flushes pending archive writes and releases the stream.
-func void filestream_close(filestream* stm);
+func void _filestream_close(filestream* stm, callsite site);
+
+#define filestream_open(src, mode_flags) \
+  _filestream_open(src, mode_flags, CALLSITE_HERE)
+#define filestream_open_archive(arc, src, mode_flags) \
+  _filestream_open_archive(arc, src, mode_flags, CALLSITE_HERE)
+#define filestream_close(stm) \
+  _filestream_close(stm, CALLSITE_HERE)
 
 // Returns 1 when stm currently references an open stream.
 func b32 filestream_is_open(const filestream* stm);

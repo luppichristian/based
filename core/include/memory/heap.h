@@ -64,19 +64,26 @@ typedef struct heap {
 //                    pass a zeroed allocator for fixed-buffer-only operation.
 // opt_mutex        — mutex that guards every operation; pass NULL to disable locking.
 // default_block_sz — byte size for automatically grown blocks (ignored when parent has no alloc_fn).
-func heap heap_create(allocator parent_alloc, mutex opt_mutex, sz default_block_sz);
+func heap _heap_create(allocator parent_alloc, mutex opt_mutex, sz default_block_sz, callsite site);
 
 // Creates a new heap and internally allocates a dedicated mutex for thread safety.
 // The mutex is destroyed automatically by heap_destroy.
 // parent_alloc     — same as heap_create.
 // default_block_sz — same as heap_create.
-func heap heap_create_mutexed(allocator parent_alloc, sz default_block_sz);
+func heap _heap_create_mutexed(allocator parent_alloc, sz default_block_sz, callsite site);
 
 // Releases all blocks that were auto-allocated through the parent allocator and
 // resets the heap to its initial empty state. Manually added blocks are detached
 // but their memory is not freed. If the heap owns its mutex (created via
 // heap_create_mutexed), the mutex is also destroyed.
-func void heap_destroy(heap* hep);
+func void _heap_destroy(heap* hep, callsite site);
+
+#define heap_create(parent_alloc, opt_mutex, default_block_sz) \
+  _heap_create(parent_alloc, opt_mutex, default_block_sz, CALLSITE_HERE)
+#define heap_create_mutexed(parent_alloc, default_block_sz) \
+  _heap_create_mutexed(parent_alloc, default_block_sz, CALLSITE_HERE)
+#define heap_destroy(hep) \
+  _heap_destroy(hep, CALLSITE_HERE)
 
 // Returns an allocator interface backed by hep.
 // The returned allocator stores a pointer to hep; hep must outlive the allocator.

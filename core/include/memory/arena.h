@@ -49,22 +49,30 @@ typedef struct arena {
 //                    pass a zeroed allocator for fixed-buffer-only operation.
 // opt_mutex        — mutex that guards every operation; pass NULL to disable locking.
 // default_block_sz — byte size for automatically grown blocks (ignored when parent has no alloc_fn).
-func arena arena_create(
+func arena _arena_create(
     allocator parent_alloc,
     mutex opt_mutex,
-    sz default_block_sz);
+    sz default_block_sz,
+    callsite site);
 
 // Creates a new arena and internally allocates a dedicated mutex for thread safety.
 // The mutex is destroyed automatically by arena_destroy.
 // parent_alloc     — same as arena_create.
 // default_block_sz — same as arena_create.
-func arena arena_create_mutexed(allocator parent_alloc, sz default_block_sz);
+func arena _arena_create_mutexed(allocator parent_alloc, sz default_block_sz, callsite site);
 
 // Releases all blocks that were auto-allocated through the parent allocator and
 // resets the arena to its initial empty state. Manually added blocks are detached
 // but their memory is not freed. If the arena owns its mutex (created via
 // arena_create_mutexed), the mutex is also destroyed.
-func void arena_destroy(arena* arn);
+func void _arena_destroy(arena* arn, callsite site);
+
+#define arena_create(parent_alloc, opt_mutex, default_block_sz) \
+  _arena_create(parent_alloc, opt_mutex, default_block_sz, CALLSITE_HERE)
+#define arena_create_mutexed(parent_alloc, default_block_sz) \
+  _arena_create_mutexed(parent_alloc, default_block_sz, CALLSITE_HERE)
+#define arena_destroy(arn) \
+  _arena_destroy(arn, CALLSITE_HERE)
 
 // Returns an allocator interface backed by arn.
 // The returned allocator stores a pointer to arn; arn must outlive the allocator.

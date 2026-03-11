@@ -109,41 +109,51 @@ func void* arena_realloc_callback(
 // Create / Destroy
 // =========================================================================
 
-func arena arena_create(allocator parent_alloc, mutex opt_mutex, sz default_block_sz) {
+func arena _arena_create(
+    allocator parent_alloc,
+    mutex opt_mutex,
+    sz default_block_sz,
+    callsite site) {
   profile_func_begin;
   arena arn;
   mem_zero(&arn, size_of(arn));
   arn.parent = parent_alloc;
-  if (arn.parent.alloc_fn == NULL || arn.parent.dealloc_fn == NULL) {
-    arn.parent = thread_get_allocator();
-  }
-  if (arn.parent.alloc_fn == NULL || arn.parent.dealloc_fn == NULL) {
-    arn.parent = global_get_allocator();
-  }
   arn.opt_mutex = opt_mutex;
   arn.default_block_sz = default_block_sz;
+
+  msg_core_object_lifecycle_data msg_data = {
+      .event_kind = MSG_CORE_OBJECT_EVENT_CREATE,
+      .object_type = MSG_CORE_OBJECT_TYPE_ARENA,
+      .object_ptr = &arn,
+      .site = site,
+  };
+
   msg lifecycle_msg = {0};
-  lifecycle_msg.type = MSG_CORE_TYPE_OBJECT_LIFECYCLE;
-  msg_core_fill_object_lifecycle(&lifecycle_msg, &(msg_core_object_lifecycle_data) {
-                                                     .event_kind = MSG_CORE_OBJECT_EVENT_CREATE,
-                                                     .object_type = MSG_CORE_OBJECT_TYPE_ARENA,
-                                                     .object_ptr = &arn,
-                                                 });
-  (void)msg_post(&lifecycle_msg);
+  msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
+  if (!msg_post(&lifecycle_msg)) {
+    mem_zero(&arn, size_of(arn));
+    thread_log_trace("Arena creation was suspended");
+    profile_func_end;
+    return arn;
+  }
+
   thread_log_trace("Created arena default_block_size=%zu", (size_t)default_block_sz);
   profile_func_end;
   return arn;
 }
 
-func arena arena_create_mutexed(allocator parent_alloc, sz default_block_sz) {
+func arena _arena_create_mutexed(
+    allocator parent_alloc,
+    sz default_block_sz,
+    callsite site) {
   profile_func_begin;
-  arena arn = arena_create(parent_alloc, mutex_create(), default_block_sz);
+  arena arn = _arena_create(parent_alloc, mutex_create(), default_block_sz, site);
   arn.mutex_owned = 1;
   profile_func_end;
   return arn;
 }
 
-func void arena_destroy(arena* arn) {
+func void _arena_destroy(arena* arn, callsite site) {
   profile_func_begin;
   if (arn == NULL) {
     profile_func_end;
@@ -151,14 +161,20 @@ func void arena_destroy(arena* arn) {
   }
   assert(arn != NULL);
 
+  msg_core_object_lifecycle_data msg_data = {
+      .event_kind = MSG_CORE_OBJECT_EVENT_DESTROY,
+      .object_type = MSG_CORE_OBJECT_TYPE_ARENA,
+      .object_ptr = arn,
+      .site = site,
+  };
+
   msg lifecycle_msg = {0};
-  lifecycle_msg.type = MSG_CORE_TYPE_OBJECT_LIFECYCLE;
-  msg_core_fill_object_lifecycle(&lifecycle_msg, &(msg_core_object_lifecycle_data) {
-                                                     .event_kind = MSG_CORE_OBJECT_EVENT_DESTROY,
-                                                     .object_type = MSG_CORE_OBJECT_TYPE_ARENA,
-                                                     .object_ptr = arn,
-                                                 });
-  (void)msg_post(&lifecycle_msg);
+  msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
+  if (!msg_post(&lifecycle_msg)) {
+    thread_log_trace("Arena destruction was suspended handle=%p", (void*)arn);
+    profile_func_end;
+    return;
+  }
 
   if (arn->opt_mutex) {
     mutex_lock(arn->opt_mutex);

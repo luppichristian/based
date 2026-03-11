@@ -325,7 +325,7 @@ func void pathwatch_dispatch_missed(
   profile_func_end;
 }
 
-func pathwatch pathwatch_create(b32 use_generic_mode) {
+func pathwatch _pathwatch_create(b32 use_generic_mode, callsite site) {
   profile_func_begin;
   pathwatch watcher = {0};
   watcher.id = pathwatch_next_id();
@@ -343,15 +343,15 @@ func pathwatch pathwatch_create(b32 use_generic_mode) {
   }
 
   msg lifecycle_msg = {0};
-  lifecycle_msg.type = MSG_CORE_TYPE_OBJECT_LIFECYCLE;
-  msg_core_object_lifecycle_data lifecycle_data = {
+  msg_core_object_lifecycle_data msg_data = {
       .object_type = MSG_CORE_OBJECT_TYPE_PATHWATCH,
       .event_kind = MSG_CORE_OBJECT_EVENT_CREATE,
       .object_ptr = watcher.native_handle,
+      .site = site,
   };
-  msg_core_fill_object_lifecycle(&lifecycle_msg, &lifecycle_data);
+  msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
   if (!msg_post(&lifecycle_msg)) {
-    thread_log_error("Failed to post pathwatch create lifecycle watcher=%lld", (long long)watcher.id);
+    thread_log_trace("Pathwatch creation was suspended watcher=%lld", (long long)watcher.id);
     pathwatch_bind_remove(watcher.native_handle);
     efsw_release((efsw_watcher)watcher.native_handle);
     watcher.id = 0;
@@ -365,7 +365,7 @@ func pathwatch pathwatch_create(b32 use_generic_mode) {
   return watcher;
 }
 
-func void pathwatch_destroy(pathwatch* watcher) {
+func void _pathwatch_destroy(pathwatch* watcher, callsite site) {
   profile_func_begin;
   if (watcher == NULL || watcher->native_handle == NULL) {
     profile_func_end;
@@ -374,15 +374,15 @@ func void pathwatch_destroy(pathwatch* watcher) {
   assert(watcher != NULL);
 
   msg lifecycle_msg = {0};
-  lifecycle_msg.type = MSG_CORE_TYPE_OBJECT_LIFECYCLE;
-  msg_core_object_lifecycle_data lifecycle_data = {
+  msg_core_object_lifecycle_data msg_data = {
       .object_type = MSG_CORE_OBJECT_TYPE_PATHWATCH,
       .event_kind = MSG_CORE_OBJECT_EVENT_DESTROY,
       .object_ptr = watcher->native_handle,
+      .site = site,
   };
-  msg_core_fill_object_lifecycle(&lifecycle_msg, &lifecycle_data);
+  msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
   if (!msg_post(&lifecycle_msg)) {
-    thread_log_error("Failed to post pathwatch destroy lifecycle watcher=%lld", (long long)watcher->id);
+    thread_log_trace("Pathwatch destruction was suspended watcher=%lld", (long long)watcher->id);
     profile_func_end;
     return;
   }

@@ -12,7 +12,6 @@
 
 func rwlock _rwlock_create(callsite site) {
   profile_func_begin;
-  (void)site;  // TODO: When done remove these from all the codebase
   rwlock handle = (rwlock)SDL_CreateRWLock();
   if (handle == NULL) {
     thread_log_error("Failed to create rwlock error=%s", SDL_GetError());
@@ -30,7 +29,7 @@ func rwlock _rwlock_create(callsite site) {
   msg lifecycle_msg = {0};
   msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
   if (!msg_post(&lifecycle_msg)) {
-    thread_log_trace("RWLock creation cancelled");
+    thread_log_trace("RWLock creation was suspended handle=%p", handle);
     SDL_DestroyRWLock((SDL_RWLock*)handle);
     profile_func_end;
     return NULL;
@@ -43,7 +42,6 @@ func rwlock _rwlock_create(callsite site) {
 
 func b32 _rwlock_destroy(rwlock rw, callsite site) {
   profile_func_begin;
-  (void)site;
   if (!rw) {
     thread_log_warn("Skipping rwlock destroy for invalid handle");
     profile_func_end;
@@ -60,7 +58,7 @@ func b32 _rwlock_destroy(rwlock rw, callsite site) {
   msg lifecycle_msg = {0};
   msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
   if (!msg_post(&lifecycle_msg)) {
-    thread_log_trace("RWLock destruction cancelled");
+    thread_log_trace("RWLock destruction was suspended handle=%p", rw);
     profile_func_end;
     return false;
   }

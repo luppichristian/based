@@ -303,20 +303,22 @@
 10: typedef struct archive_entry {
 18: typedef struct archive {
 25: typedef struct archive_entry_info {
-35: func archive archive_create(allocator* opt_alloc);
-38: func void archive_destroy(archive* arc);
-41: func void archive_clear(archive* arc);
-44: func sz archive_count(const archive* arc);
-47: func b32 archive_exists(const archive* arc, const path* src);
-50: func b32 archive_load_file(archive* arc, const path* src);
-53: func b32 archive_save_file(const archive* arc, const path* dst);
-56: func b32 archive_write_all(archive* arc, const path* src, buffer data);
-59: func b32 archive_remove(archive* arc, const path* src);
-63: func b32 archive_read_all(const archive* arc, const path* src, allocator* alloc, buffer* out_data);
-66: func b32 archive_add_file(archive* arc, const path* archive_path, const path* disk_path);
-69: func b32 archive_iterate(const archive* arc, archive_iterate_callback* callback, void* user_data);
-72: func b32 archive_get_entry_info(const archive* arc, const path* src, archive_entry_info* out_info);
-75: func b32 archive_get_entry_data(const archive* arc, const path* src, buffer* out_data);
+40: func archive _archive_create(allocator* opt_alloc, callsite site);
+43: func void _archive_destroy(archive* arc, callsite site);
+45: #define archive_create(opt_alloc) \
+47: #define archive_destroy(arc) \
+51: func void archive_clear(archive* arc);
+54: func sz archive_count(const archive* arc);
+57: func b32 archive_exists(const archive* arc, const path* src);
+60: func b32 archive_load_file(archive* arc, const path* src);
+63: func b32 archive_save_file(const archive* arc, const path* dst);
+66: func b32 archive_write_all(archive* arc, const path* src, buffer data);
+69: func b32 archive_remove(archive* arc, const path* src);
+73: func b32 archive_read_all(const archive* arc, const path* src, allocator* alloc, buffer* out_data);
+76: func b32 archive_add_file(archive* arc, const path* archive_path, const path* disk_path);
+79: func b32 archive_iterate(const archive* arc, archive_iterate_callback* callback, void* user_data);
+82: func b32 archive_get_entry_info(const archive* arc, const path* src, archive_entry_info* out_info);
+85: func b32 archive_get_entry_data(const archive* arc, const path* src, buffer* out_data);
 
 === include\filesystem\directory.h ===
 8: typedef struct dir_entry {
@@ -350,13 +352,15 @@
 8: typedef enum filemap_access {
 14: typedef enum filemap_error {
 22: typedef struct filemap {
-34: func filemap filemap_open(const path* src, filemap_access access);
-37: func b32 filemap_is_open(const filemap* map);
-40: func b32 filemap_flush(filemap* map);
-43: func void filemap_close(filemap* map);
-45: func b32 filemap_is_writable(const filemap* map);
-46: func void filemap_mark_dirty(filemap* map);
-47: func filemap_error filemap_get_last_error(void);
+39: func filemap _filemap_open(const path* src, filemap_access access, callsite site);
+42: func b32 filemap_is_open(const filemap* map);
+45: func b32 filemap_flush(filemap* map);
+48: func void _filemap_close(filemap* map, callsite site);
+50: #define filemap_open(src, access) \
+52: #define filemap_close(map) \
+56: func b32 filemap_is_writable(const filemap* map);
+58: func void filemap_mark_dirty(filemap* map);
+60: func filemap_error filemap_get_last_error(void);
 
 === include\filesystem\filestream.h ===
 9: typedef struct archive archive;
@@ -364,19 +368,22 @@
 17: typedef enum filestream_seek_basis {
 23: typedef enum filestream_error {
 41: typedef struct filestream {
-56: func filestream filestream_open(const path* src, u32 mode_flags);
-59: func filestream filestream_open_archive(archive* arc, const path* src, u32 mode_flags);
-62: func void filestream_close(filestream* stm);
-65: func b32 filestream_is_open(const filestream* stm);
-68: func b32 filestream_flush(filestream* stm);
-71: func sz filestream_read(filestream* stm, void* dst, sz size);
-74: func b32 filestream_read_exact(filestream* stm, void* dst, sz size);
-77: func sz filestream_write(filestream* stm, const void* src, sz size);
-80: func b32 filestream_write_exact(filestream* stm, const void* src, sz size);
-83: func b32 filestream_seek(filestream* stm, i64 offset, filestream_seek_basis basis);
-86: func sz filestream_tell(const filestream* stm);
-89: func sz filestream_size(const filestream* stm);
-92: func b32 filestream_eof(const filestream* stm);
+61: func filestream _filestream_open(const path* src, u32 mode_flags, callsite site);
+64: func filestream _filestream_open_archive(archive* arc, const path* src, u32 mode_flags, callsite site);
+67: func void _filestream_close(filestream* stm, callsite site);
+69: #define filestream_open(src, mode_flags) \
+71: #define filestream_open_archive(arc, src, mode_flags) \
+73: #define filestream_close(stm) \
+77: func b32 filestream_is_open(const filestream* stm);
+80: func b32 filestream_flush(filestream* stm);
+83: func sz filestream_read(filestream* stm, void* dst, sz size);
+86: func b32 filestream_read_exact(filestream* stm, void* dst, sz size);
+89: func sz filestream_write(filestream* stm, const void* src, sz size);
+92: func b32 filestream_write_exact(filestream* stm, const void* src, sz size);
+95: func b32 filestream_seek(filestream* stm, i64 offset, filestream_seek_basis basis);
+98: func sz filestream_tell(const filestream* stm);
+101: func sz filestream_size(const filestream* stm);
+104: func b32 filestream_eof(const filestream* stm);
 95: func filestream_error filestream_get_error(const filestream* stm);
 
 === include\filesystem\module.h ===
@@ -426,20 +433,22 @@
 11: typedef enum pathwatch_action {
 18: typedef struct pathwatch_event {
 27: typedef struct pathwatch {
-34: func pathwatch pathwatch_create(b32 use_generic_mode);
-37: func void pathwatch_destroy(pathwatch* watcher);
-40: func b32 pathwatch_start(pathwatch* watcher);
-41: func b32 pathwatch_stop(pathwatch* watcher);
-42: func b32 pathwatch_pause(pathwatch* watcher);
-43: func b32 pathwatch_resume(pathwatch* watcher);
-44: func i32 pathwatch_drain(void);
-47: func pathwatch_watch_id pathwatch_add(pathwatch* watcher, const path* src, b32 recursive);
-50: func b32 pathwatch_remove(pathwatch* watcher, pathwatch_watch_id watch_id);
-53: func b32 pathwatch_remove_path(pathwatch* watcher, const path* src);
-56: func b32 pathwatch_get_path(pathwatch_watch_id watch_id, path* out_watch_path);
-59: func b32 pathwatch_follow_symlinks(pathwatch* watcher, b32 enabled);
-62: func b32 pathwatch_allow_out_of_scope_links(pathwatch* watcher, b32 enabled);
-65: func cstr8 pathwatch_get_last_error(void);
+39: func pathwatch _pathwatch_create(b32 use_generic_mode, callsite site);
+42: func void _pathwatch_destroy(pathwatch* watcher, callsite site);
+44: #define pathwatch_create(use_generic_mode) \
+46: #define pathwatch_destroy(watcher) \
+50: func b32 pathwatch_start(pathwatch* watcher);
+52: func b32 pathwatch_stop(pathwatch* watcher);
+53: func b32 pathwatch_pause(pathwatch* watcher);
+54: func b32 pathwatch_resume(pathwatch* watcher);
+55: func i32 pathwatch_drain(void);
+58: func pathwatch_watch_id pathwatch_add(pathwatch* watcher, const path* src, b32 recursive);
+61: func b32 pathwatch_remove(pathwatch* watcher, pathwatch_watch_id watch_id);
+64: func b32 pathwatch_remove_path(pathwatch* watcher, const path* src);
+67: func b32 pathwatch_get_path(pathwatch_watch_id watch_id, path* out_watch_path);
+70: func b32 pathwatch_follow_symlinks(pathwatch* watcher, b32 enabled);
+73: func b32 pathwatch_allow_out_of_scope_links(pathwatch* watcher, b32 enabled);
+76: func cstr8 pathwatch_get_last_error(void);
 
 === include\input\bindings.h ===
 21: typedef struct binding_keyboard_combo {
@@ -781,10 +790,13 @@
 === include\memory\arena.h ===
 17: typedef struct arena_block {
 34: typedef struct arena {
-48: func arena arena_create(allocator parent_alloc, mutex opt_mutex, sz default_block_sz);
-54: func arena arena_create_mutexed(allocator parent_alloc, sz default_block_sz);
-60: func void arena_destroy(arena* arn);
-65: func allocator arena_get_allocator(arena* arn);
+52: func arena _arena_create(
+62: func arena _arena_create_mutexed(allocator parent_alloc, sz default_block_sz, callsite site);
+68: func void _arena_destroy(arena* arn, callsite site);
+70: #define arena_create(parent_alloc, opt_mutex, default_block_sz) \
+72: #define arena_create_mutexed(parent_alloc, default_block_sz) \
+74: #define arena_destroy(arn) \
+80: func allocator arena_get_allocator(arena* arn);
 75: func void arena_add_block(arena* arn, void* ptr, sz size);
 80: func b32 arena_remove_block(arena* arn, void* ptr);
 90: func void* _arena_alloc(arena* arn, sz size, sz align, callsite site);
@@ -822,10 +834,13 @@
 18: typedef struct heap_chunk {
 32: typedef struct heap_block {
 48: typedef struct heap {
-63: func heap heap_create(allocator parent_alloc, mutex opt_mutex, sz default_block_sz);
-69: func heap heap_create_mutexed(allocator parent_alloc, sz default_block_sz);
-75: func void heap_destroy(heap* hep);
-79: func allocator heap_get_allocator(heap* hep);
+67: func heap _heap_create(allocator parent_alloc, mutex opt_mutex, sz default_block_sz, callsite site);
+73: func heap _heap_create_mutexed(allocator parent_alloc, sz default_block_sz, callsite site);
+79: func void _heap_destroy(heap* hep, callsite site);
+81: #define heap_create(parent_alloc, opt_mutex, default_block_sz) \
+83: #define heap_create_mutexed(parent_alloc, default_block_sz) \
+85: #define heap_destroy(hep) \
+90: func allocator heap_get_allocator(heap* hep);
 89: func void heap_add_block(heap* hep, void* ptr, sz size);
 94: func b32 heap_remove_block(heap* hep, void* ptr);
 104: func void* _heap_alloc(heap* hep, sz size, sz align, callsite site);
@@ -869,10 +884,13 @@
 === include\memory\pool.h ===
 16: typedef struct pool_block {
 33: typedef struct pool {
-52: func pool pool_create(
-65: func pool pool_create_mutexed(
-75: func void pool_destroy(pool* pol);
-81: func allocator pool_get_allocator(pool* pol);
+56: func pool _pool_create(
+70: func pool _pool_create_mutexed(
+81: func void _pool_destroy(pool* pol, callsite site);
+83: #define pool_create(parent_alloc, opt_mutex, default_block_sz, object_size, object_align) \
+85: #define pool_create_mutexed(parent_alloc, default_block_sz, object_size, object_align) \
+87: #define pool_destroy(pol) \
+94: func allocator pool_get_allocator(pool* pol);
 90: func void pool_add_block(pool* pol, void* ptr, sz size);
 95: func b32 pool_remove_block(pool* pol, void* ptr);
 104: func void* _pool_alloc(pool* pol, callsite site);
@@ -888,12 +906,17 @@
 
 === include\memory\ring.h ===
 22: typedef struct ring {
-38: func ring ring_create(void* ptr, sz capacity, mutex opt_mutex);
-42: func ring ring_create_mutexed(void* ptr, sz capacity);
-47: func ring ring_create_alloc(allocator parent_alloc, sz capacity, mutex opt_mutex);
-51: func ring ring_create_alloc_mutexed(allocator parent_alloc, sz capacity);
-55: func void ring_destroy(ring* rng);
-62: func sz ring_size(ring* rng);
+43: func ring _ring_create(void* ptr, sz capacity, mutex opt_mutex, callsite site);
+47: func ring _ring_create_mutexed(void* ptr, sz capacity, callsite site);
+52: func ring _ring_create_alloc(allocator parent_alloc, sz capacity, mutex opt_mutex, callsite site);
+56: func ring _ring_create_alloc_mutexed(allocator parent_alloc, sz capacity, callsite site);
+60: func void _ring_destroy(ring* rng, callsite site);
+62: #define ring_create(ptr, capacity, opt_mutex) \
+64: #define ring_create_mutexed(ptr, capacity) \
+66: #define ring_create_alloc(parent_alloc, capacity, opt_mutex) \
+68: #define ring_create_alloc_mutexed(parent_alloc, capacity) \
+70: #define ring_destroy(rng) \
+78: func sz ring_size(ring* rng);
 65: func sz ring_space(ring* rng);
 66: func sz ring_capacity(ring* rng);
 75: func sz ring_write(ring* rng, void* data, sz size);
@@ -926,17 +949,21 @@
 102: func vmem_stats vmem_get_stats(void);
 
 === include\processes\pipe.h ===
-17: func pipe pipe_stdin(process prc);
-21: func pipe pipe_stdout(process prc);
-25: func pipe pipe_stderr(process prc);
-28: func b32 pipe_is_valid(pipe pip);
-32: func sz pipe_read(pipe pip, void* ptr, sz size);
-36: func sz pipe_write(pipe pip, const void* ptr, sz size);
-37: func sz pipe_read_nonblocking(pipe pip, void* ptr, sz size);
-38: func sz pipe_write_nonblocking(pipe pip, const void* ptr, sz size);
-39: func b32 pipe_poll_readable(pipe pip, i32 timeout_ms);
-42: func b32 pipe_flush(pipe pip);
-46: func void pipe_close(pipe pip);
+22: func pipe _pipe_stdin(process prc, callsite site);
+26: func pipe _pipe_stdout(process prc, callsite site);
+30: func pipe _pipe_stderr(process prc, callsite site);
+33: func b32 pipe_is_valid(pipe pip);
+37: func sz pipe_read(pipe pip, void* ptr, sz size);
+41: func sz pipe_write(pipe pip, const void* ptr, sz size);
+43: func sz pipe_read_nonblocking(pipe pip, void* ptr, sz size);
+44: func sz pipe_write_nonblocking(pipe pip, const void* ptr, sz size);
+45: func b32 pipe_poll_readable(pipe pip, i32 timeout_ms);
+48: func b32 pipe_flush(pipe pip);
+52: func void _pipe_close(pipe pip, callsite site);
+54: #define pipe_stdin(prc) \
+56: #define pipe_stdout(prc) \
+58: #define pipe_stderr(prc) \
+60: #define pipe_close(pip) \
 
 === include\processes\common_processes.h ===
 9: func b32 process_open_weblink(cstr8 url);
@@ -958,7 +985,8 @@
 64: func b32 process_wait(process prc, b32 block, i32* out_exit_code);
 65: func b32 process_wait_timeout(process prc, i32 timeout_ms, i32* out_exit_code);
 69: func b32 process_kill(process prc, b32 force);
-73: func void process_destroy(process prc);
+78: func void _process_destroy(process prc, callsite site);
+80: #define process_destroy(prc) \
 
 === include\processes\process_current.h ===
 14: typedef enum process_priority {
@@ -1565,8 +1593,10 @@
 84: func log_msg* log_frame_first(log_frame* frame);
 85: func log_msg* log_frame_last(log_frame* frame);
 94: typedef struct log_state {
-106: func b32 log_state_init(log_state* state, b32 use_mutex, allocator alloc);
-110: func void log_state_quit(log_state* state);
+106: func b32 _log_state_init(log_state* state, b32 use_mutex, allocator alloc, callsite site);
+110: func void _log_state_quit(log_state* state, callsite site);
+112: #define log_state_init(state, use_mutex, alloc) \
+114: #define log_state_quit(state) \
 113: func b32 log_state_is_init(log_state* state);
 117: func b32 log_state_clear(log_state* state);
 121: func void log_state_sync(log_state* dst, log_state* src);

@@ -207,7 +207,7 @@ func cstr8 log_level_to_str(log_level level) {
   return NULL;
 }
 
-func b32 log_state_init(log_state* state, b32 use_mutex, allocator alloc) {
+func b32 _log_state_init(log_state* state, b32 use_mutex, allocator alloc, callsite site) {
   profile_func_begin;
   if (!state) {
     profile_func_end;
@@ -230,19 +230,28 @@ func b32 log_state_init(log_state* state, b32 use_mutex, allocator alloc) {
   }
   state->is_init = true;
   msg lifecycle_msg = {0};
-  lifecycle_msg.type = MSG_CORE_TYPE_OBJECT_LIFECYCLE;
-  msg_core_object_lifecycle_data lifecycle_data = {
+  msg_core_object_lifecycle_data msg_data = {
       .object_type = MSG_CORE_OBJECT_TYPE_LOG_STATE,
       .event_kind = MSG_CORE_OBJECT_EVENT_CREATE,
       .object_ptr = state,
+      .site = site,
   };
-  msg_core_fill_object_lifecycle(&lifecycle_msg, &lifecycle_data);
-  (void)msg_post(&lifecycle_msg);
+  msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
+  if (!msg_post(&lifecycle_msg)) {
+    if (state->mutex_handle) {
+      mutex_destroy(state->mutex_handle);
+    }
+    arena_destroy(&state->arena_alloc);
+    mem_zero(state, size_of(*state));
+    thread_log_trace("Log state initialization was suspended state=%p", (void*)state);
+    profile_func_end;
+    return false;
+  }
   profile_func_end;
   return true;
 }
 
-func void log_state_quit(log_state* state) {
+func void _log_state_quit(log_state* state, callsite site) {
   profile_func_begin;
   if (!state) {
     profile_func_end;
@@ -250,14 +259,18 @@ func void log_state_quit(log_state* state) {
   }
 
   msg lifecycle_msg = {0};
-  lifecycle_msg.type = MSG_CORE_TYPE_OBJECT_LIFECYCLE;
-  msg_core_object_lifecycle_data lifecycle_data = {
+  msg_core_object_lifecycle_data msg_data = {
       .object_type = MSG_CORE_OBJECT_TYPE_LOG_STATE,
       .event_kind = MSG_CORE_OBJECT_EVENT_DESTROY,
       .object_ptr = state,
+      .site = site,
   };
-  msg_core_fill_object_lifecycle(&lifecycle_msg, &lifecycle_data);
-  (void)msg_post(&lifecycle_msg);
+  msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
+  if (!msg_post(&lifecycle_msg)) {
+    thread_log_trace("Log state shutdown was suspended state=%p", (void*)state);
+    profile_func_end;
+    return;
+  }
 
   log_state_lock(state);
   arena_destroy(&state->arena_alloc);

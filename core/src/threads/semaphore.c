@@ -28,7 +28,7 @@ func semaphore _semaphore_create(u32 initial_count, callsite site) {
   msg lifecycle_msg = {0};
   msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
   if (!msg_post(&lifecycle_msg)) {
-    thread_log_trace("Semaphore creation cancelled");
+    thread_log_trace("Semaphore creation was suspended handle=%p", handle);
     SDL_DestroySemaphore((SDL_Semaphore*)handle);
     profile_func_end;
     return NULL;
@@ -41,7 +41,6 @@ func semaphore _semaphore_create(u32 initial_count, callsite site) {
 
 func b32 _semaphore_destroy(semaphore sem, callsite site) {
   profile_func_begin;
-  (void)site;
   if (!sem) {
     thread_log_warn("Skipping semaphore destroy for invalid handle");
     profile_func_end;
@@ -58,7 +57,7 @@ func b32 _semaphore_destroy(semaphore sem, callsite site) {
   msg lifecycle_msg = {0};
   msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
   if (!msg_post(&lifecycle_msg)) {
-    thread_log_trace("Semaphore destruction cancelled");
+    thread_log_trace("Semaphore destruction was suspended handle=%p", sem);
     profile_func_end;
     return false;
   }

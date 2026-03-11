@@ -53,12 +53,13 @@ typedef struct pool {
 // default_block_sz — byte size for automatically grown blocks (ignored when parent has no alloc_fn).
 // object_size      — byte size of every allocation; must be > 0.
 // object_align     — power-of-two alignment for every slot; must be > 0.
-func pool pool_create(
+func pool _pool_create(
     allocator parent_alloc,
     mutex opt_mutex,
     sz default_block_sz,
     sz object_size,
-    sz object_align);
+    sz object_align,
+    callsite site);
 
 // Creates a new pool and internally allocates a dedicated mutex for thread safety.
 // The mutex is destroyed automatically by pool_destroy.
@@ -66,17 +67,25 @@ func pool pool_create(
 // default_block_sz — same as pool_create.
 // object_size      — same as pool_create.
 // object_align     — same as pool_create.
-func pool pool_create_mutexed(
+func pool _pool_create_mutexed(
     allocator parent_alloc,
     sz default_block_sz,
     sz object_size,
-    sz object_align);
+    sz object_align,
+    callsite site);
 
 // Releases all blocks that were auto-allocated through the parent allocator and
 // resets the pool to its initial empty state. Manually added blocks are detached
 // but their memory is not freed. If the pool owns its mutex (created via
 // pool_create_mutexed), the mutex is also destroyed.
-func void pool_destroy(pool* pol);
+func void _pool_destroy(pool* pol, callsite site);
+
+#define pool_create(parent_alloc, opt_mutex, default_block_sz, object_size, object_align) \
+  _pool_create(parent_alloc, opt_mutex, default_block_sz, object_size, object_align, CALLSITE_HERE)
+#define pool_create_mutexed(parent_alloc, default_block_sz, object_size, object_align) \
+  _pool_create_mutexed(parent_alloc, default_block_sz, object_size, object_align, CALLSITE_HERE)
+#define pool_destroy(pol) \
+  _pool_destroy(pol, CALLSITE_HERE)
 
 // Returns an allocator interface backed by pol.
 // The returned allocator stores a pointer to pol; pol must outlive the allocator.

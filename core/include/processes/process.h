@@ -75,7 +75,10 @@ func b32 process_kill(process prc, b32 force);
 
 // Destroys the tracking handle for a process.
 // This does not terminate the process.
-func void process_destroy(process prc);
+func void _process_destroy(process prc, callsite site);
+
+#define process_destroy(prc) \
+  _process_destroy(prc, CALLSITE_HERE)
 
 // =========================================================================
 c_end;

@@ -88,21 +88,6 @@ func thread thread_create_impl(
     return NULL;
   }
 
-  msg_core_object_lifecycle_data msg_data = {
-      .event_kind = MSG_CORE_OBJECT_EVENT_CREATE,
-      .object_type = MSG_CORE_OBJECT_TYPE_THREAD,
-      .object_ptr = NULL,
-      .site = site,
-  };
-
-  msg lifecycle_msg = {0};
-  msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
-  if (!msg_post(&lifecycle_msg)) {
-    thread_log_trace("Thread creation cancelled");
-    profile_func_end;
-    return NULL;
-  }
-
   thread_entry_payload* payload = heap_alloc_type(hp, thread_entry_payload);
   if (!payload) {
     thread_log_error("Failed to allocate thread payload name=%s", name != NULL ? name : "<null>");
@@ -119,6 +104,22 @@ func thread thread_create_impl(
   if (!thd) {
     heap_dealloc(hp, payload);
     thread_log_error("Failed to create thread name=%s error=%s", name != NULL ? name : "<null>", SDL_GetError());
+    profile_func_end;
+    return NULL;
+  }
+
+  msg_core_object_lifecycle_data msg_data = {
+      .event_kind = MSG_CORE_OBJECT_EVENT_CREATE,
+      .object_type = MSG_CORE_OBJECT_TYPE_THREAD,
+      .object_ptr = thd,
+      .site = site,
+  };
+
+  msg lifecycle_msg = {0};
+  msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
+  if (!msg_post(&lifecycle_msg)) {
+    SDL_DetachThread((SDL_Thread*)thd);
+    thread_log_trace("Thread creation was suspended handle=%p", thd);
     profile_func_end;
     return NULL;
   }
@@ -167,7 +168,7 @@ func b32 _thread_join(thread thd, i32* out_exit_code, callsite site) {
   msg lifecycle_msg = {0};
   msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
   if (!msg_post(&lifecycle_msg)) {
-    thread_log_trace("Thread join cancelled");
+    thread_log_trace("Thread join was suspended handle=%p", thd);
     profile_func_end;
     return false;
   }
@@ -196,12 +197,11 @@ func b32 _thread_detach(thread thd, callsite site) {
   msg lifecycle_msg = {0};
   msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
   if (!msg_post(&lifecycle_msg)) {
-    thread_log_trace("Thread detach cancelled");
+    thread_log_trace("Thread detach was suspended handle=%p", thd);
     profile_func_end;
     return false;
   }
 
-  (void)msg_post(&lifecycle_msg);
   SDL_DetachThread((SDL_Thread*)thd);
   thread_log_trace("Detached thread handle=%p", thd);
   profile_func_end;

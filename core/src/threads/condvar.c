@@ -11,7 +11,6 @@
 
 func condvar _condvar_create(callsite site) {
   profile_func_begin;
-  (void)site;
   condvar handle = (condvar)SDL_CreateCondition();
   if (handle == NULL) {
     thread_log_error("Failed to create condvar error=%s", SDL_GetError());
@@ -29,7 +28,7 @@ func condvar _condvar_create(callsite site) {
   msg lifecycle_msg = {0};
   msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
   if (!msg_post(&lifecycle_msg)) {
-    thread_log_trace("Condvar creation cancelled");
+    thread_log_trace("Condvar creation was suspended handle=%p", handle);
     SDL_DestroyCondition((SDL_Condition*)handle);
     profile_func_end;
     return NULL;
@@ -42,7 +41,6 @@ func condvar _condvar_create(callsite site) {
 
 func b32 _condvar_destroy(condvar cond, callsite site) {
   profile_func_begin;
-  (void)site;
   if (!cond) {
     thread_log_warn("Skipping condvar destroy for invalid handle");
     profile_func_end;
@@ -59,7 +57,7 @@ func b32 _condvar_destroy(condvar cond, callsite site) {
   msg lifecycle_msg = {0};
   msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
   if (!msg_post(&lifecycle_msg)) {
-    thread_log_trace("Condvar destruction cancelled");
+    thread_log_trace("Condvar destruction was suspended handle=%p", cond);
     profile_func_end;
     return false;
   }

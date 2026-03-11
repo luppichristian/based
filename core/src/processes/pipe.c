@@ -9,7 +9,7 @@
 #include "../sdl3_include.h"
 #include "basic/profiler.h"
 
-func pipe pipe_stdin(process prc) {
+func pipe _pipe_stdin(process prc, callsite site) {
   profile_func_begin;
   if (!prc) {
     profile_func_end;
@@ -19,20 +19,26 @@ func pipe pipe_stdin(process prc) {
 
   pipe pip = (pipe)SDL_GetProcessInput((SDL_Process*)prc);
   if (pip != NULL) {
+    msg_core_object_lifecycle_data msg_data = {
+        .event_kind = MSG_CORE_OBJECT_EVENT_CREATE,
+        .object_type = MSG_CORE_OBJECT_TYPE_PIPE,
+        .object_ptr = pip,
+        .site = site,
+    };
+
     msg lifecycle_msg = {0};
-    lifecycle_msg.type = MSG_CORE_TYPE_OBJECT_LIFECYCLE;
-    msg_core_fill_object_lifecycle(&lifecycle_msg, &(msg_core_object_lifecycle_data) {
-                                                       .event_kind = MSG_CORE_OBJECT_EVENT_CREATE,
-                                                       .object_type = MSG_CORE_OBJECT_TYPE_PIPE,
-                                                       .object_ptr = pip,
-                                                   });
-    (void)msg_post(&lifecycle_msg);
+    msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
+    if (!msg_post(&lifecycle_msg)) {
+      thread_log_trace("Pipe stdin acquisition was suspended process=%p pipe=%p", prc, pip);
+      profile_func_end;
+      return NULL;
+    }
   }
   profile_func_end;
   return pip;
 }
 
-func pipe pipe_stdout(process prc) {
+func pipe _pipe_stdout(process prc, callsite site) {
   profile_func_begin;
   if (!prc) {
     profile_func_end;
@@ -42,20 +48,26 @@ func pipe pipe_stdout(process prc) {
 
   pipe pip = (pipe)SDL_GetProcessOutput((SDL_Process*)prc);
   if (pip != NULL) {
+    msg_core_object_lifecycle_data msg_data = {
+        .event_kind = MSG_CORE_OBJECT_EVENT_CREATE,
+        .object_type = MSG_CORE_OBJECT_TYPE_PIPE,
+        .object_ptr = pip,
+        .site = site,
+    };
+
     msg lifecycle_msg = {0};
-    lifecycle_msg.type = MSG_CORE_TYPE_OBJECT_LIFECYCLE;
-    msg_core_fill_object_lifecycle(&lifecycle_msg, &(msg_core_object_lifecycle_data) {
-                                                       .event_kind = MSG_CORE_OBJECT_EVENT_CREATE,
-                                                       .object_type = MSG_CORE_OBJECT_TYPE_PIPE,
-                                                       .object_ptr = pip,
-                                                   });
-    (void)msg_post(&lifecycle_msg);
+    msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
+    if (!msg_post(&lifecycle_msg)) {
+      thread_log_trace("Pipe stdout acquisition was suspended process=%p pipe=%p", prc, pip);
+      profile_func_end;
+      return NULL;
+    }
   }
   profile_func_end;
   return pip;
 }
 
-func pipe pipe_stderr(process prc) {
+func pipe _pipe_stderr(process prc, callsite site) {
   profile_func_begin;
   if (!prc) {
     profile_func_end;
@@ -71,14 +83,20 @@ func pipe pipe_stderr(process prc) {
 
   pipe pip = (pipe)SDL_GetPointerProperty(props, SDL_PROP_PROCESS_STDERR_POINTER, NULL);
   if (pip != NULL) {
+    msg_core_object_lifecycle_data msg_data = {
+        .event_kind = MSG_CORE_OBJECT_EVENT_CREATE,
+        .object_type = MSG_CORE_OBJECT_TYPE_PIPE,
+        .object_ptr = pip,
+        .site = site,
+    };
+
     msg lifecycle_msg = {0};
-    lifecycle_msg.type = MSG_CORE_TYPE_OBJECT_LIFECYCLE;
-    msg_core_fill_object_lifecycle(&lifecycle_msg, &(msg_core_object_lifecycle_data) {
-                                                       .event_kind = MSG_CORE_OBJECT_EVENT_CREATE,
-                                                       .object_type = MSG_CORE_OBJECT_TYPE_PIPE,
-                                                       .object_ptr = pip,
-                                                   });
-    (void)msg_post(&lifecycle_msg);
+    msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
+    if (!msg_post(&lifecycle_msg)) {
+      thread_log_trace("Pipe stderr acquisition was suspended process=%p pipe=%p", prc, pip);
+      profile_func_end;
+      return NULL;
+    }
   }
   profile_func_end;
   return pip;
@@ -167,21 +185,27 @@ func b32 pipe_flush(pipe pip) {
   return success;
 }
 
-func void pipe_close(pipe pip) {
+func void _pipe_close(pipe pip, callsite site) {
   profile_func_begin;
   if (!pip) {
     profile_func_end;
     return;
   }
 
+  msg_core_object_lifecycle_data msg_data = {
+      .event_kind = MSG_CORE_OBJECT_EVENT_DESTROY,
+      .object_type = MSG_CORE_OBJECT_TYPE_PIPE,
+      .object_ptr = pip,
+      .site = site,
+  };
+
   msg lifecycle_msg = {0};
-  lifecycle_msg.type = MSG_CORE_TYPE_OBJECT_LIFECYCLE;
-  msg_core_fill_object_lifecycle(&lifecycle_msg, &(msg_core_object_lifecycle_data) {
-                                                     .event_kind = MSG_CORE_OBJECT_EVENT_DESTROY,
-                                                     .object_type = MSG_CORE_OBJECT_TYPE_PIPE,
-                                                     .object_ptr = pip,
-                                                 });
-  (void)msg_post(&lifecycle_msg);
+  msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
+  if (!msg_post(&lifecycle_msg)) {
+    thread_log_trace("Pipe close was suspended pipe=%p", pip);
+    profile_func_end;
+    return;
+  }
 
   thread_log_trace("Closed pipe pipe=%p", pip);
   SDL_CloseIO((SDL_IOStream*)pip);

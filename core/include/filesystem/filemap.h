@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "../basic/codespace.h"
 #include "path.h"
 
 // =========================================================================
@@ -35,7 +36,7 @@ typedef struct filemap {
 } filemap;
 
 // Opens src as a mapped file view. Returns an empty map on failure.
-func filemap filemap_open(const path* src, filemap_access access);
+func filemap _filemap_open(const path* src, filemap_access access, callsite site);
 
 // Returns 1 when map currently references an open mapping.
 func b32 filemap_is_open(const filemap* map);
@@ -44,7 +45,12 @@ func b32 filemap_is_open(const filemap* map);
 func b32 filemap_flush(filemap* map);
 
 // Releases the mapping and resets map to an empty value.
-func void filemap_close(filemap* map);
+func void _filemap_close(filemap* map, callsite site);
+
+#define filemap_open(src, access) \
+  _filemap_open(src, access, CALLSITE_HERE)
+#define filemap_close(map) \
+  _filemap_close(map, CALLSITE_HERE)
 
 // Returns 1 if map was opened with write permissions.
 func b32 filemap_is_writable(const filemap* map);

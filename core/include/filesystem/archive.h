@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "../basic/codespace.h"
 #include "../memory/allocator.h"
 #include "../memory/buffer.h"
 #include "path.h"
@@ -36,10 +37,15 @@ typedef struct archive_entry_info {
 typedef b32 archive_iterate_callback(const archive_entry_info* info, void* user_data);
 
 // Creates an empty archive value. opt_alloc may be null when only write-once transient storage is needed.
-func archive archive_create(allocator* opt_alloc);
+func archive _archive_create(allocator* opt_alloc, callsite site);
 
 // Releases every entry buffer owned by arc.
-func void archive_destroy(archive* arc);
+func void _archive_destroy(archive* arc, callsite site);
+
+#define archive_create(opt_alloc) \
+  _archive_create(opt_alloc, CALLSITE_HERE)
+#define archive_destroy(arc) \
+  _archive_destroy(arc, CALLSITE_HERE)
 
 // Removes every entry from arc but keeps the archive value valid for reuse.
 func void archive_clear(archive* arc);

@@ -163,7 +163,7 @@ func b32 filestream_reserve_memory(filestream* stm, sz min_capacity) {
   return true;
 }
 
-func filestream filestream_open(const path* src, u32 mode_flags) {
+func filestream _filestream_open(const path* src, u32 mode_flags, callsite site) {
   profile_func_begin;
   filestream stm = filestream_empty();
   SDL_IOStream* file_ptr = NULL;
@@ -197,20 +197,28 @@ func filestream filestream_open(const path* src, u32 mode_flags) {
   stm.mode_flags = mode_flags;
   stm.native_handle = file_ptr;
   stm.error_code = FILESTREAM_ERROR_NONE;
+  msg_core_object_lifecycle_data msg_data = {
+      .event_kind = MSG_CORE_OBJECT_EVENT_CREATE,
+      .object_type = MSG_CORE_OBJECT_TYPE_FILESTREAM,
+      .object_ptr = &stm,
+      .site = site,
+  };
+
   msg lifecycle_msg = {0};
-  lifecycle_msg.type = MSG_CORE_TYPE_OBJECT_LIFECYCLE;
-  msg_core_fill_object_lifecycle(&lifecycle_msg, &(msg_core_object_lifecycle_data) {
-                                                     .event_kind = MSG_CORE_OBJECT_EVENT_CREATE,
-                                                     .object_type = MSG_CORE_OBJECT_TYPE_FILESTREAM,
-                                                     .object_ptr = &stm,
-                                                 });
-  (void)msg_post(&lifecycle_msg);
+  msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
+  if (!msg_post(&lifecycle_msg)) {
+    SDL_CloseIO(file_ptr);
+    stm = filestream_empty();
+    thread_log_trace("Filestream open was suspended path=%s", src->buf);
+    profile_func_end;
+    return stm;
+  }
   thread_log_trace("Opened native filestream path=%s flags=0x%08x", src->buf, mode_flags);
   profile_func_end;
   return stm;
 }
 
-func filestream filestream_open_archive(archive* arc, const path* src, u32 mode_flags) {
+func filestream _filestream_open_archive(archive* arc, const path* src, u32 mode_flags, callsite site) {
   profile_func_begin;
   filestream stm = filestream_empty();
   archive_entry* ent = NULL;
@@ -240,7 +248,10 @@ func filestream filestream_open_archive(archive* arc, const path* src, u32 mode_
       thread_log_error("Failed to allocate archive filestream buffer path=%s size=%zu",
                        src->buf,
                        (size_t)ent->data_size);
-      filestream_close(&stm);
+      if (stm.memory_ptr != NULL) {
+        allocator alloc = filestream_allocator_resolve();
+        allocator_dealloc(alloc, stm.memory_ptr);
+      }
       profile_func_end;
       return filestream_empty();
     }
@@ -257,14 +268,24 @@ func filestream filestream_open_archive(archive* arc, const path* src, u32 mode_
     stm.cursor = stm.memory_size;
   }
 
+  msg_core_object_lifecycle_data msg_data = {
+      .event_kind = MSG_CORE_OBJECT_EVENT_CREATE,
+      .object_type = MSG_CORE_OBJECT_TYPE_FILESTREAM,
+      .object_ptr = &stm,
+      .site = site,
+  };
+
   msg lifecycle_msg = {0};
-  lifecycle_msg.type = MSG_CORE_TYPE_OBJECT_LIFECYCLE;
-  msg_core_fill_object_lifecycle(&lifecycle_msg, &(msg_core_object_lifecycle_data) {
-                                                     .event_kind = MSG_CORE_OBJECT_EVENT_CREATE,
-                                                     .object_type = MSG_CORE_OBJECT_TYPE_FILESTREAM,
-                                                     .object_ptr = &stm,
-                                                 });
-  (void)msg_post(&lifecycle_msg);
+  msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
+  if (!msg_post(&lifecycle_msg)) {
+    if (stm.memory_ptr != NULL) {
+      allocator alloc = filestream_allocator_resolve();
+      allocator_dealloc(alloc, stm.memory_ptr);
+    }
+    thread_log_trace("Archive filestream open was suspended path=%s", src->buf);
+    profile_func_end;
+    return filestream_empty();
+  }
   thread_log_trace("Opened archive filestream path=%s flags=0x%08x", stm.archive_path.buf, mode_flags);
 
   profile_func_end;
@@ -318,7 +339,7 @@ func b32 filestream_flush(filestream* stm) {
   return true;
 }
 
-func void filestream_close(filestream* stm) {
+func void _filestream_close(filestream* stm, callsite site) {
   profile_func_begin;
   allocator alloc = filestream_allocator_resolve();
   SDL_IOStream* file_ptr = NULL;
@@ -328,14 +349,20 @@ func void filestream_close(filestream* stm) {
     return;
   }
 
+  msg_core_object_lifecycle_data msg_data = {
+      .event_kind = MSG_CORE_OBJECT_EVENT_DESTROY,
+      .object_type = MSG_CORE_OBJECT_TYPE_FILESTREAM,
+      .object_ptr = stm,
+      .site = site,
+  };
+
   msg lifecycle_msg = {0};
-  lifecycle_msg.type = MSG_CORE_TYPE_OBJECT_LIFECYCLE;
-  msg_core_fill_object_lifecycle(&lifecycle_msg, &(msg_core_object_lifecycle_data) {
-                                                     .event_kind = MSG_CORE_OBJECT_EVENT_DESTROY,
-                                                     .object_type = MSG_CORE_OBJECT_TYPE_FILESTREAM,
-                                                     .object_ptr = stm,
-                                                 });
-  (void)msg_post(&lifecycle_msg);
+  msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
+  if (!msg_post(&lifecycle_msg)) {
+    thread_log_trace("Filestream close was suspended handle=%p", (void*)stm);
+    profile_func_end;
+    return;
+  }
 
   if (stm->kind == FILESTREAM_KIND_NATIVE) {
     file_ptr = (SDL_IOStream*)stm->native_handle;

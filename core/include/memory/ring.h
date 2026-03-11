@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "../basic/codespace.h"
 #include "../threads/mutex.h"
 #include "allocator.h"
 
@@ -39,24 +40,35 @@ typedef struct ring {
 // ptr      — base of the backing buffer; must remain valid for the lifetime of the ring.
 // capacity — byte size of the buffer; must be > 0.
 // opt_mutex — mutex that guards every operation; pass NULL to disable locking.
-func ring ring_create(void* ptr, sz capacity, mutex opt_mutex);
+func ring _ring_create(void* ptr, sz capacity, mutex opt_mutex, callsite site);
 
 // Creates a ring backed by an existing buffer and allocates a dedicated mutex.
 // The mutex is destroyed automatically by ring_destroy.
-func ring ring_create_mutexed(void* ptr, sz capacity);
+func ring _ring_create_mutexed(void* ptr, sz capacity, callsite site);
 
 // Creates a ring and allocates its backing buffer from parent_alloc.
 // capacity  — byte size of the buffer to allocate; must be > 0.
 // opt_mutex — mutex that guards every operation; pass NULL to disable locking.
-func ring ring_create_alloc(allocator parent_alloc, sz capacity, mutex opt_mutex);
+func ring _ring_create_alloc(allocator parent_alloc, sz capacity, mutex opt_mutex, callsite site);
 
 // Creates a ring, allocates its backing buffer from parent_alloc, and allocates
 // a dedicated mutex. Both are destroyed automatically by ring_destroy.
-func ring ring_create_alloc_mutexed(allocator parent_alloc, sz capacity);
+func ring _ring_create_alloc_mutexed(allocator parent_alloc, sz capacity, callsite site);
 
 // Releases the backing buffer if it was auto-allocated and destroys the mutex
 // if it was owned. Resets the ring to a zeroed state.
-func void ring_destroy(ring* rng);
+func void _ring_destroy(ring* rng, callsite site);
+
+#define ring_create(ptr, capacity, opt_mutex) \
+  _ring_create(ptr, capacity, opt_mutex, CALLSITE_HERE)
+#define ring_create_mutexed(ptr, capacity) \
+  _ring_create_mutexed(ptr, capacity, CALLSITE_HERE)
+#define ring_create_alloc(parent_alloc, capacity, opt_mutex) \
+  _ring_create_alloc(parent_alloc, capacity, opt_mutex, CALLSITE_HERE)
+#define ring_create_alloc_mutexed(parent_alloc, capacity) \
+  _ring_create_alloc_mutexed(parent_alloc, capacity, CALLSITE_HERE)
+#define ring_destroy(rng) \
+  _ring_destroy(rng, CALLSITE_HERE)
 
 // =========================================================================
 // Capacity Queries

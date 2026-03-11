@@ -125,12 +125,13 @@ func void* pool_realloc_callback(
 // Create / Destroy
 // =========================================================================
 
-func pool pool_create(
+func pool _pool_create(
     allocator parent_alloc,
     mutex opt_mutex,
     sz default_block_sz,
     sz object_size,
-    sz object_align) {
+    sz object_align,
+    callsite site) {
   profile_func_begin;
   pool pol;
   mem_zero(&pol, size_of(pol));
@@ -145,33 +146,41 @@ func pool pool_create(
   pol.default_block_sz = default_block_sz;
   pol.object_size = object_size;
   pol.object_align = object_align;
+  msg_core_object_lifecycle_data msg_data = {
+      .event_kind = MSG_CORE_OBJECT_EVENT_CREATE,
+      .object_type = MSG_CORE_OBJECT_TYPE_POOL,
+      .object_ptr = &pol,
+      .site = site,
+  };
+
   msg lifecycle_msg = {0};
-  lifecycle_msg.type = MSG_CORE_TYPE_OBJECT_LIFECYCLE;
-  msg_core_fill_object_lifecycle(&lifecycle_msg, &(msg_core_object_lifecycle_data) {
-                                                     .event_kind = MSG_CORE_OBJECT_EVENT_CREATE,
-                                                     .object_type = MSG_CORE_OBJECT_TYPE_POOL,
-                                                     .object_ptr = &pol,
-                                                 });
-  (void)msg_post(&lifecycle_msg);
+  msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
+  if (!msg_post(&lifecycle_msg)) {
+    mem_zero(&pol, size_of(pol));
+    thread_log_trace("Pool creation was suspended");
+    profile_func_end;
+    return pol;
+  }
   thread_log_trace("Created pool object_size=%zu object_align=%zu", (size_t)object_size, (size_t)object_align);
   profile_func_end;
   return pol;
 }
 
-func pool pool_create_mutexed(
+func pool _pool_create_mutexed(
     allocator parent_alloc,
     sz default_block_sz,
     sz object_size,
-    sz object_align) {
+    sz object_align,
+    callsite site) {
   profile_func_begin;
   pool pol =
-      pool_create(parent_alloc, mutex_create(), default_block_sz, object_size, object_align);
+      _pool_create(parent_alloc, mutex_create(), default_block_sz, object_size, object_align, site);
   pol.mutex_owned = 1;
   profile_func_end;
   return pol;
 }
 
-func void pool_destroy(pool* pol) {
+func void _pool_destroy(pool* pol, callsite site) {
   profile_func_begin;
   if (pol == NULL) {
     profile_func_end;
@@ -179,14 +188,20 @@ func void pool_destroy(pool* pol) {
   }
   assert(pol != NULL);
 
+  msg_core_object_lifecycle_data msg_data = {
+      .event_kind = MSG_CORE_OBJECT_EVENT_DESTROY,
+      .object_type = MSG_CORE_OBJECT_TYPE_POOL,
+      .object_ptr = pol,
+      .site = site,
+  };
+
   msg lifecycle_msg = {0};
-  lifecycle_msg.type = MSG_CORE_TYPE_OBJECT_LIFECYCLE;
-  msg_core_fill_object_lifecycle(&lifecycle_msg, &(msg_core_object_lifecycle_data) {
-                                                     .event_kind = MSG_CORE_OBJECT_EVENT_DESTROY,
-                                                     .object_type = MSG_CORE_OBJECT_TYPE_POOL,
-                                                     .object_ptr = pol,
-                                                 });
-  (void)msg_post(&lifecycle_msg);
+  msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
+  if (!msg_post(&lifecycle_msg)) {
+    thread_log_trace("Pool destruction was suspended handle=%p", (void*)pol);
+    profile_func_end;
+    return;
+  }
 
   if (pol->opt_mutex) {
     mutex_lock(pol->opt_mutex);

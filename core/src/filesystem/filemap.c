@@ -163,7 +163,7 @@ func b32 filemap_flush(filemap* map) {
 #endif
 }
 
-func void filemap_close(filemap* map) {
+func void _filemap_close(filemap* map, callsite site) {
   profile_func_begin;
   allocator alloc = filemap_allocator_resolve();
   if (map == NULL) {
@@ -172,14 +172,20 @@ func void filemap_close(filemap* map) {
   }
   assert(map->data_size == 0 || map->source_path.buf[0] != '\0');
 
+  msg_core_object_lifecycle_data msg_data = {
+      .event_kind = MSG_CORE_OBJECT_EVENT_DESTROY,
+      .object_type = MSG_CORE_OBJECT_TYPE_FILEMAP,
+      .object_ptr = map,
+      .site = site,
+  };
+
   msg lifecycle_msg = {0};
-  lifecycle_msg.type = MSG_CORE_TYPE_OBJECT_LIFECYCLE;
-  msg_core_fill_object_lifecycle(&lifecycle_msg, &(msg_core_object_lifecycle_data) {
-                                                     .event_kind = MSG_CORE_OBJECT_EVENT_DESTROY,
-                                                     .object_type = MSG_CORE_OBJECT_TYPE_FILEMAP,
-                                                     .object_ptr = map,
-                                                 });
-  (void)msg_post(&lifecycle_msg);
+  msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
+  if (!msg_post(&lifecycle_msg)) {
+    thread_log_trace("File map close was suspended path=%s", map->source_path.buf);
+    profile_func_end;
+    return;
+  }
 
   if (map->uses_fallback_copy) {
     if (map->writable) {
@@ -222,7 +228,7 @@ func void filemap_close(filemap* map) {
   profile_func_end;
 }
 
-func filemap filemap_open(const path* src, filemap_access access) {
+func filemap _filemap_open(const path* src, filemap_access access, callsite site) {
   profile_func_begin;
   allocator alloc = filemap_allocator_resolve();
   filemap map = filemap_empty();
@@ -297,7 +303,7 @@ func filemap filemap_open(const path* src, filemap_access access) {
   if (mapping_handle == NULL) {
     thread_log_error("Failed to create file mapping path=%s", src->buf);
     filemap_set_error(FILEMAP_ERROR_MAP_FAILED);
-    filemap_close(&map);
+    CloseHandle(file_handle);
     profile_func_end;
     return filemap_empty();
   }
@@ -307,19 +313,29 @@ func filemap filemap_open(const path* src, filemap_access access) {
   if (map.data_ptr == NULL) {
     thread_log_error("Failed to map file view path=%s", src->buf);
     filemap_set_error(FILEMAP_ERROR_MAP_FAILED);
-    filemap_close(&map);
+    CloseHandle((HANDLE)map.native_mapping);
+    CloseHandle((HANDLE)map.native_file);
     profile_func_end;
     return filemap_empty();
   }
 
+  msg_core_object_lifecycle_data msg_data = {
+      .event_kind = MSG_CORE_OBJECT_EVENT_CREATE,
+      .object_type = MSG_CORE_OBJECT_TYPE_FILEMAP,
+      .object_ptr = &map,
+      .site = site,
+  };
+
   msg lifecycle_msg = {0};
-  lifecycle_msg.type = MSG_CORE_TYPE_OBJECT_LIFECYCLE;
-  msg_core_fill_object_lifecycle(&lifecycle_msg, &(msg_core_object_lifecycle_data) {
-                                                     .event_kind = MSG_CORE_OBJECT_EVENT_CREATE,
-                                                     .object_type = MSG_CORE_OBJECT_TYPE_FILEMAP,
-                                                     .object_ptr = &map,
-                                                 });
-  (void)msg_post(&lifecycle_msg);
+  msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
+  if (!msg_post(&lifecycle_msg)) {
+    thread_log_trace("File map open was suspended path=%s", src->buf);
+    UnmapViewOfFile(map.data_ptr);
+    CloseHandle((HANDLE)map.native_mapping);
+    CloseHandle((HANDLE)map.native_file);
+    profile_func_end;
+    return filemap_empty();
+  }
   thread_log_trace("Opened Windows file map path=%s size=%zu writable=%u", src->buf, (size_t)map.data_size, (u32)map.writable);
   profile_func_end;
   return map;
@@ -366,20 +382,28 @@ func filemap filemap_open(const path* src, filemap_access access) {
   if (map.data_ptr == MAP_FAILED) {
     thread_log_error("Failed to map file path=%s", src->buf);
     filemap_set_error(FILEMAP_ERROR_MAP_FAILED);
-    filemap_close(&map);
+    close(file_desc);
     profile_func_end;
     return filemap_empty();
   }
 
   map.native_mapping = (void*)(up)map_flags;
+  msg_core_object_lifecycle_data msg_data = {
+      .event_kind = MSG_CORE_OBJECT_EVENT_CREATE,
+      .object_type = MSG_CORE_OBJECT_TYPE_FILEMAP,
+      .object_ptr = &map,
+      .site = site,
+  };
+
   msg lifecycle_msg = {0};
-  lifecycle_msg.type = MSG_CORE_TYPE_OBJECT_LIFECYCLE;
-  msg_core_fill_object_lifecycle(&lifecycle_msg, &(msg_core_object_lifecycle_data) {
-                                                     .event_kind = MSG_CORE_OBJECT_EVENT_CREATE,
-                                                     .object_type = MSG_CORE_OBJECT_TYPE_FILEMAP,
-                                                     .object_ptr = &map,
-                                                 });
-  (void)msg_post(&lifecycle_msg);
+  msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
+  if (!msg_post(&lifecycle_msg)) {
+    thread_log_trace("File map open was suspended path=%s", src->buf);
+    munmap(map.data_ptr, map.data_size);
+    close((i32)(up)map.native_file - 1);
+    profile_func_end;
+    return filemap_empty();
+  }
   thread_log_trace("Opened Unix file map path=%s size=%zu writable=%u", src->buf, (size_t)map.data_size, (u32)map.writable);
   profile_func_end;
   return map;
@@ -396,14 +420,21 @@ func filemap filemap_open(const path* src, filemap_access access) {
   map.data_size = file_data.size;
   map.uses_fallback_copy = 1;
   thread_log_warn("Using fallback file map copy path=%s writable=%u", src->buf, (u32)map.writable);
+  msg_core_object_lifecycle_data msg_data = {
+      .event_kind = MSG_CORE_OBJECT_EVENT_CREATE,
+      .object_type = MSG_CORE_OBJECT_TYPE_FILEMAP,
+      .object_ptr = &map,
+      .site = site,
+  };
+
   msg lifecycle_msg = {0};
-  lifecycle_msg.type = MSG_CORE_TYPE_OBJECT_LIFECYCLE;
-  msg_core_fill_object_lifecycle(&lifecycle_msg, &(msg_core_object_lifecycle_data) {
-                                                     .event_kind = MSG_CORE_OBJECT_EVENT_CREATE,
-                                                     .object_type = MSG_CORE_OBJECT_TYPE_FILEMAP,
-                                                     .object_ptr = &map,
-                                                 });
-  (void)msg_post(&lifecycle_msg);
+  msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
+  if (!msg_post(&lifecycle_msg)) {
+    thread_log_trace("Fallback file map open was suspended path=%s", src->buf);
+    allocator_dealloc(alloc, map.data_ptr);
+    profile_func_end;
+    return filemap_empty();
+  }
   thread_log_trace("Opened fallback file map path=%s size=%zu writable=%u", src->buf, (size_t)map.data_size, (u32)map.writable);
   profile_func_end;
   return map;

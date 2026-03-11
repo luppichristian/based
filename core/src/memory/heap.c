@@ -199,7 +199,7 @@ func void* heap_realloc_callback(
 // Create / Destroy
 // =========================================================================
 
-func heap heap_create(allocator parent_alloc, mutex opt_mutex, sz default_block_sz) {
+func heap _heap_create(allocator parent_alloc, mutex opt_mutex, sz default_block_sz, callsite site) {
   profile_func_begin;
   heap hep;
   mem_zero(&hep, size_of(hep));
@@ -212,28 +212,35 @@ func heap heap_create(allocator parent_alloc, mutex opt_mutex, sz default_block_
   }
   hep.opt_mutex = opt_mutex;
   hep.default_block_sz = default_block_sz;
+  msg_core_object_lifecycle_data msg_data = {
+      .event_kind = MSG_CORE_OBJECT_EVENT_CREATE,
+      .object_type = MSG_CORE_OBJECT_TYPE_HEAP,
+      .object_ptr = &hep,
+      .site = site,
+  };
+
   msg lifecycle_msg = {0};
-  lifecycle_msg.type = MSG_CORE_TYPE_OBJECT_LIFECYCLE;
-  msg_core_fill_object_lifecycle(&lifecycle_msg, &(msg_core_object_lifecycle_data) {
-                                                     .event_kind = MSG_CORE_OBJECT_EVENT_CREATE,
-                                                     .object_type = MSG_CORE_OBJECT_TYPE_HEAP,
-                                                     .object_ptr = &hep,
-                                                 });
-  (void)msg_post(&lifecycle_msg);
+  msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
+  if (!msg_post(&lifecycle_msg)) {
+    mem_zero(&hep, size_of(hep));
+    thread_log_trace("Heap creation was suspended");
+    profile_func_end;
+    return hep;
+  }
   thread_log_trace("Created heap default_block_size=%zu", (size_t)default_block_sz);
   profile_func_end;
   return hep;
 }
 
-func heap heap_create_mutexed(allocator parent_alloc, sz default_block_sz) {
+func heap _heap_create_mutexed(allocator parent_alloc, sz default_block_sz, callsite site) {
   profile_func_begin;
-  heap hep = heap_create(parent_alloc, mutex_create(), default_block_sz);
+  heap hep = _heap_create(parent_alloc, mutex_create(), default_block_sz, site);
   hep.mutex_owned = 1;
   profile_func_end;
   return hep;
 }
 
-func void heap_destroy(heap* hep) {
+func void _heap_destroy(heap* hep, callsite site) {
   profile_func_begin;
   if (hep == NULL) {
     profile_func_end;
@@ -241,14 +248,20 @@ func void heap_destroy(heap* hep) {
   }
   assert(hep != NULL);
 
+  msg_core_object_lifecycle_data msg_data = {
+      .event_kind = MSG_CORE_OBJECT_EVENT_DESTROY,
+      .object_type = MSG_CORE_OBJECT_TYPE_HEAP,
+      .object_ptr = hep,
+      .site = site,
+  };
+
   msg lifecycle_msg = {0};
-  lifecycle_msg.type = MSG_CORE_TYPE_OBJECT_LIFECYCLE;
-  msg_core_fill_object_lifecycle(&lifecycle_msg, &(msg_core_object_lifecycle_data) {
-                                                     .event_kind = MSG_CORE_OBJECT_EVENT_DESTROY,
-                                                     .object_type = MSG_CORE_OBJECT_TYPE_HEAP,
-                                                     .object_ptr = hep,
-                                                 });
-  (void)msg_post(&lifecycle_msg);
+  msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
+  if (!msg_post(&lifecycle_msg)) {
+    thread_log_trace("Heap destruction was suspended handle=%p", (void*)hep);
+    profile_func_end;
+    return;
+  }
 
   if (hep->opt_mutex) {
     mutex_lock(hep->opt_mutex);

@@ -41,7 +41,6 @@ func process _process_create(cstr8 const* args, callsite site) {
 
 func process _process_create_with(cstr8 const* args, process_options options, callsite site) {
   profile_func_begin;
-  (void)site;
 
   if (!args || !args[0]) {
     thread_log_error("Rejected process create without arguments");
@@ -50,22 +49,31 @@ func process _process_create_with(cstr8 const* args, process_options options, ca
   }
   assert(args[0][0] != '\0');
 
-  msg lifecycle_msg = {0};
-  lifecycle_msg.type = MSG_CORE_TYPE_OBJECT_LIFECYCLE;
-  msg_core_fill_object_lifecycle(&lifecycle_msg, &(msg_core_object_lifecycle_data) {
-                                                     .event_kind = MSG_CORE_OBJECT_EVENT_CREATE,
-                                                     .object_type = MSG_CORE_OBJECT_TYPE_PROCESS,
-                                                     .object_ptr = NULL,
-                                                 });
-  (void)msg_post(&lifecycle_msg);
-
   if (process_options_is_default(options)) {
     process prc = (process)SDL_CreateProcess(args, false);
     if (prc == NULL) {
       thread_log_error("Failed to create process command=%s error=%s", args[0], SDL_GetError());
-    } else {
-      thread_log_trace("Created process command=%s options=default", args[0]);
+      profile_func_end;
+      return NULL;
     }
+
+    msg_core_object_lifecycle_data msg_data = {
+        .event_kind = MSG_CORE_OBJECT_EVENT_CREATE,
+        .object_type = MSG_CORE_OBJECT_TYPE_PROCESS,
+        .object_ptr = prc,
+        .site = site,
+    };
+
+    msg lifecycle_msg = {0};
+    msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
+    if (!msg_post(&lifecycle_msg)) {
+      SDL_DestroyProcess((SDL_Process*)prc);
+      thread_log_trace("Process creation was suspended command=%s", args[0]);
+      profile_func_end;
+      return NULL;
+    }
+
+    thread_log_trace("Created process command=%s options=default", args[0]);
     profile_func_end;
     return prc;
   }
@@ -102,6 +110,22 @@ func process _process_create_with(cstr8 const* args, process_options options, ca
   if (prc == NULL) {
     thread_log_error("Failed to create configured process command=%s error=%s", args[0], SDL_GetError());
   } else {
+    msg_core_object_lifecycle_data msg_data = {
+        .event_kind = MSG_CORE_OBJECT_EVENT_CREATE,
+        .object_type = MSG_CORE_OBJECT_TYPE_PROCESS,
+        .object_ptr = prc,
+        .site = site,
+    };
+
+    msg lifecycle_msg = {0};
+    msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
+    if (!msg_post(&lifecycle_msg)) {
+      SDL_DestroyProcess((SDL_Process*)prc);
+      thread_log_trace("Process creation was suspended command=%s", args[0]);
+      profile_func_end;
+      return NULL;
+    }
+
     thread_log_trace("Created configured process command=%s", args[0]);
   }
   profile_func_end;
@@ -233,7 +257,7 @@ func b32 process_kill(process prc, b32 force) {
   return success;
 }
 
-func void process_destroy(process prc) {
+func void _process_destroy(process prc, callsite site) {
   profile_func_begin;
   if (!prc) {
     thread_log_warn("Skipping process destroy for invalid handle");
@@ -241,14 +265,20 @@ func void process_destroy(process prc) {
     return;
   }
 
+  msg_core_object_lifecycle_data msg_data = {
+      .event_kind = MSG_CORE_OBJECT_EVENT_DESTROY,
+      .object_type = MSG_CORE_OBJECT_TYPE_PROCESS,
+      .object_ptr = prc,
+      .site = site,
+  };
+
   msg lifecycle_msg = {0};
-  lifecycle_msg.type = MSG_CORE_TYPE_OBJECT_LIFECYCLE;
-  msg_core_fill_object_lifecycle(&lifecycle_msg, &(msg_core_object_lifecycle_data) {
-                                                     .event_kind = MSG_CORE_OBJECT_EVENT_DESTROY,
-                                                     .object_type = MSG_CORE_OBJECT_TYPE_PROCESS,
-                                                     .object_ptr = prc,
-                                                 });
-  (void)msg_post(&lifecycle_msg);
+  msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
+  if (!msg_post(&lifecycle_msg)) {
+    thread_log_trace("Process destruction was suspended handle=%p", prc);
+    profile_func_end;
+    return;
+  }
 
   thread_log_trace("Destroyed process handle=%p", prc);
   SDL_DestroyProcess((SDL_Process*)prc);

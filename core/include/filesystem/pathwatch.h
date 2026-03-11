@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "../basic/codespace.h"
 #include "path.h"
 
 // =========================================================================
@@ -35,10 +36,15 @@ typedef struct pathwatch {
 
 // Creates a pathwatch wrapper around efsw.
 // Changes are emitted through MSG_CORE_TYPE_PATHWATCH messages.
-func pathwatch pathwatch_create(b32 use_generic_mode);
+func pathwatch _pathwatch_create(b32 use_generic_mode, callsite site);
 
 // Releases the watcher and every active watch.
-func void pathwatch_destroy(pathwatch* watcher);
+func void _pathwatch_destroy(pathwatch* watcher, callsite site);
+
+#define pathwatch_create(use_generic_mode) \
+  _pathwatch_create(use_generic_mode, CALLSITE_HERE)
+#define pathwatch_destroy(watcher) \
+  _pathwatch_destroy(watcher, CALLSITE_HERE)
 
 // Starts the background watch thread. Returns 1 on success, 0 otherwise.
 func b32 pathwatch_start(pathwatch* watcher);

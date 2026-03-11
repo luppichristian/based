@@ -305,21 +305,24 @@ func b32 archive_write_disk_bytes(const path* dst, const void* data_ptr, sz data
   return file_write_all(dst, write_data);
 }
 
-func archive archive_create(allocator* opt_alloc) {
+func archive _archive_create(allocator* opt_alloc, callsite site) {
   profile_func_begin;
   archive arc;
   mem_zero(&arc, size_of(arc));
   arc.opt_alloc = opt_alloc;
   thread_log_trace("Created archive opt_alloc=%p", (void*)opt_alloc);
+  msg_core_object_lifecycle_data msg_data = {
+      .event_kind = MSG_CORE_OBJECT_EVENT_CREATE,
+      .object_type = MSG_CORE_OBJECT_TYPE_ARCHIVE,
+      .object_ptr = &arc,
+      .site = site,
+  };
+
   msg lifecycle_msg = {0};
-  lifecycle_msg.type = MSG_CORE_TYPE_OBJECT_LIFECYCLE;
-  msg_core_fill_object_lifecycle(&lifecycle_msg, &(msg_core_object_lifecycle_data) {
-                                                     .event_kind = MSG_CORE_OBJECT_EVENT_CREATE,
-                                                     .object_type = MSG_CORE_OBJECT_TYPE_ARCHIVE,
-                                                     .object_ptr = &arc,
-                                                 });
+  msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
   if (!msg_post(&lifecycle_msg)) {
     mem_zero(&arc, size_of(arc));
+    thread_log_trace("Archive creation was suspended");
   }
   profile_func_end;
   return arc;
@@ -343,7 +346,7 @@ func void archive_clear(archive* arc) {
   profile_func_end;
 }
 
-func void archive_destroy(archive* arc) {
+func void _archive_destroy(archive* arc, callsite site) {
   profile_func_begin;
   if (arc == NULL) {
     profile_func_end;
@@ -351,15 +354,17 @@ func void archive_destroy(archive* arc) {
   }
   thread_log_trace("Destroying archive arc=%p entries=%zu", (void*)arc, (size_t)arc->entry_count);
 
+  msg_core_object_lifecycle_data msg_data = {
+      .event_kind = MSG_CORE_OBJECT_EVENT_DESTROY,
+      .object_type = MSG_CORE_OBJECT_TYPE_ARCHIVE,
+      .object_ptr = arc,
+      .site = site,
+  };
+
   msg lifecycle_msg = {0};
-  lifecycle_msg.type = MSG_CORE_TYPE_OBJECT_LIFECYCLE;
-  msg_core_fill_object_lifecycle(&lifecycle_msg, &(msg_core_object_lifecycle_data) {
-                                                     .event_kind = MSG_CORE_OBJECT_EVENT_DESTROY,
-                                                     .object_type = MSG_CORE_OBJECT_TYPE_ARCHIVE,
-                                                     .object_ptr = arc,
-                                                 });
+  msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
   if (!msg_post(&lifecycle_msg)) {
-    thread_log_warn("Archive destroy lifecycle notification failed arc=%p", (void*)arc);
+    thread_log_warn("Archive destruction was suspended arc=%p", (void*)arc);
     profile_func_end;
     return;
   }

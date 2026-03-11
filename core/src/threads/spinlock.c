@@ -37,7 +37,8 @@ func spinlock _spinlock_create(callsite site) {
   msg lifecycle_msg = {0};
   msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
   if (!msg_post(&lifecycle_msg)) {
-    thread_log_trace("Spinlock creation cancelled");
+    heap_dealloc(hp, spl);
+    thread_log_trace("Spinlock creation was suspended");
     profile_func_end;
     return NULL;
   }
@@ -67,7 +68,7 @@ func b32 _spinlock_destroy(spinlock sl, callsite site) {
   msg lifecycle_msg = {0};
   msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
   if (!msg_post(&lifecycle_msg)) {
-    thread_log_trace("Spinlock destruction cancelled");
+    thread_log_trace("Spinlock destruction was suspended handle=%p", sl);
     profile_func_end;
     return false;
   }
