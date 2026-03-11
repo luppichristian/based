@@ -200,7 +200,7 @@ func b32 atomic_ptr_eq(atomic_ptr* atom, void* val);
 func b32 atomic_ptr_neq(atomic_ptr* atom, void* val);
 
 // =========================================================================
-// Memory Fences
+// Fences
 // =========================================================================
 
 // Prevents memory operations after this call from being reordered before it (acquire).

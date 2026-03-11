@@ -1,1 +1,1 @@
-- dont use strncpy
+- dont use strncpy, SDL_zero

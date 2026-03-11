@@ -17,27 +17,8 @@
 typedef struct thread_entry_payload {
   thread_func entry;
   void* arg;
-  allocator payload_allocator;
-  allocator main_allocator;
-  b32 should_init_thread_ctx;
+  allocator alloc;
 } thread_entry_payload;
-
-func allocator thread_allocator_resolve(allocator preferred_alloc) {
-  profile_func_begin;
-  if (preferred_alloc.alloc_fn != NULL && preferred_alloc.dealloc_fn != NULL) {
-    profile_func_end;
-    return preferred_alloc;
-  }
-
-  allocator thread_alloc = thread_get_allocator();
-  if (thread_alloc.alloc_fn != NULL && thread_alloc.dealloc_fn != NULL) {
-    profile_func_end;
-    return thread_alloc;
-  }
-
-  profile_func_end;
-  return global_get_allocator();
-}
 
 func i32 thread_entry_wrapper(void* raw) {
   profile_func_begin;
@@ -50,54 +31,70 @@ func i32 thread_entry_wrapper(void* raw) {
                      raw,
                      (u32)(payload != NULL && payload->entry != NULL));
     profile_func_end;
-    return 0;
+    return 1;
   }
-  assert(payload->payload_allocator.dealloc_fn != NULL);
 
-  if (payload->should_init_thread_ctx) {
-    has_thread_ctx = thread_ctx_init(payload->main_allocator);
-    if (!has_thread_ctx) {
-      thread_log_warn("Thread entry running without thread context");
-    } else {
-      thread_log_trace("Initialized thread context for worker thread");
-    }
+  heap* hp = global_get_perm_heap();
+  if (!hp) {
+    global_log_error("Failed to acquire global heap");
+    profile_func_end;
+    return 1;
+  }
+
+  if (!thread_ctx_init(payload->alloc)) {
+    thread_log_error("Could not initialize thread ctx");
+    profile_func_end;
+    return 1;
   }
 
   thread_log_trace("Entering worker thread payload=%p", raw);
   exit_code = payload->entry(payload->arg);
   thread_log_trace("Leaving worker thread exit_code=%d", exit_code);
 
-  if (has_thread_ctx) {
-    thread_ctx_quit();
-  }
+  thread_ctx_quit();  // TODO: Check if this was successful
 
-  allocator_dealloc(payload->payload_allocator, payload);
+  heap_dealloc(hp, payload);
   profile_func_end;
   return exit_code;
 }
 
-func thread thread_create_impl(thread_func entry, void* arg, cstr8 name, allocator main_allocator) {
+func thread thread_create_impl(
+    thread_func entry,
+    void* arg,
+    cstr8 name,
+    allocator main_allocator,
+    callsite site) {
   profile_func_begin;
-  allocator payload_allocator = {0};
+
   if (!entry) {
     thread_log_error("Rejected thread creation without entry callback");
     profile_func_end;
     return NULL;
   }
-  payload_allocator = thread_allocator_resolve(main_allocator);
-  assert(payload_allocator.alloc_fn != NULL);
-  assert(payload_allocator.dealloc_fn != NULL);
+
+  heap* hp = global_get_perm_heap();
+  if (!hp) {
+    global_log_error("Failed to acquire global heap");
+    profile_func_end;
+    return NULL;
+  }
+
+  msg_core_object_lifecycle_data msg_data = {
+      .event_kind = MSG_CORE_OBJECT_EVENT_CREATE,
+      .object_type = MSG_CORE_OBJECT_TYPE_THREAD,
+      .object_ptr = NULL,
+      .site = site,
+  };
 
   msg lifecycle_msg = {0};
-  lifecycle_msg.type = MSG_CORE_TYPE_OBJECT_LIFECYCLE;
-  msg_core_fill_object_lifecycle(&lifecycle_msg, &(msg_core_object_lifecycle_data) {
-                                                     .event_kind = MSG_CORE_OBJECT_EVENT_CREATE,
-                                                     .object_type = MSG_CORE_OBJECT_TYPE_THREAD,
-                                                     .object_ptr = NULL,
-                                                 });
-  (void)msg_post(&lifecycle_msg);
+  msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
+  if (!msg_post(&lifecycle_msg)) {
+    thread_log_trace("Thread creation cancelled");
+    profile_func_end;
+    return NULL;
+  }
 
-  thread_entry_payload* payload = (thread_entry_payload*)allocator_alloc(payload_allocator, size_of(*payload));
+  thread_entry_payload* payload = heap_alloc_type(hp, thread_entry_payload);
   if (!payload) {
     thread_log_error("Failed to allocate thread payload name=%s", name != NULL ? name : "<null>");
     profile_func_end;
@@ -107,29 +104,27 @@ func thread thread_create_impl(thread_func entry, void* arg, cstr8 name, allocat
   SDL_zero(*payload);
   payload->entry = entry;
   payload->arg = arg;
-  payload->payload_allocator = payload_allocator;
-  if (main_allocator.alloc_fn) {
-    payload->main_allocator = main_allocator;
-    payload->should_init_thread_ctx = true;
-  }
+  payload->alloc = main_allocator;
 
   thread thd = (thread)SDL_CreateThread(thread_entry_wrapper, name, payload);
   if (!thd) {
-    allocator_dealloc(payload_allocator, payload);
+    heap_dealloc(hp, payload);
     thread_log_error("Failed to create thread name=%s error=%s", name != NULL ? name : "<null>", SDL_GetError());
     profile_func_end;
     return NULL;
   }
+
   thread_log_trace("Created thread handle=%p name=%s", thd, name != NULL ? name : "<null>");
   profile_func_end;
   return thd;
 }
 
-func thread _thread_create(thread_func entry, void* arg, allocator main_allocator, callsite site) {
-  profile_func_begin;
-  (void)site;
-  profile_func_end;
-  return thread_create_impl(entry, arg, NULL, main_allocator);
+func thread _thread_create(
+    thread_func entry,
+    void* arg,
+    allocator main_allocator,
+    callsite site) {
+  return thread_create_impl(entry, arg, NULL, main_allocator, site);
 }
 
 func thread _thread_create_named(
@@ -138,56 +133,70 @@ func thread _thread_create_named(
     cstr8 name,
     allocator main_allocator,
     callsite site) {
-  profile_func_begin;
-  (void)site;
-  profile_func_end;
-  return thread_create_impl(entry, arg, name, main_allocator);
+  return thread_create_impl(entry, arg, name, main_allocator, site);
 }
 
 func b32 thread_is_valid(thread thd) {
   return thd != NULL;
 }
 
-func b32 thread_join(thread thd, i32* out_exit_code) {
+func b32 _thread_join(thread thd, i32* out_exit_code, callsite site) {
   profile_func_begin;
-  if (!thd) {
+  if (!thread_is_valid(thd)) {
     thread_log_error("Cannot join invalid thread");
     profile_func_end;
     return false;
   }
-  assert(thread_is_valid(thd));
+
+  msg_core_object_lifecycle_data msg_data = {
+      .event_kind = MSG_CORE_OBJECT_EVENT_DESTROY,
+      .object_type = MSG_CORE_OBJECT_TYPE_THREAD,
+      .object_ptr = thd,
+      .site = site,
+  };
+
   msg lifecycle_msg = {0};
-  lifecycle_msg.type = MSG_CORE_TYPE_OBJECT_LIFECYCLE;
-  msg_core_fill_object_lifecycle(&lifecycle_msg, &(msg_core_object_lifecycle_data) {
-                                                     .event_kind = MSG_CORE_OBJECT_EVENT_DESTROY,
-                                                     .object_type = MSG_CORE_OBJECT_TYPE_THREAD,
-                                                     .object_ptr = thd,
-                                                 });
-  (void)msg_post(&lifecycle_msg);
+  msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
+  if (!msg_post(&lifecycle_msg)) {
+    thread_log_trace("Thread join cancelled");
+    profile_func_end;
+    return false;
+  }
+
   SDL_WaitThread((SDL_Thread*)thd, (int*)out_exit_code);
   thread_log_trace("Joined thread handle=%p", thd);
   profile_func_end;
   return true;
 }
 
-func void thread_detach(thread thd) {
+func b32 _thread_detach(thread thd, callsite site) {
   profile_func_begin;
   if (!thd) {
     thread_log_warn("Skipping detach for invalid thread");
     profile_func_end;
-    return;
+    return false;
   }
+
+  msg_core_object_lifecycle_data msg_data = {
+      .event_kind = MSG_CORE_OBJECT_EVENT_DESTROY,
+      .object_type = MSG_CORE_OBJECT_TYPE_THREAD,
+      .object_ptr = thd,
+      .site = site,
+  };
+
   msg lifecycle_msg = {0};
-  lifecycle_msg.type = MSG_CORE_TYPE_OBJECT_LIFECYCLE;
-  msg_core_fill_object_lifecycle(&lifecycle_msg, &(msg_core_object_lifecycle_data) {
-                                                     .event_kind = MSG_CORE_OBJECT_EVENT_DESTROY,
-                                                     .object_type = MSG_CORE_OBJECT_TYPE_THREAD,
-                                                     .object_ptr = thd,
-                                                 });
+  msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
+  if (!msg_post(&lifecycle_msg)) {
+    thread_log_trace("Thread detach cancelled");
+    profile_func_end;
+    return false;
+  }
+
   (void)msg_post(&lifecycle_msg);
   SDL_DetachThread((SDL_Thread*)thd);
   thread_log_trace("Detached thread handle=%p", thd);
   profile_func_end;
+  return true;
 }
 
 func u64 thread_get_id(thread thd) {

@@ -19,7 +19,7 @@ typedef void* spinlock;
 func spinlock _spinlock_create(callsite site);
 
 // Destroys the spinlock and releases its resources.
-func void _spinlock_destroy(spinlock sl, callsite site);
+func b32 _spinlock_destroy(spinlock sl, callsite site);
 
 // Convenience macros that automatically pass the callsite information.
 #define spinlock_create()    _spinlock_create(CALLSITE_HERE)

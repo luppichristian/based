@@ -479,6 +479,7 @@ typedef struct msg_core_object_lifecycle_data {
   msg_core_object_type object_type;
   msg_core_object_event_kind event_kind;
   void* object_ptr;
+  callsite site;
 } msg_core_object_lifecycle_data;
 
 typedef struct msg_core_thread_ctx_data {

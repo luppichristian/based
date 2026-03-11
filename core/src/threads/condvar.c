@@ -13,23 +13,29 @@ func condvar _condvar_create(callsite site) {
   profile_func_begin;
   (void)site;
   condvar handle = (condvar)SDL_CreateCondition();
-  if (handle != NULL) {
-    msg lifecycle_msg = {0};
-    lifecycle_msg.type = MSG_CORE_TYPE_OBJECT_LIFECYCLE;
-    msg_core_fill_object_lifecycle(&lifecycle_msg, &(msg_core_object_lifecycle_data) {
-                                                       .event_kind = MSG_CORE_OBJECT_EVENT_CREATE,
-                                                       .object_type = MSG_CORE_OBJECT_TYPE_CONDVAR,
-                                                       .object_ptr = handle,
-                                                   });
-    if (!msg_post(&lifecycle_msg)) {
-      SDL_DestroyCondition((SDL_Condition*)handle);
-      profile_func_end;
-      return NULL;
-    }
-    thread_log_trace("Created condvar handle=%p", handle);
-  } else {
+  if (handle == NULL) {
     thread_log_error("Failed to create condvar error=%s", SDL_GetError());
+    profile_func_end;
+    return NULL;
   }
+
+  msg_core_object_lifecycle_data msg_data = {
+      .event_kind = MSG_CORE_OBJECT_EVENT_CREATE,
+      .object_type = MSG_CORE_OBJECT_TYPE_CONDVAR,
+      .object_ptr = handle,
+      .site = site,
+  };
+
+  msg lifecycle_msg = {0};
+  msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
+  if (!msg_post(&lifecycle_msg)) {
+    thread_log_trace("Condvar creation cancelled");
+    SDL_DestroyCondition((SDL_Condition*)handle);
+    profile_func_end;
+    return NULL;
+  }
+
+  thread_log_trace("Created condvar handle=%p", handle);
   profile_func_end;
   return handle;
 }
@@ -43,17 +49,21 @@ func b32 _condvar_destroy(condvar cond, callsite site) {
     return false;
   }
 
+  msg_core_object_lifecycle_data msg_data = {
+      .event_kind = MSG_CORE_OBJECT_EVENT_DESTROY,
+      .object_type = MSG_CORE_OBJECT_TYPE_CONDVAR,
+      .object_ptr = cond,
+      .site = site,
+  };
+
   msg lifecycle_msg = {0};
-  lifecycle_msg.type = MSG_CORE_TYPE_OBJECT_LIFECYCLE;
-  msg_core_fill_object_lifecycle(&lifecycle_msg, &(msg_core_object_lifecycle_data) {
-                                                     .event_kind = MSG_CORE_OBJECT_EVENT_DESTROY,
-                                                     .object_type = MSG_CORE_OBJECT_TYPE_CONDVAR,
-                                                     .object_ptr = cond,
-                                                 });
+  msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
   if (!msg_post(&lifecycle_msg)) {
+    thread_log_trace("Condvar destruction cancelled");
     profile_func_end;
     return false;
   }
+
   thread_log_trace("Destroyed condvar handle=%p", cond);
   SDL_DestroyCondition((SDL_Condition*)cond);
   profile_func_end;

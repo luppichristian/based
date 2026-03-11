@@ -1401,19 +1401,19 @@
 38: func void thread_sleep_precise(u64 nanos);
 
 === include\threads\thread_group.h ===
-19: typedef struct {
-27: typedef struct {
-36: func thread_group _thread_group_create(u32 count, thread_group_func entry, void* arg, callsite site);
-40: func thread_group _thread_group_create_named(
-49: func void _thread_group_destroy(thread_group* group, callsite site);
-52: #define thread_group_create(count, entry, arg) \
-54: #define thread_group_create_named(count, entry, arg, base_name) \
-56: #define thread_group_destroy(group) _thread_group_destroy(group, CALLSITE_HERE)
-59: func b32 thread_group_is_valid(thread_group* group);
-62: func u32 thread_group_get_count(thread_group* group);
-65: func thread thread_group_get(thread_group* group, u32 idx);
-71: func b32 thread_group_join_all(thread_group* group, i32* out_exit_codes);
-74: func void thread_group_detach_all(thread_group* group);
+20: typedef i32 (*thread_group_func)(u32 idx, void* arg);
+23: typedef void* thread_group;
+29: func thread_group _thread_group_create(
+37: func thread_group _thread_group_create_named(
+47: func b32 _thread_group_destroy(thread_group group, callsite site);
+50: #define thread_group_create(count, entry, arg, main_allocator) \
+52: #define thread_group_create_named(count, entry, arg, main_allocator, base_name) \
+54: #define thread_group_destroy(group) _thread_group_destroy(group, CALLSITE_HERE)
+57: func b32 thread_group_is_valid(thread_group group);
+60: func u32 thread_group_get_count(thread_group group);
+63: func thread thread_group_get(thread_group group, u32 idx);
+69: func b32 thread_group_join_all(thread_group group, i32* out_exit_codes);
+73: func b32 thread_group_detach_all(thread_group group);
 
 === include\utils\cmdline.h ===
 9: typedef struct cmdline {

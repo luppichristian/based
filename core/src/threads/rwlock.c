@@ -8,28 +8,35 @@
 #include "input/msg_core.h"
 #include "../sdl3_include.h"
 #include "basic/profiler.h"
+#include "threads/atomics.h"
 
 func rwlock _rwlock_create(callsite site) {
   profile_func_begin;
-  (void)site;
+  (void)site;  // TODO: When done remove these from all the codebase
   rwlock handle = (rwlock)SDL_CreateRWLock();
-  if (handle != NULL) {
-    msg lifecycle_msg = {0};
-    lifecycle_msg.type = MSG_CORE_TYPE_OBJECT_LIFECYCLE;
-    msg_core_fill_object_lifecycle(&lifecycle_msg, &(msg_core_object_lifecycle_data) {
-                                                       .event_kind = MSG_CORE_OBJECT_EVENT_CREATE,
-                                                       .object_type = MSG_CORE_OBJECT_TYPE_RWLOCK,
-                                                       .object_ptr = handle,
-                                                   });
-    if (!msg_post(&lifecycle_msg)) {
-      SDL_DestroyRWLock((SDL_RWLock*)handle);
-      profile_func_end;
-      return NULL;
-    }
-    thread_log_trace("Created rwlock handle=%p", handle);
-  } else {
+  if (handle == NULL) {
     thread_log_error("Failed to create rwlock error=%s", SDL_GetError());
+    profile_func_end;
+    return NULL;
   }
+
+  msg_core_object_lifecycle_data msg_data = {
+      .event_kind = MSG_CORE_OBJECT_EVENT_CREATE,
+      .object_type = MSG_CORE_OBJECT_TYPE_RWLOCK,
+      .object_ptr = handle,
+      .site = site,
+  };
+
+  msg lifecycle_msg = {0};
+  msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
+  if (!msg_post(&lifecycle_msg)) {
+    thread_log_trace("RWLock creation cancelled");
+    SDL_DestroyRWLock((SDL_RWLock*)handle);
+    profile_func_end;
+    return NULL;
+  }
+
+  thread_log_trace("Created rwlock handle=%p", handle);
   profile_func_end;
   return handle;
 }
@@ -43,17 +50,21 @@ func b32 _rwlock_destroy(rwlock rw, callsite site) {
     return false;
   }
 
+  msg_core_object_lifecycle_data msg_data = {
+      .event_kind = MSG_CORE_OBJECT_EVENT_DESTROY,
+      .object_type = MSG_CORE_OBJECT_TYPE_RWLOCK,
+      .object_ptr = rw,
+      .site = site,
+  };
+
   msg lifecycle_msg = {0};
-  lifecycle_msg.type = MSG_CORE_TYPE_OBJECT_LIFECYCLE;
-  msg_core_fill_object_lifecycle(&lifecycle_msg, &(msg_core_object_lifecycle_data) {
-                                                     .event_kind = MSG_CORE_OBJECT_EVENT_DESTROY,
-                                                     .object_type = MSG_CORE_OBJECT_TYPE_RWLOCK,
-                                                     .object_ptr = rw,
-                                                 });
+  msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
   if (!msg_post(&lifecycle_msg)) {
+    thread_log_trace("RWLock destruction cancelled");
     profile_func_end;
     return false;
   }
+
   thread_log_trace("Destroyed rwlock handle=%p", rw);
   SDL_DestroyRWLock((SDL_RWLock*)rw);
   profile_func_end;
@@ -120,8 +131,9 @@ func b32 rwlock_try_read_lock(rwlock rw) {
     return false;
   }
   assert(rw != NULL);
+  b32 res = SDL_TryLockRWLockForReading((SDL_RWLock*)rw);
   profile_func_end;
-  return SDL_TryLockRWLockForReading((SDL_RWLock*)rw);
+  return res;
 }
 
 func b32 rwlock_try_write_lock(rwlock rw) {
@@ -132,8 +144,9 @@ func b32 rwlock_try_write_lock(rwlock rw) {
     return false;
   }
   assert(rw != NULL);
+  b32 res = SDL_TryLockRWLockForWriting((SDL_RWLock*)rw);
   profile_func_end;
-  return SDL_TryLockRWLockForWriting((SDL_RWLock*)rw);
+  return res;
 }
 
 func b32 rwlock_timed_read_lock(rwlock rw, i32 timeout_ms) {
@@ -151,7 +164,8 @@ func b32 rwlock_timed_read_lock(rwlock rw, i32 timeout_ms) {
       profile_func_end;
       return false;
     }
-    SDL_Delay(1);
+
+    atomic_pause();
   }
 
   profile_func_end;
@@ -173,7 +187,8 @@ func b32 rwlock_timed_write_lock(rwlock rw, i32 timeout_ms) {
       profile_func_end;
       return false;
     }
-    SDL_Delay(1);
+
+    atomic_pause();
   }
 
   profile_func_end;

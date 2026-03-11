@@ -10,88 +10,76 @@
 #include "../sdl3_include.h"
 #include "basic/profiler.h"
 
-func allocator spinlock_allocator_resolve(void) {
-  profile_func_begin;
-  allocator alloc = thread_get_allocator();
-  if (alloc.alloc_fn != NULL && alloc.dealloc_fn != NULL) {
-    profile_func_end;
-    return alloc;
-  }
-  profile_func_end;
-  return global_get_allocator();
-}
-
 func spinlock _spinlock_create(callsite site) {
   profile_func_begin;
-  allocator alloc = spinlock_allocator_resolve();
-  (void)site;
-  if (alloc.alloc_fn == NULL || alloc.dealloc_fn == NULL) {
-    thread_log_error("Failed to resolve allocator for spinlock creation");
+
+  heap* hp = thread_get_perm_heap();
+  if (!hp) {
+    thread_log_error("Thread ctx heap allocator is not available");
     profile_func_end;
     return NULL;
   }
-  assert(alloc.alloc_fn != NULL);
-  assert(alloc.dealloc_fn != NULL);
 
-  SDL_SpinLock* spl = (SDL_SpinLock*)allocator_alloc(alloc, size_of(SDL_SpinLock));
-  if (spl) {
-    *spl = 0;
+  SDL_SpinLock* spl = heap_alloc_type(hp, SDL_SpinLock);
+  if (spl == NULL) {
+    thread_log_error("Failed to create spinlock");
+    profile_func_end;
+    return NULL;
   }
-  if (spl != NULL) {
-    msg lifecycle_msg = {0};
-    lifecycle_msg.type = MSG_CORE_TYPE_OBJECT_LIFECYCLE;
-    msg_core_fill_object_lifecycle(&lifecycle_msg, &(msg_core_object_lifecycle_data) {
-                                                       .event_kind = MSG_CORE_OBJECT_EVENT_CREATE,
-                                                       .object_type = MSG_CORE_OBJECT_TYPE_SPINLOCK,
-                                                       .object_ptr = spl,
-                                                   });
-    if (!msg_post(&lifecycle_msg)) {
-      allocator_dealloc(alloc, spl);
-      profile_func_end;
-      return NULL;
-    }
-    thread_log_trace("Created spinlock handle=%p", spl);
-  } else {
-    thread_log_error("Failed to allocate spinlock storage");
+
+  msg_core_object_lifecycle_data msg_data = {
+      .event_kind = MSG_CORE_OBJECT_EVENT_CREATE,
+      .object_type = MSG_CORE_OBJECT_TYPE_SPINLOCK,
+      .object_ptr = spl,
+      .site = site,
+  };
+
+  msg lifecycle_msg = {0};
+  msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
+  if (!msg_post(&lifecycle_msg)) {
+    thread_log_trace("Spinlock creation cancelled");
+    profile_func_end;
+    return NULL;
   }
+
+  thread_log_trace("Created spinlock handle=%p", spl);
   profile_func_end;
   return (spinlock)spl;
 }
 
-func void _spinlock_destroy(spinlock sl, callsite site) {
+func b32 _spinlock_destroy(spinlock sl, callsite site) {
   profile_func_begin;
-  allocator alloc = spinlock_allocator_resolve();
-  (void)site;
-  if (!sl) {
-    thread_log_warn("Skipping spinlock destroy for invalid handle");
+
+  heap* hp = thread_get_perm_heap();
+  if (!hp) {
+    thread_log_error("Thread ctx heap allocator is not available");
     profile_func_end;
-    return;
+    return false;
   }
-  if (alloc.dealloc_fn == NULL) {
-    thread_log_error("Failed to resolve deallocator for spinlock handle=%p", sl);
-    profile_func_end;
-    return;
-  }
-  assert(alloc.dealloc_fn != NULL);
+
+  msg_core_object_lifecycle_data msg_data = {
+      .event_kind = MSG_CORE_OBJECT_EVENT_DESTROY,
+      .object_type = MSG_CORE_OBJECT_TYPE_SPINLOCK,
+      .object_ptr = sl,
+      .site = site,
+  };
 
   msg lifecycle_msg = {0};
-  lifecycle_msg.type = MSG_CORE_TYPE_OBJECT_LIFECYCLE;
-  msg_core_fill_object_lifecycle(&lifecycle_msg, &(msg_core_object_lifecycle_data) {
-                                                     .event_kind = MSG_CORE_OBJECT_EVENT_DESTROY,
-                                                     .object_type = MSG_CORE_OBJECT_TYPE_SPINLOCK,
-                                                     .object_ptr = sl,
-                                                 });
+  msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
   if (!msg_post(&lifecycle_msg)) {
+    thread_log_trace("Spinlock destruction cancelled");
     profile_func_end;
-    return;
+    return false;
   }
+
   thread_log_trace("Destroyed spinlock handle=%p", sl);
-  allocator_dealloc(alloc, sl);
+  heap_dealloc(hp, sl);
   profile_func_end;
+  return true;
 }
 
 func b32 spinlock_is_valid(spinlock sl) {
-  return sl != NULL;
+  return sl != 0;
 }
 
 func void spinlock_lock(spinlock sl) {
@@ -102,7 +90,7 @@ func void spinlock_lock(spinlock sl) {
     return;
   }
   assert(sl != NULL);
-  SDL_LockSpinlock((SDL_SpinLock*)sl);
+  SDL_LockSpinlock((SDL_SpinLock*)(sl));
   profile_func_end;
 }
 
@@ -114,7 +102,7 @@ func void spinlock_unlock(spinlock sl) {
     return;
   }
   assert(sl != NULL);
-  SDL_UnlockSpinlock((SDL_SpinLock*)sl);
+  SDL_UnlockSpinlock((SDL_SpinLock*)(sl));
   profile_func_end;
 }
 
@@ -126,6 +114,7 @@ func b32 spinlock_try_lock(spinlock sl) {
     return false;
   }
   assert(sl != NULL);
+  b32 res = SDL_TryLockSpinlock((SDL_SpinLock*)(sl));
   profile_func_end;
-  return SDL_TryLockSpinlock((SDL_SpinLock*)sl);
+  return res;
 }

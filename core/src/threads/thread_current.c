@@ -20,20 +20,17 @@ const_var SDL_ThreadPriority sdl_priorities[] = {
 };
 
 func u64 thread_id(void) {
-  profile_func_begin;
-  profile_func_end;
   return (u64)SDL_GetCurrentThreadID();
 }
 
 func thread_priority thread_get_priority(void) {
-  profile_func_begin;
-  profile_func_end;
   return tls_priority;
 }
 
 func b32 thread_set_priority(thread_priority priority) {
   profile_func_begin;
   if (priority >= count_of(sdl_priorities)) {
+    thread_log_error("Passed invalid priority in thread_set_priority");
     profile_func_end;
     return false;  // Invalid priority
   }
