@@ -6,6 +6,7 @@
 #include "context/thread_ctx.h"
 #include "basic/env_defines.h"
 #include "basic/profiler.h"
+#include "memory/memops.h"
 
 #include <stddef.h>
 #include <string.h>
@@ -115,9 +116,9 @@ func void cpu_fill_x86_strings(cpu_info* out_info) {
   i32 base_regs[4];
   if (cpu_read_cpuid(0, 0, base_regs)) {
     c8 vendor_name[13];
-    memcpy(&vendor_name[0], &base_regs[1], 4);
-    memcpy(&vendor_name[4], &base_regs[3], 4);
-    memcpy(&vendor_name[8], &base_regs[2], 4);
+    mem_cpy(&vendor_name[0], &base_regs[1], 4);
+    mem_cpy(&vendor_name[4], &base_regs[3], 4);
+    mem_cpy(&vendor_name[8], &base_regs[2], 4);
     vendor_name[12] = '\0';
     cstr8_copy(out_info->vendor_name, size_of(out_info->vendor_name), vendor_name);
   }
@@ -136,12 +137,12 @@ func void cpu_fill_x86_strings(cpu_info* out_info) {
 
   i32 brand_regs[12];
   c8 brand_name[49];
-  memset(brand_regs, 0, size_of(brand_regs));
-  memset(brand_name, 0, size_of(brand_name));
+  mem_zero(brand_regs, size_of(brand_regs));
+  mem_zero(brand_name, size_of(brand_name));
   cpu_read_cpuid(0x80000002U, 0, &brand_regs[0]);
   cpu_read_cpuid(0x80000003U, 0, &brand_regs[4]);
   cpu_read_cpuid(0x80000004U, 0, &brand_regs[8]);
-  memcpy(brand_name, brand_regs, 48);
+  mem_cpy(brand_name, brand_regs, 48);
   cstr8_copy(out_info->brand_name, size_of(out_info->brand_name), brand_name);
   profile_func_end;
 }
@@ -202,7 +203,7 @@ func b32 cpu_info_query(cpu_info* out_info) {
   }
   assert(out_info != NULL);
 
-  memset(out_info, 0, size_of(*out_info));
+  mem_zero(out_info, size_of(*out_info));
   out_info->logical_core_count = cpu_query_logical_cores();
   out_info->cache_line_bytes = 64;
   cpu_set_compile_time_fallback(out_info);

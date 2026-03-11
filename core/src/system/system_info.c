@@ -6,6 +6,7 @@
 #include "context/thread_ctx.h"
 #include "basic/env_defines.h"
 #include "basic/profiler.h"
+#include "memory/memops.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -83,7 +84,7 @@ func void system_query_windows_version(system_info* out_info) {
   }
 
   OSVERSIONINFOW version_info;
-  memset(&version_info, 0, size_of(version_info));
+  mem_zero(&version_info, size_of(version_info));
   version_info.dwOSVersionInfoSize = size_of(version_info);
 
   if (get_version(&version_info) != 0) {
@@ -112,7 +113,7 @@ func b32 system_info_query(system_info* out_info) {
   }
   assert(out_info != NULL);
 
-  memset(out_info, 0, size_of(*out_info));
+  mem_zero(out_info, size_of(*out_info));
   cstr8_copy(out_info->architecture_name,
              size_of(out_info->architecture_name),
              system_architecture_name());

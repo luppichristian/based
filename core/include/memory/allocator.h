@@ -56,6 +56,9 @@ func void* _allocator_realloc(allocator alloc, void* ptr, sz new_size, callsite 
 #define allocator_realloc(alloc, ptr, new_size) \
   _allocator_realloc((alloc), ptr, new_size, CALLSITE_HERE)
 
+// Helpers for type, array allocation are not provided because you shouldnt
+// use this for small allocations.
+
 // =========================================================================
 c_end;
 // =========================================================================

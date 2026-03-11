@@ -9,6 +9,7 @@
 
 #include "../sdl3_include.h"
 #include "basic/profiler.h"
+#include "memory/memops.h"
 
 #include <string.h>
 
@@ -153,7 +154,7 @@ func path dir_relative_path(const path* root_path, const path* full_path) {
 
   if (cstr8_cmp_n(relative_path.buf, root_copy.buf, root_len)) {
     if (relative_path.buf[root_len] == '/') {
-      memmove(
+      mem_move(
           relative_path.buf,
           relative_path.buf + root_len + 1,
           cstr8_len(relative_path.buf + root_len + 1) + 1);
@@ -544,7 +545,7 @@ func b32 dir_copy_recursive(const path* src, const path* dst, b32 overwrite_exis
     return false;
   }
 
-  memset(&state, 0, size_of(state));
+  mem_zero(&state, size_of(state));
   state.dst_root = *dst;
   state.overwrite_existing = overwrite_existing;
   state.success = 1;
@@ -626,7 +627,7 @@ func b32 dir_remove_recursive(const path* src) {
   }
   assert(src != NULL);
 
-  memset(&state, 0, size_of(state));
+  mem_zero(&state, size_of(state));
   state.success = 1;
 
   if (!SDL_EnumerateDirectory(dir_path_cstr(src), dir_remove_callback, &state)) {
@@ -664,7 +665,7 @@ func b32 dir_iterate(const path* src, dir_iterate_callback* callback, void* user
   }
   assert(callback != NULL);
 
-  memset(&state, 0, size_of(state));
+  mem_zero(&state, size_of(state));
   state.root_path = *src;
   state.recursive = 0;
   state.callback = callback;

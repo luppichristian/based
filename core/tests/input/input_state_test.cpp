@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "test_common.hpp"
+#include "memory/memops.h"
 
 TEST(input_input_state_test, clear_and_serialize_deserialize_roundtrip) {
   input_state src_state = {};
@@ -17,7 +18,7 @@ TEST(input_input_state_test, clear_and_serialize_deserialize_roundtrip) {
 
   sz blob_size = input_state_serialized_size();
   u8* blob_data = new u8[blob_size];
-  memset(blob_data, 0, blob_size);
+  mem_zero(blob_data, blob_size);
 
   sz out_size = 0;
   ASSERT_TRUE(input_state_serialize(&src_state, blob_data, blob_size, &out_size) != 0);

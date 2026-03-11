@@ -7,6 +7,7 @@
 #include "context/thread_ctx.h"
 #include "basic/env_defines.h"
 #include "basic/profiler.h"
+#include "memory/memops.h"
 
 #include <string.h>
 
@@ -22,7 +23,7 @@
 func mod module_empty(void) {
   profile_func_begin;
   mod module_value;
-  memset(&module_value, 0, size_of(module_value));
+  mem_zero(&module_value, size_of(module_value));
   module_value.source_path = path_from_cstr("");
   profile_func_end;
   return module_value;

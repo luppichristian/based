@@ -7,6 +7,7 @@
 #include "basic/utility_defines.h"
 #include "strings/char.h"
 #include "basic/profiler.h"
+#include "memory/memops.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -25,7 +26,7 @@ func uuid uuid_from_bytes(const u8* bytes) {
     return value;
   }
   assert(bytes != NULL);
-  memcpy(value.bytes, bytes, size_of(value.bytes));
+  mem_cpy(value.bytes, bytes, size_of(value.bytes));
   profile_func_end;
   return value;
 }
@@ -49,7 +50,7 @@ func void uuid_get_bytes(uuid value, u8* dst) {
     return;
   }
   assert(dst != NULL);
-  memcpy(dst, value.bytes, size_of(value.bytes));
+  mem_cpy(dst, value.bytes, size_of(value.bytes));
   profile_func_end;
 }
 
@@ -86,12 +87,12 @@ func b32 uuid_is_zero(uuid value) {
 }
 
 func b32 uuid_equal(uuid lhs, uuid rhs) {
-  return memcmp(lhs.bytes, rhs.bytes, size_of(lhs.bytes)) == 0 ? true : false;
+  return mem_cmp(lhs.bytes, rhs.bytes, size_of(lhs.bytes)) == 0 ? true : false;
 }
 
 func i32 uuid_cmp(uuid lhs, uuid rhs) {
   profile_func_begin;
-  i32 res = memcmp(lhs.bytes, rhs.bytes, size_of(lhs.bytes));
+  i32 res = mem_cmp(lhs.bytes, rhs.bytes, size_of(lhs.bytes));
   profile_func_end;
   return res;
 }

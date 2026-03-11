@@ -9,6 +9,7 @@
 #include "input/msg.h"
 #include "input/msg_core.h"
 #include "../sdl3_include.h"
+#include "memory/memops.h"
 
 typedef struct thread_group_payload {
   thread_group_func entry;
@@ -142,7 +143,7 @@ func thread_group thread_group_create_impl(
     return NULL;
   }
 
-  SDL_zero(*group);
+  mem_zero(group, size_of(*group));
   group->threads = heap_alloc_array(hp, thread, count);
   if (group->threads == NULL) {
     thread_log_error("Failed to allocate thread group storage count=%u", count);

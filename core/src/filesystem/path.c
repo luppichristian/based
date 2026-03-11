@@ -8,6 +8,7 @@
 
 #include "strings/char.h"
 #include "basic/profiler.h"
+#include "memory/memops.h"
 
 #include <string.h>
 
@@ -324,7 +325,7 @@ func void path_remove_directory(path* src) {
     return;
   }
 
-  memmove(src->buf, src->buf + name_idx, src_len - name_idx);
+  mem_move(src->buf, src->buf + name_idx, src_len - name_idx);
   src->buf[src_len - name_idx] = '\0';
   profile_func_end;
 }

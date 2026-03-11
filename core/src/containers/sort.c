@@ -6,6 +6,7 @@
 #include "context/thread_ctx.h"
 #include "memory/scratch.h"
 #include "basic/profiler.h"
+#include "memory/memops.h"
 #include <string.h>
 
 typedef struct sort_range {
@@ -136,17 +137,17 @@ func void sort_merge_ranges(
     const void* lhs_ptr = sort_elem_ptr_const(base_ptr, lhs_idx, elem_size);
     const void* rhs_ptr = sort_elem_ptr_const(base_ptr, rhs_idx, elem_size);
     if (compare(lhs_ptr, rhs_ptr, user_data) <= 0) {
-      memcpy(sort_elem_ptr(tmp_ptr, out_idx, elem_size), lhs_ptr, elem_size);
+      mem_cpy(sort_elem_ptr(tmp_ptr, out_idx, elem_size), lhs_ptr, elem_size);
       ++lhs_idx;
     } else {
-      memcpy(sort_elem_ptr(tmp_ptr, out_idx, elem_size), rhs_ptr, elem_size);
+      mem_cpy(sort_elem_ptr(tmp_ptr, out_idx, elem_size), rhs_ptr, elem_size);
       ++rhs_idx;
     }
     ++out_idx;
   }
 
   while (lhs_idx < mid_idx) {
-    memcpy(
+    mem_cpy(
         sort_elem_ptr(tmp_ptr, out_idx, elem_size),
         sort_elem_ptr(base_ptr, lhs_idx, elem_size),
         elem_size);
@@ -155,7 +156,7 @@ func void sort_merge_ranges(
   }
 
   while (rhs_idx < right_idx) {
-    memcpy(
+    mem_cpy(
         sort_elem_ptr(tmp_ptr, out_idx, elem_size),
         sort_elem_ptr(base_ptr, rhs_idx, elem_size),
         elem_size);
@@ -163,7 +164,7 @@ func void sort_merge_ranges(
     ++out_idx;
   }
 
-  memcpy(
+  mem_cpy(
       sort_elem_ptr(base_ptr, left_idx, elem_size),
       sort_elem_ptr(tmp_ptr, left_idx, elem_size),
       (right_idx - left_idx) * elem_size);

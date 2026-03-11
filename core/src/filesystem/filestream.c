@@ -14,6 +14,7 @@
 
 #include "../sdl3_include.h"
 #include "basic/profiler.h"
+#include "memory/memops.h"
 
 #include <string.h>
 
@@ -40,7 +41,7 @@ func allocator filestream_allocator_resolve(void) {
 
 func filestream filestream_empty(void) {
   filestream stm;
-  memset(&stm, 0, size_of(stm));
+  mem_zero(&stm, size_of(stm));
   stm.archive_path = path_from_cstr("");
   return stm;
 }
@@ -244,7 +245,7 @@ func filestream filestream_open_archive(archive* arc, const path* src, u32 mode_
       return filestream_empty();
     }
 
-    memcpy(stm.memory_ptr, ent->data_ptr, ent->data_size);
+    mem_cpy(stm.memory_ptr, ent->data_ptr, ent->data_size);
     stm.memory_size = ent->data_size;
   }
 
@@ -425,7 +426,7 @@ func sz filestream_read(filestream* stm, void* dst, sz size) {
 
   available = stm->memory_size - stm->cursor;
   read_size = size < available ? size : available;
-  memcpy(dst, stm->memory_ptr + stm->cursor, read_size);
+  mem_cpy(dst, stm->memory_ptr + stm->cursor, read_size);
   stm->cursor += read_size;
   filestream_set_error(stm, FILESTREAM_ERROR_NONE);
   profile_func_end;
@@ -502,7 +503,7 @@ func sz filestream_write(filestream* stm, const void* src, sz size) {
     return 0;
   }
 
-  memcpy(stm->memory_ptr + stm->cursor, src, size);
+  mem_cpy(stm->memory_ptr + stm->cursor, src, size);
   stm->cursor = end_pos;
   if (stm->memory_size < end_pos) {
     stm->memory_size = end_pos;

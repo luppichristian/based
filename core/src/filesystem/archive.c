@@ -10,6 +10,7 @@
 #include "input/msg.h"
 #include "input/msg_core.h"
 #include "basic/profiler.h"
+#include "memory/memops.h"
 
 #include <string.h>
 
@@ -205,7 +206,7 @@ func b32 archive_assign_entry_bytes(archive* arc, archive_entry* ent, buffer dat
     return false;
   }
 
-  memcpy(data_ptr, data.ptr, data.size);
+  mem_cpy(data_ptr, data.ptr, data.size);
   ent->data_ptr = (u8*)data_ptr;
   ent->data_size = data.size;
   ent->data_capacity = data.size;
@@ -249,7 +250,7 @@ func b32 archive_add_empty_entry(archive* arc, const path* src, b32 is_directory
   }
 
   ent = &arc->entries[arc->entry_count];
-  memset(ent, 0, size_of(*ent));
+  mem_zero(ent, size_of(*ent));
   ent->item_path = archive_normalize_entry_path(src);
   ent->is_directory = is_directory;
   if (out_idx != NULL) {
@@ -307,7 +308,7 @@ func b32 archive_write_disk_bytes(const path* dst, const void* data_ptr, sz data
 func archive archive_create(allocator* opt_alloc) {
   profile_func_begin;
   archive arc;
-  memset(&arc, 0, size_of(arc));
+  mem_zero(&arc, size_of(arc));
   arc.opt_alloc = opt_alloc;
   thread_log_trace("Created archive opt_alloc=%p", (void*)opt_alloc);
   msg lifecycle_msg = {0};
@@ -318,7 +319,7 @@ func archive archive_create(allocator* opt_alloc) {
                                                      .object_ptr = &arc,
                                                  });
   if (!msg_post(&lifecycle_msg)) {
-    memset(&arc, 0, size_of(arc));
+    mem_zero(&arc, size_of(arc));
   }
   profile_func_end;
   return arc;
@@ -416,7 +417,7 @@ func b32 archive_remove(archive* arc, const path* src) {
 
   archive_reset_entry(arc, &arc->entries[item_idx]);
   if (item_idx + 1 < arc->entry_count) {
-    memmove(
+    mem_move(
         &arc->entries[item_idx],
         &arc->entries[item_idx + 1],
         (arc->entry_count - item_idx - 1) * size_of(archive_entry));
@@ -471,7 +472,7 @@ func b32 archive_read_all(const archive* arc, const path* src, allocator* alloc,
       profile_func_end;
       return false;
     }
-    memcpy(data_ptr, ent->data_ptr, ent->data_size);
+    mem_cpy(data_ptr, ent->data_ptr, ent->data_size);
   }
 
   out_data->ptr = data_ptr;
@@ -606,7 +607,7 @@ func b32 archive_load_file(archive* arc, const path* src) {
   }
   assert(zip_size == 0 || zip_ptr != NULL);
 
-  memset(&zip_archive, 0, size_of(zip_archive));
+  mem_zero(&zip_archive, size_of(zip_archive));
   if (!mz_zip_reader_init_mem(&zip_archive, zip_ptr, (size_t)zip_size, 0)) {
     thread_log_error("Failed to initialize zip reader path=%s", src->buf);
     archive_dealloc_bytes(arc->opt_alloc, zip_ptr);
@@ -710,7 +711,7 @@ func b32 archive_save_file(const archive* arc, const path* dst) {
   assert(arc->entry_count <= arc->entry_capacity);
   thread_log_trace("Saving archive file arc=%p dst=%s entries=%zu", (void*)arc, dst->buf, (size_t)arc->entry_count);
 
-  memset(&zip_archive, 0, size_of(zip_archive));
+  mem_zero(&zip_archive, size_of(zip_archive));
   if (!mz_zip_writer_init_heap(&zip_archive, 0, 0)) {
     thread_log_error("Failed to initialize zip writer dst=%s", dst->buf);
     profile_func_end;

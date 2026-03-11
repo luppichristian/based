@@ -842,6 +842,30 @@
 150: func sz heap_total_size(heap* hep);
 151: func sz heap_total_free(heap* hep);
 
+=== include\memory\memops.h ===
+13: func void mem_set8(void* ptr, u8 value, sz size);
+14: func void mem_set16(void* ptr, u16 value, sz count);
+15: func void mem_set32(void* ptr, u32 value, sz count);
+16: func void mem_set64(void* ptr, u64 value, sz count);
+18: func void mem_zero(void* ptr, sz size);
+20: func void* mem_cpy(void* dst, const void* src, sz size);
+21: func void* mem_move(void* dst, const void* src, sz size);
+22: func i32 mem_cmp(const void* lhs, const void* rhs, sz size);
+23: func void* mem_align_forward(void* ptr, sz align);
+24: func void* mem_align_backward(void* ptr, sz align);
+26: #define mem_set8_type(ptr, value, type) \
+28: #define mem_set8_array(ptr, value, count, type) \
+31: #define mem_set16_type(ptr, value) \
+33: #define mem_set16_array(ptr, value, count) \
+36: #define mem_set32_type(ptr, value) \
+38: #define mem_set32_array(ptr, value, count) \
+41: #define mem_set64_type(ptr, value) \
+43: #define mem_set64_array(ptr, value, count) \
+46: #define mem_zero_type(ptr, type) \
+48: #define mem_zero_array(ptr, type, count) \
+52: func force_inline up mem_align_forward_up(up ptr, sz align) {
+56: func force_inline up mem_align_backward_up(up ptr, sz align) {
+
 === include\memory\pool.h ===
 16: typedef struct pool_block {
 33: typedef struct pool {

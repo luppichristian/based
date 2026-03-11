@@ -5,6 +5,7 @@
 #include "basic/assert.h"
 #include "input/msg_core.h"
 #include "basic/profiler.h"
+#include "memory/memops.h"
 
 #include <string.h>
 
@@ -299,8 +300,8 @@ func b32 input_state_serialize(const input_state* src, void* dst, sz dst_cap, sz
       .reserved = 0,
   };
 
-  memcpy(dst, &header, size_of(header));
-  memcpy((u8*)dst + size_of(header), src, size_of(input_state));
+  mem_cpy(dst, &header, size_of(header));
+  mem_cpy((u8*)dst + size_of(header), src, size_of(input_state));
 
   if (out_size) {
     *out_size = total_size;
@@ -320,7 +321,7 @@ func b32 input_state_deserialize(const void* src, sz src_size, input_state* out_
   assert(out_state != NULL);
 
   input_state_blob_header header = {0};
-  memcpy(&header, src, size_of(header));
+  mem_cpy(&header, src, size_of(header));
 
   if (header.magic != INPUT_STATE_SERIALIZATION_MAGIC || header.version != INPUT_STATE_SERIALIZATION_VERSION ||
       header.payload_size != (u32)size_of(input_state)) {
@@ -328,7 +329,7 @@ func b32 input_state_deserialize(const void* src, sz src_size, input_state* out_
     return false;
   }
 
-  memcpy(out_state, (const u8*)src + size_of(header), size_of(input_state));
+  mem_cpy(out_state, (const u8*)src + size_of(header), size_of(input_state));
   profile_func_end;
   return true;
 }

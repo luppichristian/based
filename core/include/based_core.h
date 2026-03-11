@@ -32,6 +32,7 @@
 #include "memory/arena.h"
 #include "memory/buffer.h"
 #include "memory/heap.h"
+#include "memory/memops.h"
 #include "memory/pool.h"
 #include "memory/ring.h"
 #include "memory/scratch.h"

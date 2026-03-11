@@ -9,6 +9,7 @@
 #include "input/msg_core.h"
 #include "../sdl3_include.h"
 #include "basic/profiler.h"
+#include "memory/memops.h"
 
 // SDL_ThreadFunction is `int (SDLCALL *)(void*)`.
 // SDLCALL is __cdecl on Windows, which is the default C calling convention,
@@ -109,7 +110,7 @@ func thread thread_create_impl(
     return NULL;
   }
 
-  SDL_zero(*payload);
+  mem_zero(payload, size_of(*payload));
   payload->entry = entry;
   payload->arg = arg;
   payload->setup = setup;

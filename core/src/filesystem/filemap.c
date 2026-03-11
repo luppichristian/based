@@ -11,6 +11,7 @@
 #include "input/msg.h"
 #include "input/msg_core.h"
 #include "basic/profiler.h"
+#include "memory/memops.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -38,7 +39,7 @@ func void filemap_set_error(filemap_error error_code) {
 
 func filemap filemap_empty(void) {
   filemap map;
-  memset(&map, 0, size_of(map));
+  mem_zero(&map, size_of(map));
   map.source_path = path_from_cstr("");
   return map;
 }

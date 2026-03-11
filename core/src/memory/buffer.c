@@ -4,6 +4,7 @@
 #include "memory/buffer.h"
 #include "basic/assert.h"
 #include "basic/profiler.h"
+#include "memory/memops.h"
 #include <string.h>
 
 // =========================================================================
@@ -104,7 +105,7 @@ func b32 buffer_cmp(buffer aaa, buffer bbb) {
     return true;
   }
   profile_func_end;
-  return memcmp(aaa.ptr, bbb.ptr, aaa.size) == 0 ? true : false;
+  return mem_cmp(aaa.ptr, bbb.ptr, aaa.size) == 0 ? true : false;
 }
 
 func b32 buffer_cmp_common(buffer aaa, buffer bbb) {
@@ -115,7 +116,7 @@ func b32 buffer_cmp_common(buffer aaa, buffer bbb) {
     return true;
   }
   profile_func_end;
-  return memcmp(aaa.ptr, bbb.ptr, common_size) == 0 ? true : false;
+  return mem_cmp(aaa.ptr, bbb.ptr, common_size) == 0 ? true : false;
 }
 
 func void* buffer_get_ptr(buffer buff, sz offset) {
@@ -144,37 +145,25 @@ func void buffer_set8(buffer buff, u8 value) {
     profile_func_end;
     return;
   }
-  memset(buff.ptr, value, buff.size);
+  mem_set8(buff.ptr, value, buff.size);
   profile_func_end;
 }
 
 func void buffer_set16(buffer buff, u16 value) {
   profile_func_begin;
-  u16* data = (u16*)buff.ptr;
-  sz count = buff.size / size_of(u16);
-  for (sz idx = 0; idx < count; idx++) {
-    data[idx] = value;
-  }
+  mem_set16(buff.ptr, value, buff.size / size_of(u16));
   profile_func_end;
 }
 
 func void buffer_set32(buffer buff, u32 value) {
   profile_func_begin;
-  u32* data = (u32*)buff.ptr;
-  sz count = buff.size / size_of(u32);
-  for (sz idx = 0; idx < count; idx++) {
-    data[idx] = value;
-  }
+  mem_set32(buff.ptr, value, buff.size / size_of(u32));
   profile_func_end;
 }
 
 func void buffer_set64(buffer buff, u64 value) {
   profile_func_begin;
-  u64* data = (u64*)buff.ptr;
-  sz count = buff.size / size_of(u64);
-  for (sz idx = 0; idx < count; idx++) {
-    data[idx] = value;
-  }
+  mem_set64(buff.ptr, value, buff.size / size_of(u64));
   profile_func_end;
 }
 
@@ -184,6 +173,6 @@ func void buffer_zero(buffer buff) {
     profile_func_end;
     return;
   }
-  memset(buff.ptr, 0, buff.size);
+  mem_zero(buff.ptr, buff.size);
   profile_func_end;
 }

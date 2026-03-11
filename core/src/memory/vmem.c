@@ -6,6 +6,7 @@
 #include "basic/env_defines.h"
 #include "basic/utility_defines.h"
 #include "basic/profiler.h"
+#include "memory/memops.h"
 #include <string.h>
 
 typedef struct vmem_stats_state {
@@ -375,7 +376,7 @@ func void* vmem_calloc(sz count, sz size) {
   sz total_size = count * size;
   void* ptr = vmem_alloc(total_size);
   if (ptr) {
-    memset(ptr, 0, total_size);
+    mem_zero(ptr, total_size);
   }
   profile_func_end;
   return ptr;
@@ -410,7 +411,7 @@ func void* vmem_realloc(void* ptr, sz old_size, sz new_size) {
   }
 
   sz copy_size = old_header->info.user_size < new_size ? old_header->info.user_size : new_size;
-  memcpy(new_ptr, ptr, copy_size);
+  mem_cpy(new_ptr, ptr, copy_size);
   (void)vmem_free(ptr, 0);
   profile_func_end;
   return new_ptr;

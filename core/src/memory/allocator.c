@@ -4,6 +4,7 @@
 #include "memory/allocator.h"
 #include "basic/assert.h"
 #include "basic/profiler.h"
+#include "memory/memops.h"
 #include <string.h>
 
 func void* _allocator_alloc(allocator alloc, sz size, callsite site) {
@@ -31,7 +32,7 @@ func void* _allocator_calloc(allocator alloc, sz count, sz size, callsite site) 
   sz total_size = count * size;
   void* ptr = _allocator_alloc(alloc, total_size, site);
   if (ptr) {
-    memset(ptr, 0, total_size);
+    mem_zero(ptr, total_size);
   }
   profile_func_end;
   return ptr;

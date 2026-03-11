@@ -5,6 +5,7 @@
 #include "basic/assert.h"
 #include "based_core.h"
 #include "basic/profiler.h"
+#include "memory/memops.h"
 #include <string.h>
 
 // =========================================================================
@@ -145,7 +146,7 @@ func hash_map_slot* hash_map_find_slot(hash_map* map, u64 key) {
 func hash_map hash_map_create(sz cap, allocator alloc) {
   profile_func_begin;
   hash_map map;
-  memset(&map, 0, size_of(map));
+  mem_zero(&map, size_of(map));
   map.alloc = alloc;
   if (map.alloc.alloc_fn == NULL || map.alloc.dealloc_fn == NULL) {
     map.alloc = thread_get_allocator();
@@ -188,7 +189,7 @@ func void hash_map_clear(hash_map* map) {
     return;
   }
   if (map->slots) {
-    memset(map->slots, 0, map->cap * size_of(hash_map_slot));
+    mem_zero(map->slots, map->cap * size_of(hash_map_slot));
   }
   map->count = 0;
   profile_func_end;
@@ -291,7 +292,7 @@ func b32 hash_map_remove(hash_map* map, u64 key) {
         sz nxt = (cur + 1) & (map->cap - 1);
         hash_map_slot* next_slot = &map->slots[nxt];
         if (!next_slot->occupied || next_slot->probe_dist == 0) {
-          memset(&map->slots[cur], 0, size_of(hash_map_slot));
+          mem_zero(&map->slots[cur], size_of(hash_map_slot));
           break;
         }
         map->slots[cur] = *next_slot;

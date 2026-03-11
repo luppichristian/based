@@ -49,7 +49,10 @@ typedef struct arena {
 //                    pass a zeroed allocator for fixed-buffer-only operation.
 // opt_mutex        — mutex that guards every operation; pass NULL to disable locking.
 // default_block_sz — byte size for automatically grown blocks (ignored when parent has no alloc_fn).
-func arena arena_create(allocator parent_alloc, mutex opt_mutex, sz default_block_sz);
+func arena arena_create(
+    allocator parent_alloc,
+    mutex opt_mutex,
+    sz default_block_sz);
 
 // Creates a new arena and internally allocates a dedicated mutex for thread safety.
 // The mutex is destroyed automatically by arena_destroy.

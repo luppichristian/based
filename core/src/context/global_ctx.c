@@ -7,6 +7,7 @@
 #include "input/msg_core.h"
 #include "threads/atomics.h"
 #include "basic/profiler.h"
+#include "memory/memops.h"
 
 #include <string.h>
 
@@ -56,7 +57,7 @@ func b32 global_ctx_init(ctx_setup setup) {
       return true;
     }
 
-    memset(&process_global_ctx, 0, size_of(process_global_ctx));
+    mem_zero(&process_global_ctx, size_of(process_global_ctx));
     process_global_ctx.mutex_handle = mutex_create();
     ctx_setup global_setup = setup;
     global_setup.allocator_mutex = process_global_ctx.mutex_handle;
@@ -67,7 +68,7 @@ func b32 global_ctx_init(ctx_setup setup) {
       if (process_global_ctx.mutex_handle) {
         mutex_destroy(process_global_ctx.mutex_handle);
       }
-      memset(&process_global_ctx, 0, size_of(process_global_ctx));
+      mem_zero(&process_global_ctx, size_of(process_global_ctx));
       atomic_fence_release();
       atomic_i32_set(&process_global_ctx_init, 0);
       profile_func_end;
@@ -132,7 +133,7 @@ func b32 global_ctx_quit(void) {
     mutex_destroy(wrapper_mutex);
   }
 
-  memset(&process_global_ctx, 0, size_of(process_global_ctx));
+  mem_zero(&process_global_ctx, size_of(process_global_ctx));
   global_user_data_access_set_all_local(false);
   atomic_fence_release();
   atomic_i32_set(&process_global_ctx_init, 0);

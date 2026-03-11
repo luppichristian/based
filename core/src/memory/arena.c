@@ -9,6 +9,7 @@
 #include "input/msg_core.h"
 #include "basic/utility_defines.h"
 #include "basic/profiler.h"
+#include "memory/memops.h"
 #include <string.h>
 
 // =========================================================================
@@ -41,8 +42,8 @@ func void arena_chain_block(arena* arn, arena_block* blk) {
 func void* arena_block_alloc(arena_block* blk, sz size, sz align) {
   profile_func_begin;
   u8* base = (u8*)blk + blk->used;
-  sz pad = (sz)(align_up((up)base, align) - (up)base);
-  u8* aligned = base + pad;
+  u8* aligned = (u8*)mem_align_forward(base, align);
+  sz pad = (sz)(aligned - base);
   sz avail = blk->size - blk->used;
   if (pad > avail || size > avail - pad) {
     profile_func_end;
@@ -111,7 +112,7 @@ func void* arena_realloc_callback(
 func arena arena_create(allocator parent_alloc, mutex opt_mutex, sz default_block_sz) {
   profile_func_begin;
   arena arn;
-  memset(&arn, 0, size_of(arn));
+  mem_zero(&arn, size_of(arn));
   arn.parent = parent_alloc;
   if (arn.parent.alloc_fn == NULL || arn.parent.dealloc_fn == NULL) {
     arn.parent = thread_get_allocator();
@@ -356,7 +357,7 @@ func void* _arena_realloc(
     result = _arena_alloc(arn, new_size, align, site);
     if (result) {
       sz copy_sz = old_size < new_size ? old_size : new_size;
-      memcpy(result, ptr, copy_sz);
+      mem_cpy(result, ptr, copy_sz);
     }
   }
 

@@ -4,6 +4,7 @@
 #pragma once
 
 #include "../basic/primitive_types.h"
+#include "memops.h"
 
 // =========================================================================
 c_begin;

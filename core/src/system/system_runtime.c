@@ -6,6 +6,7 @@
 #include "context/thread_ctx.h"
 #include "basic/env_defines.h"
 #include "basic/profiler.h"
+#include "memory/memops.h"
 
 #include <stddef.h>
 #include <string.h>
@@ -171,11 +172,11 @@ func b32 system_runtime_query(system_runtime_info* out_info) {
   }
   assert(out_info != NULL);
 
-  memset(out_info, 0, size_of(*out_info));
+  mem_zero(out_info, size_of(*out_info));
 
 #if defined(PLATFORM_WINDOWS)
   MEMORYSTATUSEX memory_status;
-  memset(&memory_status, 0, size_of(memory_status));
+  mem_zero(&memory_status, size_of(memory_status));
   memory_status.dwLength = size_of(memory_status);
   if (GlobalMemoryStatusEx(&memory_status) == 0) {
     thread_log_error("Failed to query Windows memory status");
@@ -188,7 +189,7 @@ func b32 system_runtime_query(system_runtime_info* out_info) {
   out_info->memory_used = out_info->memory_total - out_info->memory_available;
 
   PROCESS_MEMORY_COUNTERS memory_counters;
-  memset(&memory_counters, 0, size_of(memory_counters));
+  mem_zero(&memory_counters, size_of(memory_counters));
   get_process_memory_info_fn get_memory_info = NULL;
   HMODULE psapi_module = NULL;
   HMODULE kernel_module = GetModuleHandleA("kernel32.dll");
@@ -275,7 +276,7 @@ func b32 system_runtime_query(system_runtime_info* out_info) {
   }
 
   struct rusage usage_info;
-  memset(&usage_info, 0, size_of(usage_info));
+  mem_zero(&usage_info, size_of(usage_info));
   if (getrusage(RUSAGE_SELF, &usage_info) == 0) {
     out_info->process_memory_peak = (sz)((u64)usage_info.ru_maxrss * 1024ULL);
   } else {

@@ -8,6 +8,7 @@
 #include "input/msg.h"
 #include "input/msg_core.h"
 #include "basic/profiler.h"
+#include "memory/memops.h"
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -23,7 +24,7 @@ func log_state* log_state_resolve(log_state* state) {
 
 func void log_frame_reset(log_frame* frame) {
   if (frame) {
-    memset(frame, 0, size_of(*frame));
+    mem_zero(frame, size_of(*frame));
   }
 }
 
@@ -76,7 +77,7 @@ func log_msg* log_msg_create(log_state* state, log_level level, callsite site, c
   msg->level = level;
   msg->site = site;
   msg->text = (cstr8)(msg + 1);
-  memcpy((void*)msg->text, text, text_len + 1);
+  mem_cpy((void*)msg->text, text, text_len + 1);
   profile_func_end;
   return msg;
 }
@@ -214,7 +215,7 @@ func b32 log_state_init(log_state* state, b32 use_mutex, allocator alloc) {
   }
   assert(use_mutex == 0 || use_mutex == 1);
 
-  memset(state, 0, size_of(*state));
+  mem_zero(state, size_of(*state));
   state->level = LOG_LEVEL_DEFAULT;
   state->arena_alloc = arena_create(alloc, NULL, LOG_STATE_ARENA_MIN_SIZE);
   state->root_frame = &state->root_frame_storage;
@@ -267,7 +268,7 @@ func void log_state_quit(log_state* state) {
   log_state_unlock(state);
 
   mutex_destroy(state->mutex_handle);
-  memset(state, 0, size_of(*state));
+  mem_zero(state, size_of(*state));
   profile_func_end;
 }
 

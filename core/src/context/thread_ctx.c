@@ -8,6 +8,7 @@
 #include "input/msg_core.h"
 #include "threads/thread_current.h"
 #include "basic/profiler.h"
+#include "memory/memops.h"
 
 #include <string.h>
 
@@ -130,16 +131,16 @@ func b32 thread_ctx_init(ctx_setup setup) {
   if (!msg_post(&thread_ctx_msg)) {
     thread_log_error("Thread context init was cancelled thread_id=%llu",
                      (unsigned long long)thread_id());
-    memset(&thread_ctx, 0, size_of(thread_ctx));
+    mem_zero(&thread_ctx, size_of(thread_ctx));
     profile_func_end;
     return false;
   }
 
-  memset(&thread_ctx, 0, size_of(thread_ctx));
+  mem_zero(&thread_ctx, size_of(thread_ctx));
   if (!ctx_init(&thread_ctx, setup)) {
     thread_log_error("Failed to initialize thread context thread_id=%llu",
                      (unsigned long long)thread_id());
-    memset(&thread_ctx, 0, size_of(thread_ctx));
+    mem_zero(&thread_ctx, size_of(thread_ctx));
     profile_func_end;
     return false;
   }

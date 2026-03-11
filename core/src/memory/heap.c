@@ -9,6 +9,7 @@
 #include "input/msg_core.h"
 #include "basic/utility_defines.h"
 #include "basic/profiler.h"
+#include "memory/memops.h"
 #include <string.h>
 
 // =========================================================================
@@ -32,7 +33,7 @@ func void heap_write_back_ref(void* user_ptr, heap_chunk* chunk) {
   profile_func_begin;
   heap_chunk_ref ref;
   ref.ptr = chunk;
-  memcpy((u8*)user_ptr - HEAP_BACK_REF_SZ, ref.bytes, HEAP_BACK_REF_SZ);
+  mem_cpy((u8*)user_ptr - HEAP_BACK_REF_SZ, ref.bytes, HEAP_BACK_REF_SZ);
   profile_func_end;
 }
 
@@ -40,7 +41,7 @@ func void heap_write_back_ref(void* user_ptr, heap_chunk* chunk) {
 func heap_chunk* heap_read_back_ref(void* user_ptr) {
   profile_func_begin;
   heap_chunk_ref ref;
-  memcpy(ref.bytes, (u8*)user_ptr - HEAP_BACK_REF_SZ, HEAP_BACK_REF_SZ);
+  mem_cpy(ref.bytes, (u8*)user_ptr - HEAP_BACK_REF_SZ, HEAP_BACK_REF_SZ);
   profile_func_end;
   return ref.ptr;
 }
@@ -115,8 +116,8 @@ func void* heap_try_alloc(heap* hep, sz size, sz eff_align) {
   while (chunk) {
     u8* raw = (u8*)(chunk + 1);
     // Advance past the back-reference slot, then align up.
-    sz pad = (sz)(align_up((up)(raw + HEAP_BACK_REF_SZ), eff_align) - (up)raw);
-    u8* usr = raw + pad;
+    u8* usr = (u8*)mem_align_forward(raw + HEAP_BACK_REF_SZ, eff_align);
+    sz pad = (sz)(usr - raw);
     sz avail = chunk->size;
 
     if (pad <= avail && size <= avail - pad) {
@@ -201,7 +202,7 @@ func void* heap_realloc_callback(
 func heap heap_create(allocator parent_alloc, mutex opt_mutex, sz default_block_sz) {
   profile_func_begin;
   heap hep;
-  memset(&hep, 0, size_of(hep));
+  mem_zero(&hep, size_of(hep));
   hep.parent = parent_alloc;
   if (hep.parent.alloc_fn == NULL || hep.parent.dealloc_fn == NULL) {
     hep.parent = thread_get_allocator();
@@ -486,7 +487,7 @@ func void* _heap_realloc(
     result = _heap_alloc(hep, new_size, align, site);
     if (result) {
       sz copy_sz = old_size < new_size ? old_size : new_size;
-      memcpy(result, ptr, copy_sz);
+      mem_cpy(result, ptr, copy_sz);
       _heap_dealloc(hep, ptr, site);
     }
   }

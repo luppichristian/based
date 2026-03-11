@@ -7,6 +7,7 @@
 #include "input/msg.h"
 #include "input/msg_core.h"
 #include "basic/profiler.h"
+#include "memory/memops.h"
 #include <string.h>
 
 // =========================================================================
@@ -16,7 +17,7 @@
 func ring ring_create(void* ptr, sz capacity, mutex opt_mutex) {
   profile_func_begin;
   ring rng;
-  memset(&rng, 0, size_of(rng));
+  mem_zero(&rng, size_of(rng));
   rng.ptr = (u8*)ptr;
   rng.capacity = capacity;
   rng.opt_mutex = opt_mutex;
@@ -44,7 +45,7 @@ func ring ring_create_mutexed(void* ptr, sz capacity) {
 func ring ring_create_alloc(allocator parent_alloc, sz capacity, mutex opt_mutex) {
   profile_func_begin;
   ring rng;
-  memset(&rng, 0, size_of(rng));
+  mem_zero(&rng, size_of(rng));
   rng.parent = parent_alloc;
   rng.capacity = capacity;
   rng.opt_mutex = opt_mutex;
@@ -175,10 +176,10 @@ func void ring_copy_out(ring* rng, sz ring_offset, void* dst, sz byte_count) {
   sz to_end = rng->capacity - ring_offset;
   u8* out_bytes = (u8*)dst;
   if (byte_count <= to_end) {
-    memcpy(out_bytes, rng->ptr + ring_offset, byte_count);
+    mem_cpy(out_bytes, rng->ptr + ring_offset, byte_count);
   } else {
-    memcpy(out_bytes, rng->ptr + ring_offset, to_end);
-    memcpy(out_bytes + to_end, rng->ptr, byte_count - to_end);
+    mem_cpy(out_bytes, rng->ptr + ring_offset, to_end);
+    mem_cpy(out_bytes + to_end, rng->ptr, byte_count - to_end);
   }
   profile_func_end;
 }
@@ -190,10 +191,10 @@ func void ring_copy_in(ring* rng, sz ring_offset, void* src, sz byte_count) {
   sz to_end = rng->capacity - ring_offset;
   u8* src_bytes = (u8*)src;
   if (byte_count <= to_end) {
-    memcpy(rng->ptr + ring_offset, src_bytes, byte_count);
+    mem_cpy(rng->ptr + ring_offset, src_bytes, byte_count);
   } else {
-    memcpy(rng->ptr + ring_offset, src_bytes, to_end);
-    memcpy(rng->ptr, src_bytes + to_end, byte_count - to_end);
+    mem_cpy(rng->ptr + ring_offset, src_bytes, to_end);
+    mem_cpy(rng->ptr, src_bytes + to_end, byte_count - to_end);
   }
   profile_func_end;
 }

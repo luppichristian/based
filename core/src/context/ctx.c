@@ -6,6 +6,7 @@
 #include "basic/utility_defines.h"
 #include "context/thread_ctx.h"
 #include "basic/profiler.h"
+#include "memory/memops.h"
 
 #include <string.h>
 
@@ -101,13 +102,13 @@ func b32 ctx_init(ctx* context, ctx_setup setup) {
     return false;
   }
 
-  memset(context, 0, size_of(*context));
+  mem_zero(context, size_of(*context));
   context->setup = setup;
   if (!log_state_init(&context->log, setup.use_log_mutex, setup.main_allocator)) {
     thread_log_error("Failed to initialize context log state context=%p use_log_mutex=%u",
                      (void*)context,
                      (u32)setup.use_log_mutex);
-    memset(context, 0, size_of(*context));
+    mem_zero(context, size_of(*context));
     profile_func_end;
     return false;
   }
@@ -158,7 +159,7 @@ func b32 ctx_quit(ctx* context) {
     arena_destroy(&context->perm_arena);
   }
   thread_log_trace("Context released context=%p", (void*)context);
-  memset(context, 0, size_of(*context));
+  mem_zero(context, size_of(*context));
   profile_func_end;
   return true;
 }

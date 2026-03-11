@@ -9,6 +9,7 @@
 #include "input/msg_core.h"
 #include "basic/utility_defines.h"
 #include "basic/profiler.h"
+#include "memory/memops.h"
 #include <string.h>
 
 // =========================================================================
@@ -27,7 +28,7 @@ func void pool_slot_write_next(void* slot_ptr, void* next_ptr) {
   profile_func_begin;
   pool_slot_ref ref;
   ref.ptr = next_ptr;
-  memcpy(slot_ptr, ref.bytes, size_of(void*));
+  mem_cpy(slot_ptr, ref.bytes, size_of(void*));
   profile_func_end;
 }
 
@@ -35,7 +36,7 @@ func void pool_slot_write_next(void* slot_ptr, void* next_ptr) {
 func void* pool_slot_read_next(void* slot_ptr) {
   profile_func_begin;
   pool_slot_ref ref;
-  memcpy(ref.bytes, slot_ptr, size_of(void*));
+  mem_cpy(ref.bytes, slot_ptr, size_of(void*));
   profile_func_end;
   return ref.ptr;
 }
@@ -57,8 +58,8 @@ func void pool_block_carve(pool* pol, pool_block* blk) {
   // Ensure each slot is aligned for both the object type and the free-list pointer.
   sz eff_align = pol->object_align > align_of(void*) ? pol->object_align : align_of(void*);
   u8* base = (u8*)(blk + 1);
-  sz pad = (sz)(align_up((up)base, eff_align) - (up)base);
-  u8* slot = base + pad;
+  u8* slot = (u8*)mem_align_forward(base, eff_align);
+  sz pad = (sz)(slot - base);
   sz header_used = size_of(pool_block) + pad;
   sz avail = blk->size > header_used ? blk->size - header_used : 0;
 
@@ -132,7 +133,7 @@ func pool pool_create(
     sz object_align) {
   profile_func_begin;
   pool pol;
-  memset(&pol, 0, size_of(pol));
+  mem_zero(&pol, size_of(pol));
   pol.parent = parent_alloc;
   if (pol.parent.alloc_fn == NULL || pol.parent.dealloc_fn == NULL) {
     pol.parent = thread_get_allocator();

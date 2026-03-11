@@ -1,1 +1,0 @@
-- dont use strncpy, SDL_zero
