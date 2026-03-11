@@ -15,16 +15,16 @@
 
 // Runtime entry implementation this wrapper dispatches to.
 #    ifdef __cplusplus
-extern "C" int ENTRY_FUNCTION_NAME(int argc, char** argv, allocator alloc, ENTRY_CALLBACKS_TYPE callbacks);
+extern "C" int ENTRY_FUNCTION_NAME(int argc, char** argv, ctx_setup setup, ENTRY_CALLBACKS_TYPE callbacks);
 #    else
-int ENTRY_FUNCTION_NAME(int argc, char** argv, allocator alloc, ENTRY_CALLBACKS_TYPE callbacks);
+int ENTRY_FUNCTION_NAME(int argc, char** argv, ctx_setup setup, ENTRY_CALLBACKS_TYPE callbacks);
 #    endif
 
 // Single bootstrap macro so all platform entry variants follow the same path:
 // - resolve allocator override
 // - materialize compile-time callback bundle
 // - call runtime entry implementation
-#    define ENTRY_BOOT(argc, argv) ENTRY_FUNCTION_NAME((argc), (argv), ENTRY_GET_GLOBAL_ALLOCATOR(), ENTRY_CALLBACKS_INIT())
+#    define ENTRY_BOOT(argc, argv) ENTRY_FUNCTION_NAME((argc), (argv), ENTRY_GET_GLOBAL_CTX_SETUP(), ENTRY_CALLBACKS_INIT())
 
 #    if defined(PLATFORM_WINDOWS) && !defined(ENTRY_WINDOWS_CONSOLE)
 

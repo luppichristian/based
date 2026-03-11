@@ -18,7 +18,7 @@ func void msg_notify_internal_listeners(const msg* src);
 // =========================================================================
 
 global_var cmdline entry_cmdline_current = {0};
-global_var allocator entry_start_allocator = {0};
+global_var ctx_setup entry_start_setup = {0};
 
 func void* entry_pipeline_malloc(sz size) {
   profile_func_begin;
@@ -71,7 +71,11 @@ func cmdline entry_get_cmdline(void) {
 }
 
 func allocator entry_get_allocator(void) {
-  return entry_start_allocator;
+  return entry_start_setup.main_allocator;
+}
+
+func ctx_setup entry_get_ctx_setup(void) {
+  return entry_start_setup;
 }
 
 // =========================================================================
@@ -96,7 +100,7 @@ func b32 entry_init(cmdline cmdline) {
   global_log_info("Initializing entry runtime");
   global_log_trace("Entry init state cmdline_count=%zu has_allocator=%u has_global_ctx=%u has_thread_ctx=%u",
                    (size_t)cmdline.count,
-                   (u32)(entry_start_allocator.alloc_fn != NULL),
+                   (u32)(entry_start_setup.main_allocator.alloc_fn != NULL),
                    (u32)global_ctx_is_init(),
                    (u32)thread_ctx_is_init());
 
@@ -130,7 +134,7 @@ func b32 entry_init(cmdline cmdline) {
   global_log_info("SDL initialized");
 
   global_log_verbose("Initializing global context");
-  if (!global_ctx_init(entry_start_allocator)) {
+  if (!global_ctx_init(entry_start_setup)) {
     global_log_error("Global context initialization failed");
     profile_func_end;
     return false;
@@ -138,7 +142,9 @@ func b32 entry_init(cmdline cmdline) {
 
   global_log_info("Global context initialized");
   global_log_verbose("Initializing thread context");
-  if (!thread_ctx_init(global_get_allocator())) {
+  ctx_setup thread_setup = entry_start_setup;
+  thread_setup.main_allocator = global_get_allocator();
+  if (!thread_ctx_init(thread_setup)) {
     global_log_error("Thread context initialization failed");
     profile_func_end;
     return false;
@@ -173,19 +179,23 @@ func void entry_quit(void) {
   if (!has_thread_ctx && !has_global_ctx && !has_sdl) {
     global_log_verbose("Entry runtime already shut down");
     entry_cmdline_current = (cmdline) {0};
-    entry_start_allocator = (allocator) {0};
+    entry_start_setup = (ctx_setup) {0};
     profile_func_end;
     return;
   }
 
   if (has_thread_ctx) {
     thread_log_verbose("Shutting down thread context");
-    thread_ctx_quit();
+    if (!thread_ctx_quit()) {
+      thread_log_error("Failed shutting thread context");
+    }
   }
 
   if (has_global_ctx) {
     global_log_verbose("Shutting down global context");
-    global_ctx_quit();
+    if (!global_ctx_quit()) {
+      thread_log_error("Failed shutting global context");
+    }
   }
 
   if (has_sdl) {
@@ -307,10 +317,10 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
   return event->type == SDL_EVENT_QUIT ? SDL_APP_SUCCESS : SDL_APP_CONTINUE;
 }
 
-int main_app(int argc, char** argv, allocator alloc, entry_app_callbacks callbacks) {
+int main_app(int argc, char** argv, ctx_setup setup, entry_app_callbacks callbacks) {
   profile_func_begin;
   global_log_info("Starting app runtime argc=%d", argc);
-  entry_start_allocator = alloc;
+  entry_start_setup = setup;
   app_callbacks = callbacks;
   entry_cmdline_current = cmdline_build((sz)argc, (c8**)argv);
   int res = SDL_EnterAppMainCallbacks(argc, argv, SDL_AppInit, SDL_AppIterate, SDL_AppEvent, SDL_AppQuit);
@@ -352,10 +362,10 @@ int main_run_internal(int argc, char** argv) {
   return result ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
-int main_run(int argc, char** argv, allocator alloc, entry_run_callbacks callbacks) {
+int main_run(int argc, char** argv, ctx_setup setup, entry_run_callbacks callbacks) {
   profile_func_begin;
   global_log_info("Starting run runtime argc=%d", argc);
-  entry_start_allocator = alloc;
+  entry_start_setup = setup;
   run_callbacks = callbacks;
   entry_cmdline_current = cmdline_build((sz)argc, (c8**)argv);
   int res = SDL_RunApp(argc, argv, main_run_internal, NULL);

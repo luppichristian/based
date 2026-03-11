@@ -94,7 +94,7 @@ TEST(threads_mutex_test, recursive_lock_by_different_thread) {
   atomic_u32 done = {0};
   mutex_lock_ctx ctx = {mtx, &ready, &done};
 
-  thread thd = thread_create(mutex_lock_entry, &ctx, (allocator) {0});
+  thread thd = thread_create(mutex_lock_entry, &ctx, (ctx_setup) {0});
   EXPECT_NE(0, thread_is_valid(thd));
 
   while (atomic_u32_get(&ready) == 0) {
@@ -116,8 +116,8 @@ TEST(threads_mutex_test, critical_section_protection) {
   constexpr i32 iterations = 100000;
   mutex_counter_ctx ctx = {mtx, &counter};
 
-  thread thd1 = thread_create(mutex_counter_entry, &ctx, (allocator) {0});
-  thread thd2 = thread_create(mutex_counter_entry, &ctx, (allocator) {0});
+  thread thd1 = thread_create(mutex_counter_entry, &ctx, (ctx_setup) {0});
+  thread thd2 = thread_create(mutex_counter_entry, &ctx, (ctx_setup) {0});
   EXPECT_NE(0, thread_is_valid(thd1));
   EXPECT_NE(0, thread_is_valid(thd2));
 

@@ -65,8 +65,8 @@ TEST(threads_spinlock_test, critical_section_protection) {
   constexpr i32 iterations = 10000;
   spinlock_counter_ctx ctx = {lock, &counter};
 
-  thread thd1 = thread_create(spinlock_counter_entry, &ctx, (allocator) {0});
-  thread thd2 = thread_create(spinlock_counter_entry, &ctx, (allocator) {0});
+  thread thd1 = thread_create(spinlock_counter_entry, &ctx, (ctx_setup) {0});
+  thread thd2 = thread_create(spinlock_counter_entry, &ctx, (ctx_setup) {0});
   EXPECT_NE(0, thread_is_valid(thd1));
   EXPECT_NE(0, thread_is_valid(thd2));
 

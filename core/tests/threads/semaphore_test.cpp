@@ -47,7 +47,7 @@ TEST(threads_semaphore_test, wait_and_signal) {
   semaphore sem = semaphore_create(0);
   semaphore_wait_ctx ctx = {sem};
 
-  thread thd = thread_create(semaphore_wait_entry, &ctx, (allocator) {0});
+  thread thd = thread_create(semaphore_wait_entry, &ctx, (ctx_setup) {0});
   EXPECT_NE(0, thread_is_valid(thd));
 
   semaphore_signal(sem);

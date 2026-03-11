@@ -82,7 +82,7 @@ TEST(threads_condvar_test, signal_wakes_one) {
   atomic_u32 started = {0};
   condvar_signal_ctx ctx = {mtx, cond, &counter, &started};
 
-  thread thd = thread_create(condvar_signal_waiter_entry, &ctx, (allocator) {0});
+  thread thd = thread_create(condvar_signal_waiter_entry, &ctx, (ctx_setup) {0});
   EXPECT_NE(0, thread_is_valid(thd));
 
   while (atomic_u32_get(&started) == 0) {
@@ -111,7 +111,7 @@ TEST(threads_condvar_test, broadcast_wakes_all) {
   thread threads[num_waiters] = {0};
 
   for (i32 i = 0; i < num_waiters; i++) {
-    threads[i] = thread_create(condvar_broadcast_waiter_entry, &ctx, (allocator) {0});
+    threads[i] = thread_create(condvar_broadcast_waiter_entry, &ctx, (ctx_setup) {0});
     EXPECT_NE(0, thread_is_valid(threads[i]));
   }
 
@@ -154,7 +154,7 @@ TEST(threads_condvar_test, producer_consumer) {
   atomic_u32 producer_done = {0};
   condvar_producer_ctx ctx = {mtx, cond, &item, &producer_done};
 
-  thread producer = thread_create(condvar_producer_entry, &ctx, (allocator) {0});
+  thread producer = thread_create(condvar_producer_entry, &ctx, (ctx_setup) {0});
   EXPECT_NE(0, thread_is_valid(producer));
 
   i32 last_received = -1;

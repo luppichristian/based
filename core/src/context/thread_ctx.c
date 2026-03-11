@@ -33,6 +33,14 @@ func allocator thread_get_allocator(void) {
   return ctx_get_allocator(context);
 }
 
+func ctx_setup thread_get_setup(void) {
+  ctx* context = thread_ctx_get();
+  if (context == NULL) {
+    return global_get_setup();
+  }
+  return ctx_get_setup(context);
+}
+
 func log_state* thread_get_log_state(void) {
   log_state* state = ctx_get_log_state(thread_ctx_get());
   if (!state) {
@@ -101,16 +109,15 @@ func log_frame* thread_log_end_frame(u32 severity_mask) {
   return log_state_end_frame(thread_get_log_state(), severity_mask);
 }
 
-func b32 thread_ctx_init(allocator main_allocator) {
+func b32 thread_ctx_init(ctx_setup setup) {
   profile_func_begin;
-  if (!main_allocator.alloc_fn || thread_ctx.is_init) {
+  if (!setup.main_allocator.alloc_fn || thread_ctx.is_init) {
     thread_log_error("Invalid thread context initialization request has_alloc=%u is_init=%u",
-                     (u32)(main_allocator.alloc_fn != NULL),
+                     (u32)(setup.main_allocator.alloc_fn != NULL),
                      (u32)thread_ctx.is_init);
     profile_func_end;
     return false;
   }
-  assert(main_allocator.dealloc_fn != NULL);
 
   msg thread_ctx_msg = {0};
   thread_ctx_msg.type = MSG_CORE_TYPE_THREAD_CTX;
@@ -120,10 +127,16 @@ func b32 thread_ctx_init(allocator main_allocator) {
       .ctx_ptr = &thread_ctx,
   };
   msg_core_fill_thread_ctx(&thread_ctx_msg, &thread_ctx_data);
-  (void)msg_post(&thread_ctx_msg);
+  if (!msg_post(&thread_ctx_msg)) {
+    thread_log_error("Thread context init was cancelled thread_id=%llu",
+                     (unsigned long long)thread_id());
+    memset(&thread_ctx, 0, size_of(thread_ctx));
+    profile_func_end;
+    return false;
+  }
 
   memset(&thread_ctx, 0, size_of(thread_ctx));
-  if (!ctx_init(&thread_ctx, main_allocator, NULL, false)) {
+  if (!ctx_init(&thread_ctx, setup)) {
     thread_log_error("Failed to initialize thread context thread_id=%llu",
                      (unsigned long long)thread_id());
     memset(&thread_ctx, 0, size_of(thread_ctx));
@@ -136,11 +149,11 @@ func b32 thread_ctx_init(allocator main_allocator) {
   return true;
 }
 
-func void thread_ctx_quit(void) {
+func b32 thread_ctx_quit(void) {
   profile_func_begin;
   if (!thread_ctx.is_init) {
     profile_func_end;
-    return;
+    return false;
   }
 
   msg thread_ctx_msg = {0};
@@ -151,9 +164,15 @@ func void thread_ctx_quit(void) {
       .ctx_ptr = &thread_ctx,
   };
   msg_core_fill_thread_ctx(&thread_ctx_msg, &thread_ctx_data);
-  (void)msg_post(&thread_ctx_msg);
+  if (!msg_post(&thread_ctx_msg)) {
+    thread_log_error("Thread context quit was cancelled thread_id=%llu",
+                     (unsigned long long)thread_id());
+    profile_func_end;
+    return false;
+  }
 
   thread_log_trace("Thread context released thread_id=%llu", (unsigned long long)thread_id());
   ctx_quit(&thread_ctx);
   profile_func_end;
+  return true;
 }

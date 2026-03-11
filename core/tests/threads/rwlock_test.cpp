@@ -144,7 +144,7 @@ TEST(threads_rwlock_test, writer_excludes_reader) {
   atomic_u32 reader_can_proceed = {0};
   rwlock_writer_ctx ctx = {lock, &writer_active, &reader_can_proceed};
 
-  thread writer = thread_create(rwlock_writer_entry, &ctx, (allocator) {0});
+  thread writer = thread_create(rwlock_writer_entry, &ctx, (ctx_setup) {0});
   EXPECT_NE(0, thread_is_valid(writer));
 
   while (atomic_u32_get(&writer_active) == 0) {

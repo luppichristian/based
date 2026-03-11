@@ -20,14 +20,18 @@ func b32 thread_ctx_is_init(void);
 
 // Initializes the current thread's context. This is thread-local: each thread
 // that wants a context must call it for itself.
-func b32 thread_ctx_init(allocator main_allocator);
+func b32 thread_ctx_init(ctx_setup setup);
 
 // Destroys the current thread's context and releases owned resources.
-func void thread_ctx_quit(void);
+func b32 thread_ctx_quit(void);
 
 // Returns an allocator backed by the current thread's permanent heap.
 // If the context is not initialized, a zeroed allocator is returned.
 func allocator thread_get_allocator(void);
+
+// Returns the current thread context setup, or the global fallback setup when
+// this thread has no initialized context.
+func ctx_setup thread_get_setup(void);
 
 // Returns the current thread's log state, or the process-global fallback state
 // when this thread has no initialized context.

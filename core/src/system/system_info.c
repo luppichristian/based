@@ -30,30 +30,6 @@
 typedef LONG(WINAPI* rtl_get_version_fn)(void* version_info);
 #endif
 
-func void system_copy_string(c8* dst_ptr, sz dst_cap, cstr8 src_ptr) {
-  profile_func_begin;
-  if (dst_ptr == NULL || dst_cap == 0) {
-    profile_func_end;
-    return;
-  }
-  assert(dst_cap > 0);
-
-  dst_ptr[0] = '\0';
-  if (src_ptr == NULL) {
-    profile_func_end;
-    return;
-  }
-
-  sz src_len = cstr8_len(src_ptr);
-  if (src_len >= dst_cap) {
-    src_len = dst_cap - 1;
-  }
-
-  memcpy(dst_ptr, src_ptr, src_len);
-  dst_ptr[src_len] = '\0';
-  profile_func_end;
-}
-
 func cstr8 system_architecture_name(void) {
   profile_func_begin;
 #if defined(ARCH_X86_64)
@@ -92,7 +68,7 @@ func void system_query_windows_version(system_info* out_info) {
   HMODULE module_handle = GetModuleHandleA("ntdll.dll");
   if (module_handle == NULL) {
     thread_log_debug("Falling back to generic Windows version name");
-    system_copy_string(out_info->os_name, size_of(out_info->os_name), "Windows");
+    cstr8_copy(out_info->os_name, size_of(out_info->os_name), "Windows");
     profile_func_end;
     return;
   }
@@ -101,7 +77,7 @@ func void system_query_windows_version(system_info* out_info) {
       (rtl_get_version_fn)GetProcAddress(module_handle, "RtlGetVersion");
   if (get_version == NULL) {
     thread_log_debug("RtlGetVersion unavailable, using generic Windows version name");
-    system_copy_string(out_info->os_name, size_of(out_info->os_name), "Windows");
+    cstr8_copy(out_info->os_name, size_of(out_info->os_name), "Windows");
     profile_func_end;
     return;
   }
@@ -112,12 +88,12 @@ func void system_query_windows_version(system_info* out_info) {
 
   if (get_version(&version_info) != 0) {
     thread_log_warn("Failed to query Windows version through RtlGetVersion");
-    system_copy_string(out_info->os_name, size_of(out_info->os_name), "Windows");
+    cstr8_copy(out_info->os_name, size_of(out_info->os_name), "Windows");
     profile_func_end;
     return;
   }
 
-  system_copy_string(out_info->os_name, size_of(out_info->os_name), "Windows");
+  cstr8_copy(out_info->os_name, size_of(out_info->os_name), "Windows");
   cstr8_format(out_info->os_version,
                size_of(out_info->os_version),
                "%lu.%lu build %lu",
@@ -137,9 +113,9 @@ func b32 system_info_query(system_info* out_info) {
   assert(out_info != NULL);
 
   memset(out_info, 0, size_of(*out_info));
-  system_copy_string(out_info->architecture_name,
-                     size_of(out_info->architecture_name),
-                     system_architecture_name());
+  cstr8_copy(out_info->architecture_name,
+             size_of(out_info->architecture_name),
+             system_architecture_name());
 
 #if defined(PLATFORM_WINDOWS)
   SYSTEM_INFO native_info;
@@ -172,7 +148,7 @@ func b32 system_info_query(system_info* out_info) {
       cstr8_format(out_info->user_home, size_of(out_info->user_home), "%s%s", home_drive, home_part);
     }
   } else {
-    system_copy_string(out_info->user_home, size_of(out_info->user_home), home_path);
+    cstr8_copy(out_info->user_home, size_of(out_info->user_home), home_path);
   }
 
   thread_log_trace("Queried system info platform=windows arch=%s", out_info->architecture_name);
@@ -181,13 +157,13 @@ func b32 system_info_query(system_info* out_info) {
 #elif defined(PLATFORM_UNIX)
   struct utsname uname_info;
   if (uname(&uname_info) == 0) {
-    system_copy_string(out_info->os_name, size_of(out_info->os_name), uname_info.sysname);
+    cstr8_copy(out_info->os_name, size_of(out_info->os_name), uname_info.sysname);
     cstr8_format(out_info->os_version,
                  size_of(out_info->os_version),
                  "%s %s",
                  uname_info.release,
                  uname_info.version);
-    system_copy_string(out_info->computer_name, size_of(out_info->computer_name), uname_info.nodename);
+    cstr8_copy(out_info->computer_name, size_of(out_info->computer_name), uname_info.nodename);
   } else {
     thread_log_warn("Failed to query Unix uname information");
   }
@@ -203,12 +179,12 @@ func b32 system_info_query(system_info* out_info) {
   cstr8 user_name = getenv("USER");
   cstr8 home_path = getenv("HOME");
   if (user_name != NULL) {
-    system_copy_string(out_info->user_name, size_of(out_info->user_name), user_name);
+    cstr8_copy(out_info->user_name, size_of(out_info->user_name), user_name);
   } else {
     thread_log_debug("USER environment variable unavailable");
   }
   if (home_path != NULL) {
-    system_copy_string(out_info->user_home, size_of(out_info->user_home), home_path);
+    cstr8_copy(out_info->user_home, size_of(out_info->user_home), home_path);
   } else {
     thread_log_debug("HOME environment variable unavailable");
   }
@@ -217,10 +193,10 @@ func b32 system_info_query(system_info* out_info) {
     struct passwd* pass_info = getpwuid(geteuid());
     if (pass_info != NULL) {
       if (out_info->user_name[0] == '\0') {
-        system_copy_string(out_info->user_name, size_of(out_info->user_name), pass_info->pw_name);
+        cstr8_copy(out_info->user_name, size_of(out_info->user_name), pass_info->pw_name);
       }
       if (out_info->user_home[0] == '\0') {
-        system_copy_string(out_info->user_home, size_of(out_info->user_home), pass_info->pw_dir);
+        cstr8_copy(out_info->user_home, size_of(out_info->user_home), pass_info->pw_dir);
       }
     } else {
       thread_log_warn("Failed to query Unix passwd fallback information");
@@ -231,8 +207,8 @@ func b32 system_info_query(system_info* out_info) {
   profile_func_end;
   return true;
 #else
-  system_copy_string(out_info->os_name, size_of(out_info->os_name), "unknown");
-  system_copy_string(out_info->os_version, size_of(out_info->os_version), "unknown");
+  cstr8_copy(out_info->os_name, size_of(out_info->os_name), "unknown");
+  cstr8_copy(out_info->os_version, size_of(out_info->os_version), "unknown");
   thread_log_warn("System info query is unsupported on this platform");
   profile_func_end;
   return false;

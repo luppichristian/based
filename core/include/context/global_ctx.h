@@ -20,10 +20,10 @@ typedef struct global_ctx {
 
 // Initializes the process-global context singleton.
 // Returns true if already initialized.
-func b32 global_ctx_init(allocator main_allocator);
+func b32 global_ctx_init(ctx_setup setup);
 
 // Destroys the process-global context singleton.
-func void global_ctx_quit(void);
+func b32 global_ctx_quit(void);
 
 // Returns true when the global context singleton is initialized.
 func b32 global_ctx_is_init(void);
@@ -40,6 +40,7 @@ func void global_ctx_unlock(void);
 
 // Convenience wrappers for the shared context payload.
 func allocator global_get_allocator(void);
+func ctx_setup global_get_setup(void);
 func allocator global_get_main_allocator(void);
 func log_state* global_get_log_state(void);
 func arena* global_get_perm_arena(void);

@@ -16,13 +16,52 @@ c_begin;
 const_var sz CTX_USER_DATA_COUNT = 32;
 typedef sz ctx_user_data_idx;
 
+typedef struct ctx_setup {
+  // Parent allocator used to initialize log state and grow enabled allocators.
+  allocator main_allocator;
+
+  // Optional mutex shared by enabled arena/heap allocators.
+  mutex allocator_mutex;
+
+  // When true, the embedded log_state creates and owns its own mutex.
+  b32 use_log_mutex;
+
+  // Enables permanent and temporary arena allocators for this context.
+  b32 use_arena_allocs;
+
+  // Enables permanent and temporary heap allocators for this context.
+  b32 use_heap_allocs;
+
+  // Enables temporary allocators in addition to permanent ones.
+  b32 use_temp_allocs;
+
+  // Default block size used when growing the permanent arena.
+  sz perm_arena_block_size;
+
+  // Default block size used when growing the temporary arena.
+  sz temp_arena_block_size;
+
+  // Default block size used when growing the permanent heap.
+  sz perm_heap_block_size;
+
+  // Default block size used when growing the temporary heap.
+  sz temp_heap_block_size;
+} ctx_setup;
+
+// Checks if the current setup is valid for a context creation.
+func b32 ctx_setup_is_valid(ctx_setup* setup);
+
+// Fills missing setup fields with project defaults.
+// A zeroed setup enables arena, heap, and temp allocators by default.
+func void ctx_setup_fill_defaults(ctx_setup* setup);
+
 // Shared context payload used by both thread-local and global context wrappers.
 typedef struct ctx {
   // Set to true after ctx_init succeeds.
   b32 is_init;
 
-  // Parent allocator used to grow all context-owned allocators.
-  allocator main_allocator;
+  // Initialization settings used to configure the context-owned subsystems.
+  ctx_setup setup;
 
   // Long-lived bump allocator for context-affine scratch reclaimed in bulk.
   arena perm_arena;
@@ -43,13 +82,11 @@ typedef struct ctx {
   void* user_data[CTX_USER_DATA_COUNT];
 } ctx;
 
-// Initializes a context payload using main_allocator.
-// allocator_mutex is shared across the embedded allocators when non-NULL.
-// When use_log_mutex is true, the embedded log_state owns a mutex.
-func b32 ctx_init(ctx* context, allocator main_allocator, mutex allocator_mutex, b32 use_log_mutex);
+// Initializes a context payload
+func b32 ctx_init(ctx* context, ctx_setup setup);
 
 // Destroys a context payload and releases owned allocator resources.
-func void ctx_quit(ctx* context);
+func b32 ctx_quit(ctx* context);
 
 // Returns true if context is non-NULL and initialized.
 func b32 ctx_is_init(ctx* context);
@@ -57,6 +94,9 @@ func b32 ctx_is_init(ctx* context);
 // Returns an allocator backed by context->perm_heap.
 // Returns a zeroed allocator when context is invalid or uninitialized.
 func allocator ctx_get_allocator(ctx* context);
+
+// Returns the context initialization settings, or a zeroed setup when invalid.
+func ctx_setup ctx_get_setup(ctx* context);
 
 // Returns the embedded log_state pointer or NULL when uninitialized.
 func log_state* ctx_get_log_state(ctx* context);

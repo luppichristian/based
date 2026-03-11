@@ -17,7 +17,7 @@
 typedef struct thread_entry_payload {
   thread_func entry;
   void* arg;
-  allocator alloc;
+  ctx_setup setup;
 } thread_entry_payload;
 
 func i32 thread_entry_wrapper(void* raw) {
@@ -41,17 +41,25 @@ func i32 thread_entry_wrapper(void* raw) {
     return 1;
   }
 
-  if (!thread_ctx_init(payload->alloc)) {
-    thread_log_error("Could not initialize thread ctx");
-    profile_func_end;
-    return 1;
+  if (payload->setup.main_allocator.alloc_fn) {
+    if (!thread_ctx_init(payload->setup)) {
+      thread_log_error("Could not initialize thread ctx");
+      heap_dealloc(hp, payload);
+      profile_func_end;
+      return 1;
+    }
+    has_thread_ctx = true;
   }
 
   thread_log_trace("Entering worker thread payload=%p", raw);
   exit_code = payload->entry(payload->arg);
   thread_log_trace("Leaving worker thread exit_code=%d", exit_code);
 
-  thread_ctx_quit();  // TODO: Check if this was successful
+  if (has_thread_ctx) {
+    if (!thread_ctx_quit()) {
+      thread_log_error("Failed to quit thread context");
+    }
+  }
 
   heap_dealloc(hp, payload);
   profile_func_end;
@@ -62,7 +70,7 @@ func thread thread_create_impl(
     thread_func entry,
     void* arg,
     cstr8 name,
-    allocator main_allocator,
+    ctx_setup setup,
     callsite site) {
   profile_func_begin;
 
@@ -104,7 +112,7 @@ func thread thread_create_impl(
   SDL_zero(*payload);
   payload->entry = entry;
   payload->arg = arg;
-  payload->alloc = main_allocator;
+  payload->setup = setup;
 
   thread thd = (thread)SDL_CreateThread(thread_entry_wrapper, name, payload);
   if (!thd) {
@@ -122,18 +130,18 @@ func thread thread_create_impl(
 func thread _thread_create(
     thread_func entry,
     void* arg,
-    allocator main_allocator,
+    ctx_setup setup,
     callsite site) {
-  return thread_create_impl(entry, arg, NULL, main_allocator, site);
+  return thread_create_impl(entry, arg, NULL, setup, site);
 }
 
 func thread _thread_create_named(
     thread_func entry,
     void* arg,
     cstr8 name,
-    allocator main_allocator,
+    ctx_setup setup,
     callsite site) {
-  return thread_create_impl(entry, arg, name, main_allocator, site);
+  return thread_create_impl(entry, arg, name, setup, site);
 }
 
 func b32 thread_is_valid(thread thd) {

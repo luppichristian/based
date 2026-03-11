@@ -219,23 +219,27 @@
 108: #define TREE_FOREACH_PREORDER(root, it) \
 
 === include\context\ctx.h ===
-15: typedef struct ctx {
-43: func b32 ctx_init(ctx* context, allocator main_allocator, mutex allocator_mutex, b32 use_log_mutex);
-46: func void ctx_quit(ctx* context);
-49: func b32 ctx_is_init(ctx* context);
-53: func allocator ctx_get_allocator(ctx* context);
-56: func log_state* ctx_get_log_state(ctx* context);
-59: func arena* ctx_get_perm_arena(ctx* context);
-60: func arena* ctx_get_temp_arena(ctx* context);
-61: func heap* ctx_get_perm_heap(ctx* context);
-62: func heap* ctx_get_temp_heap(ctx* context);
-66: func void* ctx_get_user_data(ctx* context, ctx_user_data_idx idx);
-67: func b32 ctx_set_user_data(ctx* context, ctx_user_data_idx idx, void* user_data);
-70: func void ctx_clear_temp(ctx* context);
+21: typedef struct ctx_setup {
+52: func b32 ctx_setup_is_valid(ctx_setup* setup);
+56: func void ctx_setup_fill_defaults(ctx_setup* setup);
+59: typedef struct ctx {
+68: func b32 ctx_init(ctx* context, ctx_setup setup);
+71: func b32 ctx_quit(ctx* context);
+74: func b32 ctx_is_init(ctx* context);
+78: func allocator ctx_get_allocator(ctx* context);
+81: func ctx_setup ctx_get_setup(ctx* context);
+84: func log_state* ctx_get_log_state(ctx* context);
+87: func arena* ctx_get_perm_arena(ctx* context);
+88: func arena* ctx_get_temp_arena(ctx* context);
+89: func heap* ctx_get_perm_heap(ctx* context);
+90: func heap* ctx_get_temp_heap(ctx* context);
+94: func void* ctx_get_user_data(ctx* context, ctx_user_data_idx idx);
+97: func b32 ctx_set_user_data(ctx* context, ctx_user_data_idx idx, void* user_data);
+100: func void ctx_clear_temp(ctx* context);
 
 === include\context\global_ctx.h ===
 11: typedef struct global_ctx {
-19: func b32 global_ctx_init(allocator main_allocator);
+23: func b32 global_ctx_init(ctx_setup setup);
 22: func void global_ctx_quit(void);
 25: func b32 global_ctx_is_init(void);
 28: func global_ctx* global_ctx_get(void);
@@ -243,12 +247,13 @@
 34: func void global_ctx_lock(void);
 35: func void global_ctx_unlock(void);
 38: func allocator global_get_allocator(void);
-39: func allocator global_get_main_allocator(void);
-40: func log_state* global_get_log_state(void);
-41: func arena* global_get_perm_arena(void);
-42: func arena* global_get_temp_arena(void);
-43: func heap* global_get_perm_heap(void);
-44: func heap* global_get_temp_heap(void);
+43: func ctx_setup global_get_setup(void);
+44: func allocator global_get_main_allocator(void);
+45: func log_state* global_get_log_state(void);
+46: func arena* global_get_perm_arena(void);
+47: func arena* global_get_temp_arena(void);
+48: func heap* global_get_perm_heap(void);
+49: func heap* global_get_temp_heap(void);
 49: func b32 global_has_user_data_access(ctx_user_data_idx idx);
 50: func void* global_get_user_data(ctx_user_data_idx idx);
 51: func b32 global_set_user_data(ctx_user_data_idx idx, void* user_data);
@@ -270,21 +275,22 @@
 9: #define THREAD_CTX_USER_DATA_COUNT CTX_USER_DATA_COUNT
 12: func ctx* thread_ctx_get(void);
 15: func b32 thread_ctx_is_init(void);
-19: func b32 thread_ctx_init(allocator main_allocator);
+23: func b32 thread_ctx_init(ctx_setup setup);
 22: func void thread_ctx_quit(void);
 26: func allocator thread_get_allocator(void);
-30: func log_state* thread_get_log_state(void);
-33: func arena* thread_get_perm_arena(void);
-34: func arena* thread_get_temp_arena(void);
-35: func heap* thread_get_perm_heap(void);
-36: func heap* thread_get_temp_heap(void);
-40: func void* thread_get_user_data(ctx_user_data_idx idx);
-41: func b32 thread_set_user_data(ctx_user_data_idx idx, void* user_data);
-44: func void thread_clear_temp(void);
-47: func void thread_log_set_level(log_level level);
-52: func b32 thread_log_sync(void);
-55: func void thread_log_begin_frame(void);
-56: func log_frame* thread_log_end_frame(u32 severity_mask);
+34: func ctx_setup thread_get_setup(void);
+38: func log_state* thread_get_log_state(void);
+41: func arena* thread_get_perm_arena(void);
+42: func arena* thread_get_temp_arena(void);
+43: func heap* thread_get_perm_heap(void);
+44: func heap* thread_get_temp_heap(void);
+48: func void* thread_get_user_data(ctx_user_data_idx idx);
+51: func b32 thread_set_user_data(ctx_user_data_idx idx, void* user_data);
+54: func void thread_clear_temp(void);
+57: func void thread_log_set_level(log_level level);
+62: func b32 thread_log_sync(void);
+65: func void thread_log_begin_frame(void);
+66: func log_frame* thread_log_end_frame(u32 severity_mask);
 59: #define thread_log_fatal(...)   _log(thread_get_log_state(), LOG_LEVEL_FATAL, CALLSITE_HERE, __VA_ARGS__)
 60: #define thread_log_error(...)   _log(thread_get_log_state(), LOG_LEVEL_ERROR, CALLSITE_HERE, __VA_ARGS__)
 61: #define thread_log_warn(...)    _log(thread_get_log_state(), LOG_LEVEL_WARN, CALLSITE_HERE, __VA_ARGS__)
@@ -1380,10 +1386,10 @@
 35: func b32 spinlock_try_lock(spinlock sl);
 
 === include\threads\thread.h ===
-22: func thread _thread_create(thread_func entry, void* arg, allocator main_allocator, callsite site);
-27: func thread _thread_create_named(
-35: #define thread_create(entry, arg, main_allocator) \
-37: #define thread_create_named(entry, arg, name, main_allocator) \
+27: func thread _thread_create(thread_func entry, void* arg, ctx_setup setup, callsite site);
+32: func thread _thread_create_named(
+48: #define thread_create(entry, arg, setup) \
+50: #define thread_create_named(entry, arg, name, setup) \
 41: func b32 thread_is_valid(thread thd);
 45: func b32 thread_join(thread thd, i32* out_exit_code);
 49: func void thread_detach(thread thd);
@@ -1406,8 +1412,8 @@
 29: func thread_group _thread_group_create(
 37: func thread_group _thread_group_create_named(
 47: func b32 _thread_group_destroy(thread_group group, callsite site);
-50: #define thread_group_create(count, entry, arg, main_allocator) \
-52: #define thread_group_create_named(count, entry, arg, main_allocator, base_name) \
+51: #define thread_group_create(count, entry, arg, setup) \
+53: #define thread_group_create_named(count, entry, arg, setup, base_name) \
 54: #define thread_group_destroy(group) _thread_group_destroy(group, CALLSITE_HERE)
 57: func b32 thread_group_is_valid(thread_group group);
 60: func u32 thread_group_get_count(thread_group group);

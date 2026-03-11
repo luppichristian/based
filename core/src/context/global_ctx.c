@@ -22,14 +22,14 @@ func void global_user_data_access_set_all_local(b8 has_access) {
   profile_func_end;
 }
 
-func b32 global_ctx_init(allocator main_allocator) {
+func b32 global_ctx_init(ctx_setup setup) {
   profile_func_begin;
-  if (!main_allocator.alloc_fn) {
+  if (!setup.main_allocator.alloc_fn) {
     global_log_error("Missing global context allocator");
     profile_func_end;
     return false;
   }
-  assert(main_allocator.dealloc_fn != NULL);
+  assert(setup.main_allocator.dealloc_fn != NULL);
 
   i32 state = atomic_i32_get(&process_global_ctx_init);
   if (state == 2) {
@@ -39,20 +39,30 @@ func b32 global_ctx_init(allocator main_allocator) {
   }
 
   i32 expected = 0;
-  if (atomic_i32_cmpex(&process_global_ctx_init, &expected, 1)) {
+  if (atomic_i32_cmpex(&process_global_ctx_init, &expected, true)) {
     global_log_info("Initializing global context");
+
+    msg_core_global_ctx_data ctx_data = {
+        .event_kind = MSG_CORE_GLOBAL_CTX_EVENT_INIT,
+        .global_ctx_ptr = &process_global_ctx,
+    };
+
     msg lifecycle_msg = {0};
-    lifecycle_msg.type = MSG_CORE_TYPE_GLOBAL_CTX;
-    msg_core_fill_global_ctx(&lifecycle_msg, &(msg_core_global_ctx_data) {
-                                                 .event_kind = MSG_CORE_GLOBAL_CTX_EVENT_INIT,
-                                                 .global_ctx_ptr = &process_global_ctx,
-                                             });
-    (void)msg_post(&lifecycle_msg);
+    msg_core_fill_global_ctx(&lifecycle_msg, &ctx_data);
+    if (!msg_post(&lifecycle_msg)) {
+      atomic_i32_set(&process_global_ctx_init, false);
+      global_log_fatal("Global context init was cancelled");
+      profile_func_end;
+      return true;
+    }
 
     memset(&process_global_ctx, 0, size_of(process_global_ctx));
     process_global_ctx.mutex_handle = mutex_create();
+    ctx_setup global_setup = setup;
+    global_setup.allocator_mutex = process_global_ctx.mutex_handle;
+    global_setup.use_log_mutex = true;
     if (!process_global_ctx.mutex_handle ||
-        !ctx_init(&process_global_ctx.shared_ctx, main_allocator, process_global_ctx.mutex_handle, true)) {
+        !ctx_init(&process_global_ctx.shared_ctx, global_setup)) {
       global_log_error("Global context initialization failed");
       if (process_global_ctx.mutex_handle) {
         mutex_destroy(process_global_ctx.mutex_handle);
@@ -85,24 +95,29 @@ func b32 global_ctx_init(allocator main_allocator) {
   return is_init;
 }
 
-func void global_ctx_quit(void) {
+func b32 global_ctx_quit(void) {
   profile_func_begin;
   i32 expected = 2;
   if (!atomic_i32_cmpex(&process_global_ctx_init, &expected, 1)) {
     global_log_verbose("Global context quit skipped");
     profile_func_end;
-    return;
+    return false;
   }
 
   global_log_info("Shutting down global context");
 
+  msg_core_global_ctx_data ctx_data = {
+      .event_kind = MSG_CORE_GLOBAL_CTX_EVENT_QUIT,
+      .global_ctx_ptr = &process_global_ctx,
+  };
+
   msg lifecycle_msg = {0};
-  lifecycle_msg.type = MSG_CORE_TYPE_GLOBAL_CTX;
-  msg_core_fill_global_ctx(&lifecycle_msg, &(msg_core_global_ctx_data) {
-                                               .event_kind = MSG_CORE_GLOBAL_CTX_EVENT_QUIT,
-                                               .global_ctx_ptr = &process_global_ctx,
-                                           });
-  (void)msg_post(&lifecycle_msg);
+  msg_core_fill_global_ctx(&lifecycle_msg, &ctx_data);
+  if (!msg_post(&lifecycle_msg)) {
+    global_log_trace("Global context quit was cancelled");
+    profile_func_end;
+    return false;
+  }
 
   mutex wrapper_mutex = process_global_ctx.mutex_handle;
   if (wrapper_mutex) {
@@ -123,6 +138,7 @@ func void global_ctx_quit(void) {
   atomic_i32_set(&process_global_ctx_init, 0);
   global_log_info("Global context shut down");
   profile_func_end;
+  return true;
 }
 
 func b32 global_ctx_is_init(void) {
@@ -170,6 +186,10 @@ func allocator global_get_allocator(void) {
   return ctx_get_allocator(global_ctx_get_shared());
 }
 
+func ctx_setup global_get_setup(void) {
+  return ctx_get_setup(global_ctx_get_shared());
+}
+
 func allocator global_get_main_allocator(void) {
   profile_func_begin;
   allocator alloc = {0};
@@ -180,7 +200,7 @@ func allocator global_get_main_allocator(void) {
   }
 
   profile_func_end;
-  return process_global_ctx.shared_ctx.main_allocator;
+  return process_global_ctx.shared_ctx.setup.main_allocator;
 }
 
 func arena* global_get_perm_arena(void) {

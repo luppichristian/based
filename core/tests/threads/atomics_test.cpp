@@ -248,7 +248,7 @@ TEST(threads_atomics_test, concurrent_increment) {
   thread threads[num_threads] = {0};
 
   for (u32 idx = 0; idx < num_threads; idx++) {
-    threads[idx] = thread_create(atomic_increment_entry, &ctx, (allocator) {0});
+    threads[idx] = thread_create(atomic_increment_entry, &ctx, (ctx_setup) {0});
     EXPECT_NE(0, thread_is_valid(threads[idx]));
   }
 

@@ -110,7 +110,7 @@ func thread_group thread_group_create_impl(
     u32 count,
     thread_group_func entry,
     void* arg,
-    allocator main_allocator,
+    ctx_setup setup,
     cstr8 base_name,
     callsite site) {
   profile_func_begin;
@@ -169,9 +169,9 @@ func thread_group thread_group_create_impl(
     if (base_name != NULL) {
       str8_medium name_buf = {0};
       cstr8_format(name_buf, size_of(name_buf), "%s[%u]", base_name, idx);
-      group->threads[idx] = thread_create_named(thread_group_wrapper, payload, name_buf, main_allocator);
+      group->threads[idx] = thread_create_named(thread_group_wrapper, payload, name_buf, setup);
     } else {
-      group->threads[idx] = thread_create(thread_group_wrapper, payload, main_allocator);
+      group->threads[idx] = thread_create(thread_group_wrapper, payload, setup);
     }
 
     if (!thread_is_valid(group->threads[idx])) {
@@ -221,10 +221,10 @@ func thread_group _thread_group_create(
     u32 count,
     thread_group_func entry,
     void* arg,
-    allocator main_allocator,
+    ctx_setup setup,
     callsite site) {
   profile_func_begin;
-  thread_group group = thread_group_create_impl(count, entry, arg, main_allocator, NULL, site);
+  thread_group group = thread_group_create_impl(count, entry, arg, setup, NULL, site);
   profile_func_end;
   return group;
 }
@@ -233,11 +233,11 @@ func thread_group _thread_group_create_named(
     u32 count,
     thread_group_func entry,
     void* arg,
-    allocator main_allocator,
+    ctx_setup setup,
     cstr8 base_name,
     callsite site) {
   profile_func_begin;
-  thread_group group = thread_group_create_impl(count, entry, arg, main_allocator, base_name, site);
+  thread_group group = thread_group_create_impl(count, entry, arg, setup, base_name, site);
   profile_func_end;
   return group;
 }

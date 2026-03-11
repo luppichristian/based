@@ -34,9 +34,10 @@ typedef struct runtime_cpu_sample {
   u64 user_ticks;
 } runtime_cpu_sample;
 
-typedef BOOL(WINAPI* get_process_memory_info_fn)(HANDLE process_handle,
-                                                 PPROCESS_MEMORY_COUNTERS counters,
-                                                 DWORD counter_size);
+typedef BOOL(WINAPI* get_process_memory_info_fn)(
+    HANDLE process_handle,
+    PPROCESS_MEMORY_COUNTERS counters,
+    DWORD counter_size);
 
 func u64 runtime_filetime_to_u64(FILETIME value) {
   profile_func_begin;

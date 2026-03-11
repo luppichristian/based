@@ -7,7 +7,7 @@ TEST(context_ctx_test, init_exposes_allocator_log_and_sub_allocators) {
   ctx local_ctx = {0};
   allocator main_alloc = vmem_get_allocator();
 
-  b32 init_ok = ctx_init(&local_ctx, main_alloc, NULL, 0);
+  b32 init_ok = ctx_init(&local_ctx, (ctx_setup) {.main_allocator = main_alloc});
   ASSERT_TRUE(init_ok != 0);
   EXPECT_TRUE(ctx_is_init(&local_ctx) != 0);
 
@@ -23,10 +23,44 @@ TEST(context_ctx_test, init_exposes_allocator_log_and_sub_allocators) {
   EXPECT_TRUE(ctx_is_init(&local_ctx) == 0);
 }
 
+TEST(context_ctx_test, setup_defaults_and_validate_support_zeroed_setup) {
+  ctx_setup setup = {0};
+  setup.main_allocator = vmem_get_allocator();
+
+  ctx_setup_fill_defaults(&setup);
+
+  EXPECT_TRUE(ctx_setup_is_valid(&setup) != 0);
+  EXPECT_TRUE(setup.use_arena_allocs != 0);
+  EXPECT_TRUE(setup.use_heap_allocs != 0);
+  EXPECT_TRUE(setup.use_temp_allocs != 0);
+  EXPECT_GT(setup.perm_arena_block_size, 0U);
+  EXPECT_GT(setup.temp_arena_block_size, 0U);
+  EXPECT_GT(setup.perm_heap_block_size, 0U);
+  EXPECT_GT(setup.temp_heap_block_size, 0U);
+}
+
+TEST(context_ctx_test, setup_can_disable_temp_allocators) {
+  ctx local_ctx = {0};
+  ctx_setup setup = {
+      .main_allocator = vmem_get_allocator(),
+      .use_arena_allocs = true,
+      .use_heap_allocs = true,
+      .use_temp_allocs = false,
+  };
+
+  ASSERT_TRUE(ctx_init(&local_ctx, setup) != 0);
+  EXPECT_NE(ctx_get_perm_arena(&local_ctx), nullptr);
+  EXPECT_NE(ctx_get_perm_heap(&local_ctx), nullptr);
+  EXPECT_EQ(ctx_get_temp_arena(&local_ctx), nullptr);
+  EXPECT_EQ(ctx_get_temp_heap(&local_ctx), nullptr);
+
+  ctx_quit(&local_ctx);
+}
+
 TEST(context_ctx_test, user_data_slots_support_set_get_and_bounds_checks) {
   ctx local_ctx = {0};
   allocator main_alloc = vmem_get_allocator();
-  ASSERT_TRUE(ctx_init(&local_ctx, main_alloc, NULL, 0) != 0);
+  ASSERT_TRUE(ctx_init(&local_ctx, (ctx_setup) {.main_allocator = main_alloc}) != 0);
 
   i32 payload_val = 123;
   ctx_user_data_idx slot_idx = 5;
@@ -43,7 +77,7 @@ TEST(context_ctx_test, user_data_slots_support_set_get_and_bounds_checks) {
 TEST(context_ctx_test, clear_temp_resets_temp_allocators_without_destroying_context) {
   ctx local_ctx = {0};
   allocator main_alloc = vmem_get_allocator();
-  ASSERT_TRUE(ctx_init(&local_ctx, main_alloc, NULL, 0) != 0);
+  ASSERT_TRUE(ctx_init(&local_ctx, (ctx_setup) {.main_allocator = main_alloc}) != 0);
 
   arena* temp_arena = ctx_get_temp_arena(&local_ctx);
   heap* temp_heap = ctx_get_temp_heap(&local_ctx);

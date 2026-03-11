@@ -24,13 +24,13 @@ typedef void* thread_group;
 
 // Creates a group of count threads, all executing entry(idx, arg).
 // Threads start immediately; idx runs from 0 to count-1.
-// main_allocator is forwarded to each worker thread's thread_ctx_init path.
+// setup is forwarded to each worker thread's thread_ctx_init path.
 // Returns a valid handle on success, or NULL on failure.
 func thread_group _thread_group_create(
     u32 count,
     thread_group_func entry,
     void* arg,
-    allocator main_allocator,
+    ctx_setup setup,
     callsite site);
 
 // Like thread_group_create, but each thread is named "<base_name>[<idx>]".
@@ -39,7 +39,7 @@ func thread_group _thread_group_create_named(
     u32 count,
     thread_group_func entry,
     void* arg,
-    allocator main_allocator,
+    ctx_setup setup,
     cstr8 base_name,
     callsite site);
 
@@ -48,10 +48,10 @@ func thread_group _thread_group_create_named(
 func b32 _thread_group_destroy(thread_group group, callsite site);
 
 // Convenience macros that automatically capture the callsite information for debugging purposes.
-#define thread_group_create(count, entry, arg, main_allocator) \
-  _thread_group_create(count, entry, arg, main_allocator, CALLSITE_HERE)
-#define thread_group_create_named(count, entry, arg, main_allocator, base_name) \
-  _thread_group_create_named(count, entry, arg, main_allocator, base_name, CALLSITE_HERE)
+#define thread_group_create(count, entry, arg, setup) \
+  _thread_group_create(count, entry, arg, setup, CALLSITE_HERE)
+#define thread_group_create_named(count, entry, arg, setup, base_name) \
+  _thread_group_create_named(count, entry, arg, setup, base_name, CALLSITE_HERE)
 #define thread_group_destroy(group) _thread_group_destroy(group, CALLSITE_HERE)
 
 // Returns true if the group handle is valid, false otherwise.

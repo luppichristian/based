@@ -29,7 +29,7 @@ TEST(threads_thread_current_test, id_is_unique_per_thread) {
   u64 other_id = 0;
   thread_id_ctx ctx = {&other_id};
 
-  thread thd = thread_create(thread_id_entry, &ctx, (allocator) {0});
+  thread thd = thread_create(thread_id_entry, &ctx, (ctx_setup) {0});
   EXPECT_NE(0, thread_is_valid(thd));
 
   b32 joined = thread_join(thd, nullptr);

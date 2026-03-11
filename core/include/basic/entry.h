@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include "../context/ctx.h"
 #include "../memory/allocator.h"
 #include "../memory/vmem.h"
 #include "../utils/cmdline.h"
@@ -30,8 +31,11 @@ User-definable macros:
   Selects simple command-line mode. Requires run.
 - ENTRY_TYPE_MOD
   Selects module mode. Requires mod_init and mod_quit exports.
+- ENTRY_GET_GLOBAL_CTX_SETUP
+  Override context setup used by generated wrapper.
+  Default uses ENTRY_GET_GLOBAL_ALLOCATOR() for main_allocator.
 - ENTRY_GET_GLOBAL_ALLOCATOR
-  Override allocator getter used by generated wrapper.
+  Override allocator getter used by the default ENTRY_GET_GLOBAL_CTX_SETUP.
   Default is vmem_get_allocator.
 - ENTRY_WINDOWS_CONSOLE
   On Windows, force console main path instead of WinMain/wWinMain path.
@@ -48,6 +52,10 @@ User-definable macros:
 #  define ENTRY_GET_GLOBAL_ALLOCATOR vmem_get_allocator
 #endif
 
+#ifndef ENTRY_GET_GLOBAL_CTX_SETUP
+#  define ENTRY_GET_GLOBAL_CTX_SETUP() ((ctx_setup) {.main_allocator = ENTRY_GET_GLOBAL_ALLOCATOR()})
+#endif
+
 // Common initialization hook used by custom entry points.
 // The built-in entry paths above also route through this function internally.
 // Returns true on success, false on failure.
@@ -60,6 +68,9 @@ func cmdline entry_get_cmdline(void);
 // The allocation hierarchy is as follows:
 // Entry Allocator -> Global Context Allocator -> Thread Context Allocator
 func allocator entry_get_allocator(void);
+
+// Returns the initial context setup used to bootstrap entry-owned contexts.
+func ctx_setup entry_get_ctx_setup(void);
 
 // Common shutdown hook paired with entry_init().
 // Safe to call even if initialization failed.

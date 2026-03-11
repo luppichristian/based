@@ -24,7 +24,7 @@ namespace {
 TEST(threads_thread_test, create_join) {
   i32 result = 0;
 
-  thread thd = thread_create(thread_entry_simple, &result, (allocator) {0});
+  thread thd = thread_create(thread_entry_simple, &result, (ctx_setup) {0});
   EXPECT_NE(0, thread_is_valid(thd));
 
   i32 exit_code = 0;
@@ -38,7 +38,7 @@ TEST(threads_thread_test, create_named) {
 #if defined(_WIN32)
   GTEST_SKIP() << "thread naming is unstable on this target";
 #endif
-  thread thd = thread_create_named(thread_entry_simple, nullptr, "test_thread", (allocator) {0});
+  thread thd = thread_create_named(thread_entry_simple, nullptr, "test_thread", (ctx_setup) {0});
   EXPECT_NE(0, thread_is_valid(thd));
 
   cstr8 name = thread_get_name(thd);
@@ -48,7 +48,7 @@ TEST(threads_thread_test, create_named) {
 }
 
 TEST(threads_thread_test, get_id) {
-  thread thd = thread_create(thread_entry_simple, nullptr, (allocator) {0});
+  thread thd = thread_create(thread_entry_simple, nullptr, (ctx_setup) {0});
   EXPECT_NE(0, thread_is_valid(thd));
 
   u64 thread_identifier = 0;
@@ -64,7 +64,7 @@ TEST(threads_thread_test, get_id) {
 }
 
 TEST(threads_thread_test, detach) {
-  thread thd = thread_create(thread_entry_simple, nullptr, (allocator) {0});
+  thread thd = thread_create(thread_entry_simple, nullptr, (ctx_setup) {0});
   EXPECT_NE(0, thread_is_valid(thd));
 
   thread_detach(thd);
@@ -76,7 +76,7 @@ TEST(threads_thread_test, multiple_threads) {
 
   thread threads[num_threads];
   for (i32 i = 0; i < num_threads; i++) {
-    threads[i] = thread_create(thread_entry_simple, &results[i], (allocator) {0});
+    threads[i] = thread_create(thread_entry_simple, &results[i], (ctx_setup) {0});
     EXPECT_NE(0, thread_is_valid(threads[i]));
   }
 
@@ -90,7 +90,7 @@ TEST(threads_thread_test, multiple_threads) {
 }
 
 TEST(threads_thread_test, exit_code) {
-  thread thd = thread_create(thread_entry_sleep, nullptr, (allocator) {0});
+  thread thd = thread_create(thread_entry_sleep, nullptr, (ctx_setup) {0});
 
   i32 exit_code = -1;
   thread_join(thd, &exit_code);
@@ -113,7 +113,7 @@ TEST(threads_thread_test, parallel_execution) {
 
   thread threads[num_threads];
   for (i32 i = 0; i < num_threads; i++) {
-    threads[i] = thread_create(entry, &counters[i], (allocator) {0});
+    threads[i] = thread_create(entry, &counters[i], (ctx_setup) {0});
   }
 
   for (i32 i = 0; i < num_threads; i++) {

@@ -21,9 +21,9 @@ namespace {
 
 TEST(threads_thread_group_test, create) {
   i32 results[4] = {0, 0, 0, 0};
-  allocator main_allocator = thread_ctx_get()->main_allocator;
+  ctx_setup setup = thread_get_setup();
 
-  thread_group group = thread_group_create(4, thread_group_entry, results, main_allocator);
+  thread_group group = thread_group_create(4, thread_group_entry, results, setup);
   EXPECT_NE(0, thread_group_is_valid(group));
   EXPECT_EQ(4U, thread_group_get_count(group));
 
@@ -33,9 +33,9 @@ TEST(threads_thread_group_test, create) {
 
 TEST(threads_thread_group_test, create_named) {
   i32 results[2] = {0, 0};
-  allocator main_allocator = thread_ctx_get()->main_allocator;
+  ctx_setup setup = thread_get_setup();
 
-  thread_group group = thread_group_create_named(2, thread_group_entry, results, main_allocator, "worker");
+  thread_group group = thread_group_create_named(2, thread_group_entry, results, setup, "worker");
   EXPECT_NE(0, thread_group_is_valid(group));
 
   thread_group_join_all(group, nullptr);
@@ -44,9 +44,9 @@ TEST(threads_thread_group_test, create_named) {
 
 TEST(threads_thread_group_test, get) {
   i32 results[3] = {0, 0, 0};
-  allocator main_allocator = thread_ctx_get()->main_allocator;
+  ctx_setup setup = thread_get_setup();
 
-  thread_group group = thread_group_create(3, thread_group_entry, results, main_allocator);
+  thread_group group = thread_group_create(3, thread_group_entry, results, setup);
 
   thread thd0 = thread_group_get(group, 0);
   thread thd1 = thread_group_get(group, 1);
@@ -65,9 +65,9 @@ TEST(threads_thread_group_test, get) {
 
 TEST(threads_thread_group_test, join_all) {
   i32 results[3] = {0, 0, 0};
-  allocator main_allocator = thread_ctx_get()->main_allocator;
+  ctx_setup setup = thread_get_setup();
 
-  thread_group group = thread_group_create(3, thread_group_entry, results, main_allocator);
+  thread_group group = thread_group_create(3, thread_group_entry, results, setup);
 
   i32 exit_codes[3];
   b32 result = thread_group_join_all(group, exit_codes);
@@ -84,8 +84,8 @@ TEST(threads_thread_group_test, join_all) {
 }
 
 TEST(threads_thread_group_test, detach_all) {
-  allocator main_allocator = thread_ctx_get()->main_allocator;
-  thread_group group = thread_group_create(0, thread_group_entry_noarg, nullptr, main_allocator);
+  ctx_setup setup = thread_get_setup();
+  thread_group group = thread_group_create(0, thread_group_entry_noarg, nullptr, setup);
 
   EXPECT_EQ(0, thread_group_detach_all(group));
 }
@@ -93,7 +93,7 @@ TEST(threads_thread_group_test, detach_all) {
 TEST(threads_thread_group_test, parallel_execution) {
   constexpr u32 num_threads = 4;
   i32 counters[num_threads] = {0, 0, 0, 0};
-  allocator main_allocator = thread_ctx_get()->main_allocator;
+  ctx_setup setup = thread_get_setup();
 
   auto entry = [](u32 idx, void* arg) -> i32 {
     i32* counters = static_cast<i32*>(arg);
@@ -103,7 +103,7 @@ TEST(threads_thread_group_test, parallel_execution) {
     return 0;
   };
 
-  thread_group group = thread_group_create(num_threads, entry, counters, main_allocator);
+  thread_group group = thread_group_create(num_threads, entry, counters, setup);
   thread_group_join_all(group, nullptr);
 
   for (u32 i = 0; i < num_threads; i++) {

@@ -12,56 +12,155 @@
 // Default reserved growth size for each context-local allocator.
 const_var sz CTX_DEFAULT_BLOCK_SIZE = kb(64);
 
-func b32 ctx_init(ctx* context, allocator main_allocator, mutex allocator_mutex, b32 use_log_mutex) {
+func b32 ctx_setup_is_valid(ctx_setup* setup) {
   profile_func_begin;
-  if (!context || !main_allocator.alloc_fn || context->is_init) {
+  if (setup == NULL) {
+    thread_log_error("Cannot validate NULL context setup");
+    profile_func_end;
+    return false;
+  }
+
+  if (!setup->main_allocator.alloc_fn || !setup->main_allocator.dealloc_fn) {
+    thread_log_error("Context setup is missing a valid main allocator");
+    profile_func_end;
+    return false;
+  }
+
+  if ((setup->use_log_mutex != false && setup->use_log_mutex != true) ||
+      (setup->use_arena_allocs != false && setup->use_arena_allocs != true) ||
+      (setup->use_heap_allocs != false && setup->use_heap_allocs != true) ||
+      (setup->use_temp_allocs != false && setup->use_temp_allocs != true)) {
+    thread_log_error("Context setup contains invalid boolean flags");
+    profile_func_end;
+    return false;
+  }
+
+  if (setup->use_arena_allocs && setup->perm_arena_block_size == 0) {
+    thread_log_error("Context setup permanent arena block size is zero");
+    profile_func_end;
+    return false;
+  }
+
+  if (setup->use_heap_allocs && setup->perm_heap_block_size == 0) {
+    thread_log_error("Context setup permanent heap block size is zero");
+    profile_func_end;
+    return false;
+  }
+
+  if (setup->use_temp_allocs && setup->use_arena_allocs && setup->temp_arena_block_size == 0) {
+    thread_log_error("Context setup temporary arena block size is zero");
+    profile_func_end;
+    return false;
+  }
+
+  if (setup->use_temp_allocs && setup->use_heap_allocs && setup->temp_heap_block_size == 0) {
+    thread_log_error("Context setup temporary heap block size is zero");
+    profile_func_end;
+    return false;
+  }
+
+  profile_func_end;
+  return true;
+}
+
+func void ctx_setup_fill_defaults(ctx_setup* setup) {
+  profile_func_begin;
+  if (setup == NULL) {
+    thread_log_warn("Cannot fill defaults for NULL context setup");
+    profile_func_end;
+    return;
+  }
+
+  if (setup->perm_arena_block_size == 0) {
+    setup->perm_arena_block_size = CTX_DEFAULT_BLOCK_SIZE;
+  }
+  if (setup->temp_arena_block_size == 0) {
+    setup->temp_arena_block_size = CTX_DEFAULT_BLOCK_SIZE;
+  }
+  if (setup->perm_heap_block_size == 0) {
+    setup->perm_heap_block_size = CTX_DEFAULT_BLOCK_SIZE;
+  }
+  if (setup->temp_heap_block_size == 0) {
+    setup->temp_heap_block_size = CTX_DEFAULT_BLOCK_SIZE;
+  }
+
+  profile_func_end;
+}
+
+func b32 ctx_init(ctx* context, ctx_setup setup) {
+  profile_func_begin;
+
+  ctx_setup_fill_defaults(&setup);
+
+  if (!context || context->is_init || !ctx_setup_is_valid(&setup)) {
     thread_log_error("Invalid context initialization request context=%p has_alloc=%u is_init=%u",
                      (void*)context,
-                     (u32)(main_allocator.alloc_fn != NULL),
+                     (u32)(setup.main_allocator.alloc_fn != NULL && setup.main_allocator.dealloc_fn != NULL),
                      (u32)(context != NULL && context->is_init));
     profile_func_end;
     return false;
   }
-  assert(main_allocator.dealloc_fn != NULL);
-  assert(use_log_mutex == false || use_log_mutex == true);
 
   memset(context, 0, size_of(*context));
-  context->main_allocator = main_allocator;
-  if (!log_state_init(&context->log, use_log_mutex, main_allocator)) {
+  context->setup = setup;
+  if (!log_state_init(&context->log, setup.use_log_mutex, setup.main_allocator)) {
     thread_log_error("Failed to initialize context log state context=%p use_log_mutex=%u",
                      (void*)context,
-                     (u32)use_log_mutex);
+                     (u32)setup.use_log_mutex);
     memset(context, 0, size_of(*context));
     profile_func_end;
     return false;
   }
 
-  // TODO: Can we make these configurable?
-  context->perm_arena = arena_create(main_allocator, allocator_mutex, CTX_DEFAULT_BLOCK_SIZE);
-  context->temp_arena = arena_create(main_allocator, allocator_mutex, CTX_DEFAULT_BLOCK_SIZE);
-  context->perm_heap = heap_create(main_allocator, allocator_mutex, CTX_DEFAULT_BLOCK_SIZE);
-  context->temp_heap = heap_create(main_allocator, allocator_mutex, CTX_DEFAULT_BLOCK_SIZE);
+  if (setup.use_arena_allocs) {
+    context->perm_arena = arena_create(setup.main_allocator, setup.allocator_mutex, setup.perm_arena_block_size);
+    if (setup.use_temp_allocs) {
+      context->temp_arena = arena_create(setup.main_allocator, setup.allocator_mutex, setup.temp_arena_block_size);
+    }
+  }
+
+  if (setup.use_heap_allocs) {
+    context->perm_heap = heap_create(setup.main_allocator, setup.allocator_mutex, setup.perm_heap_block_size);
+    if (setup.use_temp_allocs) {
+      context->temp_heap = heap_create(setup.main_allocator, setup.allocator_mutex, setup.temp_heap_block_size);
+    }
+  }
+
   context->is_init = true;
-  thread_log_trace("Context initialized context=%p use_log_mutex=%u", (void*)context, (u32)use_log_mutex);
+  thread_log_trace("Context initialized context=%p use_log_mutex=%u use_arena=%u use_heap=%u use_temp=%u",
+                   (void*)context,
+                   (u32)setup.use_log_mutex,
+                   (u32)setup.use_arena_allocs,
+                   (u32)setup.use_heap_allocs,
+                   (u32)setup.use_temp_allocs);
   profile_func_end;
   return true;
 }
 
-func void ctx_quit(ctx* context) {
+func b32 ctx_quit(ctx* context) {
   profile_func_begin;
   if (!context || !context->is_init) {
     profile_func_end;
-    return;
+    return false;
   }
 
   log_state_quit(&context->log);
-  heap_destroy(&context->temp_heap);
-  heap_destroy(&context->perm_heap);
-  arena_destroy(&context->temp_arena);
-  arena_destroy(&context->perm_arena);
+  if (context->setup.use_heap_allocs && context->setup.use_temp_allocs) {
+    heap_destroy(&context->temp_heap);
+  }
+  if (context->setup.use_heap_allocs) {
+    heap_destroy(&context->perm_heap);
+  }
+  if (context->setup.use_arena_allocs && context->setup.use_temp_allocs) {
+    arena_destroy(&context->temp_arena);
+  }
+  if (context->setup.use_arena_allocs) {
+    arena_destroy(&context->perm_arena);
+  }
   thread_log_trace("Context released context=%p", (void*)context);
   memset(context, 0, size_of(*context));
   profile_func_end;
+  return true;
 }
 
 func b32 ctx_is_init(ctx* context) {
@@ -73,7 +172,18 @@ func allocator ctx_get_allocator(ctx* context) {
   if (!ctx_is_init(context)) {
     return alloc;
   }
+  if (!context->setup.use_heap_allocs) {
+    return alloc;
+  }
   return heap_get_allocator(&context->perm_heap);
+}
+
+func ctx_setup ctx_get_setup(ctx* context) {
+  ctx_setup setup = {0};
+  if (!ctx_is_init(context)) {
+    return setup;
+  }
+  return context->setup;
 }
 
 func log_state* ctx_get_log_state(ctx* context) {
@@ -84,19 +194,19 @@ func log_state* ctx_get_log_state(ctx* context) {
 }
 
 func arena* ctx_get_perm_arena(ctx* context) {
-  return ctx_is_init(context) ? &context->perm_arena : NULL;
+  return ctx_is_init(context) && context->setup.use_arena_allocs ? &context->perm_arena : NULL;
 }
 
 func arena* ctx_get_temp_arena(ctx* context) {
-  return ctx_is_init(context) ? &context->temp_arena : NULL;
+  return ctx_is_init(context) && context->setup.use_arena_allocs && context->setup.use_temp_allocs ? &context->temp_arena : NULL;
 }
 
 func heap* ctx_get_perm_heap(ctx* context) {
-  return ctx_is_init(context) ? &context->perm_heap : NULL;
+  return ctx_is_init(context) && context->setup.use_heap_allocs ? &context->perm_heap : NULL;
 }
 
 func heap* ctx_get_temp_heap(ctx* context) {
-  return ctx_is_init(context) ? &context->temp_heap : NULL;
+  return ctx_is_init(context) && context->setup.use_heap_allocs && context->setup.use_temp_allocs ? &context->temp_heap : NULL;
 }
 
 func void* ctx_get_user_data(ctx* context, ctx_user_data_idx idx) {
@@ -131,7 +241,11 @@ func void ctx_clear_temp(ctx* context) {
     return;
   }
 
-  arena_clear(&context->temp_arena);
-  heap_clear(&context->temp_heap);
+  if (context->setup.use_arena_allocs && context->setup.use_temp_allocs) {
+    arena_clear(&context->temp_arena);
+  }
+  if (context->setup.use_heap_allocs && context->setup.use_temp_allocs) {
+    heap_clear(&context->temp_heap);
+  }
   profile_func_end;
 }
