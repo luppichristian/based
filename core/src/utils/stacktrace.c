@@ -2,15 +2,9 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "utils/stacktrace.h"
+#include "basic/assert.h"
 #include "basic/profiler.h"
-
-#if defined(_WIN32)
-#  include <windows.h>
-#  include <dbghelp.h>
-#else
-#  include <dlfcn.h>
-#  include <execinfo.h>
-#endif
+#include "platform_includes.h"
 
 func sz stacktrace_capture(stacktrace_frame* out_frames, sz out_capacity, sz skip_frames) {
   profile_func_begin;
@@ -24,7 +18,7 @@ func sz stacktrace_capture(stacktrace_frame* out_frames, sz out_capacity, sz ski
 
   void* raw_frames[STACKTRACE_CAPTURE_CAP] = {0};
 
-#if defined(_WIN32)
+#if defined(PLATFORM_WINDOWS)
   HANDLE process = GetCurrentProcess();
   SymInitialize(process, NULL, TRUE);
 
@@ -59,7 +53,7 @@ func sz stacktrace_capture(stacktrace_frame* out_frames, sz out_capacity, sz ski
           raw_frames[frame_idx]);
     }
   }
-#else
+#elif defined(PLATFORM_LINUX) || defined(PLATFORM_MACOS)
   i32 captured = backtrace(raw_frames, (i32)capture_cap);
   if (captured <= 0) {
     profile_func_end;
@@ -98,6 +92,8 @@ func sz stacktrace_capture(stacktrace_frame* out_frames, sz out_capacity, sz ski
       cstr8_format(out_frames[frame_idx].symbol, STR_CAP_MEDIUM, "0x%p", raw_frames[idx]);
     }
   }
+#else
+  invalid_code_path;
 #endif
 
   profile_func_end;

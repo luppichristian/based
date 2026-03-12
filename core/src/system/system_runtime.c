@@ -7,26 +7,11 @@
 #include "basic/env_defines.h"
 #include "basic/profiler.h"
 #include "memory/memops.h"
+#include "platform_includes.h"
 
 #include <stddef.h>
+#include <stdio.h>
 #include <string.h>
-
-#if defined(PLATFORM_WINDOWS)
-#  define WIN32_LEAN_AND_MEAN
-#  include <windows.h>
-#  include <psapi.h>
-#elif defined(PLATFORM_LINUX)
-#  include <stdio.h>
-#  include <sys/resource.h>
-#  include <sys/sysinfo.h>
-#  include <unistd.h>
-#elif defined(PLATFORM_MACOS)
-#  include <mach/mach.h>
-#  include <mach/task.h>
-#  include <sys/resource.h>
-#  include <sys/sysctl.h>
-#  include <unistd.h>
-#endif
 
 #if defined(PLATFORM_WINDOWS)
 typedef struct runtime_cpu_sample {
@@ -366,7 +351,7 @@ func b32 system_runtime_query(system_runtime_info* out_info) {
   profile_func_end;
   return true;
 #else
-  thread_log_warn("Runtime query is unsupported on this platform");
+  invalid_code_path;
   profile_func_end;
   return false;
 #endif

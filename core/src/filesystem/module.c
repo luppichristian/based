@@ -8,14 +8,9 @@
 #include "basic/env_defines.h"
 #include "basic/profiler.h"
 #include "memory/memops.h"
+#include "platform_includes.h"
 
 #include <string.h>
-
-#if defined(PLATFORM_WINDOWS)
-#  include <windows.h>
-#elif defined(PLATFORM_UNIX)
-#  include <dlfcn.h>
-#endif
 
 #define MODULE_INIT_SYMBOL "mod_init"
 #define MODULE_QUIT_SYMBOL "mod_quit"
@@ -77,6 +72,7 @@ func void* mod_get_func(const mod* mod_ptr, cstr8 name) {
   return cast_value.resolved_func;
 #else
   (void)name;
+  invalid_code_path;
   profile_func_end;
   return NULL;
 #endif
@@ -95,6 +91,7 @@ func cstr8 mod_get_extension(void) {
   profile_func_end;
   return ".so";
 #else
+  invalid_code_path;
   profile_func_end;
   return "";
 #endif
@@ -121,6 +118,8 @@ func void mod_close(mod* mod_ptr) {
   (void)FreeLibrary((HMODULE)mod_ptr->native_handle);
 #elif defined(PLATFORM_UNIX)
   (void)dlclose(mod_ptr->native_handle);
+#else
+  invalid_code_path;
 #endif
 
   *mod_ptr = module_empty();
@@ -158,6 +157,7 @@ func mod mod_open(const path* src) {
   }
   module_value.native_handle = handle;
 #else
+  invalid_code_path;
   profile_func_end;
   return module_value;
 #endif

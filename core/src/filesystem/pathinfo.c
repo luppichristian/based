@@ -8,11 +8,9 @@
 #include "filesystem/directory.h"
 #include "filesystem/file.h"
 #include "basic/profiler.h"
+#include "platform_includes.h"
 
 #if defined(PLATFORM_WINDOWS)
-
-#  include <windows.h>
-
 func timestamp filesystem_timestamp_from_filetime(FILETIME value) {
   ULARGE_INTEGER raw_value;
   u64 total_microseconds = 0;
@@ -20,12 +18,12 @@ func timestamp filesystem_timestamp_from_filetime(FILETIME value) {
   raw_value.LowPart = value.dwLowDateTime;
   raw_value.HighPart = value.dwHighDateTime;
   if (raw_value.QuadPart == 0) {
-      return timestamp_zero();
+    return timestamp_zero();
   }
 
   total_microseconds = raw_value.QuadPart / 10;
   if (total_microseconds < 11644473600000000ULL) {
-      return timestamp_zero();
+    return timestamp_zero();
   }
 
   return timestamp_from_microseconds((i64)(total_microseconds - 11644473600000000ULL));
@@ -33,11 +31,11 @@ func timestamp filesystem_timestamp_from_filetime(FILETIME value) {
 
 func pathinfo_type filesystem_kind_from_attributes(DWORD attributes) {
   if ((attributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0) {
-      return PATHINFO_TYPE_SYMLINK;
+    return PATHINFO_TYPE_SYMLINK;
   }
 
   if ((attributes & FILE_ATTRIBUTE_DIRECTORY) != 0) {
-      return PATHINFO_TYPE_DIRECTORY;
+    return PATHINFO_TYPE_DIRECTORY;
   }
 
   return PATHINFO_TYPE_FILE;
@@ -51,10 +49,6 @@ func void filesystem_info_set_windows_flags(pathinfo* info, DWORD attributes) {
 }
 
 #elif defined(PLATFORM_UNIX)
-
-#  include <sys/stat.h>
-#  include <unistd.h>
-
 func cstr8 filesystem_name_ptr(cstr8 src) {
   profile_func_begin;
   cstr8 last_sep = src;
@@ -77,15 +71,15 @@ func cstr8 filesystem_name_ptr(cstr8 src) {
 
 func pathinfo_type filesystem_kind_from_mode(mode_t mode_value) {
   if (S_ISLNK(mode_value)) {
-      return PATHINFO_TYPE_SYMLINK;
+    return PATHINFO_TYPE_SYMLINK;
   }
 
   if (S_ISDIR(mode_value)) {
-      return PATHINFO_TYPE_DIRECTORY;
+    return PATHINFO_TYPE_DIRECTORY;
   }
 
   if (S_ISREG(mode_value)) {
-      return PATHINFO_TYPE_FILE;
+    return PATHINFO_TYPE_FILE;
   }
 
   return PATHINFO_TYPE_OTHER;
@@ -189,26 +183,10 @@ func b32 pathinfo_get(const path* src, pathinfo* out_info) {
   name_ptr = filesystem_name_ptr(src_str);
   info.hidden = (name_ptr[0] == '.' && name_ptr[1] != '\0') ? true : false;
 #else
-  info.exists = path_exists(src);
-  if (!info.exists) {
-    profile_func_end;
-    return false;
-  }
-
-  if (dir_exists(src)) {
-    info.kind = PATHINFO_TYPE_DIRECTORY;
-  } else if (file_exists(src)) {
-    info.kind = PATHINFO_TYPE_FILE;
-    (void)file_get_size(src, &info.size);
-  } else {
-    info.kind = PATHINFO_TYPE_OTHER;
-  }
-
-  info.write_time = path_get_last_write_time(src);
-  info.create_time = info.write_time;
-  info.access_time = info.write_time;
-  info.is_read_only = 0;
-  info.hidden = (filesystem_name_ptr(src_str)[0] == '.') ? true : false;
+  invalid_code_path;
+  (void)src_str;
+  profile_func_end;
+  return false;
 #endif
 
   *out_info = info;

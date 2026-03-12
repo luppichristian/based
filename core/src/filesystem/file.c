@@ -9,12 +9,9 @@
 
 #include "../sdl3_include.h"
 #include "basic/profiler.h"
+#include "platform_includes.h"
 
 #include <stdio.h>
-
-#if defined(PLATFORM_WINDOWS)
-#  include <windows.h>
-#endif
 
 func b32 file_paths_equal(const path* lhs, const path* rhs) {
   profile_func_begin;
@@ -36,13 +33,9 @@ func b32 file_replace_path(const path* src, const path* dst) {
   profile_func_end;
   return rename(src->buf, dst->buf) == 0 ? true : false;
 #else
-  if (path_exists(dst) && !path_remove(dst)) {
-    profile_func_end;
-    return false;
-  }
-
+  invalid_code_path;
   profile_func_end;
-  return SDL_RenamePath(src->buf, dst->buf) ? true : false;
+  return false;
 #endif
 }
 

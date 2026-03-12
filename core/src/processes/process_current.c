@@ -9,22 +9,13 @@
 #include "processes/process.h"
 #include "basic/profiler.h"
 #include "strings/cstrings.h"
+#include "platform_includes.h"
 #include "../sdl3_include.h"
 #include "basic/third_party.h"
 #include <errno.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-
-#if defined(PLATFORM_WINDOWS)
-#  define WIN32_LEAN_AND_MEAN
-#  include <windows.h>
-#elif defined(PLATFORM_UNIX)
-#  include <fcntl.h>
-#  include <sys/file.h>
-#  include <sys/resource.h>
-#  include <unistd.h>
-#endif
 
 #if defined(PLATFORM_WINDOWS)
 // Mapping of our process_priority enum to Win32 priority classes.
@@ -139,6 +130,7 @@ func process_priority process_get_priority(void) {
   profile_func_end;
   return PROCESS_PRIORITY_NORMAL;
 #else
+  invalid_code_path;
   profile_func_end;
   return PROCESS_PRIORITY_NORMAL;
 #endif

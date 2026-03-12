@@ -71,12 +71,16 @@ func b32 process_open_file_window(cstr8 location) {
       location != NULL ? location : ".",
       NULL,
   };
-#else
+#elif defined(PLATFORM_LINUX)
   cstr8 const args[] = {
       "xdg-open",
       location != NULL ? location : ".",
       NULL,
   };
+#else
+  invalid_code_path;
+  profile_func_end;
+  return false;
 #endif
   b32 result = common_processes_spawn_background(args, NULL);
   if (!result) {
@@ -119,7 +123,7 @@ func b32 process_open_terminal(cstr8 location) {
   }
   profile_func_end;
   return result;
-#else
+#elif defined(PLATFORM_LINUX)
   cstr8 const xterm_args[] = {
       "x-terminal-emulator",
       NULL,
@@ -161,5 +165,9 @@ func b32 process_open_terminal(cstr8 location) {
   }
   profile_func_end;
   return result;
+#else
+  invalid_code_path;
+  profile_func_end;
+  return false;
 #endif
 }

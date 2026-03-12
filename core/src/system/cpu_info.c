@@ -7,16 +7,10 @@
 #include "basic/env_defines.h"
 #include "basic/profiler.h"
 #include "memory/memops.h"
+#include "platform_includes.h"
 
 #include <stddef.h>
 #include <string.h>
-
-#if defined(PLATFORM_WINDOWS)
-#  define WIN32_LEAN_AND_MEAN
-#  include <windows.h>
-#elif defined(PLATFORM_UNIX)
-#  include <unistd.h>
-#endif
 
 #if defined(COMPILER_MSVC) && (defined(ARCH_X86) || defined(ARCH_X86_64))
 #  include <intrin.h>
@@ -38,7 +32,7 @@ func u32 cpu_query_logical_cores(void) {
   thread_log_warn("Falling back to one logical core after sysconf failure");
   return 1;
 #else
-  thread_log_warn("Falling back to one logical core on unsupported platform");
+  invalid_code_path;
   return 1;
 #endif
 }

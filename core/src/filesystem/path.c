@@ -9,14 +9,9 @@
 #include "strings/char.h"
 #include "basic/profiler.h"
 #include "memory/memops.h"
+#include "platform_includes.h"
 
 #include <string.h>
-
-#if defined(PLATFORM_WINDOWS)
-#  include <direct.h>
-#elif defined(PLATFORM_UNIX)
-#  include <unistd.h>
-#endif
 
 func c8* path_mut_buf(path* value) {
   profile_func_begin;
@@ -417,6 +412,7 @@ func path path_get_current(void) {
     return path_empty_value();
   }
 #else
+  invalid_code_path;
   profile_func_end;
   return path_empty_value();
 #endif
@@ -441,6 +437,7 @@ func b32 path_set_current(const path* src) {
   profile_func_end;
   return chdir(src->buf) == 0 ? true : false;
 #else
+  invalid_code_path;
   profile_func_end;
   return false;
 #endif

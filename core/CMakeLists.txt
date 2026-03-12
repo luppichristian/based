@@ -29,7 +29,7 @@ file(GLOB_RECURSE BASED_CORE_SOURCES "src/**.c")
 
 # Default target (entry point is not handled)
 add_library(based-core STATIC ${BASED_CORE_SOURCES})
-target_include_directories(based-core PUBLIC include)
+target_include_directories(based-core PUBLIC include src)
 target_link_libraries(based-core
     PRIVATE SDL3::SDL3 efsw miniz
     PUBLIC olib::static libmath2 Tracy::TracyClient

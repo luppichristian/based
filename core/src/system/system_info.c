@@ -7,25 +7,11 @@
 #include "basic/env_defines.h"
 #include "basic/profiler.h"
 #include "memory/memops.h"
+#include "platform_includes.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#if defined(PLATFORM_WINDOWS)
-#  define WIN32_LEAN_AND_MEAN
-#  include <windows.h>
-#elif defined(PLATFORM_UNIX)
-#  include <sys/types.h>
-#  include <sys/utsname.h>
-#  include <unistd.h>
-#  if defined(PLATFORM_MACOS)
-#    include <pwd.h>
-#    include <sys/sysctl.h>
-#  else
-#    include <pwd.h>
-#  endif
-#endif
 
 #if defined(PLATFORM_WINDOWS)
 typedef LONG(WINAPI* rtl_get_version_fn)(void* version_info);
@@ -210,7 +196,7 @@ func b32 system_info_query(system_info* out_info) {
 #else
   cstr8_copy(out_info->os_name, size_of(out_info->os_name), "unknown");
   cstr8_copy(out_info->os_version, size_of(out_info->os_version), "unknown");
-  thread_log_warn("System info query is unsupported on this platform");
+  invalid_code_path;
   profile_func_end;
   return false;
 #endif

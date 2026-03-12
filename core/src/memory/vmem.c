@@ -7,6 +7,7 @@
 #include "basic/utility_defines.h"
 #include "basic/profiler.h"
 #include "memory/memops.h"
+#include "platform_includes.h"
 #include <string.h>
 
 typedef struct vmem_stats_state {
@@ -47,9 +48,6 @@ func void vmem_update_peak_allocated_bytes(void) {
 // =========================================================================
 
 #if defined(PLATFORM_WINDOWS)
-
-#  include <windows.h>
-
 func sz vmem_page_size(void) {
   profile_func_begin;
   SYSTEM_INFO info;
@@ -126,10 +124,6 @@ func b32 vmem_platform_free(void* ptr, sz size) {
 }
 
 #elif defined(PLATFORM_UNIX)
-
-#  include <sys/mman.h>
-#  include <unistd.h>
-
 func sz vmem_page_size(void) {
   profile_func_begin;
   sz res = (sz)sysconf(_SC_PAGESIZE);
@@ -215,75 +209,62 @@ func b32 vmem_platform_free(void* ptr, sz size) {
 // =========================================================================
 // Fallback — platforms without virtual memory primitives
 // =========================================================================
-// reserve + commit collapse into a single malloc; decommit is a no-op.
-
-#  include <stdlib.h>
 
 func sz vmem_page_size(void) {
-  return 4096;
+  invalid_code_path;
+  return 0;
 }
 
 func void* vmem_reserve(sz size) {
   profile_func_begin;
-  g_vmem_stats.reserve_calls += 1;
-  void* ptr = malloc(size);
-  if (ptr != NULL) {
-    g_vmem_stats.reserved_bytes += size;
-    TracyCAlloc(ptr, size);
-  }
+  (void)size;
+  invalid_code_path;
   profile_func_end;
-  return ptr;
+  return NULL;
 }
 
 func b32 vmem_commit(void* ptr, sz size) {
   profile_func_begin;
-  g_vmem_stats.commit_calls += 1;
   (void)ptr;
-  g_vmem_stats.committed_bytes += size;
+  (void)size;
+  invalid_code_path;
   profile_func_end;
-  return true;
+  return false;
 }
 
 func b32 vmem_decommit(void* ptr, sz size) {
   profile_func_begin;
-  g_vmem_stats.decommit_calls += 1;
   (void)ptr;
-  g_vmem_stats.decommitted_bytes += size;
+  (void)size;
+  invalid_code_path;
   profile_func_end;
-  return true;
+  return false;
 }
 
 func b32 vmem_release(void* ptr, sz size) {
   profile_func_begin;
-  g_vmem_stats.release_calls += 1;
-  g_vmem_stats.released_bytes += size;
-  if (ptr != NULL) {
-    TracyCFree(ptr);
-  }
-  free(ptr);
+  (void)ptr;
+  (void)size;
+  invalid_code_path;
   profile_func_end;
-  return true;
+  return false;
 }
 
 func void* vmem_platform_alloc(sz size) {
   profile_func_begin;
-  void* ptr = malloc(size);
-  if (ptr != NULL) {
-    TracyCAlloc(ptr, size);
-  }
+  (void)size;
+  invalid_code_path;
   profile_func_end;
-  return ptr;
+  return NULL;
 }
 
 func b32 vmem_platform_free(void* ptr, sz size) {
   profile_func_begin;
+  (void)ptr;
   (void)size;
-  if (ptr != NULL) {
-    TracyCFree(ptr);
-  }
-  free(ptr);
+  invalid_code_path;
   profile_func_end;
-  return true;
+  return false;
 }
 
 #endif
@@ -318,8 +299,9 @@ func sz vmem_get_alloc_align(void) {
   profile_func_end;
   return vmem_page_size();
 #else
+  invalid_code_path;
   profile_func_end;
-  return align_of(max_align_t);
+  return 0;
 #endif
 }
 

@@ -12,22 +12,10 @@
 #include "input/msg_core.h"
 #include "basic/profiler.h"
 #include "memory/memops.h"
+#include "platform_includes.h"
 
 #include <stdio.h>
 #include <string.h>
-
-#if defined(PLATFORM_WINDOWS)
-
-#  include <windows.h>
-
-#elif defined(PLATFORM_UNIX)
-
-#  include <fcntl.h>
-#  include <sys/mman.h>
-#  include <sys/stat.h>
-#  include <unistd.h>
-
-#endif
 
 global_var thread_local filemap_error filemap_last_error = FILEMAP_ERROR_NONE;
 
@@ -158,8 +146,9 @@ func b32 filemap_flush(filemap* map) {
   profile_func_end;
   return true;
 #else
+  invalid_code_path;
   profile_func_end;
-  return true;
+  return false;
 #endif
 }
 
@@ -408,35 +397,9 @@ func filemap _filemap_open(const path* src, filemap_access access, callsite site
   profile_func_end;
   return map;
 #else
-  buffer file_data = {0};
-
-  if (!file_read_all(src, &alloc, &file_data)) {
-    thread_log_error("Failed to open fallback file map path=%s", src->buf);
-    filemap_set_error(FILEMAP_ERROR_IO_FAILED);
-    profile_func_end;
-    return filemap_empty();
-  }
-  map.data_ptr = file_data.ptr;
-  map.data_size = file_data.size;
-  map.uses_fallback_copy = 1;
-  thread_log_warn("Using fallback file map copy path=%s writable=%u", src->buf, (u32)map.writable);
-  msg_core_object_lifecycle_data msg_data = {
-      .event_kind = MSG_CORE_OBJECT_EVENT_CREATE,
-      .object_type = MSG_CORE_OBJECT_TYPE_FILEMAP,
-      .object_ptr = &map,
-      .site = site,
-  };
-
-  msg lifecycle_msg = {0};
-  msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
-  if (!msg_post(&lifecycle_msg)) {
-    thread_log_trace("Fallback file map open was suspended path=%s", src->buf);
-    allocator_dealloc(alloc, map.data_ptr);
-    profile_func_end;
-    return filemap_empty();
-  }
-  thread_log_trace("Opened fallback file map path=%s size=%zu writable=%u", src->buf, (size_t)map.data_size, (u32)map.writable);
+  (void)alloc;
+  invalid_code_path;
   profile_func_end;
-  return map;
+  return filemap_empty();
 #endif
 }
