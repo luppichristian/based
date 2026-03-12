@@ -1,11 +1,11 @@
 // MIT License
 // Copyright (c) 2026 Christian Luppi
 
-#include "windowing/dialog.h"
+#include "interface/dialog.h"
 #include "context/thread_ctx.h"
 #include "../internal.h"
 #include "basic/profiler.h"
-#include "windowing/window.h"
+#include "interface/window.h"
 #include "../sdl3_include.h"
 #include "basic/safe.h"
 

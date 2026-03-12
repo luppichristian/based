@@ -6,7 +6,7 @@
 #include "../internal.h"
 #include "input/msg.h"
 #include "input/msg_core.h"
-#include "windowing/window.h"
+#include "interface/window.h"
 #include "../sdl3_include.h"
 #include "basic/profiler.h"
 

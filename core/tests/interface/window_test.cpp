@@ -4,7 +4,7 @@
 #include "test_common.hpp"
 #include "internal.h"
 
-TEST(windowing_window_test, invalid_window_id_paths_return_failure) {
+TEST(interface_window_test, invalid_window_id_paths_return_failure) {
   EXPECT_TRUE(window_id_is_valid(nullptr) == 0);
   EXPECT_EQ((up)456, window_to_native_id(window_from_native_id(456)));
 
@@ -29,7 +29,7 @@ TEST(windowing_window_test, invalid_window_id_paths_return_failure) {
   EXPECT_TRUE(window_get_monitor_id(nullptr, &mon_id) == 0);
 }
 
-TEST(windowing_window_test, create_modify_and_destroy_window_when_available) {
+TEST(interface_window_test, create_modify_and_destroy_window_when_available) {
 #if defined(_WIN32)
   GTEST_SKIP() << "window creation is unstable on this target";
 #endif

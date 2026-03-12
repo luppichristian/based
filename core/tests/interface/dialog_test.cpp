@@ -3,7 +3,7 @@
 
 #include "test_common.hpp"
 
-TEST(windowing_dialog_test, validation_failures_do_not_require_user_interaction) {
+TEST(interface_dialog_test, validation_failures_do_not_require_user_interaction) {
   EXPECT_TRUE(dialog_show_message_box(nullptr, nullptr, nullptr) == 0);
 
   dialog_message_box bad_box = {};

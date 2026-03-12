@@ -4,7 +4,7 @@
 #include "test_common.hpp"
 #include "internal.h"
 
-TEST(windowing_monitor_test, id_conversion_and_invalid_queries) {
+TEST(interface_monitor_test, id_conversion_and_invalid_queries) {
   monitor mon_id = monitor_from_native_id(123);
   EXPECT_TRUE(monitor_id_is_valid(mon_id) != 0);
   EXPECT_EQ((up)123, monitor_to_native_id(mon_id));
@@ -22,7 +22,7 @@ TEST(windowing_monitor_test, id_conversion_and_invalid_queries) {
   EXPECT_EQ(MONITOR_ORIENTATION_UNKNOWN, monitor_get_orientation(nullptr));
 }
 
-TEST(windowing_monitor_test, count_and_primary_monitor_queries) {
+TEST(interface_monitor_test, count_and_primary_monitor_queries) {
   sz count_val = monitor_get_count();
   monitor out_id = nullptr;
   if (count_val == 0) {

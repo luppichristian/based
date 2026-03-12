@@ -1716,7 +1716,7 @@
 67: func b32 version_to_str32(version ver, str32* dst);
 70: func b32 version_parse_cstr8(cstr8 src, version* out_ver);
 
-=== include\windowing\dialog.h ===
+=== include\interface\dialog.h ===
 8: typedef enum dialog_message_kind {
 14: typedef enum dialog_message_box_flag {
 22: typedef enum dialog_message_box_button_flag {
@@ -1732,7 +1732,7 @@
 85: func b32 dialog_save_file(window owner, const dialog_file_filter* filters, sz filter_count, cstr8 default_location, dialog_file_callback* callback, void* user_data);
 93: func b32 dialog_open_folder(window owner, cstr8 default_location, b32 allow_many, dialog_file_callback* callback, void* user_data);
 
-=== include\windowing\monitor.h ===
+=== include\interface\monitor.h ===
 15: typedef struct monitor_rect {
 22: typedef struct monitor_mode {
 29: typedef enum monitor_orientation {
@@ -1751,7 +1751,7 @@
 58: func f32 monitor_get_content_scale(monitor id);
 59: func monitor_orientation monitor_get_orientation(monitor id);
 
-=== include\windowing\window.h ===
+=== include\interface\window.h ===
 17: func b32 window_id_is_valid(window src);
 20: func sz window_get_count(void);
 21: func b32 window_get_id(sz idx, window* out_id);

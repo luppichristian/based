@@ -1,7 +1,7 @@
 // MIT License
 // Copyright (c) 2026 Christian Luppi
 
-#include "windowing/window.h"
+#include "interface/window.h"
 #include "context/thread_ctx.h"
 #include "../internal.h"
 #include "../sdl3_include.h"

@@ -71,7 +71,7 @@ include/                     # Core public headers
   memory/                    # Allocators and memory utilities
   filesystem/                # Path/filesystem/file stream/module APIs
   input/                     # Input APIs and message/event abstractions
-  windowing/                 # Monitor/window/dialog wrappers
+  interface/                 # Monitor/window/dialog wrappers
   processes/                 # Process and pipe APIs
   system/                    # CPU/system/runtime information APIs
   strings/                   # Character/string/unicode APIs

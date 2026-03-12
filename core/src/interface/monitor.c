@@ -1,7 +1,7 @@
 // MIT License
 // Copyright (c) 2026 Christian Luppi
 
-#include "windowing/monitor.h"
+#include "interface/monitor.h"
 #include "context/thread_ctx.h"
 #include "../sdl3_include.h"
 #include "basic/profiler.h"

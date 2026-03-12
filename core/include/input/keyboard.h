@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "../windowing/window.h"
+#include "../interface/window.h"
 #include "capture.h"
 #include "devices.h"
 

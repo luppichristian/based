@@ -66,10 +66,10 @@
 #include "input/tablet.h"
 #include "input/touch.h"
 
-// Include windowing modules.
-#include "windowing/dialog.h"
-#include "windowing/monitor.h"
-#include "windowing/window.h"
+// Include interface modules.
+#include "interface/dialog.h"
+#include "interface/monitor.h"
+#include "interface/window.h"
 
 // Include process modules.
 #include "processes/common_processes.h"

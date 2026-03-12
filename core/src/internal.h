@@ -7,8 +7,8 @@
 #include "../include/input/devices.h"
 #include "../include/input/msg.h"
 #include "../include/input/sensor.h"
-#include "../include/windowing/monitor.h"
-#include "../include/windowing/window.h"
+#include "../include/interface/monitor.h"
+#include "../include/interface/window.h"
 
 // This header is internal to the core module and is not part of the public API.
 
