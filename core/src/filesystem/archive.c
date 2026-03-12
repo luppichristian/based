@@ -4,101 +4,15 @@
 #include "filesystem/archive.h"
 #include "basic/assert.h"
 #include "basic/utility_defines.h"
-#include "context/global_ctx.h"
 #include "context/thread_ctx.h"
 #include "filesystem/file.h"
 #include "input/msg.h"
 #include "input/msg_core.h"
 #include "basic/profiler.h"
+#include "memory/heap.h"
 #include "memory/memops.h"
-
 #include <string.h>
-
-#if defined(__has_include)
-#  if __has_include(<miniz.h>)
-#    include <miniz.h>
-#    define BASED_ARCHIVE_HAS_MINIZ 1
-#  endif
-#endif
-
-#ifndef BASED_ARCHIVE_HAS_MINIZ
-#  define BASED_ARCHIVE_HAS_MINIZ 0
-#endif
-
-func allocator archive_allocator_resolve(allocator* opt_alloc) {
-  profile_func_begin;
-  if (opt_alloc != NULL && opt_alloc->alloc_fn != NULL && opt_alloc->dealloc_fn != NULL) {
-    profile_func_end;
-    return *opt_alloc;
-  }
-
-  allocator thread_alloc = thread_get_allocator();
-  if (thread_alloc.alloc_fn != NULL && thread_alloc.dealloc_fn != NULL) {
-    profile_func_end;
-    return thread_alloc;
-  }
-
-  profile_func_end;
-  return global_get_allocator();
-}
-
-func void* archive_alloc_bytes(allocator* opt_alloc, sz size) {
-  profile_func_begin;
-  allocator resolved_alloc = archive_allocator_resolve(opt_alloc);
-  if (size == 0) {
-    profile_func_end;
-    return NULL;
-  }
-
-  assert(resolved_alloc.alloc_fn != NULL);
-  profile_func_end;
-  return allocator_alloc(resolved_alloc, size);
-}
-
-func void* archive_realloc_bytes(allocator* opt_alloc, void* ptr, sz new_size) {
-  profile_func_begin;
-  allocator resolved_alloc = archive_allocator_resolve(opt_alloc);
-  if (new_size == 0) {
-    if (ptr != NULL) {
-      allocator_dealloc(resolved_alloc, ptr);
-    }
-    profile_func_end;
-    return NULL;
-  }
-
-  assert(resolved_alloc.alloc_fn != NULL);
-  assert(resolved_alloc.dealloc_fn != NULL);
-  profile_func_end;
-  return allocator_realloc(resolved_alloc, ptr, new_size);
-}
-
-func void archive_dealloc_bytes(allocator* opt_alloc, void* ptr) {
-  profile_func_begin;
-  allocator resolved_alloc = archive_allocator_resolve(opt_alloc);
-  if (ptr == NULL) {
-    profile_func_end;
-    return;
-  }
-
-  assert(resolved_alloc.dealloc_fn != NULL);
-  allocator_dealloc(resolved_alloc, ptr);
-  profile_func_end;
-}
-
-func path archive_normalize_entry_path(const path* src) {
-  profile_func_begin;
-  path item_path = path_from_cstr(src != NULL ? src->buf : "");
-  path_normalize(&item_path);
-  path_remove_trailing_slash(&item_path);
-  profile_func_end;
-  return item_path;
-}
-
-func b32 archive_path_equals(const path* lhs, const path* rhs) {
-  path lhs_norm = archive_normalize_entry_path(lhs);
-  path rhs_norm = archive_normalize_entry_path(rhs);
-  return cstr8_cmp(lhs_norm.buf, rhs_norm.buf);
-}
+#include <miniz.h>
 
 func sz archive_find_idx(const archive* arc, const path* src) {
   profile_func_begin;
@@ -110,7 +24,7 @@ func sz archive_find_idx(const archive* arc, const path* src) {
   }
 
   for (item_idx = 0; item_idx < arc->entry_count; item_idx += 1) {
-    if (archive_path_equals(&arc->entries[item_idx].item_path, src)) {
+    if (path_cmd_normd(&arc->entries[item_idx].item_path, src)) {
       profile_func_end;
       return item_idx;
     }
@@ -124,6 +38,7 @@ func b32 archive_reserve(archive* arc, sz min_capacity) {
   profile_func_begin;
   archive_entry* new_entries = NULL;
   sz new_capacity = 0;
+  heap* hp = NULL;
   if (arc == NULL) {
     profile_func_end;
     return false;
@@ -144,10 +59,20 @@ func b32 archive_reserve(archive* arc, sz min_capacity) {
     new_capacity *= 2;
   }
 
-  new_entries = (archive_entry*)archive_realloc_bytes(
-      arc->opt_alloc,
-      arc->entries,
-      new_capacity * size_of(archive_entry));
+  hp = thread_get_perm_heap();
+  if (hp == NULL) {
+    thread_log_error("Missing archive permanent heap old_size=%zu new_size=%zu",
+                     (size_t)(arc->entry_capacity * size_of(archive_entry)),
+                     (size_t)(new_capacity * size_of(archive_entry)));
+    profile_func_end;
+    return false;
+  }
+
+  new_entries = (archive_entry*)heap_realloc(hp,
+                                             arc->entries,
+                                             arc->entry_capacity * size_of(archive_entry),
+                                             new_capacity * size_of(archive_entry),
+                                             align_of(archive_entry));
   if (new_entries == NULL) {
     thread_log_error("Failed to grow archive entries min_capacity=%zu", (size_t)min_capacity);
     profile_func_end;
@@ -162,9 +87,17 @@ func b32 archive_reserve(archive* arc, sz min_capacity) {
 
 func void archive_reset_entry(archive* arc, archive_entry* ent) {
   profile_func_begin;
+  heap* hp = NULL;
   assert(arc != NULL);
   assert(ent != NULL);
-  archive_dealloc_bytes(arc->opt_alloc, ent->data_ptr);
+  if (ent->data_ptr != NULL) {
+    hp = thread_get_perm_heap();
+    if (hp == NULL) {
+      thread_log_error("Missing archive permanent heap for deallocation ptr=%p", ent->data_ptr);
+    } else {
+      heap_dealloc(hp, ent->data_ptr);
+    }
+  }
   ent->data_ptr = NULL;
   ent->data_size = 0;
   ent->data_capacity = 0;
@@ -176,13 +109,21 @@ func void archive_reset_entry(archive* arc, archive_entry* ent) {
 func b32 archive_assign_entry_bytes(archive* arc, archive_entry* ent, buffer data) {
   profile_func_begin;
   void* data_ptr = NULL;
+  heap* hp = NULL;
   if (arc == NULL || ent == NULL) {
     profile_func_end;
     return false;
   }
   assert(arc->entry_count <= arc->entry_capacity);
 
-  archive_dealloc_bytes(arc->opt_alloc, ent->data_ptr);
+  if (ent->data_ptr != NULL) {
+    hp = thread_get_perm_heap();
+    if (hp == NULL) {
+      thread_log_error("Missing archive permanent heap for deallocation ptr=%p", ent->data_ptr);
+    } else {
+      heap_dealloc(hp, ent->data_ptr);
+    }
+  }
   ent->data_ptr = NULL;
   ent->data_size = 0;
   ent->data_capacity = 0;
@@ -199,7 +140,14 @@ func b32 archive_assign_entry_bytes(archive* arc, archive_entry* ent, buffer dat
   assert(arc != NULL);
   assert(ent != NULL);
 
-  data_ptr = archive_alloc_bytes(arc->opt_alloc, data.size);
+  hp = thread_get_perm_heap();
+  if (hp == NULL) {
+    thread_log_error("Missing archive permanent heap size=%zu", (size_t)data.size);
+    profile_func_end;
+    return false;
+  }
+
+  data_ptr = heap_alloc(hp, data.size, align_of(u8));
   if (data_ptr == NULL) {
     thread_log_error("Failed to allocate archive entry bytes size=%zu", (size_t)data.size);
     profile_func_end;
@@ -218,6 +166,7 @@ func b32 archive_add_empty_entry(archive* arc, const path* src, b32 is_directory
   profile_func_begin;
   archive_entry* ent = NULL;
   sz item_idx = SZ_MAX;
+  heap* hp = NULL;
 
   if (arc == NULL || src == NULL) {
     profile_func_end;
@@ -228,10 +177,15 @@ func b32 archive_add_empty_entry(archive* arc, const path* src, b32 is_directory
 
   if (item_idx != SZ_MAX) {
     ent = &arc->entries[item_idx];
-    ent->item_path = archive_normalize_entry_path(src);
+    ent->item_path = path_norm_trimmed_cpy(src);
     ent->is_directory = is_directory;
-    if (is_directory) {
-      archive_dealloc_bytes(arc->opt_alloc, ent->data_ptr);
+    if (is_directory && ent->data_ptr != NULL) {
+      hp = thread_get_perm_heap();
+      if (hp == NULL) {
+        thread_log_error("Missing archive permanent heap for deallocation ptr=%p", ent->data_ptr);
+      } else {
+        heap_dealloc(hp, ent->data_ptr);
+      }
       ent->data_ptr = NULL;
       ent->data_size = 0;
       ent->data_capacity = 0;
@@ -251,7 +205,7 @@ func b32 archive_add_empty_entry(archive* arc, const path* src, b32 is_directory
 
   ent = &arc->entries[arc->entry_count];
   mem_zero(ent, size_of(*ent));
-  ent->item_path = archive_normalize_entry_path(src);
+  ent->item_path = path_norm_trimmed_cpy(src);
   ent->is_directory = is_directory;
   if (out_idx != NULL) {
     *out_idx = arc->entry_count;
@@ -305,12 +259,11 @@ func b32 archive_write_disk_bytes(const path* dst, const void* data_ptr, sz data
   return file_write_all(dst, write_data);
 }
 
-func archive _archive_create(allocator* opt_alloc, callsite site) {
+func archive _archive_create(callsite site) {
   profile_func_begin;
   archive arc;
   mem_zero(&arc, size_of(arc));
-  arc.opt_alloc = opt_alloc;
-  thread_log_trace("Created archive opt_alloc=%p", (void*)opt_alloc);
+  thread_log_trace("Created archive");
   msg_core_object_lifecycle_data msg_data = {
       .event_kind = MSG_CORE_OBJECT_EVENT_CREATE,
       .object_type = MSG_CORE_OBJECT_TYPE_ARCHIVE,
@@ -348,6 +301,7 @@ func void archive_clear(archive* arc) {
 
 func void _archive_destroy(archive* arc, callsite site) {
   profile_func_begin;
+  heap* hp = NULL;
   if (arc == NULL) {
     profile_func_end;
     return;
@@ -370,7 +324,14 @@ func void _archive_destroy(archive* arc, callsite site) {
   }
 
   archive_clear(arc);
-  archive_dealloc_bytes(arc->opt_alloc, arc->entries);
+  if (arc->entries != NULL) {
+    hp = thread_get_perm_heap();
+    if (hp == NULL) {
+      thread_log_error("Missing archive permanent heap for deallocation ptr=%p", (void*)arc->entries);
+    } else {
+      heap_dealloc(hp, arc->entries);
+    }
+  }
   arc->entries = NULL;
   arc->entry_capacity = 0;
   profile_func_end;
@@ -422,7 +383,7 @@ func b32 archive_remove(archive* arc, const path* src) {
 
   archive_reset_entry(arc, &arc->entries[item_idx]);
   if (item_idx + 1 < arc->entry_count) {
-    mem_move(
+    mem_mv(
         &arc->entries[item_idx],
         &arc->entries[item_idx + 1],
         (arc->entry_count - item_idx - 1) * size_of(archive_entry));
@@ -473,7 +434,9 @@ func b32 archive_read_all(const archive* arc, const path* src, allocator* alloc,
   if (ent->data_size > 0) {
     data_ptr = allocator_alloc(*alloc, ent->data_size);
     if (data_ptr == NULL) {
-      thread_log_error("Failed to allocate archive read buffer path=%s size=%zu", src->buf, (size_t)ent->data_size);
+      thread_log_error("Failed to allocate archive read buffer path=%s size=%zu",
+                       src->buf,
+                       (size_t)ent->data_size);
       profile_func_end;
       return false;
     }
@@ -488,6 +451,7 @@ func b32 archive_read_all(const archive* arc, const path* src, allocator* alloc,
 
 func b32 archive_add_file(archive* arc, const path* archive_path, const path* disk_path) {
   profile_func_begin;
+  heap* data_heap = NULL;
   allocator data_alloc = {0};
   void* data_ptr = NULL;
   sz data_size = 0;
@@ -499,7 +463,14 @@ func b32 archive_add_file(archive* arc, const path* archive_path, const path* di
     return false;
   }
 
-  data_alloc = archive_allocator_resolve(arc->opt_alloc);
+  data_heap = thread_get_temp_heap();
+  if (data_heap == NULL) {
+    thread_log_error("Missing archive temporary heap while adding file path=%s", disk_path->buf);
+    profile_func_end;
+    return false;
+  }
+
+  data_alloc = heap_get_allocator(data_heap);
   if (!archive_read_disk_bytes(disk_path, &data_alloc, &data_ptr, &data_size)) {
     profile_func_end;
     return false;
@@ -509,12 +480,15 @@ func b32 archive_add_file(archive* arc, const path* archive_path, const path* di
   data.ptr = data_ptr;
   data.size = data_size;
   result = archive_write_all(arc, archive_path, data);
-  archive_dealloc_bytes(arc->opt_alloc, data_ptr);
+  heap_dealloc(data_heap, data_ptr);
   profile_func_end;
   return result;
 }
 
-func b32 archive_iterate(const archive* arc, archive_iterate_callback* callback, void* user_data) {
+func b32 archive_iterate(
+    const archive* arc,
+    archive_iterate_callback* callback,
+    void* user_data) {
   profile_func_begin;
   archive_entry_info info;
   sz item_idx = 0;
@@ -538,7 +512,10 @@ func b32 archive_iterate(const archive* arc, archive_iterate_callback* callback,
   return true;
 }
 
-func b32 archive_get_entry_info(const archive* arc, const path* src, archive_entry_info* out_info) {
+func b32 archive_get_entry_info(
+    const archive* arc,
+    const path* src,
+    archive_entry_info* out_info) {
   profile_func_begin;
   if (arc == NULL || src == NULL || out_info == NULL) {
     profile_func_end;
@@ -557,7 +534,10 @@ func b32 archive_get_entry_info(const archive* arc, const path* src, archive_ent
   return true;
 }
 
-func b32 archive_get_entry_data(const archive* arc, const path* src, buffer* out_data) {
+func b32 archive_get_entry_data(
+    const archive* arc,
+    const path* src,
+    buffer* out_data) {
   profile_func_begin;
   if (arc == NULL || src == NULL || out_data == NULL) {
     profile_func_end;
@@ -583,7 +563,7 @@ func b32 archive_get_entry_data(const archive* arc, const path* src, buffer* out
 
 func b32 archive_load_file(archive* arc, const path* src) {
   profile_func_begin;
-#if BASED_ARCHIVE_HAS_MINIZ
+  heap* zip_heap = NULL;
   allocator zip_alloc = {0};
   mz_zip_archive zip_archive;
   void* zip_ptr = NULL;
@@ -601,7 +581,14 @@ func b32 archive_load_file(archive* arc, const path* src) {
   }
   assert(arc->entry_count <= arc->entry_capacity);
   thread_log_trace("Loading archive file arc=%p src=%s", (void*)arc, src->buf);
-  zip_alloc = archive_allocator_resolve(arc->opt_alloc);
+  zip_heap = thread_get_temp_heap();
+  if (zip_heap == NULL) {
+    thread_log_error("Missing archive temporary heap while loading path=%s", src->buf);
+    profile_func_end;
+    return false;
+  }
+
+  zip_alloc = heap_get_allocator(zip_heap);
 
   archive_clear(arc);
 
@@ -615,7 +602,7 @@ func b32 archive_load_file(archive* arc, const path* src) {
   mem_zero(&zip_archive, size_of(zip_archive));
   if (!mz_zip_reader_init_mem(&zip_archive, zip_ptr, (size_t)zip_size, 0)) {
     thread_log_error("Failed to initialize zip reader path=%s", src->buf);
-    archive_dealloc_bytes(arc->opt_alloc, zip_ptr);
+    heap_dealloc(zip_heap, zip_ptr);
     profile_func_end;
     return false;
   }
@@ -629,20 +616,20 @@ func b32 archive_load_file(archive* arc, const path* src) {
     if (!mz_zip_reader_file_stat(&zip_archive, file_idx, &file_stat)) {
       thread_log_error("Failed to query zip entry stat path=%s index=%u", src->buf, (u32)file_idx);
       mz_zip_reader_end(&zip_archive);
-      archive_dealloc_bytes(arc->opt_alloc, zip_ptr);
+      heap_dealloc(zip_heap, zip_ptr);
       archive_clear(arc);
       profile_func_end;
       return false;
     }
 
     item_path = path_from_cstr(file_stat.m_filename);
-    path_normalize(&item_path);
+    path_norm(&item_path);
     if (mz_zip_reader_is_file_a_directory(&zip_archive, file_idx)) {
       path_remove_trailing_slash(&item_path);
       if (!archive_add_empty_entry(arc, &item_path, 1, &item_idx)) {
         thread_log_error("Failed to add archive directory entry path=%s", item_path.buf);
         mz_zip_reader_end(&zip_archive);
-        archive_dealloc_bytes(arc->opt_alloc, zip_ptr);
+        heap_dealloc(zip_heap, zip_ptr);
         archive_clear(arc);
         profile_func_end;
         return false;
@@ -653,7 +640,7 @@ func b32 archive_load_file(archive* arc, const path* src) {
     if (!archive_add_empty_entry(arc, &item_path, 0, &item_idx)) {
       thread_log_error("Failed to add archive file entry path=%s", item_path.buf);
       mz_zip_reader_end(&zip_archive);
-      archive_dealloc_bytes(arc->opt_alloc, zip_ptr);
+      heap_dealloc(zip_heap, zip_ptr);
       archive_clear(arc);
       profile_func_end;
       return false;
@@ -667,7 +654,7 @@ func b32 archive_load_file(archive* arc, const path* src) {
       if (item_ptr == NULL) {
         thread_log_error("Failed to extract zip entry path=%s", item_path.buf);
         mz_zip_reader_end(&zip_archive);
-        archive_dealloc_bytes(arc->opt_alloc, zip_ptr);
+        heap_dealloc(zip_heap, zip_ptr);
         archive_clear(arc);
         profile_func_end;
         return false;
@@ -679,7 +666,7 @@ func b32 archive_load_file(archive* arc, const path* src) {
         thread_log_error("Failed to store extracted zip entry path=%s", item_path.buf);
         mz_free(item_ptr);
         mz_zip_reader_end(&zip_archive);
-        archive_dealloc_bytes(arc->opt_alloc, zip_ptr);
+        heap_dealloc(zip_heap, zip_ptr);
         archive_clear(arc);
         profile_func_end;
         return false;
@@ -690,20 +677,13 @@ func b32 archive_load_file(archive* arc, const path* src) {
   }
 
   mz_zip_reader_end(&zip_archive);
-  archive_dealloc_bytes(arc->opt_alloc, zip_ptr);
+  heap_dealloc(zip_heap, zip_ptr);
   profile_func_end;
   return true;
-#else
-  (void)arc;
-  (void)src;
-  profile_func_end;
-  return false;
-#endif
 }
 
 func b32 archive_save_file(const archive* arc, const path* dst) {
   profile_func_begin;
-#if BASED_ARCHIVE_HAS_MINIZ
   mz_zip_archive zip_archive;
   void* zip_ptr = NULL;
   size_t zip_size = 0;
@@ -765,10 +745,4 @@ func b32 archive_save_file(const archive* arc, const path* dst) {
   mz_free(zip_ptr);
   profile_func_end;
   return true;
-#else
-  (void)arc;
-  (void)dst;
-  profile_func_end;
-  return false;
-#endif
 }

@@ -45,16 +45,16 @@ TEST(strings_cstrings_test, cstr8_to_u64) {
   EXPECT_FALSE(cstr8_to_u64("", U64_MAX, &value));
 }
 
-TEST(strings_cstrings_test, cstr8_copy) {
+TEST(strings_cstrings_test, cstr8_cpy) {
   c8 buf[16];
-  sz len = cstr8_copy(buf, sizeof(buf), "hello");
+  sz len = cstr8_cpy(buf, sizeof(buf), "hello");
   EXPECT_EQ(5U, len);
   EXPECT_STREQ("hello", buf);
 }
 
-TEST(strings_cstrings_test, cstr8_copy_n) {
+TEST(strings_cstrings_test, cstr8_cpy_n) {
   c8 buf[16];
-  sz len = cstr8_copy_n(buf, sizeof(buf), "hello", 3);
+  sz len = cstr8_cpy_n(buf, sizeof(buf), "hello", 3);
   EXPECT_EQ(3U, len);
   EXPECT_STREQ("hel", buf);
 }

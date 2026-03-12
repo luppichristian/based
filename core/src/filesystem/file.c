@@ -142,15 +142,15 @@ func b32 file_rename(const path* old_src, const path* new_src) {
   return success;
 }
 
-func b32 file_copy(const path* src, const path* dst, b32 overwrite_existing) {
+func b32 file_cpy(const path* src, const path* dst, b32 overwrite_existing) {
   profile_func_begin;
   SDL_IOStream* src_file = NULL;
   SDL_IOStream* dst_file = NULL;
-  u8 copy_buf[16 * 1024];
+  u8 cpy_buf[16 * 1024];
   sz read_size = 0;
 
   if (!file_exists(src) || dst == NULL) {
-    thread_log_error("Rejected file copy source=%s destination=%s",
+    thread_log_error("Rejected file cpy source=%s destination=%s",
                      src != NULL ? src->buf : "<null>",
                      dst != NULL ? dst->buf : "<null>");
     profile_func_end;
@@ -174,26 +174,26 @@ func b32 file_copy(const path* src, const path* dst, b32 overwrite_existing) {
 
   src_file = SDL_IOFromFile(file_path_cstr(src), "rb");
   if (src_file == NULL) {
-    thread_log_error("Failed to open source file for copy path=%s error=%s", src->buf, SDL_GetError());
+    thread_log_error("Failed to open source file for cpy path=%s error=%s", src->buf, SDL_GetError());
     profile_func_end;
     return false;
   }
 
   dst_file = SDL_IOFromFile(file_path_cstr(dst), "wb");
   if (dst_file == NULL) {
-    thread_log_error("Failed to open destination file for copy path=%s error=%s", dst->buf, SDL_GetError());
+    thread_log_error("Failed to open destination file for cpy path=%s error=%s", dst->buf, SDL_GetError());
     SDL_CloseIO(src_file);
     profile_func_end;
     return false;
   }
 
   for (;;) {
-    read_size = (sz)SDL_ReadIO(src_file, copy_buf, size_of(copy_buf));
+    read_size = (sz)SDL_ReadIO(src_file, cpy_buf, size_of(cpy_buf));
     if (read_size == 0) {
       break;
     }
 
-    if ((sz)SDL_WriteIO(dst_file, copy_buf, (size_t)read_size) != read_size) {
+    if ((sz)SDL_WriteIO(dst_file, cpy_buf, (size_t)read_size) != read_size) {
       thread_log_error("Failed to write copied file data destination=%s expected=%zu error=%s",
                        dst->buf,
                        (size_t)read_size,

@@ -83,19 +83,19 @@ func cstr8 cmdline_get_option(cmdline cmdl, cstr8 name) {
     return NULL;
   }
 
-  c8 normalized_name[128] = {0};
+  c8 normd_name[128] = {0};
   cstr8 lookup_name = name;
   sz lookup_len = name_len;
   if (name[0] != '-') {
-    if (!cstr8_copy(normalized_name, size_of(normalized_name), "--")) {
+    if (!cstr8_cpy(normd_name, size_of(normd_name), "--")) {
       profile_func_end;
       return NULL;
     }
-    if (!cstr8_cat(normalized_name, size_of(normalized_name), name)) {
+    if (!cstr8_cat(normd_name, size_of(normd_name), name)) {
       profile_func_end;
       return NULL;
     }
-    lookup_name = normalized_name;
+    lookup_name = normd_name;
     lookup_len = cstr8_len(lookup_name);
   }
 

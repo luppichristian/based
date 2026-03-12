@@ -171,11 +171,11 @@ TEST(strings_strings_test, str8_clear) {
   EXPECT_EQ(0U, str.size);
 }
 
-TEST(strings_strings_test, str8_copy) {
+TEST(strings_strings_test, str8_cpy) {
   c8 buf[32];
   str8 str = str8_empty(buf, sizeof(buf));
 
-  sz written = str8_copy(&str, "hello world");
+  sz written = str8_cpy(&str, "hello world");
   EXPECT_EQ(11U, written);
   EXPECT_EQ(11U, str.size);
 }
@@ -448,12 +448,12 @@ TEST(strings_strings_test, str16_clear) {
   EXPECT_EQ(0U, str.size);
 }
 
-TEST(strings_strings_test, str16_copy) {
+TEST(strings_strings_test, str16_cpy) {
   c16 buf[32];
   str16 str = str16_empty(buf, sizeof(buf));
   c16 src[] = {'h', 'e', 'l', 'l', 'o', 0};
 
-  sz written = str16_copy(&str, src);
+  sz written = str16_cpy(&str, src);
   EXPECT_EQ(5U, written);
 }
 
@@ -651,12 +651,12 @@ TEST(strings_strings_test, str32_clear) {
   EXPECT_EQ(0U, str.size);
 }
 
-TEST(strings_strings_test, str32_copy) {
+TEST(strings_strings_test, str32_cpy) {
   c32 buf[32];
   str32 str = str32_empty(buf, sizeof(buf));
   c32 src[] = {'h', 'e', 'l', 'l', 'o', 0};
 
-  sz written = str32_copy(&str, src);
+  sz written = str32_cpy(&str, src);
   EXPECT_EQ(5U, written);
 }
 

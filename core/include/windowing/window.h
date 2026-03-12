@@ -32,7 +32,7 @@ func b32 window_show(window id);
 func b32 window_hide(window id);
 
 // Position.
-func b32 window_move(window id, i32 xpos, i32 ypos);
+func b32 window_mv(window id, i32 xpos, i32 ypos);
 func b32 window_get_position(window id, i32* out_xpos, i32* out_ypos);
 
 // Size.

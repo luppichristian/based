@@ -21,9 +21,9 @@ namespace {
   }
 }  // namespace
 
-TEST(filesystem_path_test, normalize_join_and_extract_parts) {
+TEST(filesystem_path_test, norm_join_and_extract_parts) {
   path src_path = path_from_cstr("alpha\\beta//gamma.txt");
-  path_normalize(&src_path);
+  path_norm(&src_path);
   EXPECT_STREQ("alpha/beta/gamma.txt", src_path.buf);
   EXPECT_TRUE(path_is_relative(&src_path) != 0);
   EXPECT_TRUE(path_ends_with(&src_path, ".txt") != 0);

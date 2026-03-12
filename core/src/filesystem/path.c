@@ -164,7 +164,7 @@ func path path_from_cstr(cstr8 src) {
 func path path_from_str8(str8 src) {
   profile_func_begin;
   path value = path_empty_value();
-  cstr8_copy_n(value.buf, size_of(value.buf), src.ptr, src.size);
+  cstr8_cpy_n(value.buf, size_of(value.buf), src.ptr, src.size);
   profile_func_end;
   return value;
 }
@@ -180,13 +180,13 @@ func path path_join_cstr(const path* lhs, cstr8 rhs) {
   assert(rhs != NULL);
 
   if (path_is_absolute_cstr(rhs) || cstr8_is_empty(path_buf(lhs))) {
-    cstr8_copy(result.buf, size_of(result.buf), rhs);
-    path_normalize(&result);
+    cstr8_cpy(result.buf, size_of(result.buf), rhs);
+    path_norm(&result);
     profile_func_end;
     return result;
   }
 
-  cstr8_copy(result.buf, size_of(result.buf), path_buf(lhs));
+  cstr8_cpy(result.buf, size_of(result.buf), path_buf(lhs));
   path_remove_trailing_slash(&result);
 
   while (path_is_separator(*rhs)) {
@@ -200,7 +200,7 @@ func path path_join_cstr(const path* lhs, cstr8 rhs) {
   }
 
   cstr8_cat(result.buf, size_of(result.buf), rhs);
-  path_normalize(&result);
+  path_norm(&result);
   profile_func_end;
   return result;
 }
@@ -236,7 +236,7 @@ func sz path_append(path* dst, const path* src) {
   return cstr8_len(path_mut_buf(dst));
 }
 
-func void path_normalize(path* src) {
+func void path_norm(path* src) {
   profile_func_begin;
   if (src == NULL) {
     profile_func_end;
@@ -271,6 +271,24 @@ func void path_normalize(path* src) {
 
   src->buf[write_idx] = '\0';
   profile_func_end;
+}
+
+func path path_norm_trimmed_cpy(const path* src) {
+  profile_func_begin;
+  path result = path_from_cstr(src != NULL ? src->buf : "");
+  path_norm(&result);
+  path_remove_trailing_slash(&result);
+  profile_func_end;
+  return result;
+}
+
+func b32 path_cmd_normd(const path* lhs, const path* rhs) {
+  profile_func_begin;
+  path lhs_norm = path_norm_trimmed_cpy(lhs);
+  path rhs_norm = path_norm_trimmed_cpy(rhs);
+  b32 is_equal = cstr8_cmp(lhs_norm.buf, rhs_norm.buf);
+  profile_func_end;
+  return is_equal;
 }
 
 func b32 path_ends_with(const path* src, cstr8 suffix) {
@@ -320,7 +338,7 @@ func void path_remove_directory(path* src) {
     return;
   }
 
-  mem_move(src->buf, src->buf + name_idx, src_len - name_idx);
+  mem_mv(src->buf, src->buf + name_idx, src_len - name_idx);
   src->buf[src_len - name_idx] = '\0';
   profile_func_end;
 }
@@ -344,7 +362,7 @@ func path path_get_extension(const path* src) {
   sz dot_idx = path_extension_start_cstr(path_buf(src));
 
   if (dot_idx != SZ_MAX) {
-    cstr8_copy(result.buf, size_of(result.buf), path_buf(src) + dot_idx);
+    cstr8_cpy(result.buf, size_of(result.buf), path_buf(src) + dot_idx);
   }
 
   profile_func_end;
@@ -356,7 +374,7 @@ func path path_get_name(const path* src) {
   sz name_idx = path_name_start_cstr(path_buf(src));
   sz src_len = path_trimmed_length_cstr(path_buf(src));
 
-  cstr8_copy_n(result.buf, size_of(result.buf), path_buf(src) + name_idx, src_len - name_idx);
+  cstr8_cpy_n(result.buf, size_of(result.buf), path_buf(src) + name_idx, src_len - name_idx);
   return result;
 }
 
@@ -384,11 +402,11 @@ func path path_get_common(const path* src_list, sz path_count) {
   }
 
   result = src_list[0];
-  path_normalize(&result);
+  path_norm(&result);
 
   for (item_idx = 1; item_idx < path_count; item_idx += 1) {
     current = src_list[item_idx];
-    path_normalize(&current);
+    path_norm(&current);
     cstr8_common_prefix(result.buf, current.buf, result.buf, size_of(result.buf));
   }
 
@@ -417,7 +435,7 @@ func path path_get_current(void) {
   return path_empty_value();
 #endif
 
-  path_normalize(&result);
+  path_norm(&result);
   path_remove_trailing_slash(&result);
   profile_func_end;
   return result;
@@ -455,7 +473,7 @@ func path path_resolve(const path* src) {
 
   result = *src;
   if (path_is_absolute(&result)) {
-    path_normalize(&result);
+    path_norm(&result);
     path_remove_trailing_slash(&result);
     profile_func_end;
     return result;
@@ -463,7 +481,7 @@ func path path_resolve(const path* src) {
 
   cwd_path = path_get_current();
   result = path_join(&cwd_path, &result);
-  path_normalize(&result);
+  path_norm(&result);
   path_remove_trailing_slash(&result);
   profile_func_end;
   return result;

@@ -40,7 +40,7 @@ func str8 str8_from_cstr(c8* ptr, sz cap, cstr8 src) {
   str8 str;
   str.ptr = ptr;
   str.cap = cap;
-  str.size = cstr8_copy(ptr, cap, src);
+  str.size = cstr8_cpy(ptr, cap, src);
   profile_func_end;
   return str;
 }
@@ -159,9 +159,9 @@ func void str8_clear(str8* str) {
   profile_func_end;
 }
 
-func sz str8_copy(str8* str, cstr8 src) {
+func sz str8_cpy(str8* str, cstr8 src) {
   profile_func_begin;
-  str->size = cstr8_copy(str->ptr, str->cap, src);
+  str->size = cstr8_cpy(str->ptr, str->cap, src);
   profile_func_end;
   return str->size;
 }
@@ -337,7 +337,7 @@ func str16 str16_from_cstr(c16* ptr, sz cap, cstr16 src) {
   str16 str;
   str.ptr = ptr;
   str.cap = cap;
-  str.size = cstr16_copy(ptr, cap, src);
+  str.size = cstr16_cpy(ptr, cap, src);
   profile_func_end;
   return str;
 }
@@ -444,9 +444,9 @@ func void str16_clear(str16* str) {
   profile_func_end;
 }
 
-func sz str16_copy(str16* str, cstr16 src) {
+func sz str16_cpy(str16* str, cstr16 src) {
   profile_func_begin;
-  str->size = cstr16_copy(str->ptr, str->cap, src);
+  str->size = cstr16_cpy(str->ptr, str->cap, src);
   profile_func_end;
   return str->size;
 }
@@ -579,7 +579,7 @@ func str32 str32_from_cstr(c32* ptr, sz cap, cstr32 src) {
   str32 str;
   str.ptr = ptr;
   str.cap = cap;
-  str.size = cstr32_copy(ptr, cap, src);
+  str.size = cstr32_cpy(ptr, cap, src);
   profile_func_end;
   return str;
 }
@@ -686,9 +686,9 @@ func void str32_clear(str32* str) {
   profile_func_end;
 }
 
-func sz str32_copy(str32* str, cstr32 src) {
+func sz str32_cpy(str32* str, cstr32 src) {
   profile_func_begin;
-  str->size = cstr32_copy(str->ptr, str->cap, src);
+  str->size = cstr32_cpy(str->ptr, str->cap, src);
   profile_func_end;
   return str->size;
 }

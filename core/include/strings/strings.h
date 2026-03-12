@@ -85,7 +85,7 @@ func b32 str8_to_f64(str8 str, f64* out);
 func void str8_clear(str8* str);
 
 // Copies src into str (at most cap - 1 bytes). Returns the number of bytes written.
-func sz str8_copy(str8* str, cstr8 src);
+func sz str8_cpy(str8* str, cstr8 src);
 
 // Appends src to str. Returns the new length, or original length if cap was too small.
 func sz str8_cat(str8* str, cstr8 src);
@@ -209,7 +209,7 @@ func b32 str16_to_f64(str16 str, f64* out);
 func void str16_clear(str16* str);
 
 // Copies src into str (at most cap - 1 units). Returns the number of units written.
-func sz str16_copy(str16* str, cstr16 src);
+func sz str16_cpy(str16* str, cstr16 src);
 
 // Appends src to str. Returns the new length, or original length if cap was too small.
 func sz str16_cat(str16* str, cstr16 src);
@@ -321,7 +321,7 @@ func b32 str32_to_f64(str32 str, f64* out);
 func void str32_clear(str32* str);
 
 // Copies src into str (at most cap - 1 units). Returns the number of units written.
-func sz str32_copy(str32* str, cstr32 src);
+func sz str32_cpy(str32* str, cstr32 src);
 
 // Appends src to str. Returns the new length, or original length if cap was too small.
 func sz str32_cat(str32* str, cstr32 src);

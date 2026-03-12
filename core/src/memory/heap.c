@@ -490,11 +490,11 @@ func void* _heap_realloc(
   }
 
   if (!result) {
-    // No in-place option: allocate fresh, copy data, free the old chunk.
+    // No in-place option: allocate fresh, cpy data, free the old chunk.
     result = _heap_alloc(hep, new_size, align, site);
     if (result) {
-      sz copy_sz = old_size < new_size ? old_size : new_size;
-      mem_cpy(result, ptr, copy_sz);
+      sz cpy_sz = old_size < new_size ? old_size : new_size;
+      mem_cpy(result, ptr, cpy_sz);
       _heap_dealloc(hep, ptr, site);
     }
   }

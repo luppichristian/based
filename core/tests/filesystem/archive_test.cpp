@@ -15,7 +15,7 @@ namespace {
 }  // namespace
 
 TEST(filesystem_archive_test, write_read_and_metadata_roundtrip) {
-  archive arc_val = archive_create(nullptr);
+  archive arc_val = archive_create();
   path item_path = path_from_cstr("folder/item.bin");
   u8 src_data[] = {10, 20, 30, 40};
   buffer src_buff = buffer_from(src_data, size_of(src_data));
@@ -36,7 +36,9 @@ TEST(filesystem_archive_test, write_read_and_metadata_roundtrip) {
     EXPECT_EQ(src_data[data_idx], ((u8*)view_buff.ptr)[data_idx]);
   }
 
-  allocator alloc_val = thread_get_allocator();
+  heap* heap_ptr = thread_get_perm_heap();
+  ASSERT_NE(nullptr, heap_ptr);
+  allocator alloc_val = heap_get_allocator(heap_ptr);
   buffer read_buff = {0};
   ASSERT_TRUE(archive_read_all(&arc_val, &item_path, &alloc_val, &read_buff) != 0);
   ASSERT_EQ(src_buff.size, read_buff.size);
@@ -49,7 +51,7 @@ TEST(filesystem_archive_test, write_read_and_metadata_roundtrip) {
 }
 
 TEST(filesystem_archive_test, iterate_remove_and_clear_entries) {
-  archive arc_val = archive_create(nullptr);
+  archive arc_val = archive_create();
   path one_path = path_from_cstr("one.txt");
   path two_path = path_from_cstr("two.txt");
   u8 one_data[] = {1};

@@ -392,8 +392,8 @@ func void* vmem_realloc(void* ptr, sz old_size, sz new_size) {
     return NULL;
   }
 
-  sz copy_size = old_header->info.user_size < new_size ? old_header->info.user_size : new_size;
-  mem_cpy(new_ptr, ptr, copy_size);
+  sz cpy_size = old_header->info.user_size < new_size ? old_header->info.user_size : new_size;
+  mem_cpy(new_ptr, ptr, cpy_size);
   (void)vmem_free(ptr, 0);
   profile_func_end;
   return new_ptr;

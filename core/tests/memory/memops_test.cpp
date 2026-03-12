@@ -3,7 +3,7 @@
 
 #include "test_common.hpp"
 
-TEST(memory_memops_test, set_copy_compare_and_zero_work) {
+TEST(memory_memops_test, set_cpy_compare_and_zero_work) {
   u32 src_words[4] = {0};
   u32 dst_words[4] = {0};
 

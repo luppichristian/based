@@ -5,11 +5,11 @@
 
 #include "basic/assert.h"
 #include "basic/env_defines.h"
-#include "context/global_ctx.h"
 #include "context/thread_ctx.h"
 #include "filesystem/file.h"
 #include "input/msg.h"
 #include "input/msg_core.h"
+#include "memory/heap.h"
 #include "basic/profiler.h"
 #include "memory/memops.h"
 #include "platform_includes.h"
@@ -32,17 +32,6 @@ func filemap filemap_empty(void) {
   return map;
 }
 
-func allocator filemap_allocator_resolve(void) {
-  profile_func_begin;
-  allocator alloc = thread_get_allocator();
-  if (alloc.alloc_fn != NULL && alloc.dealloc_fn != NULL) {
-    profile_func_end;
-    return alloc;
-  }
-  profile_func_end;
-  return global_get_allocator();
-}
-
 func b32 filemap_is_open(const filemap* map) {
   profile_func_begin;
   if (map == NULL) {
@@ -56,7 +45,7 @@ func b32 filemap_is_open(const filemap* map) {
   }
 
   profile_func_end;
-  return map->uses_fallback_copy && map->source_path.buf[0] != '\0' ? true : false;
+  return map->uses_fallback_cpy && map->source_path.buf[0] != '\0' ? true : false;
 }
 
 func b32 filemap_is_writable(const filemap* map) {
@@ -99,8 +88,8 @@ func b32 filemap_flush(filemap* map) {
   }
   assert(map->source_path.buf[0] != '\0');
 
-  if (map->uses_fallback_copy) {
-    thread_log_warn("Flushing file map through fallback copy path=%s", map->source_path.buf);
+  if (map->uses_fallback_cpy) {
+    thread_log_warn("Flushing file map through fallback cpy path=%s", map->source_path.buf);
     buffer data = buffer_from(map->data_ptr, map->data_size);
     if (!file_write_all(&map->source_path, data)) {
       thread_log_error("Failed to flush fallback file map path=%s", map->source_path.buf);
@@ -154,7 +143,6 @@ func b32 filemap_flush(filemap* map) {
 
 func void _filemap_close(filemap* map, callsite site) {
   profile_func_begin;
-  allocator alloc = filemap_allocator_resolve();
   if (map == NULL) {
     profile_func_end;
     return;
@@ -176,13 +164,18 @@ func void _filemap_close(filemap* map, callsite site) {
     return;
   }
 
-  if (map->uses_fallback_copy) {
+  if (map->uses_fallback_cpy) {
     if (map->writable) {
       (void)filemap_flush(map);
     }
 
     if (map->data_ptr != NULL) {
-      allocator_dealloc(alloc, map->data_ptr);
+      heap* hp = thread_get_perm_heap();
+      if (hp != NULL) {
+        heap_dealloc(hp, map->data_ptr);
+      } else {
+        thread_log_error("Missing file map permanent heap while closing fallback cpy path=%s", map->source_path.buf);
+      }
     }
     thread_log_trace("Closed fallback file map path=%s", map->source_path.buf);
     *map = filemap_empty();
@@ -219,7 +212,6 @@ func void _filemap_close(filemap* map, callsite site) {
 
 func filemap _filemap_open(const path* src, filemap_access access, callsite site) {
   profile_func_begin;
-  allocator alloc = filemap_allocator_resolve();
   filemap map = filemap_empty();
 
   if (src == NULL || !file_exists(src)) {
@@ -397,7 +389,6 @@ func filemap _filemap_open(const path* src, filemap_access access, callsite site
   profile_func_end;
   return map;
 #else
-  (void)alloc;
   invalid_code_path;
   profile_func_end;
   return filemap_empty();

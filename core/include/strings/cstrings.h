@@ -35,10 +35,10 @@ func b32 cstr8_cmp_nocase(cstr8 lhs, cstr8 rhs);
 
 // Copies src into dst (at most dst_size - 1 units) and null-terminates.
 // Returns the number of c8 units written, excluding the null terminator.
-func sz cstr8_copy(c8* dst, sz dst_size, cstr8 src);
+func sz cstr8_cpy(c8* dst, sz dst_size, cstr8 src);
 
-// Like cstr8_copy but copies at most cnt units from src.
-func sz cstr8_copy_n(c8* dst, sz dst_size, cstr8 src, sz cnt);
+// Like cstr8_cpy but copies at most cnt units from src.
+func sz cstr8_cpy_n(c8* dst, sz dst_size, cstr8 src, sz cnt);
 
 // Appends src to dst. Returns the new length, or the original length if dst_cap was too small.
 func sz cstr8_cat(c8* dst, sz dst_cap, cstr8 src);
@@ -164,10 +164,10 @@ func b32 cstr16_cmp_nocase(cstr16 lhs, cstr16 rhs);
 
 // Copies src into dst (at most dst_size - 1 units) and null-terminates.
 // Returns the number of c16 units written, excluding the null terminator.
-func sz cstr16_copy(c16* dst, sz dst_size, cstr16 src);
+func sz cstr16_cpy(c16* dst, sz dst_size, cstr16 src);
 
-// Like cstr16_copy but copies at most cnt units from src.
-func sz cstr16_copy_n(c16* dst, sz dst_size, cstr16 src, sz cnt);
+// Like cstr16_cpy but copies at most cnt units from src.
+func sz cstr16_cpy_n(c16* dst, sz dst_size, cstr16 src, sz cnt);
 
 // Appends src to dst. Returns the new length, or the original length if dst_cap was too small.
 func sz cstr16_cat(c16* dst, sz dst_cap, cstr16 src);
@@ -272,10 +272,10 @@ func b32 cstr32_cmp_nocase(cstr32 lhs, cstr32 rhs);
 
 // Copies src into dst (at most dst_size - 1 units) and null-terminates.
 // Returns the number of c32 units written, excluding the null terminator.
-func sz cstr32_copy(c32* dst, sz dst_size, cstr32 src);
+func sz cstr32_cpy(c32* dst, sz dst_size, cstr32 src);
 
-// Like cstr32_copy but copies at most cnt units from src.
-func sz cstr32_copy_n(c32* dst, sz dst_size, cstr32 src, sz cnt);
+// Like cstr32_cpy but copies at most cnt units from src.
+func sz cstr32_cpy_n(c32* dst, sz dst_size, cstr32 src, sz cnt);
 
 // Appends src to dst. Returns the new length, or the original length if dst_cap was too small.
 func sz cstr32_cat(c32* dst, sz dst_cap, cstr32 src);

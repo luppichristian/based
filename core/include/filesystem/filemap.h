@@ -31,7 +31,7 @@ typedef struct filemap {
   void* native_mapping;
   b32 writable;
   b32 dirty;
-  b32 uses_fallback_copy;
+  b32 uses_fallback_cpy;
   path source_path;
 } filemap;
 

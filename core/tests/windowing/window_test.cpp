@@ -17,7 +17,7 @@ TEST(windowing_window_test, invalid_window_id_paths_return_failure) {
   EXPECT_TRUE(window_destroy(nullptr) == 0);
   EXPECT_TRUE(window_show(nullptr) == 0);
   EXPECT_TRUE(window_hide(nullptr) == 0);
-  EXPECT_TRUE(window_move(nullptr, 0, 0) == 0);
+  EXPECT_TRUE(window_mv(nullptr, 0, 0) == 0);
   EXPECT_TRUE(window_get_position(nullptr, &xpos_val, &ypos_val) == 0);
   EXPECT_TRUE(window_resize(nullptr, 10, 10) == 0);
   EXPECT_TRUE(window_get_size(nullptr, &widt_val, &high_val) == 0);

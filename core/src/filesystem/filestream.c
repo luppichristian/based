@@ -4,13 +4,12 @@
 #include "filesystem/filestream.h"
 
 #include "basic/assert.h"
-#include "context/global_ctx.h"
 #include "context/thread_ctx.h"
 #include "filesystem/archive.h"
 #include "input/msg.h"
 #include "input/msg_core.h"
-#include "memory/allocator.h"
 #include "memory/buffer.h"
+#include "memory/heap.h"
 
 #include "../sdl3_include.h"
 #include "basic/profiler.h"
@@ -26,17 +25,6 @@ func filestream_error filestream_set_error(filestream* stm, filestream_error err
 
   profile_func_end;
   return error_code;
-}
-
-func allocator filestream_allocator_resolve(void) {
-  profile_func_begin;
-  allocator alloc = thread_get_allocator();
-  if (alloc.alloc_fn != NULL && alloc.dealloc_fn != NULL) {
-    profile_func_end;
-    return alloc;
-  }
-  profile_func_end;
-  return global_get_allocator();
 }
 
 func filestream filestream_empty(void) {
@@ -90,18 +78,9 @@ func sz filestream_native_size(SDL_IOStream* file_ptr) {
   return (sz)size_value;
 }
 
-func path filestream_normalize_archive_path(const path* src) {
-  profile_func_begin;
-  path item_path = path_from_cstr(src != NULL ? src->buf : "");
-  path_normalize(&item_path);
-  path_remove_trailing_slash(&item_path);
-  profile_func_end;
-  return item_path;
-}
-
 func archive_entry* filestream_find_archive_entry(archive* arc, const path* src) {
   profile_func_begin;
-  path item_path = filestream_normalize_archive_path(src);
+  path item_path = path_norm_trimmed_cpy(src);
   sz item_idx = 0;
 
   if (arc == NULL) {
@@ -110,7 +89,7 @@ func archive_entry* filestream_find_archive_entry(archive* arc, const path* src)
   }
 
   for (item_idx = 0; item_idx < arc->entry_count; item_idx += 1) {
-    path ent_path = filestream_normalize_archive_path(&arc->entries[item_idx].item_path);
+    path ent_path = path_norm_trimmed_cpy(&arc->entries[item_idx].item_path);
     if (cstr8_cmp(ent_path.buf, item_path.buf)) {
       profile_func_end;
       return &arc->entries[item_idx];
@@ -123,7 +102,7 @@ func archive_entry* filestream_find_archive_entry(archive* arc, const path* src)
 
 func b32 filestream_reserve_memory(filestream* stm, sz min_capacity) {
   profile_func_begin;
-  allocator alloc = {0};
+  heap* hp = NULL;
   u8* new_ptr = NULL;
   sz new_capacity = 0;
 
@@ -136,7 +115,13 @@ func b32 filestream_reserve_memory(filestream* stm, sz min_capacity) {
     return true;
   }
   assert(stm->memory_size <= stm->memory_capacity);
-  alloc = filestream_allocator_resolve();
+  hp = thread_get_perm_heap();
+  if (hp == NULL) {
+    thread_log_error("Missing filestream permanent heap requested=%zu", (size_t)min_capacity);
+    filestream_set_error(stm, FILESTREAM_ERROR_ALLOC);
+    profile_func_end;
+    return false;
+  }
 
   new_capacity = stm->memory_capacity == 0 ? 64 : stm->memory_capacity;
   while (new_capacity < min_capacity) {
@@ -147,7 +132,7 @@ func b32 filestream_reserve_memory(filestream* stm, sz min_capacity) {
     new_capacity *= 2;
   }
 
-  new_ptr = (u8*)allocator_realloc(alloc, stm->memory_ptr, new_capacity);
+  new_ptr = (u8*)heap_realloc(hp, stm->memory_ptr, stm->memory_capacity, new_capacity, align_of(u8));
   if (new_ptr == NULL) {
     thread_log_error("Failed to grow filestream buffer current=%zu requested=%zu",
                      (size_t)stm->memory_capacity,
@@ -241,7 +226,7 @@ func filestream _filestream_open_archive(archive* arc, const path* src, u32 mode
   stm.kind = FILESTREAM_KIND_ARCHIVE;
   stm.mode_flags = mode_flags;
   stm.archive_ref = arc;
-  stm.archive_path = filestream_normalize_archive_path(src);
+  stm.archive_path = path_norm_trimmed_cpy(src);
 
   if (ent != NULL && !ent->is_directory && ent->data_size > 0) {
     if (!filestream_reserve_memory(&stm, ent->data_size)) {
@@ -249,8 +234,10 @@ func filestream _filestream_open_archive(archive* arc, const path* src, u32 mode
                        src->buf,
                        (size_t)ent->data_size);
       if (stm.memory_ptr != NULL) {
-        allocator alloc = filestream_allocator_resolve();
-        allocator_dealloc(alloc, stm.memory_ptr);
+        heap* hp = thread_get_perm_heap();
+        if (hp != NULL) {
+          heap_dealloc(hp, stm.memory_ptr);
+        }
       }
       profile_func_end;
       return filestream_empty();
@@ -279,8 +266,10 @@ func filestream _filestream_open_archive(archive* arc, const path* src, u32 mode
   msg_core_fill_object_lifecycle(&lifecycle_msg, &msg_data);
   if (!msg_post(&lifecycle_msg)) {
     if (stm.memory_ptr != NULL) {
-      allocator alloc = filestream_allocator_resolve();
-      allocator_dealloc(alloc, stm.memory_ptr);
+      heap* hp = thread_get_perm_heap();
+      if (hp != NULL) {
+        heap_dealloc(hp, stm.memory_ptr);
+      }
     }
     thread_log_trace("Archive filestream open was suspended path=%s", src->buf);
     profile_func_end;
@@ -341,7 +330,7 @@ func b32 filestream_flush(filestream* stm) {
 
 func void _filestream_close(filestream* stm, callsite site) {
   profile_func_begin;
-  allocator alloc = filestream_allocator_resolve();
+  heap* hp = thread_get_perm_heap();
   SDL_IOStream* file_ptr = NULL;
 
   if (stm == NULL) {
@@ -372,8 +361,8 @@ func void _filestream_close(filestream* stm, callsite site) {
     }
   } else if (stm->kind == FILESTREAM_KIND_ARCHIVE) {
     (void)filestream_flush(stm);
-    if (stm->memory_ptr != NULL) {
-      allocator_dealloc(alloc, stm->memory_ptr);
+    if (stm->memory_ptr != NULL && hp != NULL) {
+      heap_dealloc(hp, stm->memory_ptr);
     }
   }
 

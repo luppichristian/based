@@ -337,19 +337,19 @@ func void log_state_sync(log_state* dst, log_state* src) {
   log_state_lock(resolved_dst);
   log_state_lock(resolved_src);
   if (resolved_src->root_frame->msgs_head) {
-    b32 copy_ok = true;
+    b32 cpy_ok = true;
     log_frame copied_frame = {0};
     SINGLY_LIST_FOREACH(resolved_src->root_frame->msgs_head, resolved_src->root_frame->msgs_tail, src_msg) {
       log_msg* dst_msg = log_msg_create(resolved_dst, src_msg->level, src_msg->site, src_msg->text);
       if (!dst_msg) {
-        copy_ok = false;
+        cpy_ok = false;
         break;
       }
       SINGLY_LIST_PUSH_BACK(copied_frame.msgs_head, copied_frame.msgs_tail, dst_msg);
       copied_frame.msg_count += 1;
     }
 
-    if (copy_ok) {
+    if (cpy_ok) {
       if (resolved_dst->root_frame->msgs_tail) {
         resolved_dst->root_frame->msgs_tail->next = copied_frame.msgs_head;
       } else {

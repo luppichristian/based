@@ -24,7 +24,7 @@ func void mem_zero(void* ptr, sz size);
 
 // Copy / move / equality wrappers for raw byte ranges.
 func void* mem_cpy(void* dst, const void* src, sz size);
-func void* mem_move(void* dst, const void* src, sz size);
+func void* mem_mv(void* dst, const void* src, sz size);
 func b32 mem_cmp(const void* lhs, const void* rhs, sz size);
 
 // Pointer alignment helpers for generic memory addresses.

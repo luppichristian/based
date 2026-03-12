@@ -63,7 +63,7 @@ func b32 clipboard_get_text(c8* out_text, sz out_capacity) {
     return false;
   }
 
-  cstr8_copy(out_text, out_capacity, source_text);
+  cstr8_cpy(out_text, out_capacity, source_text);
   result = true;
   SDL_free(source_text);
   thread_log_trace("Read clipboard text size=%zu", (size_t)cstr8_len(out_text));

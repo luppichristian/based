@@ -190,17 +190,13 @@ func void pathwatch_watch_bind_remove_all_for_watcher(pathwatch_id pathwatch_id,
 func void pathwatch_watch_bind_remove_by_path(pathwatch_id pathwatch_id, void* native_handle, const path* src) {
   profile_func_begin;
   pathwatch_watch_binding* bindings = pathwatch_watch_bindings();
-  path normalized_src = src != NULL ? *src : path_from_cstr("");
-  path_normalize(&normalized_src);
-  path_remove_trailing_slash(&normalized_src);
+  path normd_src = path_norm_trimmed_cpy(src);
 
   for (sz item_idx = 0; item_idx < PATHWATCH_WATCH_BINDING_CAP; item_idx += 1) {
     if (bindings[item_idx].watch_id != 0 && bindings[item_idx].pathwatch_id == pathwatch_id &&
         bindings[item_idx].native_handle == native_handle) {
-      path normalized_watch = bindings[item_idx].watch_path;
-      path_normalize(&normalized_watch);
-      path_remove_trailing_slash(&normalized_watch);
-      if (cstr8_cmp(normalized_watch.buf, normalized_src.buf)) {
+      path normd_watch = path_norm_trimmed_cpy(&bindings[item_idx].watch_path);
+      if (cstr8_cmp(normd_watch.buf, normd_src.buf)) {
         bindings[item_idx] = (pathwatch_watch_binding) {0};
       }
     }

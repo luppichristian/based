@@ -22,7 +22,7 @@ namespace {
   }
 }  // namespace
 
-TEST(filesystem_file_test, create_write_read_append_copy_and_delete) {
+TEST(filesystem_file_test, create_write_read_append_cpy_and_delete) {
   path root_path = file_test_make_root("file_ops");
   if (dir_create_recursive(&root_path) == 0) {
     GTEST_SKIP() << "unable to create test directory";
@@ -52,7 +52,7 @@ TEST(filesystem_file_test, create_write_read_append_copy_and_delete) {
   EXPECT_EQ(5U, ((u8*)read_buff.ptr)[4]);
   allocator_dealloc(alloc_val, read_buff.ptr);
 
-  ASSERT_TRUE(file_copy(&src_path, &dst_path, 1) != 0);
+  ASSERT_TRUE(file_cpy(&src_path, &dst_path, 1) != 0);
   EXPECT_TRUE(file_exists(&dst_path) != 0);
 
   ASSERT_TRUE(file_rename(&dst_path, &ren_path) != 0);

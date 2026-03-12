@@ -46,7 +46,7 @@ func void input_state_clear(input_state* src);
 // Captures a full snapshot from the current input backends.
 func b32 input_state_capture(input_key key, input_state* out_state);
 
-// Applies one normalized message to src.
+// Applies one normd message to src.
 func void input_state_apply_msg(input_state* src, const msg* event_msg);
 
 // Returns the byte size written by input_state_serialize.

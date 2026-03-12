@@ -35,7 +35,13 @@ func sz path_append(path* dst, const path* src);
 func sz path_append_cstr(path* dst, cstr8 src);
 
 // Normalizes separators to '/' and collapses duplicate separators.
-func void path_normalize(path* src);
+func void path_norm(path* src);
+
+// Returns a normd copy of src with trailing separators removed.
+func path path_norm_trimmed_cpy(const path* src);
+
+// Returns 1 if lhs and rhs are equal after normalization and trailing separator trimming.
+func b32 path_cmd_normd(const path* lhs, const path* rhs);
 
 // Returns 1 if src ends with suffix, 0 otherwise.
 func b32 path_ends_with(const path* src, cstr8 suffix);

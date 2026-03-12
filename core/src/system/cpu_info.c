@@ -44,14 +44,14 @@ func void cpu_set_compile_time_fallback(cpu_info* out_info) {
 #endif
 
 #if defined(ARCH_ARM64) || defined(ARCH_ARM)
-  cstr8_copy(out_info->vendor_name, size_of(out_info->vendor_name), "ARM");
-  cstr8_copy(out_info->brand_name, size_of(out_info->brand_name), "ARM processor");
+  cstr8_cpy(out_info->vendor_name, size_of(out_info->vendor_name), "ARM");
+  cstr8_cpy(out_info->brand_name, size_of(out_info->brand_name), "ARM processor");
 #elif defined(ARCH_X86_64) || defined(ARCH_X86)
-  cstr8_copy(out_info->vendor_name, size_of(out_info->vendor_name), "x86");
-  cstr8_copy(out_info->brand_name, size_of(out_info->brand_name), "x86 processor");
+  cstr8_cpy(out_info->vendor_name, size_of(out_info->vendor_name), "x86");
+  cstr8_cpy(out_info->brand_name, size_of(out_info->brand_name), "x86 processor");
 #else
-  cstr8_copy(out_info->vendor_name, size_of(out_info->vendor_name), "unknown");
-  cstr8_copy(out_info->brand_name, size_of(out_info->brand_name), "unknown");
+  cstr8_cpy(out_info->vendor_name, size_of(out_info->vendor_name), "unknown");
+  cstr8_cpy(out_info->brand_name, size_of(out_info->brand_name), "unknown");
 #endif
 
 #if defined(__ARM_NEON) || defined(__ARM_NEON__)
@@ -114,7 +114,7 @@ func void cpu_fill_x86_strings(cpu_info* out_info) {
     mem_cpy(&vendor_name[4], &base_regs[3], 4);
     mem_cpy(&vendor_name[8], &base_regs[2], 4);
     vendor_name[12] = '\0';
-    cstr8_copy(out_info->vendor_name, size_of(out_info->vendor_name), vendor_name);
+    cstr8_cpy(out_info->vendor_name, size_of(out_info->vendor_name), vendor_name);
   }
 
   i32 ext_regs[4];
@@ -137,7 +137,7 @@ func void cpu_fill_x86_strings(cpu_info* out_info) {
   cpu_read_cpuid(0x80000003U, 0, &brand_regs[4]);
   cpu_read_cpuid(0x80000004U, 0, &brand_regs[8]);
   mem_cpy(brand_name, brand_regs, 48);
-  cstr8_copy(out_info->brand_name, size_of(out_info->brand_name), brand_name);
+  cstr8_cpy(out_info->brand_name, size_of(out_info->brand_name), brand_name);
   profile_func_end;
 }
 

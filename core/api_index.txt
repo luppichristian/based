@@ -303,9 +303,9 @@
 10: typedef struct archive_entry {
 18: typedef struct archive {
 25: typedef struct archive_entry_info {
-40: func archive _archive_create(allocator* opt_alloc, callsite site);
+39: func archive _archive_create(callsite site);
 43: func void _archive_destroy(archive* arc, callsite site);
-45: #define archive_create(opt_alloc) \
+45: #define archive_create() \
 47: #define archive_destroy(arc) \
 51: func void archive_clear(archive* arc);
 54: func sz archive_count(const archive* arc);
@@ -329,7 +329,7 @@
 42: func b32 dir_create(const path* src);
 45: func b32 dir_remove(const path* src);
 48: func b32 dir_rename(const path* old_src, const path* new_src);
-51: func b32 dir_copy_recursive(const path* src, const path* dst, b32 overwrite_existing);
+51: func b32 dir_cpy_recursive(const path* src, const path* dst, b32 overwrite_existing);
 54: func b32 dir_exists(const path* src);
 57: func b32 dir_create_recursive(const path* src);
 60: func b32 dir_remove_recursive(const path* src);
@@ -340,7 +340,7 @@
 11: func b32 file_create(const path* src);
 14: func b32 file_delete(const path* src);
 17: func b32 file_rename(const path* old_src, const path* new_src);
-20: func b32 file_copy(const path* src, const path* dst, b32 overwrite_existing);
+20: func b32 file_cpy(const path* src, const path* dst, b32 overwrite_existing);
 23: func b32 file_exists(const path* src);
 26: func b32 file_get_size(const path* src, sz* out_size);
 30: func b32 file_read_all(const path* src, allocator* alloc, buffer* out_data);
@@ -402,26 +402,28 @@
 25: func path path_join_cstr(const path* lhs, cstr8 rhs);
 28: func sz path_append(path* dst, const path* src);
 31: func sz path_append_cstr(path* dst, cstr8 src);
-34: func void path_normalize(path* src);
-37: func b32 path_ends_with(const path* src, cstr8 suffix);
-40: func b32 path_is_absolute(const path* src);
-43: func b32 path_is_relative(const path* src);
-46: func void path_remove_extension(path* src);
-49: func void path_remove_name(path* src);
-52: func void path_remove_directory(path* src);
-55: func void path_remove_trailing_slash(path* src);
-58: func path path_get_extension(const path* src);
-61: func path path_get_name(const path* src);
-64: func path path_get_basename(const path* src);
-67: func path path_get_directory(const path* src);
-70: func path path_get_common(const path* src_list, sz path_count);
-73: func path path_get_current(void);
-76: func b32 path_set_current(const path* src);
-79: func path path_resolve(const path* src);
-82: func path path_make_relative(const path* src, const path* root);
-85: func b32 path_exists(const path* src);
-88: func b32 path_remove(const path* src);
-91: func b32 path_rename(const path* old_src, const path* new_src);
+34: func void path_norm(path* src);
+37: func path path_norm_trimmed_cpy(const path* src);
+40: func b32 path_cmd_normd(const path* lhs, const path* rhs);
+43: func b32 path_ends_with(const path* src, cstr8 suffix);
+46: func b32 path_is_absolute(const path* src);
+49: func b32 path_is_relative(const path* src);
+52: func void path_remove_extension(path* src);
+55: func void path_remove_name(path* src);
+58: func void path_remove_directory(path* src);
+61: func void path_remove_trailing_slash(path* src);
+64: func path path_get_extension(const path* src);
+67: func path path_get_name(const path* src);
+70: func path path_get_basename(const path* src);
+73: func path path_get_directory(const path* src);
+76: func path path_get_common(const path* src_list, sz path_count);
+79: func path path_get_current(void);
+82: func b32 path_set_current(const path* src);
+85: func path path_resolve(const path* src);
+88: func path path_make_relative(const path* src, const path* root);
+91: func b32 path_exists(const path* src);
+94: func b32 path_remove(const path* src);
+97: func b32 path_rename(const path* old_src, const path* new_src);
 94: func timestamp path_get_last_write_time(const path* src);
 
 === include\filesystem\pathinfo.h ===
@@ -864,7 +866,7 @@
 16: func void mem_set64(void* ptr, u64 value, sz count);
 18: func void mem_zero(void* ptr, sz size);
 20: func void* mem_cpy(void* dst, const void* src, sz size);
-21: func void* mem_move(void* dst, const void* src, sz size);
+21: func void* mem_mv(void* dst, const void* src, sz size);
 22: func b32 mem_cmp(const void* lhs, const void* rhs, sz size);
 23: func void* mem_align_forward(void* ptr, sz align);
 24: func void* mem_align_backward(void* ptr, sz align);
@@ -1055,8 +1057,8 @@
 28: func b32 cstr8_cmp(cstr8 lhs, cstr8 rhs);
 31: func b32 cstr8_cmp_n(cstr8 lhs, cstr8 rhs, sz cnt);
 34: func b32 cstr8_cmp_nocase(cstr8 lhs, cstr8 rhs);
-38: func sz cstr8_copy(c8* dst, sz dst_size, cstr8 src);
-41: func sz cstr8_copy_n(c8* dst, sz dst_size, cstr8 src, sz cnt);
+38: func sz cstr8_cpy(c8* dst, sz dst_size, cstr8 src);
+41: func sz cstr8_cpy_n(c8* dst, sz dst_size, cstr8 src, sz cnt);
 44: func sz cstr8_cat(c8* dst, sz dst_cap, cstr8 src);
 47: func sz cstr8_append_char(c8* dst, sz dst_cap, c8 chr);
 50: func void cstr8_truncate(c8* str, sz length);
@@ -1094,8 +1096,8 @@
 157: func b32 cstr16_cmp(cstr16 lhs, cstr16 rhs);
 160: func b32 cstr16_cmp_n(cstr16 lhs, cstr16 rhs, sz cnt);
 163: func b32 cstr16_cmp_nocase(cstr16 lhs, cstr16 rhs);
-167: func sz cstr16_copy(c16* dst, sz dst_size, cstr16 src);
-170: func sz cstr16_copy_n(c16* dst, sz dst_size, cstr16 src, sz cnt);
+167: func sz cstr16_cpy(c16* dst, sz dst_size, cstr16 src);
+170: func sz cstr16_cpy_n(c16* dst, sz dst_size, cstr16 src, sz cnt);
 173: func sz cstr16_cat(c16* dst, sz dst_cap, cstr16 src);
 176: func sz cstr16_append_char(c16* dst, sz dst_cap, c16 chr);
 179: func void cstr16_truncate(c16* str, sz length);
@@ -1127,8 +1129,8 @@
 265: func b32 cstr32_cmp(cstr32 lhs, cstr32 rhs);
 268: func b32 cstr32_cmp_n(cstr32 lhs, cstr32 rhs, sz cnt);
 271: func b32 cstr32_cmp_nocase(cstr32 lhs, cstr32 rhs);
-275: func sz cstr32_copy(c32* dst, sz dst_size, cstr32 src);
-278: func sz cstr32_copy_n(c32* dst, sz dst_size, cstr32 src, sz cnt);
+275: func sz cstr32_cpy(c32* dst, sz dst_size, cstr32 src);
+278: func sz cstr32_cpy_n(c32* dst, sz dst_size, cstr32 src, sz cnt);
 281: func sz cstr32_cat(c32* dst, sz dst_cap, cstr32 src);
 284: func sz cstr32_append_char(c32* dst, sz dst_cap, c32 chr);
 287: func void cstr32_truncate(c32* str, sz length);
@@ -1182,7 +1184,7 @@
 78: func b32 str8_to_u64(str8 str, u64 max_value, u64* out);
 82: func b32 str8_to_f64(str8 str, f64* out);
 85: func void str8_clear(str8* str);
-88: func sz str8_copy(str8* str, cstr8 src);
+88: func sz str8_cpy(str8* str, cstr8 src);
 91: func sz str8_cat(str8* str, cstr8 src);
 94: func sz str8_append_char(str8* str, c8 chr);
 97: func void str8_truncate(str8* str, sz length);
@@ -1219,7 +1221,7 @@
 202: func b32 str16_to_i64(str16 str, i64* out);
 206: func b32 str16_to_f64(str16 str, f64* out);
 209: func void str16_clear(str16* str);
-212: func sz str16_copy(str16* str, cstr16 src);
+212: func sz str16_cpy(str16* str, cstr16 src);
 215: func sz str16_cat(str16* str, cstr16 src);
 218: func sz str16_append_char(str16* str, c16 chr);
 221: func void str16_truncate(str16* str, sz length);
@@ -1252,7 +1254,7 @@
 314: func b32 str32_to_i64(str32 str, i64* out);
 318: func b32 str32_to_f64(str32 str, f64* out);
 321: func void str32_clear(str32* str);
-324: func sz str32_copy(str32* str, cstr32 src);
+324: func sz str32_cpy(str32* str, cstr32 src);
 327: func sz str32_cat(str32* str, cstr32 src);
 330: func sz str32_append_char(str32* str, c32 chr);
 333: func void str32_truncate(str32* str, sz length);
@@ -1749,7 +1751,7 @@
 21: func b32 window_destroy(window id);
 23: func b32 window_show(window id);
 24: func b32 window_hide(window id);
-26: func b32 window_move(window id, i32 xpos, i32 ypos);
+26: func b32 window_mv(window id, i32 xpos, i32 ypos);
 27: func b32 window_get_position(window id, i32* out_xpos, i32* out_ypos);
 29: func b32 window_resize(window id, i32 width, i32 height);
 30: func b32 window_get_size(window id, i32* out_width, i32* out_height);

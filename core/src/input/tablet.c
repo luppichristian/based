@@ -127,14 +127,14 @@ func b32 tablet_read_hid_report(device_id id, void* dst, sz capacity, sz* out_si
 
   while (entry) {
     if (entry->usage_page == 0x0D && tablet_hash_path(entry->path) == id.instance) {
-      sz copy_idx = 0;
+      sz cpy_idx = 0;
 
-      while (entry->path && entry->path[copy_idx] && (copy_idx + 1) < size_of(path_buf)) {
-        path_buf[copy_idx] = entry->path[copy_idx];
-        copy_idx += 1;
+      while (entry->path && entry->path[cpy_idx] && (cpy_idx + 1) < size_of(path_buf)) {
+        path_buf[cpy_idx] = entry->path[cpy_idx];
+        cpy_idx += 1;
       }
 
-      path_buf[copy_idx] = '\0';
+      path_buf[cpy_idx] = '\0';
       break;
     }
 

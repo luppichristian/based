@@ -31,12 +31,12 @@ namespace {
   }
 }  // namespace
 
-TEST(filesystem_directory_test, create_iterate_copy_and_remove_recursive) {
+TEST(filesystem_directory_test, create_iterate_cpy_and_remove_recursive) {
   path root_path = directory_test_make_root("dir_ops");
   path src_path = path_join_cstr(&root_path, "src");
   path nested_path = path_join_cstr(&src_path, "nested");
   path file_path = path_join_cstr(&src_path, "note.txt");
-  path copy_path = path_join_cstr(&root_path, "dst");
+  path cpy_path = path_join_cstr(&root_path, "dst");
 
   if (dir_create_recursive(&nested_path) == 0) {
     GTEST_SKIP() << "unable to create test directories";
@@ -57,8 +57,8 @@ TEST(filesystem_directory_test, create_iterate_copy_and_remove_recursive) {
   }
   EXPECT_GE(recursive_count, direct_count);
 
-  ASSERT_TRUE(dir_copy_recursive(&src_path, &copy_path, 1) != 0);
-  EXPECT_TRUE(dir_exists(&copy_path) != 0);
+  ASSERT_TRUE(dir_cpy_recursive(&src_path, &cpy_path, 1) != 0);
+  EXPECT_TRUE(dir_exists(&cpy_path) != 0);
 
   (void)dir_remove_recursive(&root_path);
 }

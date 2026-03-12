@@ -33,11 +33,11 @@ typedef struct dir_remove_state {
   b32 success;
 } dir_remove_state;
 
-typedef struct dir_copy_state {
+typedef struct dir_cpy_state {
   path dst_root;
   b32 overwrite_existing;
   b32 success;
-} dir_copy_state;
+} dir_cpy_state;
 
 func path dir_path_from_string(cstr8 src) {
   profile_func_begin;
@@ -139,22 +139,22 @@ func sz dir_root_length(cstr8 src) {
 func path dir_relative_path(const path* root_path, const path* full_path) {
   profile_func_begin;
   path relative_path = *full_path;
-  path root_copy = *root_path;
+  path root_cpy = *root_path;
   sz root_len = 0;
 
-  path_normalize(&relative_path);
-  path_normalize(&root_copy);
-  path_remove_trailing_slash(&root_copy);
-  root_len = cstr8_len(root_copy.buf);
+  path_norm(&relative_path);
+  path_norm(&root_cpy);
+  path_remove_trailing_slash(&root_cpy);
+  root_len = cstr8_len(root_cpy.buf);
 
   if (root_len == 0) {
     profile_func_end;
     return relative_path;
   }
 
-  if (cstr8_cmp_n(relative_path.buf, root_copy.buf, root_len)) {
+  if (cstr8_cmp_n(relative_path.buf, root_cpy.buf, root_len)) {
     if (relative_path.buf[root_len] == '/') {
-      mem_move(
+      mem_mv(
           relative_path.buf,
           relative_path.buf + root_len + 1,
           cstr8_len(relative_path.buf + root_len + 1) + 1);
@@ -366,9 +366,9 @@ func SDL_EnumerationResult SDLCALL dir_remove_callback(
   return SDL_ENUM_CONTINUE;
 }
 
-func b32 dir_copy_entry(const dir_entry* entry, void* user_data) {
+func b32 dir_cpy_entry(const dir_entry* entry, void* user_data) {
   profile_func_begin;
-  dir_copy_state* state = (dir_copy_state*)user_data;
+  dir_cpy_state* state = (dir_cpy_state*)user_data;
   path dst_path;
 
   if (state == NULL || entry == NULL) {
@@ -378,12 +378,12 @@ func b32 dir_copy_entry(const dir_entry* entry, void* user_data) {
 
   dst_path = path_join(&state->dst_root, &entry->relative_path);
   if (entry->is_directory) {
-    state->success = dir_copy_recursive(
+    state->success = dir_cpy_recursive(
         &entry->full_path,
         &dst_path,
         state->overwrite_existing);
   } else {
-    state->success = file_copy(&entry->full_path, &dst_path, state->overwrite_existing);
+    state->success = file_cpy(&entry->full_path, &dst_path, state->overwrite_existing);
   }
 
   profile_func_end;
@@ -507,9 +507,9 @@ func b32 dir_rename(const path* old_src, const path* new_src) {
   return success;
 }
 
-func b32 dir_copy_recursive(const path* src, const path* dst, b32 overwrite_existing) {
+func b32 dir_cpy_recursive(const path* src, const path* dst, b32 overwrite_existing) {
   profile_func_begin;
-  dir_copy_state state;
+  dir_cpy_state state;
   path src_abs;
   path dst_abs;
 
@@ -550,7 +550,7 @@ func b32 dir_copy_recursive(const path* src, const path* dst, b32 overwrite_exis
   state.overwrite_existing = overwrite_existing;
   state.success = 1;
 
-  if (!dir_iterate(src, dir_copy_entry, &state)) {
+  if (!dir_iterate(src, dir_cpy_entry, &state)) {
     thread_log_error("Failed while recursively copying directory source=%s destination=%s", src->buf, dst->buf);
     profile_func_end;
     return false;
@@ -584,7 +584,7 @@ func b32 dir_create_recursive(const path* src) {
   sz root_len = 0;
   sz item_idx = 0;
 
-  path_normalize(&cur_path);
+  path_norm(&cur_path);
   path_remove_trailing_slash(&cur_path);
 
   if (cstr8_is_empty(cur_path.buf)) {

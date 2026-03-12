@@ -21,7 +21,6 @@ typedef struct archive_entry {
 } archive_entry;
 
 typedef struct archive {
-  allocator* opt_alloc;
   archive_entry* entries;
   sz entry_count;
   sz entry_capacity;
@@ -36,14 +35,14 @@ typedef struct archive_entry_info {
 // Returns 1 to continue iterating, 0 to stop.
 typedef b32 archive_iterate_callback(const archive_entry_info* info, void* user_data);
 
-// Creates an empty archive value. opt_alloc may be null when only write-once transient storage is needed.
-func archive _archive_create(allocator* opt_alloc, callsite site);
+// Creates an empty archive value backed by the current thread or global permanent heap.
+func archive _archive_create(callsite site);
 
 // Releases every entry buffer owned by arc.
 func void _archive_destroy(archive* arc, callsite site);
 
-#define archive_create(opt_alloc) \
-  _archive_create(opt_alloc, CALLSITE_HERE)
+#define archive_create() \
+  _archive_create(CALLSITE_HERE)
 #define archive_destroy(arc) \
   _archive_destroy(arc, CALLSITE_HERE)
 
@@ -62,7 +61,7 @@ func b32 archive_load_file(archive* arc, const path* src);
 // Saves arc to disk as a zip archive.
 func b32 archive_save_file(const archive* arc, const path* dst);
 
-// Adds or replaces a file entry by copying data into arc.
+// Adds or replaces a file entry by cpying data into arc.
 func b32 archive_write_all(archive* arc, const path* src, buffer data);
 
 // Removes an entry from arc. Returns 1 when the entry existed, 0 otherwise.

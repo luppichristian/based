@@ -372,8 +372,8 @@ func void* _arena_realloc(
   if (!done) {
     result = _arena_alloc(arn, new_size, align, site);
     if (result) {
-      sz copy_sz = old_size < new_size ? old_size : new_size;
-      mem_cpy(result, ptr, copy_sz);
+      sz cpy_sz = old_size < new_size ? old_size : new_size;
+      mem_cpy(result, ptr, cpy_sz);
     }
   }
 

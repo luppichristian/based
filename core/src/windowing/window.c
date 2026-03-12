@@ -161,7 +161,7 @@ func b32 window_hide(window id) {
 // Position
 // =========================================================================
 
-func b32 window_move(window id, i32 xpos, i32 ypos) {
+func b32 window_mv(window id, i32 xpos, i32 ypos) {
   profile_func_begin;
   SDL_Window* window_ptr = window_resolve(id);
   if (window_ptr == NULL) {

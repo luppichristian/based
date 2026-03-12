@@ -153,7 +153,7 @@ func b32 cstr8_cmp_nocase(cstr8 lhs, cstr8 rhs) {
 // cstr8 — Copy / Append
 // =========================================================================
 
-func sz cstr8_copy(c8* dst, sz dst_size, cstr8 src) {
+func sz cstr8_cpy(c8* dst, sz dst_size, cstr8 src) {
   profile_func_begin;
   if (dst == NULL || src == NULL || dst_size == 0) {
     profile_func_end;
@@ -162,26 +162,26 @@ func sz cstr8_copy(c8* dst, sz dst_size, cstr8 src) {
   assert(dst != NULL);
   assert(src != NULL);
   sz src_len = cstr8_len(src);
-  sz copy_len = src_len < dst_size - 1 ? src_len : dst_size - 1;
-  mem_cpy(dst, src, copy_len);
-  dst[copy_len] = '\0';
+  sz cpy_len = src_len < dst_size - 1 ? src_len : dst_size - 1;
+  mem_cpy(dst, src, cpy_len);
+  dst[cpy_len] = '\0';
   profile_func_end;
-  return copy_len;
+  return cpy_len;
 }
 
-func sz cstr8_copy_n(c8* dst, sz dst_size, cstr8 src, sz cnt) {
+func sz cstr8_cpy_n(c8* dst, sz dst_size, cstr8 src, sz cnt) {
   profile_func_begin;
   if (dst_size == 0) {
     profile_func_end;
     return 0;
   }
   sz src_len = cstr8_len(src);
-  sz max_copy = cnt < src_len ? cnt : src_len;
-  sz copy_len = max_copy < dst_size - 1 ? max_copy : dst_size - 1;
-  mem_cpy(dst, src, copy_len);
-  dst[copy_len] = '\0';
+  sz max_cpy = cnt < src_len ? cnt : src_len;
+  sz cpy_len = max_cpy < dst_size - 1 ? max_cpy : dst_size - 1;
+  mem_cpy(dst, src, cpy_len);
+  dst[cpy_len] = '\0';
   profile_func_end;
-  return copy_len;
+  return cpy_len;
 }
 
 func sz cstr8_cat(c8* dst, sz dst_cap, cstr8 src) {
@@ -197,11 +197,11 @@ func sz cstr8_cat(c8* dst, sz dst_cap, cstr8 src) {
   }
   sz remaining = dst_cap - dst_len - 1;
   sz src_len = cstr8_len(src);
-  sz copy_len = src_len < remaining ? src_len : remaining;
-  mem_cpy(dst + dst_len, src, copy_len);
-  dst[dst_len + copy_len] = '\0';
+  sz cpy_len = src_len < remaining ? src_len : remaining;
+  mem_cpy(dst + dst_len, src, cpy_len);
+  dst[dst_len + cpy_len] = '\0';
   profile_func_end;
-  return dst_len + copy_len;
+  return dst_len + cpy_len;
 }
 
 func sz cstr8_append_char(c8* dst, sz dst_cap, c8 chr) {
@@ -422,7 +422,7 @@ func void cstr8_trim(c8* str) {
   while (len > 0 && c8_is_space(str[start + len - 1])) {
     len--;
   }
-  mem_move(str, str + start, len);
+  mem_mv(str, str + start, len);
   str[len] = '\0';
   profile_func_end;
 }
@@ -477,7 +477,7 @@ func b32 cstr8_remove_prefix(c8* str, cstr8 prefix) {
     return false;
   }
   sz str_len = cstr8_len(str);
-  mem_move(str, str + prefix_len, str_len - prefix_len + 1);
+  mem_mv(str, str + prefix_len, str_len - prefix_len + 1);
   profile_func_end;
   return true;
 }
@@ -512,7 +512,7 @@ func sz cstr8_replace(c8* str, sz str_cap, cstr8 from, cstr8 rep) {
       if (new_len >= str_cap) {
         break;
       }
-      mem_move(str + pos + rep_len, str + pos + from_len, str_len - pos - from_len + 1);
+      mem_mv(str + pos + rep_len, str + pos + from_len, str_len - pos - from_len + 1);
       mem_cpy(str + pos, rep, rep_len);
       str_len = new_len;
       pos += rep_len;
@@ -743,33 +743,33 @@ func b32 cstr16_cmp_nocase(cstr16 lhs, cstr16 rhs) {
 // cstr16 — Copy / Append
 // =========================================================================
 
-func sz cstr16_copy(c16* dst, sz dst_size, cstr16 src) {
+func sz cstr16_cpy(c16* dst, sz dst_size, cstr16 src) {
   profile_func_begin;
   if (dst_size == 0) {
     profile_func_end;
     return 0;
   }
   sz src_len = cstr16_len_impl(src);
-  sz copy_len = src_len < dst_size - 1 ? src_len : dst_size - 1;
-  mem_cpy(dst, src, copy_len * size_of(c16));
-  dst[copy_len] = (c16)'\0';
+  sz cpy_len = src_len < dst_size - 1 ? src_len : dst_size - 1;
+  mem_cpy(dst, src, cpy_len * size_of(c16));
+  dst[cpy_len] = (c16)'\0';
   profile_func_end;
-  return copy_len;
+  return cpy_len;
 }
 
-func sz cstr16_copy_n(c16* dst, sz dst_size, cstr16 src, sz cnt) {
+func sz cstr16_cpy_n(c16* dst, sz dst_size, cstr16 src, sz cnt) {
   profile_func_begin;
   if (dst_size == 0) {
     profile_func_end;
     return 0;
   }
   sz src_len = cstr16_len_impl(src);
-  sz max_copy = cnt < src_len ? cnt : src_len;
-  sz copy_len = max_copy < dst_size - 1 ? max_copy : dst_size - 1;
-  mem_cpy(dst, src, copy_len * size_of(c16));
-  dst[copy_len] = (c16)'\0';
+  sz max_cpy = cnt < src_len ? cnt : src_len;
+  sz cpy_len = max_cpy < dst_size - 1 ? max_cpy : dst_size - 1;
+  mem_cpy(dst, src, cpy_len * size_of(c16));
+  dst[cpy_len] = (c16)'\0';
   profile_func_end;
-  return copy_len;
+  return cpy_len;
 }
 
 func sz cstr16_cat(c16* dst, sz dst_cap, cstr16 src) {
@@ -785,11 +785,11 @@ func sz cstr16_cat(c16* dst, sz dst_cap, cstr16 src) {
   }
   sz remaining = dst_cap - dst_len - 1;
   sz src_len = cstr16_len_impl(src);
-  sz copy_len = src_len < remaining ? src_len : remaining;
-  mem_cpy(dst + dst_len, src, copy_len * size_of(c16));
-  dst[dst_len + copy_len] = (c16)'\0';
+  sz cpy_len = src_len < remaining ? src_len : remaining;
+  mem_cpy(dst + dst_len, src, cpy_len * size_of(c16));
+  dst[dst_len + cpy_len] = (c16)'\0';
   profile_func_end;
-  return dst_len + copy_len;
+  return dst_len + cpy_len;
 }
 
 func sz cstr16_append_char(c16* dst, sz dst_cap, c16 chr) {
@@ -988,7 +988,7 @@ func void cstr16_trim(c16* str) {
   while (len > 0 && c16_is_space(str[start + len - 1])) {
     len--;
   }
-  mem_move(str, str + start, len * size_of(c16));
+  mem_mv(str, str + start, len * size_of(c16));
   str[len] = (c16)'\0';
   profile_func_end;
 }
@@ -1043,7 +1043,7 @@ func b32 cstr16_remove_prefix(c16* str, cstr16 prefix) {
     return false;
   }
   sz str_len = cstr16_len_impl(str);
-  mem_move(str, str + prefix_len, (str_len - prefix_len + 1) * size_of(c16));
+  mem_mv(str, str + prefix_len, (str_len - prefix_len + 1) * size_of(c16));
   profile_func_end;
   return true;
 }
@@ -1082,7 +1082,7 @@ func sz cstr16_replace(c16* str, sz str_cap, cstr16 from, cstr16 rep) {
       if (new_len >= str_cap) {
         break;
       }
-      mem_move(str + pos + rep_len, str + pos + from_len, (str_len - pos - from_len + 1) * size_of(c16));
+      mem_mv(str + pos + rep_len, str + pos + from_len, (str_len - pos - from_len + 1) * size_of(c16));
       mem_cpy(str + pos, rep, rep_len * size_of(c16));
       str_len = new_len;
       pos += rep_len;
@@ -1229,33 +1229,33 @@ func b32 cstr32_cmp_nocase(cstr32 lhs, cstr32 rhs) {
 // cstr32 — Copy / Append
 // =========================================================================
 
-func sz cstr32_copy(c32* dst, sz dst_size, cstr32 src) {
+func sz cstr32_cpy(c32* dst, sz dst_size, cstr32 src) {
   profile_func_begin;
   if (dst_size == 0) {
     profile_func_end;
     return 0;
   }
   sz src_len = cstr32_len_impl(src);
-  sz copy_len = src_len < dst_size - 1 ? src_len : dst_size - 1;
-  mem_cpy(dst, src, copy_len * size_of(c32));
-  dst[copy_len] = (c32)'\0';
+  sz cpy_len = src_len < dst_size - 1 ? src_len : dst_size - 1;
+  mem_cpy(dst, src, cpy_len * size_of(c32));
+  dst[cpy_len] = (c32)'\0';
   profile_func_end;
-  return copy_len;
+  return cpy_len;
 }
 
-func sz cstr32_copy_n(c32* dst, sz dst_size, cstr32 src, sz cnt) {
+func sz cstr32_cpy_n(c32* dst, sz dst_size, cstr32 src, sz cnt) {
   profile_func_begin;
   if (dst_size == 0) {
     profile_func_end;
     return 0;
   }
   sz src_len = cstr32_len_impl(src);
-  sz max_copy = cnt < src_len ? cnt : src_len;
-  sz copy_len = max_copy < dst_size - 1 ? max_copy : dst_size - 1;
-  mem_cpy(dst, src, copy_len * size_of(c32));
-  dst[copy_len] = (c32)'\0';
+  sz max_cpy = cnt < src_len ? cnt : src_len;
+  sz cpy_len = max_cpy < dst_size - 1 ? max_cpy : dst_size - 1;
+  mem_cpy(dst, src, cpy_len * size_of(c32));
+  dst[cpy_len] = (c32)'\0';
   profile_func_end;
-  return copy_len;
+  return cpy_len;
 }
 
 func sz cstr32_cat(c32* dst, sz dst_cap, cstr32 src) {
@@ -1271,11 +1271,11 @@ func sz cstr32_cat(c32* dst, sz dst_cap, cstr32 src) {
   }
   sz remaining = dst_cap - dst_len - 1;
   sz src_len = cstr32_len_impl(src);
-  sz copy_len = src_len < remaining ? src_len : remaining;
-  mem_cpy(dst + dst_len, src, copy_len * size_of(c32));
-  dst[dst_len + copy_len] = (c32)'\0';
+  sz cpy_len = src_len < remaining ? src_len : remaining;
+  mem_cpy(dst + dst_len, src, cpy_len * size_of(c32));
+  dst[dst_len + cpy_len] = (c32)'\0';
   profile_func_end;
-  return dst_len + copy_len;
+  return dst_len + cpy_len;
 }
 
 func sz cstr32_append_char(c32* dst, sz dst_cap, c32 chr) {
@@ -1474,7 +1474,7 @@ func void cstr32_trim(c32* str) {
   while (len > 0 && c32_is_space(str[start + len - 1])) {
     len--;
   }
-  mem_move(str, str + start, len * size_of(c32));
+  mem_mv(str, str + start, len * size_of(c32));
   str[len] = (c32)'\0';
   profile_func_end;
 }
@@ -1529,7 +1529,7 @@ func b32 cstr32_remove_prefix(c32* str, cstr32 prefix) {
     return false;
   }
   sz str_len = cstr32_len_impl(str);
-  mem_move(str, str + prefix_len, (str_len - prefix_len + 1) * size_of(c32));
+  mem_mv(str, str + prefix_len, (str_len - prefix_len + 1) * size_of(c32));
   profile_func_end;
   return true;
 }
@@ -1568,7 +1568,7 @@ func sz cstr32_replace(c32* str, sz str_cap, cstr32 from, cstr32 rep) {
       if (new_len >= str_cap) {
         break;
       }
-      mem_move(str + pos + rep_len, str + pos + from_len, (str_len - pos - from_len + 1) * size_of(c32));
+      mem_mv(str + pos + rep_len, str + pos + from_len, (str_len - pos - from_len + 1) * size_of(c32));
       mem_cpy(str + pos, rep, rep_len * size_of(c32));
       str_len = new_len;
       pos += rep_len;

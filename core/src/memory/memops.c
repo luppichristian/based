@@ -81,7 +81,7 @@ func void* mem_cpy(void* dst, const void* src, sz size) {
   return result;
 }
 
-func void* mem_move(void* dst, const void* src, sz size) {
+func void* mem_mv(void* dst, const void* src, sz size) {
   profile_func_begin;
   if (size == 0) {
     profile_func_end;

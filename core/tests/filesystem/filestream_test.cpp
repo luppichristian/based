@@ -49,7 +49,7 @@ TEST(filesystem_filestream_test, native_stream_write_seek_read) {
 }
 
 TEST(filesystem_filestream_test, archive_stream_flushes_into_archive_entry) {
-  archive arc_val = archive_create(nullptr);
+  archive arc_val = archive_create();
   path entry_path = path_from_cstr("data/item.bin");
   filestream stm_val = filestream_open_archive(
       &arc_val,
