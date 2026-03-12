@@ -3,6 +3,7 @@
 
 #include "memory/pool.h"
 #include "basic/assert.h"
+#include "containers/singly_list.h"
 #include "context/global_ctx.h"
 #include "context/thread_ctx.h"
 #include "input/msg.h"
@@ -75,13 +76,7 @@ func void pool_block_carve(pool* pol, pool_block* blk) {
 // Appends blk to the pool's block chain.
 func void pool_chain_block(pool* pol, pool_block* blk) {
   profile_func_begin;
-  if (pol->blocks_tail) {
-    pol->blocks_tail->next = blk;
-    pol->blocks_tail = blk;
-  } else {
-    pol->blocks_head = blk;
-    pol->blocks_tail = blk;
-  }
+  SINGLY_LIST_PUSH_BACK(pol->blocks_head, pol->blocks_tail, blk);
   profile_func_end;
 }
 
@@ -201,8 +196,7 @@ func void _pool_destroy(pool* pol, callsite site) {
     mutex_lock(pol->opt_mutex);
   }
 
-  pool_block* blk = pol->blocks_head;
-  while (blk) {
+  SINGLY_LIST_FOREACH(pol->blocks_head, pol->blocks_tail, blk) {
     pool_block* nxt = blk->next;
     if (blk->owned && pol->parent.alloc_fn) {
       _allocator_dealloc(pol->parent, blk, CALLSITE_HERE);
@@ -413,12 +407,10 @@ func void pool_clear(pool* pol) {
   }
 
   pol->free_head = NULL;
-  pool_block* blk = pol->blocks_head;
   sz rebuilt_blocks = 0;
-  while (blk) {
+  SINGLY_LIST_FOREACH(pol->blocks_head, pol->blocks_tail, blk) {
     pool_block_carve(pol, blk);
     rebuilt_blocks += 1;
-    blk = blk->next;
   }
 
   if (pol->opt_mutex) {
@@ -436,7 +428,7 @@ func sz pool_block_count(pool* pol) {
     mutex_lock(pol->opt_mutex);
   }
   sz count = 0;
-  for (pool_block* blk = pol->blocks_head; blk != NULL; blk = blk->next) {
+  SINGLY_LIST_FOREACH(pol->blocks_head, pol->blocks_tail, blk) {
     count += 1;
   }
   if (pol->opt_mutex) {

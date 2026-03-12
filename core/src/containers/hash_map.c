@@ -308,14 +308,6 @@ func b32 hash_map_remove(hash_map* map, u64 key) {
   }
 }
 
-// =========================================================================
-// Iteration
-// =========================================================================
-
-func hash_map_iter hash_map_iter_begin(void) {
-  return 0;
-}
-
 func hash_map_slot* hash_map_next(hash_map* map, hash_map_iter* iter) {
   profile_func_begin;
   if (map == NULL || iter == NULL || !map->slots) {

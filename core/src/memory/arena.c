@@ -3,6 +3,7 @@
 
 #include "memory/arena.h"
 #include "basic/assert.h"
+#include "containers/singly_list.h"
 #include "context/global_ctx.h"
 #include "context/thread_ctx.h"
 #include "input/msg.h"
@@ -27,13 +28,7 @@ func void arena_block_setup(arena_block* blk, sz size, b8 owned) {
 
 func void arena_chain_block(arena* arn, arena_block* blk) {
   profile_func_begin;
-  if (arn->blocks_tail) {
-    arn->blocks_tail->next = blk;
-    arn->blocks_tail = blk;
-  } else {
-    arn->blocks_head = blk;
-    arn->blocks_tail = blk;
-  }
+  SINGLY_LIST_PUSH_BACK(arn->blocks_head, arn->blocks_tail, blk);
   profile_func_end;
 }
 
@@ -180,8 +175,7 @@ func void _arena_destroy(arena* arn, callsite site) {
     mutex_lock(arn->opt_mutex);
   }
 
-  arena_block* blk = arn->blocks_head;
-  while (blk) {
+  SINGLY_LIST_FOREACH(arn->blocks_head, arn->blocks_tail, blk) {
     arena_block* nxt = blk->next;
     if (blk->owned && arn->parent.alloc_fn) {
       _allocator_dealloc(arn->parent, blk, CALLSITE_HERE);
@@ -297,10 +291,11 @@ func void* _arena_alloc(arena* arn, sz size, sz align, callsite site) {
 
   void* result = NULL;
 
-  arena_block* blk = arn->blocks_head;
-  while (blk && !result) {
+  SINGLY_LIST_FOREACH(arn->blocks_head, arn->blocks_tail, blk) {
     result = arena_block_alloc(blk, size, align);
-    blk = blk->next;
+    if (result != NULL) {
+      break;
+    }
   }
 
   if (!result && arn->parent.alloc_fn) {
@@ -346,8 +341,7 @@ func void* _arena_realloc(
   }
 
   // Try to extend the last allocation in-place by moving the cursor.
-  arena_block* blk = arn->blocks_head;
-  while (blk && !done) {
+  SINGLY_LIST_FOREACH(arn->blocks_head, arn->blocks_tail, blk) {
     u8* cursor = (u8*)blk + blk->used;
     if ((u8*)ptr + old_size == cursor) {
       if (new_size <= old_size) {
@@ -362,7 +356,9 @@ func void* _arena_realloc(
         }
       }
     }
-    blk = blk->next;
+    if (done) {
+      break;
+    }
   }
 
   if (arn->opt_mutex) {
@@ -395,12 +391,10 @@ func void arena_clear(arena* arn) {
     mutex_lock(arn->opt_mutex);
   }
 
-  arena_block* blk = arn->blocks_head;
   sz cleared_blocks = 0;
-  while (blk) {
+  SINGLY_LIST_FOREACH(arn->blocks_head, arn->blocks_tail, blk) {
     blk->used = size_of(arena_block);
     cleared_blocks += 1;
-    blk = blk->next;
   }
 
   if (arn->opt_mutex) {
@@ -418,7 +412,7 @@ func sz arena_block_count(arena* arn) {
     mutex_lock(arn->opt_mutex);
   }
   sz count = 0;
-  for (arena_block* blk = arn->blocks_head; blk != NULL; blk = blk->next) {
+  SINGLY_LIST_FOREACH(arn->blocks_head, arn->blocks_tail, blk) {
     count += 1;
   }
   if (arn->opt_mutex) {
@@ -435,7 +429,7 @@ func sz arena_total_size(arena* arn) {
     mutex_lock(arn->opt_mutex);
   }
   sz total = 0;
-  for (arena_block* blk = arn->blocks_head; blk != NULL; blk = blk->next) {
+  SINGLY_LIST_FOREACH(arn->blocks_head, arn->blocks_tail, blk) {
     total += blk->size;
   }
   if (arn->opt_mutex) {
@@ -452,7 +446,7 @@ func sz arena_total_used(arena* arn) {
     mutex_lock(arn->opt_mutex);
   }
   sz total = 0;
-  for (arena_block* blk = arn->blocks_head; blk != NULL; blk = blk->next) {
+  SINGLY_LIST_FOREACH(arn->blocks_head, arn->blocks_tail, blk) {
     total += blk->used > size_of(arena_block) ? blk->used - size_of(arena_block) : 0;
   }
   if (arn->opt_mutex) {
@@ -469,7 +463,7 @@ func sz arena_total_free(arena* arn) {
     mutex_lock(arn->opt_mutex);
   }
   sz total = 0;
-  for (arena_block* blk = arn->blocks_head; blk != NULL; blk = blk->next) {
+  SINGLY_LIST_FOREACH(arn->blocks_head, arn->blocks_tail, blk) {
     if (blk->size > blk->used) {
       total += blk->size - blk->used;
     }

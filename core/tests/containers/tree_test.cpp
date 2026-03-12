@@ -12,7 +12,7 @@ struct tree_node {
   i32 value;
 };
 
-TEST(containers_tree_test, next_preorder_ptr) {
+TEST(containers_tree_test, next_preorder) {
   struct tree_node root = {0};
   struct tree_node child1 = {0};
   struct tree_node child2 = {0};
@@ -24,13 +24,15 @@ TEST(containers_tree_test, next_preorder_ptr) {
   child1.next_sibling = &child2;
   child2.prev_sibling = &child1;
 
-  struct tree_node* next = (struct tree_node*)tree_next_preorder_ptr(&root, &root);
+  struct tree_node* next = nullptr;
+
+  TREE_NEXT_PREORDER(&root, &root, next);
   EXPECT_EQ(&child1, next);
 
-  next = (struct tree_node*)tree_next_preorder_ptr(&root, next);
+  TREE_NEXT_PREORDER(&root, next, next);
   EXPECT_EQ(&child2, next);
 
-  next = (struct tree_node*)tree_next_preorder_ptr(&root, next);
+  TREE_NEXT_PREORDER(&root, next, next);
   EXPECT_EQ(nullptr, next);
 }
 

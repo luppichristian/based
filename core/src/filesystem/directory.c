@@ -4,6 +4,7 @@
 #include "filesystem/directory.h"
 
 #include "basic/assert.h"
+#include "containers/singly_list.h"
 #include "context/thread_ctx.h"
 #include "filesystem/file.h"
 
@@ -201,14 +202,7 @@ func b32 dir_pending_push(dir_iterate_state* state, const path* src) {
   }
 
   node->dir_path = *src;
-  node->next = NULL;
-
-  if (state->pending_tail != NULL) {
-    state->pending_tail->next = node;
-  } else {
-    state->pending_head = node;
-  }
-  state->pending_tail = node;
+  SINGLY_LIST_PUSH_BACK(state->pending_head, state->pending_tail, node);
 
   profile_func_end;
   return true;
@@ -216,16 +210,13 @@ func b32 dir_pending_push(dir_iterate_state* state, const path* src) {
 
 func b32 dir_pending_pop(dir_iterate_state* state, path* out_path) {
   profile_func_begin;
-  dir_pending_dir* node = state->pending_head;
+  dir_pending_dir* node = NULL;
+  SINGLY_LIST_POP_FRONT(state->pending_head, state->pending_tail, node);
   if (node == NULL) {
     profile_func_end;
     return false;
   }
 
-  state->pending_head = node->next;
-  if (state->pending_head == NULL) {
-    state->pending_tail = NULL;
-  }
   *out_path = node->dir_path;
   SDL_free(node);
 
@@ -235,12 +226,11 @@ func b32 dir_pending_pop(dir_iterate_state* state, path* out_path) {
 
 func void dir_pending_clear(dir_iterate_state* state) {
   profile_func_begin;
+  dir_pending_dir* node = NULL;
   while (state->pending_head != NULL) {
-    dir_pending_dir* node = state->pending_head;
-    state->pending_head = node->next;
+    SINGLY_LIST_POP_FRONT(state->pending_head, state->pending_tail, node);
     SDL_free(node);
   }
-  state->pending_tail = NULL;
   profile_func_end;
 }
 

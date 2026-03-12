@@ -10,42 +10,44 @@
 c_begin;
 // =========================================================================
 
-typedef struct tree_links {
-  struct tree_links* parent;
-  struct tree_links* first_child;
-  struct tree_links* last_child;
-  struct tree_links* next_sibling;
-  struct tree_links* prev_sibling;
-} tree_links;
+/*
+TREE_* manages an intrusive general tree with sibling links.
+Each node must provide `parent`, `first_child`, `last_child`,
+`next_sibling`, and `prev_sibling` members.
 
-// TODO: Can we convert this into a macro without using a fixed type?
-// Returns the next node in a pre-order traversal.
-func force_inline void* tree_next_preorder_ptr(void* root_ptr, void* node_ptr) {
-  tree_links* root_node = (tree_links*)root_ptr;
-  tree_links* cursor = (tree_links*)node_ptr;
+Example:
 
-  if (root_node == NULL || cursor == NULL) {
-    return NULL;
-  }
-
-  if (cursor->first_child != NULL) {
-    return cursor->first_child;
-  }
-
-  while (cursor != root_node && cursor->next_sibling == NULL) {
-    cursor = cursor->parent;
-  }
-
-  if (cursor != root_node) {
-    return cursor->next_sibling;
-  }
-
-  return NULL;
-}
+  typedef struct scene_node {
+    struct scene_node* parent;
+    struct scene_node* first_child;
+    struct scene_node* last_child;
+    struct scene_node* next_sibling;
+    struct scene_node* prev_sibling;
+    u64 id;
+  } scene_node;
+*/
 
 // Structural predicates.
 #define TREE_IS_ROOT(node) ((node)->parent == nullptr)
 #define TREE_IS_LEAF(node) ((node)->first_child == nullptr)
+
+// Traversal helpers.
+#define TREE_NEXT_PREORDER(root, node, out) stmt(                                     \
+    typeof((root)) _tree_root = (root);                                               \
+    typeof((node)) _tree_cursor = (node);                                             \
+    (out) = nullptr;                                                                  \
+    if (_tree_root != nullptr && _tree_cursor != nullptr) {                           \
+      if (_tree_cursor->first_child != nullptr) {                                     \
+        (out) = _tree_cursor->first_child;                                            \
+      } else {                                                                        \
+        while (_tree_cursor != _tree_root && _tree_cursor->next_sibling == nullptr) { \
+          _tree_cursor = _tree_cursor->parent;                                        \
+        }                                                                             \
+        if (_tree_cursor != _tree_root) {                                             \
+          (out) = _tree_cursor->next_sibling;                                         \
+        }                                                                             \
+      }                                                                               \
+    })
 
 // Mutation helpers.
 #define TREE_INSERT_CHILD_FRONT(parent, node) stmt( \
@@ -108,13 +110,14 @@ func force_inline void* tree_next_preorder_ptr(void* root_ptr, void* node_ptr) {
 
 // Typed traversal macros.
 #define TREE_FOREACH_CHILDREN(parent, it) \
-  for (typeof((parent)->first_child) it = (parent)->first_child; (it) != nullptr; (it) = (it)->next_sibling)
+  for (typeof(((parent)->first_child)) it = (parent)->first_child; (it) != nullptr; (it) = (it)->next_sibling)
 
 #define TREE_FOREACH_CHILDREN_REVERSE(parent, it) \
-  for (typeof((parent)->last_child) it = (parent)->last_child; (it) != nullptr; (it) = (it)->prev_sibling)
+  for (typeof(((parent)->last_child)) it = (parent)->last_child; (it) != nullptr; (it) = (it)->prev_sibling)
 
-#define TREE_FOREACH_PREORDER(root, it) \
-  for (typeof(root) it = (root); (it) != nullptr; (it) = (typeof(root))tree_next_preorder_ptr((void*)(root), (void*)(it)))
+#define TREE_FOREACH_PREORDER(root, it)               \
+  for (typeof(((root))) it = (root); (it) != nullptr; \
+       (it) = ({ typeof((root)) _tree_next = nullptr; TREE_NEXT_PREORDER((root), (it), _tree_next); _tree_next; }))
 
 // =========================================================================
 c_end;

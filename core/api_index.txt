@@ -96,127 +96,125 @@
 59: #define tril(x) (bil(x) * 1000ll)
 
 === include\containers\binary_tree.h ===
-9: typedef struct binary_tree_links {
-15: func force_inline void* binary_tree_first_inorder_ptr(void* root_ptr) {
-23: func force_inline void* binary_tree_next_inorder_ptr(void* root_ptr, void* node_ptr) {
-49: func force_inline void* binary_tree_first_postorder_ptr(void* root_ptr) {
-57: func force_inline void* binary_tree_next_postorder_ptr(void* root_ptr, void* node_ptr) {
-78: func force_inline void* binary_tree_next_preorder_ptr(void* root_ptr, void* node_ptr) {
-104: #define BINARY_TREE_IS_ROOT(node) ((node)->parent == nullptr)
-105: #define BINARY_TREE_IS_LEAF(node) ((node)->left == nullptr && (node)->right == nullptr)
-107: #define BINARY_TREE_INSERT_LEFT(parent, node) stmt( \
-111: #define BINARY_TREE_INSERT_RIGHT(parent, node) stmt( \
-115: #define BINARY_TREE_REMOVE(root_ptr, node) stmt( \
-125: #define BINARY_TREE_ROTATE_LEFT(root_ptr, node) stmt( \
-142: #define BINARY_TREE_ROTATE_RIGHT(root_ptr, node) stmt( \
-159: #define BINARY_TREE_FOREACH_PREORDER(root, it) \
-163: #define BINARY_TREE_FOREACH_INORDER(root, it) \
-167: #define BINARY_TREE_FOREACH_POSTORDER(root, it) \
+28: #define BINARY_TREE_IS_ROOT(node) ((node)->parent == nullptr)
+29: #define BINARY_TREE_IS_LEAF(node) ((node)->left == nullptr && (node)->right == nullptr)
+32: #define BINARY_TREE_FIRST_INORDER(root, out) stmt( \
+38: #define BINARY_TREE_NEXT_INORDER(root, node, out) stmt( \
+61: #define BINARY_TREE_FIRST_POSTORDER(root, out) stmt( \
+67: #define BINARY_TREE_NEXT_POSTORDER(root, node, out) stmt( \
+84: #define BINARY_TREE_NEXT_PREORDER(root, node, out) stmt( \
+106: #define BINARY_TREE_INSERT_LEFT(parent, node) stmt( \
+110: #define BINARY_TREE_INSERT_RIGHT(parent, node) stmt( \
+114: #define BINARY_TREE_REMOVE(root_ptr, node) stmt( \
+124: #define BINARY_TREE_ROTATE_LEFT(root_ptr, node) stmt( \
+139: #define BINARY_TREE_ROTATE_RIGHT(root_ptr, node) stmt( \
+155: #define BINARY_TREE_FOREACH_PREORDER(root, it) \
+159: #define BINARY_TREE_FOREACH_INORDER(root, it) \
+164: #define BINARY_TREE_FOREACH_POSTORDER(root, it) \
 
 === include\containers\bitset.h ===
-8: #define BITSET_WORD_COUNT(n) (((n) + 63) / 64)
-10: #define BITSET_SET(arr, idx) stmt((arr)[(idx) / 64] |= (1ULL << ((idx) % 64));)
-11: #define BITSET_CLEAR(arr, idx) stmt((arr)[(idx) / 64] &= ~(1ULL << ((idx) % 64));)
-12: #define BITSET_TOGGLE(arr, idx) stmt((arr)[(idx) / 64] ^= (1ULL << ((idx) % 64));)
-13: #define BITSET_TEST(arr, idx) (((arr)[(idx) / 64] >> ((idx) % 64)) & 1ULL)
-15: #define BITSET_CLEAR_ALL(arr, word_count) stmt( \
-20: #define BITSET_SET_ALL(arr, word_count) stmt( \
-25: #define BITSET_COUNT(arr, word_count, out) stmt( \
-31: #define BITSET_FIRST_SET(arr, word_count, out) stmt( \
-40: #define BITSET_FIRST_CLEAR(arr, word_count, out) stmt( \
-49: func force_inline i32 bitset_find_next_set(const u64* arr, sz word_count, i32 from_idx) {
-72: #define BITSET_FOREACH_SET(arr, word_count, idx) \
+27: #define BITSET_WORD_COUNT(n) (((n) + 63) / 64)
+30: #define BITSET_SET(arr, idx) stmt((arr)[(idx) / 64] |= (1ULL << ((idx) % 64));)
+31: #define BITSET_CLEAR(arr, idx) stmt((arr)[(idx) / 64] &= ~(1ULL << ((idx) % 64));)
+32: #define BITSET_TOGGLE(arr, idx) stmt((arr)[(idx) / 64] ^= (1ULL << ((idx) % 64));)
+33: #define BITSET_TEST(arr, idx) (((arr)[(idx) / 64] >> ((idx) % 64)) & 1ULL)
+36: #define BITSET_CLEAR_ALL(arr, word_count) stmt( \
+41: #define BITSET_SET_ALL(arr, word_count) stmt( \
+46: #define BITSET_COUNT(arr, word_count, out) stmt( \
+52: #define BITSET_FIRST_SET(arr, word_count, out) stmt( \
+61: #define BITSET_FIRST_CLEAR(arr, word_count, out) stmt( \
+70: #define BITSET_FIND_NEXT_SET(arr, word_count, from_idx, out) stmt( \
+91: #define BITSET_FOREACH_SET(arr, word_count, idx) \
 
 === include\containers\doubly_list.h ===
-9: #define DOUBLY_LIST_EMPTY(head, tail) ((head) == nullptr)
-11: #define DOUBLY_LIST_COUNT(head, tail, count) stmt( \
-18: #define DOUBLY_LIST_HEAD(head, tail) (head)
-19: #define DOUBLY_LIST_TAIL(head, tail) (tail)
-21: #define DOUBLY_LIST_PUSH_FRONT(head, tail, node) stmt( \
-31: #define DOUBLY_LIST_PUSH_BACK(head, tail, node) stmt( \
-41: #define DOUBLY_LIST_POP_FRONT(head, tail, node) stmt( \
-53: #define DOUBLY_LIST_POP_BACK(head, tail, node) stmt( \
-65: #define DOUBLY_LIST_REMOVE(head, tail, node) stmt(       \
-79: #define DOUBLY_LIST_INSERT_AFTER(head, tail, after, node) stmt( \
-90: #define DOUBLY_LIST_INSERT_BEFORE(head, tail, before, node) stmt( \
-101: #define DOUBLY_LIST_FOREACH(head, tail, it) \
-104: #define DOUBLY_LIST_FOREACH_REVERSE(head, tail, it) \
+26: #define DOUBLY_LIST_EMPTY(head, tail) ((head) == nullptr)
+28: #define DOUBLY_LIST_COUNT(head, tail, count) stmt( \
+35: #define DOUBLY_LIST_HEAD(head, tail) (head)
+36: #define DOUBLY_LIST_TAIL(head, tail) (tail)
+38: #define DOUBLY_LIST_PUSH_FRONT(head, tail, node) stmt( \
+47: #define DOUBLY_LIST_PUSH_BACK(head, tail, node) stmt( \
+56: #define DOUBLY_LIST_POP_FRONT(head, tail, node) stmt( \
+68: #define DOUBLY_LIST_POP_BACK(head, tail, node) stmt( \
+80: #define DOUBLY_LIST_REMOVE(head, tail, node) stmt( \
+93: #define DOUBLY_LIST_INSERT_AFTER(head, tail, after, node) stmt( \
+104: #define DOUBLY_LIST_INSERT_BEFORE(head, tail, before, node) stmt( \
+115: #define DOUBLY_LIST_FOREACH(head, tail, it) \
+118: #define DOUBLY_LIST_FOREACH_REVERSE(head, tail, it) \
 
 === include\containers\hash_map.h ===
-10: typedef struct hash_map_slot {
-17: typedef struct hash_map {
-26: func hash_map hash_map_create(sz cap, allocator alloc);
-27: func void hash_map_destroy(hash_map* map);
-28: func void hash_map_clear(hash_map* map);
-30: func sz hash_map_count(hash_map const* map);
-31: func sz hash_map_capacity(hash_map const* map);
-32: func f32 hash_map_load_factor(hash_map const* map);
-34: func b32 hash_map_rehash(hash_map* map, sz new_cap);
-35: func b32 hash_map_reserve(hash_map* map, sz min_cap);
-37: func b32 hash_map_set(hash_map* map, u64 key, void* value);
-38: func void* hash_map_get(hash_map* map, u64 key);
-39: func b32 hash_map_has(hash_map* map, u64 key);
-40: func b32 hash_map_remove(hash_map* map, u64 key);
-42: func hash_map_iter hash_map_iter_begin(void);
-43: func hash_map_slot* hash_map_next(hash_map* map, hash_map_iter* iter);
+15: typedef struct hash_map_slot {
+22: typedef struct hash_map {
+53: func hash_map hash_map_create(sz cap, allocator alloc);
+54: func void hash_map_destroy(hash_map* map);
+55: func void hash_map_clear(hash_map* map);
+58: func sz hash_map_count(hash_map const* map);
+59: func sz hash_map_capacity(hash_map const* map);
+60: func f32 hash_map_load_factor(hash_map const* map);
+63: func b32 hash_map_rehash(hash_map* map, sz new_cap);
+64: func b32 hash_map_reserve(hash_map* map, sz min_cap);
+67: func b32 hash_map_set(hash_map* map, u64 key, void* value);
+68: func void* hash_map_get(hash_map* map, u64 key);
+69: func b32 hash_map_has(hash_map* map, u64 key);
+70: func b32 hash_map_remove(hash_map* map, u64 key);
+73: func hash_map_slot* hash_map_next(hash_map* map, hash_map_iter* iter);
+75: #define HASH_MAP_FOREACH(map, it) \
 
 === include\containers\ring_list.h ===
-9: #define RING_LIST_EMPTY(head) ((head) == nullptr)
-11: #define RING_LIST_COUNT(head, count) stmt( \
-21: #define RING_LIST_HEAD(head) (head)
-22: #define RING_LIST_TAIL(head) ((head) != nullptr ? (head)->prev : nullptr)
-24: #define RING_LIST_PUSH_FRONT(head, node) stmt( \
-36: #define RING_LIST_PUSH_BACK(head, node) stmt( \
-48: #define RING_LIST_POP_FRONT(head, node) stmt( \
-62: #define RING_LIST_POP_BACK(head, node) stmt( \
-75: #define RING_LIST_REMOVE(head, node) stmt( \
-88: #define RING_LIST_INSERT_AFTER(head, after, node) stmt( \
-95: #define RING_LIST_INSERT_BEFORE(head, before, node) stmt( \
-104: #define RING_LIST_FOREACH(head, it) \
-108: #define RING_LIST_FOREACH_REVERSE(head, it) \
+27: #define RING_LIST_EMPTY(head) ((head) == nullptr)
+29: #define RING_LIST_COUNT(head, count) stmt( \
+39: #define RING_LIST_HEAD(head) (head)
+40: #define RING_LIST_TAIL(head) ((head) != nullptr ? (head)->prev : nullptr)
+42: #define RING_LIST_PUSH_FRONT(head, node) stmt( \
+53: #define RING_LIST_PUSH_BACK(head, node) stmt( \
+65: #define RING_LIST_POP_FRONT(head, node) stmt( \
+79: #define RING_LIST_POP_BACK(head, node) stmt( \
+92: #define RING_LIST_REMOVE(head, node) stmt( \
+105: #define RING_LIST_INSERT_AFTER(head, after, node) stmt( \
+112: #define RING_LIST_INSERT_BEFORE(head, before, node) stmt( \
+121: #define RING_LIST_FOREACH(head, it) \
+125: #define RING_LIST_FOREACH_REVERSE(head, it) \
 
 === include\containers\singly_list.h ===
-9: #define SINGLY_LIST_EMPTY(head, tail) ((head) == nullptr)
-11: #define SINGLY_LIST_COUNT(head, tail, count) stmt( \
-18: #define SINGLY_LIST_HEAD(head, tail) (head)
-19: #define SINGLY_LIST_TAIL(head, tail) (tail)
-21: #define SINGLY_LIST_PUSH_FRONT(head, tail, node) stmt( \
-28: #define SINGLY_LIST_PUSH_BACK(head, tail, node) stmt( \
-37: #define SINGLY_LIST_POP_FRONT(head, tail, node) stmt( \
-47: #define SINGLY_LIST_FOREACH(head, tail, it) \
+25: #define SINGLY_LIST_EMPTY(head, tail) ((head) == nullptr)
+27: #define SINGLY_LIST_COUNT(head, tail, count) stmt( \
+34: #define SINGLY_LIST_HEAD(head, tail) (head)
+35: #define SINGLY_LIST_TAIL(head, tail) (tail)
+37: #define SINGLY_LIST_PUSH_FRONT(head, tail, node) stmt( \
+43: #define SINGLY_LIST_PUSH_BACK(head, tail, node) stmt( \
+51: #define SINGLY_LIST_POP_FRONT(head, tail, node) stmt( \
+61: #define SINGLY_LIST_FOREACH(head, tail, it) \
 
 === include\containers\sort.h ===
-16: func b32 sort_check(
-27: func sz sort_bubble(
-38: func sz sort_quick(
-50: func sz sort_merge(
-62: func sz sort_selection(
-73: func sz sort_insertion(
-84: func sz sort_radix32(u32* ptr, sz elem_count);
-90: func sz sort_radix64(u64* ptr, sz elem_count);
+37: func b32 sort_check(
+48: func sz sort_bubble(
+59: func sz sort_quick(
+71: func sz sort_merge(
+83: func sz sort_selection(
+94: func sz sort_insertion(
+105: func sz sort_radix32(u32* ptr, sz elem_count);
+111: func sz sort_radix64(u64* ptr, sz elem_count);
 
 === include\containers\stack_list.h ===
-9: #define STACK_LIST_EMPTY(head) ((head) == nullptr)
-11: #define STACK_LIST_COUNT(head, count) stmt( \
-17: #define STACK_LIST_HEAD(head) (head)
-18: #define STACK_LIST_NEXT(node) ((node)->next)
-20: #define STACK_LIST_PUSH(head, node) stmt( \
-24: #define STACK_LIST_POP(head, node) stmt( \
-31: #define STACK_LIST_FOREACH(head, it) \
+25: #define STACK_LIST_EMPTY(head) ((head) == nullptr)
+27: #define STACK_LIST_COUNT(head, count) stmt( \
+33: #define STACK_LIST_HEAD(head) (head)
+34: #define STACK_LIST_NEXT(node) ((node)->next)
+36: #define STACK_LIST_PUSH(head, node) stmt( \
+40: #define STACK_LIST_POP(head, node) stmt( \
+47: #define STACK_LIST_FOREACH(head, it) \
 
 === include\containers\tree.h ===
-9: typedef struct tree_links {
-17: func force_inline void* tree_next_preorder_ptr(void* root_ptr, void* node_ptr) {
-40: #define TREE_IS_ROOT(node) ((node)->parent == nullptr)
-41: #define TREE_IS_LEAF(node) ((node)->first_child == nullptr)
-43: #define TREE_INSERT_CHILD_FRONT(parent, node) stmt( \
-54: #define TREE_INSERT_CHILD_BACK(parent, node) stmt( \
-65: #define TREE_INSERT_BEFORE(before, node) stmt( \
-76: #define TREE_INSERT_AFTER(after, node) stmt( \
-87: #define TREE_REMOVE(node) stmt( \
-102: #define TREE_FOREACH_CHILDREN(parent, it) \
-105: #define TREE_FOREACH_CHILDREN_REVERSE(parent, it) \
-108: #define TREE_FOREACH_PREORDER(root, it) \
+31: #define TREE_IS_ROOT(node) ((node)->parent == nullptr)
+32: #define TREE_IS_LEAF(node) ((node)->first_child == nullptr)
+35: #define TREE_NEXT_PREORDER(root, node, out) stmt( \
+53: #define TREE_INSERT_CHILD_FRONT(parent, node) stmt( \
+64: #define TREE_INSERT_CHILD_BACK(parent, node) stmt( \
+75: #define TREE_INSERT_BEFORE(before, node) stmt( \
+86: #define TREE_INSERT_AFTER(after, node) stmt( \
+97: #define TREE_REMOVE(node) stmt( \
+112: #define TREE_FOREACH_CHILDREN(parent, it) \
+115: #define TREE_FOREACH_CHILDREN_REVERSE(parent, it) \
+118: #define TREE_FOREACH_PREORDER(root, it) \
 
 === include\context\ctx.h ===
 21: typedef struct ctx_setup {

@@ -10,6 +10,23 @@
 c_begin;
 // =========================================================================
 
+/*
+sort_* operates on plain contiguous arrays plus a comparison callback.
+
+Example:
+
+  typedef struct score_entry {
+    i32 score;
+  } score_entry;
+
+  func i32 score_compare(const void* lhs_ptr, const void* rhs_ptr, void* user_data) {
+    (void)user_data;
+    score_entry const* lhs = (score_entry const*)lhs_ptr;
+    score_entry const* rhs = (score_entry const*)rhs_ptr;
+    return lhs->score - rhs->score;
+  }
+*/
+
 // Callback used by the generic array sort helpers.
 // Returns <0 when lhs should sort before rhs, >0 when lhs should sort after rhs,
 // and 0 when both elements compare equal.

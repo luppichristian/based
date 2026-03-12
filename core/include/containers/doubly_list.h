@@ -10,6 +10,19 @@
 c_begin;
 // =========================================================================
 
+/*
+DOUBLY_LIST_* manages an intrusive linear list with head and tail pointers.
+Each node must provide `prev` and `next` members.
+
+Example:
+
+  typedef struct job_node {
+    struct job_node* prev;
+    struct job_node* next;
+    i32 priority;
+  } job_node;
+*/
+
 #define DOUBLY_LIST_EMPTY(head, tail) ((head) == nullptr)
 
 #define DOUBLY_LIST_COUNT(head, tail, count) stmt(                             \
@@ -100,10 +113,10 @@ c_begin;
         ->prev = (node);)
 
 #define DOUBLY_LIST_FOREACH(head, tail, it) \
-  for (typeof(head) it = (head); (it) != nullptr; (it) = (it)->next)
+  for (typeof((head)) it = (head); (it) != nullptr; (it) = (it)->next)
 
 #define DOUBLY_LIST_FOREACH_REVERSE(head, tail, it) \
-  for (typeof(tail) it = (tail); (it) != nullptr; (it) = (it)->prev)
+  for (typeof((tail)) it = (tail); (it) != nullptr; (it) = (it)->prev)
 
 // =========================================================================
 c_end;

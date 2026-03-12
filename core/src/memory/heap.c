@@ -3,6 +3,7 @@
 
 #include "memory/heap.h"
 #include "basic/assert.h"
+#include "containers/singly_list.h"
 #include "context/global_ctx.h"
 #include "context/thread_ctx.h"
 #include "input/msg.h"
@@ -95,13 +96,7 @@ func void heap_block_setup(heap* hep, heap_block* blk, sz size, b8 owned) {
 // Appends a block to the heap's block chain (does not modify the free list).
 func void heap_chain_block(heap* hep, heap_block* blk) {
   profile_func_begin;
-  if (hep->blocks_tail) {
-    hep->blocks_tail->next = blk;
-    hep->blocks_tail = blk;
-  } else {
-    hep->blocks_head = blk;
-    hep->blocks_tail = blk;
-  }
+  SINGLY_LIST_PUSH_BACK(hep->blocks_head, hep->blocks_tail, blk);
   profile_func_end;
 }
 
@@ -261,8 +256,7 @@ func void _heap_destroy(heap* hep, callsite site) {
     mutex_lock(hep->opt_mutex);
   }
 
-  heap_block* blk = hep->blocks_head;
-  while (blk) {
+  SINGLY_LIST_FOREACH(hep->blocks_head, hep->blocks_tail, blk) {
     heap_block* nxt = blk->next;
     if (blk->owned && hep->parent.alloc_fn) {
       _allocator_dealloc(hep->parent, blk, CALLSITE_HERE);
@@ -519,9 +513,8 @@ func void heap_clear(heap* hep) {
 
   hep->free_head = NULL;
 
-  heap_block* blk = hep->blocks_head;
   sz rebuilt_blocks = 0;
-  while (blk) {
+  SINGLY_LIST_FOREACH(hep->blocks_head, hep->blocks_tail, blk) {
     sz body = blk->size - size_of(heap_block);
     if (body > size_of(heap_chunk)) {
       heap_chunk* chunk = (heap_chunk*)(blk + 1);
@@ -533,7 +526,6 @@ func void heap_clear(heap* hep) {
       hep->free_head = chunk;
     }
     rebuilt_blocks += 1;
-    blk = blk->next;
   }
 
   if (hep->opt_mutex) {
@@ -551,7 +543,7 @@ func sz heap_block_count(heap* hep) {
     mutex_lock(hep->opt_mutex);
   }
   sz count = 0;
-  for (heap_block* blk = hep->blocks_head; blk != NULL; blk = blk->next) {
+  SINGLY_LIST_FOREACH(hep->blocks_head, hep->blocks_tail, blk) {
     count += 1;
   }
   if (hep->opt_mutex) {
@@ -568,7 +560,7 @@ func sz heap_total_size(heap* hep) {
     mutex_lock(hep->opt_mutex);
   }
   sz total = 0;
-  for (heap_block* blk = hep->blocks_head; blk != NULL; blk = blk->next) {
+  SINGLY_LIST_FOREACH(hep->blocks_head, hep->blocks_tail, blk) {
     total += blk->size;
   }
   if (hep->opt_mutex) {

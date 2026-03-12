@@ -10,6 +10,18 @@
 c_begin;
 // =========================================================================
 
+/*
+SINGLY_LIST_* manages an intrusive forward list with head and tail pointers.
+Each node must provide a `next` member.
+
+Example:
+
+  typedef struct packet_node {
+    struct packet_node* next;
+    u32 size;
+  } packet_node;
+*/
+
 #define SINGLY_LIST_EMPTY(head, tail) ((head) == nullptr)
 
 #define SINGLY_LIST_COUNT(head, tail, count) stmt(                             \
@@ -47,7 +59,7 @@ c_begin;
     })
 
 #define SINGLY_LIST_FOREACH(head, tail, it) \
-  for (typeof(head) it = (head); (it) != nullptr; (it) = (it)->next)
+  for (typeof((head)) it = (head); (it) != nullptr; (it) = (it)->next)
 
 // =========================================================================
 c_end;

@@ -10,6 +10,20 @@
 c_begin;
 // =========================================================================
 
+/*
+RING_LIST_* manages an intrusive circular doubly linked list.
+`head->prev` always points at the tail when the list is non-empty.
+Each node must provide `prev` and `next` members.
+
+Example:
+
+  typedef struct frame_node {
+    struct frame_node* prev;
+    struct frame_node* next;
+    u64 frame_id;
+  } frame_node;
+*/
+
 #define RING_LIST_EMPTY(head) ((head) == nullptr)
 
 #define RING_LIST_COUNT(head, count) stmt( \
@@ -104,13 +118,13 @@ c_begin;
       (head) = (node);                                    \
     })
 
-#define RING_LIST_FOREACH(head, it)                                         \
-  for (typeof(head) it = (head), _ring_head_##it = (head); (it) != nullptr; \
+#define RING_LIST_FOREACH(head, it)                                           \
+  for (typeof((head)) it = (head), _ring_head_##it = (head); (it) != nullptr; \
        (it) = ((it)->next != _ring_head_##it ? (it)->next : nullptr))
 
-#define RING_LIST_FOREACH_REVERSE(head, it)                                                      \
-  for (typeof(head) it = ((head) != nullptr ? (head)->prev : nullptr), _ring_head_##it = (head); \
-       (it) != nullptr;                                                                          \
+#define RING_LIST_FOREACH_REVERSE(head, it)                                                        \
+  for (typeof((head)) it = ((head) != nullptr ? (head)->prev : nullptr), _ring_head_##it = (head); \
+       (it) != nullptr;                                                                            \
        (it) = ((it) != _ring_head_##it ? (it)->prev : nullptr))
 
 // =========================================================================

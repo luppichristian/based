@@ -10,111 +10,97 @@
 c_begin;
 // =========================================================================
 
-// TODO: This is all wrong....
+/*
+BINARY_TREE_* manages an intrusive binary tree.
+Each node must provide `left`, `right`, and `parent` members.
 
-typedef struct binary_tree_links {
-  struct binary_tree_links* left;
-  struct binary_tree_links* right;
-  struct binary_tree_links* parent;
-} binary_tree_links;
+Example:
 
-// Returns the left-most node in an in-order traversal.
-func force_inline void* binary_tree_first_inorder_ptr(void* root_ptr) {
-  binary_tree_links* cursor = (binary_tree_links*)root_ptr;
-  while (cursor != NULL && cursor->left != NULL) {
-    cursor = cursor->left;
-  }
-  return cursor;
-}
-
-// Returns the next node in an in-order traversal.
-func force_inline void* binary_tree_next_inorder_ptr(void* root_ptr, void* node_ptr) {
-  binary_tree_links* root_node = (binary_tree_links*)root_ptr;
-  binary_tree_links* cursor = (binary_tree_links*)node_ptr;
-  if (root_node == NULL || cursor == NULL) {
-    return NULL;
-  }
-
-  if (cursor->right != NULL) {
-    cursor = cursor->right;
-    while (cursor->left != NULL) {
-      cursor = cursor->left;
-    }
-    return cursor;
-  }
-
-  while (cursor != root_node) {
-    binary_tree_links* parent_node = cursor->parent;
-    if (cursor == parent_node->left) {
-      return parent_node;
-    }
-    cursor = parent_node;
-  }
-
-  return NULL;
-}
-
-// Returns the first node in a post-order traversal.
-func force_inline void* binary_tree_first_postorder_ptr(void* root_ptr) {
-  binary_tree_links* cursor = (binary_tree_links*)root_ptr;
-  while (cursor != NULL && (cursor->left != NULL || cursor->right != NULL)) {
-    cursor = cursor->left != NULL ? cursor->left : cursor->right;
-  }
-  return cursor;
-}
-
-// Returns the next node in a post-order traversal.
-func force_inline void* binary_tree_next_postorder_ptr(void* root_ptr, void* node_ptr) {
-  binary_tree_links* root_node = (binary_tree_links*)root_ptr;
-  binary_tree_links* cursor = (binary_tree_links*)node_ptr;
-
-  if (root_node == NULL || cursor == NULL || cursor == root_node) {
-    return NULL;
-  }
-
-  binary_tree_links* parent_node = cursor->parent;
-  if (cursor == parent_node->right || parent_node->right == NULL) {
-    return parent_node;
-  }
-
-  cursor = parent_node->right;
-  while (cursor->left != NULL || cursor->right != NULL) {
-    cursor = cursor->left != NULL ? cursor->left : cursor->right;
-  }
-
-  return cursor;
-}
-
-// Returns the next node in a pre-order traversal.
-func force_inline void* binary_tree_next_preorder_ptr(void* root_ptr, void* node_ptr) {
-  binary_tree_links* root_node = (binary_tree_links*)root_ptr;
-  binary_tree_links* cursor = (binary_tree_links*)node_ptr;
-
-  if (root_node == NULL || cursor == NULL) {
-    return NULL;
-  }
-
-  if (cursor->left != NULL) {
-    return cursor->left;
-  }
-  if (cursor->right != NULL) {
-    return cursor->right;
-  }
-
-  while (cursor != root_node) {
-    binary_tree_links* parent_node = cursor->parent;
-    if (cursor == parent_node->left && parent_node->right != NULL) {
-      return parent_node->right;
-    }
-    cursor = parent_node;
-  }
-
-  return NULL;
-}
+  typedef struct bst_node {
+    struct bst_node* left;
+    struct bst_node* right;
+    struct bst_node* parent;
+    i32 key;
+  } bst_node;
+*/
 
 // Structural predicates.
 #define BINARY_TREE_IS_ROOT(node) ((node)->parent == nullptr)
 #define BINARY_TREE_IS_LEAF(node) ((node)->left == nullptr && (node)->right == nullptr)
+
+// Traversal helpers.
+#define BINARY_TREE_FIRST_INORDER(root, out) stmt(       \
+    (out) = (root);                                      \
+    while ((out) != nullptr && (out)->left != nullptr) { \
+      (out) = (out)->left;                               \
+    })
+
+#define BINARY_TREE_NEXT_INORDER(root, node, out) stmt(                                    \
+    typeof((root)) _binary_tree_root = (root);                                             \
+    typeof((node)) _binary_tree_cursor = (node);                                           \
+    (out) = nullptr;                                                                       \
+    if (_binary_tree_root != nullptr && _binary_tree_cursor != nullptr) {                  \
+      if (_binary_tree_cursor->right != nullptr) {                                         \
+        _binary_tree_cursor = _binary_tree_cursor->right;                                  \
+        while (_binary_tree_cursor->left != nullptr) {                                     \
+          _binary_tree_cursor = _binary_tree_cursor->left;                                 \
+        }                                                                                  \
+        (out) = _binary_tree_cursor;                                                       \
+      } else {                                                                             \
+        while (_binary_tree_cursor != _binary_tree_root) {                                 \
+          typeof((_binary_tree_cursor)) _binary_tree_parent = _binary_tree_cursor->parent; \
+          if (_binary_tree_cursor == _binary_tree_parent->left) {                          \
+            (out) = _binary_tree_parent;                                                   \
+            break;                                                                         \
+          }                                                                                \
+          _binary_tree_cursor = _binary_tree_parent;                                       \
+        }                                                                                  \
+      }                                                                                    \
+    })
+
+#define BINARY_TREE_FIRST_POSTORDER(root, out) stmt(                                  \
+    (out) = (root);                                                                   \
+    while ((out) != nullptr && ((out)->left != nullptr || (out)->right != nullptr)) { \
+      (out) = (out)->left != nullptr ? (out)->left : (out)->right;                    \
+    })
+
+#define BINARY_TREE_NEXT_POSTORDER(root, node, out) stmt(                                                                      \
+    typeof((root)) _binary_tree_root = (root);                                                                                 \
+    typeof((node)) _binary_tree_cursor = (node);                                                                               \
+    (out) = nullptr;                                                                                                           \
+    if (_binary_tree_root != nullptr && _binary_tree_cursor != nullptr && _binary_tree_cursor != _binary_tree_root) {          \
+      typeof((_binary_tree_cursor)) _binary_tree_parent = _binary_tree_cursor->parent;                                         \
+      if (_binary_tree_cursor == _binary_tree_parent->right || _binary_tree_parent->right == nullptr) {                        \
+        (out) = _binary_tree_parent;                                                                                           \
+      } else {                                                                                                                 \
+        _binary_tree_cursor = _binary_tree_parent->right;                                                                      \
+        while (_binary_tree_cursor->left != nullptr || _binary_tree_cursor->right != nullptr) {                                \
+          _binary_tree_cursor = _binary_tree_cursor->left != nullptr ? _binary_tree_cursor->left : _binary_tree_cursor->right; \
+        }                                                                                                                      \
+        (out) = _binary_tree_cursor;                                                                                           \
+      }                                                                                                                        \
+    })
+
+#define BINARY_TREE_NEXT_PREORDER(root, node, out) stmt(                                                   \
+    typeof((root)) _binary_tree_root = (root);                                                             \
+    typeof((node)) _binary_tree_cursor = (node);                                                           \
+    (out) = nullptr;                                                                                       \
+    if (_binary_tree_root != nullptr && _binary_tree_cursor != nullptr) {                                  \
+      if (_binary_tree_cursor->left != nullptr) {                                                          \
+        (out) = _binary_tree_cursor->left;                                                                 \
+      } else if (_binary_tree_cursor->right != nullptr) {                                                  \
+        (out) = _binary_tree_cursor->right;                                                                \
+      } else {                                                                                             \
+        while (_binary_tree_cursor != _binary_tree_root) {                                                 \
+          typeof((_binary_tree_cursor)) _binary_tree_parent = _binary_tree_cursor->parent;                 \
+          if (_binary_tree_cursor == _binary_tree_parent->left && _binary_tree_parent->right != nullptr) { \
+            (out) = _binary_tree_parent->right;                                                            \
+            break;                                                                                         \
+          }                                                                                                \
+          _binary_tree_cursor = _binary_tree_parent;                                                       \
+        }                                                                                                  \
+      }                                                                                                    \
+    })
 
 // Mutation helpers.
 #define BINARY_TREE_INSERT_LEFT(parent, node) stmt( \
@@ -166,17 +152,19 @@ func force_inline void* binary_tree_next_preorder_ptr(void* root_ptr, void* node
     (node)->parent = _left;)
 
 // Typed traversal macros.
-#define BINARY_TREE_FOREACH_PREORDER(root, it)    \
-  for (typeof(root) it = (root); (it) != nullptr; \
-       (it) = (typeof(root))binary_tree_next_preorder_ptr((void*)(root), (void*)(it)))
+#define BINARY_TREE_FOREACH_PREORDER(root, it)        \
+  for (typeof(((root))) it = (root); (it) != nullptr; \
+       (it) = ({ typeof((root)) _binary_tree_next = nullptr; BINARY_TREE_NEXT_PREORDER((root), (it), _binary_tree_next); _binary_tree_next; }))
 
-#define BINARY_TREE_FOREACH_INORDER(root, it)                                                         \
-  for (typeof(root) it = (typeof(root))binary_tree_first_inorder_ptr((void*)(root)); (it) != nullptr; \
-       (it) = (typeof(root))binary_tree_next_inorder_ptr((void*)(root), (void*)(it)))
+#define BINARY_TREE_FOREACH_INORDER(root, it) \
+  for (typeof(((root))) it = ({ typeof((root)) _binary_tree_first = nullptr; BINARY_TREE_FIRST_INORDER((root), _binary_tree_first); _binary_tree_first; });           \
+       (it) != nullptr;                       \
+       (it) = ({ typeof((root)) _binary_tree_next = nullptr; BINARY_TREE_NEXT_INORDER((root), (it), _binary_tree_next); _binary_tree_next; }))
 
-#define BINARY_TREE_FOREACH_POSTORDER(root, it)                                                         \
-  for (typeof(root) it = (typeof(root))binary_tree_first_postorder_ptr((void*)(root)); (it) != nullptr; \
-       (it) = (typeof(root))binary_tree_next_postorder_ptr((void*)(root), (void*)(it)))
+#define BINARY_TREE_FOREACH_POSTORDER(root, it) \
+  for (typeof(((root))) it = ({ typeof((root)) _binary_tree_first = nullptr; BINARY_TREE_FIRST_POSTORDER((root), _binary_tree_first); _binary_tree_first; });             \
+       (it) != nullptr;                         \
+       (it) = ({ typeof((root)) _binary_tree_next = nullptr; BINARY_TREE_NEXT_POSTORDER((root), (it), _binary_tree_next); _binary_tree_next; }))
 
 // =========================================================================
 c_end;

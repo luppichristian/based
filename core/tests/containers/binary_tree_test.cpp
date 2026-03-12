@@ -10,7 +10,7 @@ struct test_node {
   i32 value;
 };
 
-TEST(containers_binary_tree_test, first_inorder_ptr) {
+TEST(containers_binary_tree_test, first_inorder) {
   struct test_node root = {0};
   struct test_node left = {0};
   struct test_node right = {0};
@@ -20,11 +20,12 @@ TEST(containers_binary_tree_test, first_inorder_ptr) {
   left.parent = &root;
   right.parent = &root;
 
-  struct test_node* first = (struct test_node*)binary_tree_first_inorder_ptr(&root);
+  struct test_node* first = nullptr;
+  BINARY_TREE_FIRST_INORDER(&root, first);
   EXPECT_EQ(&left, first);
 }
 
-TEST(containers_binary_tree_test, next_inorder_ptr) {
+TEST(containers_binary_tree_test, next_inorder) {
   struct test_node root = {0};
   struct test_node left = {0};
   struct test_node right = {0};
@@ -34,18 +35,21 @@ TEST(containers_binary_tree_test, next_inorder_ptr) {
   left.parent = &root;
   right.parent = &root;
 
-  struct test_node* first = (struct test_node*)binary_tree_first_inorder_ptr(&root);
-  struct test_node* next = (struct test_node*)binary_tree_next_inorder_ptr(&root, first);
+  struct test_node* first = nullptr;
+  struct test_node* next = nullptr;
+
+  BINARY_TREE_FIRST_INORDER(&root, first);
+  BINARY_TREE_NEXT_INORDER(&root, first, next);
   EXPECT_EQ(&root, next);
 
-  next = (struct test_node*)binary_tree_next_inorder_ptr(&root, next);
+  BINARY_TREE_NEXT_INORDER(&root, next, next);
   EXPECT_EQ(&right, next);
 
-  next = (struct test_node*)binary_tree_next_inorder_ptr(&root, next);
+  BINARY_TREE_NEXT_INORDER(&root, next, next);
   EXPECT_EQ(nullptr, next);
 }
 
-TEST(containers_binary_tree_test, first_postorder_ptr) {
+TEST(containers_binary_tree_test, first_postorder) {
   struct test_node root = {0};
   struct test_node left = {0};
   struct test_node right = {0};
@@ -55,11 +59,12 @@ TEST(containers_binary_tree_test, first_postorder_ptr) {
   left.parent = &root;
   right.parent = &root;
 
-  struct test_node* first = (struct test_node*)binary_tree_first_postorder_ptr(&root);
+  struct test_node* first = nullptr;
+  BINARY_TREE_FIRST_POSTORDER(&root, first);
   EXPECT_EQ(&left, first);
 }
 
-TEST(containers_binary_tree_test, next_postorder_ptr) {
+TEST(containers_binary_tree_test, next_postorder) {
   struct test_node root = {0};
   struct test_node left = {0};
   struct test_node right = {0};
@@ -69,18 +74,21 @@ TEST(containers_binary_tree_test, next_postorder_ptr) {
   left.parent = &root;
   right.parent = &root;
 
-  struct test_node* first = (struct test_node*)binary_tree_first_postorder_ptr(&root);
-  struct test_node* next = (struct test_node*)binary_tree_next_postorder_ptr(&root, first);
+  struct test_node* first = nullptr;
+  struct test_node* next = nullptr;
+
+  BINARY_TREE_FIRST_POSTORDER(&root, first);
+  BINARY_TREE_NEXT_POSTORDER(&root, first, next);
   EXPECT_EQ(&right, next);
 
-  next = (struct test_node*)binary_tree_next_postorder_ptr(&root, next);
+  BINARY_TREE_NEXT_POSTORDER(&root, next, next);
   EXPECT_EQ(&root, next);
 
-  next = (struct test_node*)binary_tree_next_postorder_ptr(&root, next);
+  BINARY_TREE_NEXT_POSTORDER(&root, next, next);
   EXPECT_EQ(nullptr, next);
 }
 
-TEST(containers_binary_tree_test, next_preorder_ptr) {
+TEST(containers_binary_tree_test, next_preorder) {
   struct test_node root = {0};
   struct test_node left = {0};
   struct test_node right = {0};
@@ -90,13 +98,15 @@ TEST(containers_binary_tree_test, next_preorder_ptr) {
   left.parent = &root;
   right.parent = &root;
 
-  struct test_node* next = (struct test_node*)binary_tree_next_preorder_ptr(&root, &root);
+  struct test_node* next = nullptr;
+
+  BINARY_TREE_NEXT_PREORDER(&root, &root, next);
   EXPECT_EQ(&left, next);
 
-  next = (struct test_node*)binary_tree_next_preorder_ptr(&root, next);
+  BINARY_TREE_NEXT_PREORDER(&root, next, next);
   EXPECT_EQ(&right, next);
 
-  next = (struct test_node*)binary_tree_next_preorder_ptr(&root, next);
+  BINARY_TREE_NEXT_PREORDER(&root, next, next);
   EXPECT_EQ(nullptr, next);
 }
 
@@ -198,8 +208,7 @@ TEST(containers_binary_tree_test, foreach_preorder) {
 
   i32 order[3] = {0};
   i32 idx = 0;
-  struct test_node* it = &root;
-  for (it = &root; it != nullptr; it = (struct test_node*)binary_tree_next_preorder_ptr(&root, it)) {
+  BINARY_TREE_FOREACH_PREORDER(&root, it) {
     order[idx++] = it->value;
   }
 
@@ -223,8 +232,7 @@ TEST(containers_binary_tree_test, foreach_inorder) {
 
   i32 order[3] = {0};
   i32 idx = 0;
-  struct test_node* it = (struct test_node*)binary_tree_first_inorder_ptr(&root);
-  for (; it != nullptr; it = (struct test_node*)binary_tree_next_inorder_ptr(&root, it)) {
+  BINARY_TREE_FOREACH_INORDER(&root, it) {
     order[idx++] = it->value;
   }
 
@@ -248,8 +256,7 @@ TEST(containers_binary_tree_test, foreach_postorder) {
 
   i32 order[3] = {0};
   i32 idx = 0;
-  struct test_node* it = (struct test_node*)binary_tree_first_postorder_ptr(&root);
-  for (; it != nullptr; it = (struct test_node*)binary_tree_next_postorder_ptr(&root, it)) {
+  BINARY_TREE_FOREACH_POSTORDER(&root, it) {
     order[idx++] = it->value;
   }
 

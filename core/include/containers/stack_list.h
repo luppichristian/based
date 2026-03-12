@@ -10,6 +10,18 @@
 c_begin;
 // =========================================================================
 
+/*
+STACK_LIST_* manages an intrusive LIFO chain rooted at `head`.
+Each node must provide a `next` member.
+
+Example:
+
+  typedef struct free_node {
+    struct free_node* next;
+    void* memory;
+  } free_node;
+*/
+
 #define STACK_LIST_EMPTY(head) ((head) == nullptr)
 
 #define STACK_LIST_COUNT(head, count) stmt(                                    \
@@ -33,7 +45,7 @@ c_begin;
     })
 
 #define STACK_LIST_FOREACH(head, it) \
-  for (typeof(head) it = (head); (it) != nullptr; (it) = (it)->next)
+  for (typeof((head)) it = (head); (it) != nullptr; (it) = (it)->next)
 
 // =========================================================================
 c_end;

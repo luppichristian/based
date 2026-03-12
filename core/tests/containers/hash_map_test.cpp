@@ -152,11 +152,7 @@ TEST(containers_hash_map_test, iteration) {
   hash_map_set(&map, 3, (void*)300);
 
   sz count = 0;
-  for (hash_map_iter it = hash_map_iter_begin();;) {
-    hash_map_slot* slot = hash_map_next(&map, &it);
-    if (slot == nullptr) {
-      break;
-    }
+  HASH_MAP_FOREACH(&map, slot) {
     count++;
     EXPECT_NE(0, slot->occupied);
     EXPECT_NE(nullptr, slot->value);

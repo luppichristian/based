@@ -9,6 +9,20 @@
 c_begin;
 // =========================================================================
 
+/*
+BITSET_* treats a `u64` array as a packed bitset. The caller owns storage.
+
+Example:
+
+  enum { PERM_COUNT = 96 };
+  u64 permissions[BITSET_WORD_COUNT(PERM_COUNT)] = {0};
+
+  BITSET_SET(permissions, 5);  // enable bit 5
+  BITSET_FOREACH_SET(permissions, BITSET_WORD_COUNT(PERM_COUNT), idx) {
+    // idx is each enabled bit index
+  }
+*/
+
 // Returns number of u64 words required to store n bits.
 #define BITSET_WORD_COUNT(n) (((n) + 63) / 64)
 
@@ -53,35 +67,31 @@ c_begin;
       }                                                                 \
     })
 
-// TODO: Can we implement this directly in the macro?
-// Returns the first set bit at or after from_idx, or -1 when not found.
-func force_inline i32 bitset_find_next_set(const u64* arr, sz word_count, i32 from_idx) {
-  i32 next_idx = from_idx < 0 ? 0 : from_idx;
-  sz word_idx = (sz)next_idx / 64U;
-  i32 bit_idx = next_idx % 64;
-
-  if (arr == NULL || word_idx >= word_count) {
-    return -1;
-  }
-
-  u64 word = arr[word_idx] & (~0ULL << (u32)bit_idx);
-  if (word != 0ULL) {
-    return (i32)(word_idx * 64U) + ctz_u64(word);
-  }
-
-  for (word_idx += 1; word_idx < word_count; word_idx++) {
-    if (arr[word_idx] != 0ULL) {
-      return (i32)(word_idx * 64U) + ctz_u64(arr[word_idx]);
-    }
-  }
-
-  return -1;
-}
+#define BITSET_FIND_NEXT_SET(arr, word_count, from_idx, out) stmt(                             \
+    const u64* _bitset_arr = (arr);                                                            \
+    i32 _bitset_next_idx = (from_idx) < 0 ? 0 : (from_idx);                                    \
+    sz _bitset_word_idx = (sz)_bitset_next_idx / 64U;                                          \
+    i32 _bitset_bit_idx = _bitset_next_idx % 64;                                               \
+    (out) = -1;                                                                                \
+    if (_bitset_arr != nullptr && _bitset_word_idx < (sz)(word_count)) {                       \
+      u64 _bitset_word = _bitset_arr[_bitset_word_idx] & (~0ULL << (u32)_bitset_bit_idx);      \
+      if (_bitset_word != 0ULL) {                                                              \
+        (out) = (i32)(_bitset_word_idx * 64U) + ctz_u64(_bitset_word);                         \
+      } else {                                                                                 \
+        for (_bitset_word_idx += 1; _bitset_word_idx < (sz)(word_count); _bitset_word_idx++) { \
+          if (_bitset_arr[_bitset_word_idx] != 0ULL) {                                         \
+            (out) = (i32)(_bitset_word_idx * 64U) + ctz_u64(_bitset_arr[_bitset_word_idx]);    \
+            break;                                                                             \
+          }                                                                                    \
+        }                                                                                      \
+      }                                                                                        \
+    })
 
 // Typed traversal macro over all set bits.
-#define BITSET_FOREACH_SET(arr, word_count, idx)                                \
-  for (i32 idx = bitset_find_next_set((arr), (sz)(word_count), 0); (idx) != -1; \
-       (idx) = bitset_find_next_set((arr), (sz)(word_count), (idx) + 1))
+#define BITSET_FOREACH_SET(arr, word_count, idx) \
+  for (i32 idx = ({ i32 _bitset_idx = -1; BITSET_FIND_NEXT_SET((arr), (word_count), 0, _bitset_idx); _bitset_idx; });                          \
+       (idx) != -1;                              \
+       (idx) = ({ i32 _bitset_idx = -1; BITSET_FIND_NEXT_SET((arr), (word_count), (idx) + 1, _bitset_idx); _bitset_idx; }))
 
 // =========================================================================
 c_end;
