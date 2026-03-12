@@ -90,9 +90,11 @@
 
 // Include utility modules.
 #include "utils/cmdline.h"
+#include "utils/compress.h"
 #include "utils/crc.h"
 #include "utils/digits.h"
 #include "utils/endian.h"
+#include "utils/huffman.h"
 #include "utils/id.h"
 #include "utils/log_state.h"
 #include "utils/random_series.h"

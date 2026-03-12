@@ -39,3 +39,6 @@ AlignArrayOfStructures: Right
 AlignConsecutiveShortCaseStatements:
   Enabled: true
 PointerAlignment: Left
+ForEachMacros:
+  - safe_for
+  - safe_while

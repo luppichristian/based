@@ -130,15 +130,25 @@ TEST(containers_hash_map_test, rehash) {
   allocator zero_alloc = {0};
   hash_map map = hash_map_create(4, zero_alloc);
 
-  hash_map_set(&map, 1, (void*)100);
-  hash_map_set(&map, 2, (void*)200);
+  safe_for (u64 idx = 0; idx < 12; idx++) {
+    ASSERT_NE(0, hash_map_set(&map, idx + 1, (void*)(uintptr_t)(idx + 100)));
+  }
 
-  b32 result = hash_map_rehash(&map, 32);
+  b32 result = hash_map_rehash(&map, 30);
   EXPECT_NE(0, result);
   EXPECT_EQ(32U, hash_map_capacity(&map));
 
-  EXPECT_EQ((void*)100, hash_map_get(&map, 1));
-  EXPECT_EQ((void*)200, hash_map_get(&map, 2));
+  safe_for (u64 idx = 0; idx < 12; idx++) {
+    EXPECT_EQ((void*)(uintptr_t)(idx + 100), hash_map_get(&map, idx + 1));
+  }
+
+  result = hash_map_rehash(&map, 2);
+  EXPECT_NE(0, result);
+  EXPECT_GE(hash_map_capacity(&map), hash_map_count(&map));
+
+  safe_for (u64 idx = 0; idx < 12; idx++) {
+    EXPECT_EQ((void*)(uintptr_t)(idx + 100), hash_map_get(&map, idx + 1));
+  }
 
   hash_map_destroy(&map);
 }

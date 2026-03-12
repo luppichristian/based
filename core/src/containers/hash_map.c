@@ -12,6 +12,21 @@
 // Internal Helpers
 // =========================================================================
 
+// Normalize a requested capacity to the hash map's required shape.
+// Capacities must stay power-of-two because probing masks with (cap - 1).
+func sz hash_map_normalize_capacity(sz min_cap) {
+  if (min_cap <= 16) {
+    return 16;
+  }
+
+  sz target_cap = 16;
+  safe_while (target_cap < min_cap) {
+    target_cap *= 2;
+  }
+
+  return target_cap;
+}
+
 // Insert key/value into a raw slot array without touching a hash_map struct.
 // Used both by hash_map_set and during rehashing.
 // Returns 1 if a new key was inserted, 0 if an existing key was updated.
@@ -57,19 +72,34 @@ func b32 hash_map_raw_insert(
     incoming.probe_dist = dist;
     pos = (pos + 1) & (cap - 1);
   }
+
+  return true;
 }
 
-// Grow the backing array to new_cap slots and re-insert all entries.
+// Resize the backing array to a valid capacity and re-insert all entries.
 // Returns 1 on success, 0 on allocation failure.
 func b32 hash_map_rehash(hash_map* map, sz new_cap) {
   profile_func_begin;
-  if (map == NULL || new_cap < 2) {
+  if (map == NULL) {
     profile_func_end;
     return false;
   }
+
+  sz min_cap = new_cap;
+  if (min_cap < map->count) {
+    min_cap = map->count;
+  }
+
+  sz target_cap = hash_map_normalize_capacity(min_cap);
+
+  if (map->slots != NULL && map->cap == target_cap) {
+    profile_func_end;
+    return true;
+  }
+
   assert(map != NULL);
   hash_map_slot* new_slots =
-      (hash_map_slot*)allocator_calloc(map->alloc, new_cap, size_of(hash_map_slot));
+      (hash_map_slot*)allocator_calloc(map->alloc, target_cap, size_of(hash_map_slot));
   if (!new_slots) {
     profile_func_end;
     return false;
@@ -78,7 +108,7 @@ func b32 hash_map_rehash(hash_map* map, sz new_cap) {
   safe_for (sz idx = 0; idx < map->cap; idx++) {
     hash_map_slot* slot = &map->slots[idx];
     if (slot->occupied) {
-      hash_map_raw_insert(new_slots, new_cap, slot->key, slot->value);
+      hash_map_raw_insert(new_slots, target_cap, slot->key, slot->value);
     }
   }
 
@@ -86,7 +116,7 @@ func b32 hash_map_rehash(hash_map* map, sz new_cap) {
     allocator_dealloc(map->alloc, map->slots);
   }
   map->slots = new_slots;
-  map->cap = new_cap;
+  map->cap = target_cap;
   profile_func_end;
   return true;
 }
@@ -98,10 +128,7 @@ func b32 hash_map_reserve(hash_map* map, sz min_cap) {
     return false;
   }
 
-  sz target_cap = map->cap > 0 ? map->cap : 16;
-  safe_while (target_cap < min_cap) {
-    target_cap *= 2;
-  }
+  sz target_cap = hash_map_normalize_capacity(min_cap);
 
   if (target_cap <= map->cap) {
     profile_func_end;
@@ -137,6 +164,8 @@ func hash_map_slot* hash_map_find_slot(hash_map* map, u64 key) {
     pos = (pos + 1) & (map->cap - 1);
     dist++;
   }
+
+  return NULL;
 }
 
 // =========================================================================
@@ -155,10 +184,7 @@ func hash_map hash_map_create(sz cap, allocator alloc) {
     map.alloc = global_get_allocator();
   }
 
-  sz actual = 16;
-  safe_while (actual < cap) {
-    actual *= 2;
-  }
+  sz actual = hash_map_normalize_capacity(cap);
   map.cap = actual;
   if (map.alloc.alloc_fn != NULL && map.alloc.dealloc_fn != NULL) {
     map.slots = (hash_map_slot*)allocator_calloc(map.alloc, actual, size_of(hash_map_slot));
@@ -306,6 +332,8 @@ func b32 hash_map_remove(hash_map* map, u64 key) {
     pos = (pos + 1) & (map->cap - 1);
     dist++;
   }
+
+  return false;
 }
 
 func hash_map_slot* hash_map_next(hash_map* map, hash_map_iter* iter) {

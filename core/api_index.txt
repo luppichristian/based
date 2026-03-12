@@ -1484,6 +1484,13 @@
 40: func b32 cmdline_get_option_i64(cmdline cmdl, cstr8 name, i64* out);
 43: func b32 cmdline_get_option_f64(cmdline cmdl, cstr8 name, f64* out);
 
+=== include\utils\compress.h ===
+13: typedef enum compress_error {
+21: func cstr8 compress_error_to_cstr(compress_error error);
+25: func compress_error compress_encode(buffer src, allocator alloc, buffer* out_compressed);
+29: func compress_error compress_decode(buffer src, allocator alloc, buffer* out_decompressed);
+32: func void compress_free(allocator alloc, buffer* src);
+
 === include\utils\crc.h ===
 9: func u32 crc32_init(void);
 10: func u32 crc32_update(u32 crc, const void* data, sz size);
@@ -1531,6 +1538,22 @@
 30: func u16 endian_native_to_be16(u16 value);
 31: func u32 endian_native_to_be32(u32 value);
 32: func u64 endian_native_to_be64(u64 value);
+
+=== include\utils\huffman.h ===
+8: #define HUFFMAN_SYMBOL_CAP    256
+9: #define HUFFMAN_CODE_WORD_CAP 4
+10: #define HUFFMAN_NODE_CAP      ((HUFFMAN_SYMBOL_CAP * 2) - 1)
+11: #define HUFFMAN_INVALID_NODE  0xFFFFU
+17: typedef struct huffman_code {
+24: typedef struct huffman_tree {
+39: func void huffman_tree_clear(huffman_tree* tree);
+43: func b32 huffman_tree_build(huffman_tree* tree, const u64* frequencies, sz symbol_count);
+46: func b32 huffman_tree_build_for_bytes(huffman_tree* tree, buffer src);
+49: func b32 huffman_tree_has_symbol(const huffman_tree* tree, u8 symbol);
+53: func huffman_code huffman_tree_get_code(const huffman_tree* tree, u8 symbol);
+57: func b32 huffman_code_get_bit(const huffman_code* code, sz bit_idx);
+61: func u64 huffman_tree_bit_length_for_bytes(const huffman_tree* tree, buffer src);
+65: func b32 huffman_tree_decode_symbol(
 
 === include\utils\id.h ===
 13: typedef struct id8 {
