@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "test_common.hpp"
+#include "internal.h"
 
 TEST(windowing_monitor_test, id_conversion_and_invalid_queries) {
   monitor mon_id = monitor_from_native_id(123);

@@ -468,19 +468,17 @@
 73: func void bindings_on_msg(const msg* src);
 
 === include\input\camera.h ===
-12: typedef enum camera_position {
-19: func b32 camera_id_is_valid(camera src);
-22: func camera camera_from_native_id(up native_id);
-25: func up camera_to_native_id(camera src);
-28: func sz camera_get_count(void);
-31: func b32 camera_get_id(sz idx, camera* out_id);
-34: func cstr8 camera_get_name(camera id);
-37: func camera_position camera_get_position(camera id);
-39: func b32 camera_open(camera id);
-40: func b32 camera_close(camera id);
-41: func b32 camera_start(camera id);
-42: func b32 camera_stop(camera id);
-43: func b32 camera_read(camera id, buffer* out_frame);
+16: typedef enum camera_position {
+23: func b32 camera_id_is_valid(camera src);
+26: func sz camera_get_count(void);
+29: func b32 camera_get_id(sz idx, camera* out_id);
+32: func cstr8 camera_get_name(camera id);
+35: func camera_position camera_get_position(camera id);
+38: func b32 camera_open(camera id);
+39: func b32 camera_close(camera id);
+40: func b32 camera_start(camera id);
+41: func b32 camera_stop(camera id);
+42: func b32 camera_read(camera id, buffer* out_frame);
 
 === include\input\capture.h ===
 22: func b32 input_capture_acquire_key(input_key key);
@@ -511,10 +509,8 @@
 96: func b32 devices_get_device(device_type type, sz idx, device_id* out_id);
 99: func b32 devices_get_audio_device(audio_device_type audio_type, sz idx, device_id* out_id);
 102: func audio_device_type devices_get_audio_device_type(device_id id);
-105: func device_id devices_make_audio_device_id(u64 native_id, audio_device_type audio_type);
-108: func u64 devices_get_audio_native_id(device_id id);
-111: func b32 devices_is_connected(device_id id);
-114: func b32 devices_get_info(device_id id, device_info* out_info);
+105: func b32 devices_is_connected(device_id id);
+108: func b32 devices_get_info(device_id id, device_info* out_info);
 
 === include\input\gamepads.h ===
 17: typedef enum gamepad_button {
@@ -602,8 +598,6 @@
 109: func b32 msg_remove_handler(u64 handler_id);
 112: func void msg_clear_handlers(void);
 113: func void msg_set_filter(msg_filter_fn filter_fn, void* user_data);
-116: func b32 msg_from_native(const void* native_event, msg* out_msg);
-119: func b32 msg_to_native(const msg* src, void* native_event);
 
 === include\input\msg_core.h ===
 27: typedef enum msg_core_type {
@@ -743,19 +737,17 @@
 640: func msg_core_global_ctx_data* msg_core_get_global_ctx(msg* src);
 
 === include\input\sensor.h ===
-14: func b32 sensor_id_is_valid(sensor src);
-17: func sensor sensor_from_native_id(up native_id);
-20: func up sensor_to_native_id(sensor src);
-23: func sz sensor_get_count(void);
-26: func b32 sensor_get_id(sz idx, sensor* out_id);
-29: func cstr8 sensor_get_name(sensor id);
-32: func sensor_kind sensor_get_kind(sensor id);
-35: func i32 sensor_get_non_portable_kind(sensor id);
-37: func b32 sensor_open(sensor id);
-38: func b32 sensor_close(sensor id);
-39: func b32 sensor_start(sensor id);
-40: func b32 sensor_stop(sensor id);
-41: func b32 sensor_read(sensor id, buffer* out_samples);
+18: func b32 sensor_id_is_valid(sensor src);
+21: func sz sensor_get_count(void);
+24: func b32 sensor_get_id(sz idx, sensor* out_id);
+27: func cstr8 sensor_get_name(sensor id);
+30: func sensor_kind sensor_get_kind(sensor id);
+33: func i32 sensor_get_non_portable_kind(sensor id);
+36: func b32 sensor_open(sensor id);
+37: func b32 sensor_close(sensor id);
+38: func b32 sensor_start(sensor id);
+39: func b32 sensor_stop(sensor id);
+40: func b32 sensor_read(sensor id, buffer* out_samples);
 
 === include\input\tablet.h ===
 16: typedef enum tablet_axis {
@@ -1720,49 +1712,45 @@
 93: func b32 dialog_open_folder(window owner, cstr8 default_location, b32 allow_many, dialog_file_callback* callback, void* user_data);
 
 === include\windowing\monitor.h ===
-11: typedef struct monitor_rect {
-18: typedef struct monitor_mode {
-25: typedef enum monitor_orientation {
-33: func b32 monitor_id_is_valid(monitor src);
-34: func monitor monitor_from_native_id(up native_id);
-35: func up monitor_to_native_id(monitor src);
-37: func sz monitor_get_count(void);
-38: func b32 monitor_get_id(sz idx, monitor* out_id);
-39: func monitor monitor_get_primary_id(void);
-40: func cstr8 monitor_get_name(monitor id);
-42: func b32 monitor_get_bounds(monitor id, monitor_rect* out_rect);
-43: func b32 monitor_get_usable_bounds(monitor id, monitor_rect* out_rect);
-45: func sz monitor_get_mode_count(monitor id);
-46: func b32 monitor_get_mode(monitor id, sz idx, monitor_mode* out_mode);
-47: func b32 monitor_get_current_mode(monitor id, monitor_mode* out_mode);
-48: func b32 monitor_get_desktop_mode(monitor id, monitor_mode* out_mode);
-50: func f32 monitor_get_refresh_rate(monitor id);
-51: func f32 monitor_get_content_scale(monitor id);
-52: func monitor_orientation monitor_get_orientation(monitor id);
+15: typedef struct monitor_rect {
+22: typedef struct monitor_mode {
+29: typedef enum monitor_orientation {
+38: func b32 monitor_id_is_valid(monitor src);
+41: func sz monitor_get_count(void);
+42: func b32 monitor_get_id(sz idx, monitor* out_id);
+43: func monitor monitor_get_primary_id(void);
+44: func cstr8 monitor_get_name(monitor id);
+47: func b32 monitor_get_bounds(monitor id, monitor_rect* out_rect);
+48: func b32 monitor_get_usable_bounds(monitor id, monitor_rect* out_rect);
+51: func sz monitor_get_mode_count(monitor id);
+52: func b32 monitor_get_mode(monitor id, sz idx, monitor_mode* out_mode);
+53: func b32 monitor_get_current_mode(monitor id, monitor_mode* out_mode);
+54: func b32 monitor_get_desktop_mode(monitor id, monitor_mode* out_mode);
+57: func f32 monitor_get_refresh_rate(monitor id);
+58: func f32 monitor_get_content_scale(monitor id);
+59: func monitor_orientation monitor_get_orientation(monitor id);
 
 === include\windowing\window.h ===
-12: func b32 window_id_is_valid(window src);
-13: func window window_from_native_id(up native_id);
-14: func up window_to_native_id(window src);
-16: func sz window_get_count(void);
-17: func b32 window_get_id(sz idx, window* out_id);
-18: func b32 window_is_valid(window id);
-20: func window window_create(cstr8 title, i32 width, i32 height, u64 flags);
-21: func b32 window_destroy(window id);
-23: func b32 window_show(window id);
-24: func b32 window_hide(window id);
-26: func b32 window_mv(window id, i32 xpos, i32 ypos);
-27: func b32 window_get_position(window id, i32* out_xpos, i32* out_ypos);
-29: func b32 window_resize(window id, i32 width, i32 height);
-30: func b32 window_get_size(window id, i32* out_width, i32* out_height);
-32: func b32 window_set_fullscreen(window id, b32 enabled);
-33: func b32 window_is_fullscreen(window id);
-35: func b32 window_minimize(window id);
-36: func b32 window_maximize(window id);
-37: func b32 window_restore(window id);
-38: func b32 window_focus(window id);
-40: func cstr8 window_get_title(window id);
-41: func b32 window_set_title(window id, cstr8 title);
-42: func b32 window_get_monitor_id(window id, monitor* out_monitor_id);
+17: func b32 window_id_is_valid(window src);
+20: func sz window_get_count(void);
+21: func b32 window_get_id(sz idx, window* out_id);
+22: func b32 window_is_valid(window id);
+25: func window window_create(cstr8 title, i32 width, i32 height, u64 flags);
+26: func b32 window_destroy(window id);
+29: func b32 window_show(window id);
+30: func b32 window_hide(window id);
+33: func b32 window_mv(window id, i32 xpos, i32 ypos);
+34: func b32 window_get_position(window id, i32* out_xpos, i32* out_ypos);
+37: func b32 window_resize(window id, i32 width, i32 height);
+38: func b32 window_get_size(window id, i32* out_width, i32* out_height);
+41: func b32 window_set_fullscreen(window id, b32 enabled);
+42: func b32 window_is_fullscreen(window id);
+45: func b32 window_minimize(window id);
+46: func b32 window_maximize(window id);
+47: func b32 window_restore(window id);
+48: func b32 window_focus(window id);
+51: func cstr8 window_get_title(window id);
+52: func b32 window_set_title(window id, cstr8 title);
+53: func b32 window_get_monitor_id(window id, monitor* out_monitor_id);
 
 

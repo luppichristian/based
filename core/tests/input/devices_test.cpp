@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "test_common.hpp"
+#include "internal.h"
 
 TEST(input_devices_test, type_names_and_audio_id_encoding_roundtrip) {
   EXPECT_STREQ("keyboard", devices_get_type_name(DEVICE_TYPE_KEYBOARD));

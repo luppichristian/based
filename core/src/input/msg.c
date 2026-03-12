@@ -3,6 +3,7 @@
 
 #include "input/msg.h"
 #include "input/msg_core.h"
+#include "../internal.h"
 #include "../sdl3_include.h"
 #include "basic/assert.h"
 #include "basic/utility_defines.h"

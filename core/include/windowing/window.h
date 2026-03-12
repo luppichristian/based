@@ -15,8 +15,6 @@ typedef void* window;
 
 // Identifier conversion helpers.
 func b32 window_id_is_valid(window src);
-func window window_from_native_id(up native_id);
-func up window_to_native_id(window src);
 
 // Global window enumeration.
 func sz window_get_count(void);

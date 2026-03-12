@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "test_common.hpp"
+#include "internal.h"
 
 TEST(input_sensor_test, id_conversion_and_invalid_lifecycle_calls) {
   sensor sen_id = sensor_from_native_id(123);

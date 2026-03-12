@@ -3,6 +3,7 @@
 
 #include "input/keyboard.h"
 #include "basic/assert.h"
+#include "../internal.h"
 #include "input/msg.h"
 #include "input/msg_core.h"
 #include "windowing/window.h"

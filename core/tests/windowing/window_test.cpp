@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "test_common.hpp"
+#include "internal.h"
 
 TEST(windowing_window_test, invalid_window_id_paths_return_failure) {
   EXPECT_TRUE(window_id_is_valid(nullptr) == 0);

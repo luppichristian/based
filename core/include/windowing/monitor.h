@@ -36,8 +36,6 @@ typedef enum monitor_orientation {
 
 // Identifier conversion helpers.
 func b32 monitor_id_is_valid(monitor src);
-func monitor monitor_from_native_id(up native_id);
-func up monitor_to_native_id(monitor src);
 
 // Global monitor enumeration.
 func sz monitor_get_count(void);

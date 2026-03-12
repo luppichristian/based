@@ -3,6 +3,7 @@
 
 #include "windowing/dialog.h"
 #include "context/thread_ctx.h"
+#include "../internal.h"
 #include "basic/profiler.h"
 #include "windowing/window.h"
 #include "../sdl3_include.h"
@@ -106,7 +107,10 @@ func dialog_callback_ctx* dialog_make_callback_ctx(dialog_file_callback* callbac
   return callback_ctx;
 }
 
-func void SDLCALL dialog_file_callback_bridge(void* user_data, const c8* const* file_list, int filter_idx) {
+func void SDLCALL dialog_file_callback_bridge(
+    void* user_data,
+    const c8* const* file_list,
+    int filter_idx) {
   profile_func_begin;
   dialog_callback_ctx* callback_ctx = (dialog_callback_ctx*)user_data;
   if (callback_ctx == NULL || callback_ctx->callback == NULL) {
@@ -133,7 +137,11 @@ func void SDLCALL dialog_file_callback_bridge(void* user_data, const c8* const* 
 // Public API
 // =========================================================================
 
-func b32 dialog_show_message(window owner, dialog_message_kind message_kind, cstr8 title, cstr8 message) {
+func b32 dialog_show_message(
+    window owner,
+    dialog_message_kind message_kind,
+    cstr8 title,
+    cstr8 message) {
   profile_func_begin;
   SDL_Window* owner_window = dialog_resolve_window(owner);
   b32 result = SDL_ShowSimpleMessageBox(
@@ -150,7 +158,10 @@ func b32 dialog_show_message(window owner, dialog_message_kind message_kind, cst
   return result;
 }
 
-func b32 dialog_show_message_box(window owner, const dialog_message_box* message_box, i32* out_button_id) {
+func b32 dialog_show_message_box(
+    window owner,
+    const dialog_message_box* message_box,
+    i32* out_button_id) {
   profile_func_begin;
   if (message_box == NULL) {
     thread_log_error("Rejected dialog message box because descriptor is NULL");

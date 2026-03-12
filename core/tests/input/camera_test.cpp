@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "test_common.hpp"
+#include "internal.h"
 
 TEST(input_camera_test, id_conversion_and_invalid_lifecycle_calls) {
   camera cam_id = camera_from_native_id(123);

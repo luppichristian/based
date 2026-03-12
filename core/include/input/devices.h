@@ -105,12 +105,6 @@ func b32 devices_get_audio_device(audio_device_type audio_type, sz idx, device_i
 // Returns the encoded audio device direction for id.
 func audio_device_type devices_get_audio_device_type(device_id id);
 
-// Writes a DEVICE_TYPE_AUDIO id from the backend-native identifier and direction.
-func device_id devices_make_audio_device_id(u64 native_id, audio_device_type audio_type);
-
-// Returns the backend-native audio identifier encoded in id.
-func u64 devices_get_audio_native_id(device_id id);
-
 // Returns 1 if id is still connected, 0 otherwise.
 func b32 devices_is_connected(device_id id);
 

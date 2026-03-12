@@ -4,6 +4,7 @@
 #include "basic/entry.h"
 #include "context/global_ctx.h"
 #include "context/thread_ctx.h"
+#include "../internal.h"
 #include "input/msg.h"
 #include "input/msg_core.h"
 #include "memory/vmem.h"

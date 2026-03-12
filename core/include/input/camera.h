@@ -22,12 +22,6 @@ typedef enum camera_position {
 // Returns 1 if src refers to a concrete camera id, 0 otherwise.
 func b32 camera_id_is_valid(camera src);
 
-// Builds a camera from a backend-native camera identifier.
-func camera camera_from_native_id(up native_id);
-
-// Returns the backend-native camera identifier encoded in src.
-func up camera_to_native_id(camera src);
-
 // Returns the number of currently known camera devices.
 func sz camera_get_count(void);
 
