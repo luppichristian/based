@@ -52,6 +52,9 @@ func u32 random_series_bounded_u32(random_series* series, u32 bound) {
       return value % bound;
     }
   }
+
+  thread_log_fatal("Random series bounded u32 exceeded safe iteration limit bound=%u", bound);
+  return 0;
 }
 
 func u64 random_series_bounded_u64(random_series* series, u64 bound) {
@@ -66,6 +69,9 @@ func u64 random_series_bounded_u64(random_series* series, u64 bound) {
       return value % bound;
     }
   }
+
+  thread_log_fatal("Random series bounded u64 exceeded safe iteration limit bound=%llu", (unsigned long long)bound);
+  return 0;
 }
 
 func b32 random_series_validate(random_series* series, cstr8 func_name) {

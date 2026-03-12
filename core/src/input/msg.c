@@ -238,7 +238,7 @@ func sz msg_collect_tablet_devices(device_id* out_ids, sz cap) {
   SDL_hid_device_info* entry = head;
   sz out_count = 0;
 
-  safe_while (entry && out_count < cap) {
+  safe_while (entry&& out_count < cap) {
     if (entry->usage_page == 0x0D && entry->path != NULL) {
       out_ids[out_count].type = DEVICE_TYPE_TABLET;
       out_ids[out_count].instance = msg_hash_path(entry->path);
@@ -1533,6 +1533,10 @@ func b32 msg_wait(msg* out_msg) {
     profile_func_end;
     return true;
   }
+
+  thread_log_fatal("Message wait exceeded safe iteration limit");
+  profile_func_end;
+  return false;
 }
 
 func b32 msg_wait_timeout(msg* out_msg, i32 timeout_ms) {
