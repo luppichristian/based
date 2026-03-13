@@ -62,6 +62,7 @@
 #include "input/sensor.h"
 #include "input/tablet.h"
 #include "input/touch.h"
+#include "input/vkeys.h"
 
 // Include interface modules.
 #include "interface/cursor.h"
@@ -79,6 +80,8 @@
 
 // Include system modules.
 #include "system/cpu_info.h"
+#include "system/hardware_info.h"
+#include "system/language.h"
 #include "system/system_info.h"
 #include "system/system_runtime.h"
 

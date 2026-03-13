@@ -215,10 +215,8 @@ typedef struct msg_core_keyboard_device_data {
 typedef struct msg_core_keyboard_data {
   window window;
   device device;
-  keyboard_scancode scancode;
-  keyboard_keycode keycode;
+  vkey key;
   keymod modifiers;
-  keyboard_raw_key raw;
   b32 down;
   b32 repeat;
 } msg_core_keyboard_data;

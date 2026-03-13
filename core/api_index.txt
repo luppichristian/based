@@ -1,10 +1,27 @@
 === include\based_core.h ===
+54: #include "input/camera.h"
+55: #include "input/clipboard.h"
+56: #include "input/devices.h"
+57: #include "input/gamepads.h"
+58: #include "input/keyboard.h"
+59: #include "input/mouse.h"
+60: #include "input/msg.h"
+61: #include "input/msg_core.h"
+62: #include "input/sensor.h"
+63: #include "input/tablet.h"
+64: #include "input/touch.h"
+65: #include "input/vkeys.h"
 70: #include "interface/cursor.h"
 71: #include "interface/dpi.h"
 72: #include "interface/dialog.h"
 73: #include "interface/icon.h"
 74: #include "interface/monitor.h"
 75: #include "interface/window.h"
+82: #include "system/cpu_info.h"
+83: #include "system/hardware_info.h"
+84: #include "system/language.h"
+85: #include "system/system_info.h"
+86: #include "system/system_runtime.h"
 
 === include\basic\assert.h ===
 20: func void _assert(b32 condition, const char* msg, callsite site);
@@ -519,20 +536,23 @@
 
 === include\input\keyboard.h ===
 15: typedef enum keymod {
-41: func b32 keyboard_is_available(void);
-47: func device keyboard_get_primary_device(void);
-50: func b32 keyboard_is_key_down(keyboard_scancode scancode);
-53: func u32 keyboard_get_key_repeat_count(keyboard_scancode scancode);
-57: func keymod keyboard_get_mods(void);
-60: func b32 keyboard_has_mods(keymod required_mods);
-63: func b32 keyboard_has_mods_exact(keymod required_mods, keymod forbidden_mods);
-65: func b32 keyboard_is_key_down_mod(keyboard_scancode scancode, keymod required_mods, keymod forbidden_mods);
-68: func keyboard_keycode keyboard_get_keycode(keyboard_scancode scancode, keymod modifiers, b32 key_event);
-71: func cstr8 keyboard_get_scancode_name(keyboard_scancode scancode);
-74: func b32 keyboard_start_text_input(window opt_window);
-75: func b32 keyboard_stop_text_input(window opt_window);
-76: func b32 keyboard_is_text_input_active(window opt_window);
-77: func b32 keyboard_set_text_input_area(window opt_window, i32 xpos, i32 ypos, i32 width, i32 height);
+45: func b32 keyboard_vkey_is_valid(vkey key);
+48: func b32 keyboard_is_available(void);
+51: func device keyboard_get_primary_device(void);
+54: func b32 keyboard_is_key_down(vkey key);
+60: func keymod keyboard_get_mods(void);
+63: func b32 keyboard_has_mods(keymod required_mods);
+66: func b32 keyboard_has_mods_exact(keymod required_mods, keymod forbidden_mods);
+69: func b32 keyboard_is_key_down_mod(vkey key, keymod required_mods, keymod forbidden_mods);
+72: func cstr8 keyboard_get_key_name(vkey key);
+75: func cstr8 keyboard_get_key_display_name(vkey key, keymod modifiers, b32 key_event);
+78: func b32 keyboard_start_text_input(window opt_window);
+79: func b32 keyboard_stop_text_input(window opt_window);
+80: func b32 keyboard_is_text_input_active(window opt_window);
+81: func b32 keyboard_set_text_input_area(window opt_window, i32 xpos, i32 ypos, i32 width, i32 height);
+
+=== include\input\vkeys.h ===
+142: typedef enum vkey {
 
 === include\input\mouse.h ===
 14: typedef enum mouse_button {
@@ -1289,6 +1309,14 @@
 9: typedef struct cpu_instruction_set_info {
 29: typedef struct cpu_info {
 39: func b32 cpu_info_query(cpu_info* out_info);
+
+=== include\system\hardware_info.h ===
+14: typedef struct hardware_info {
+47: func b32 hardware_info_query(hardware_info* out_info);
+
+=== include\system\language.h ===
+13: typedef struct language_info {
+25: func b32 language_query(language_info* out_info);
 
 === include\system\system_info.h ===
 9: typedef struct system_info {

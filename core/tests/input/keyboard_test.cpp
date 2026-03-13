@@ -3,16 +3,17 @@
 
 #include "test_common.hpp"
 
-TEST(input_keyboard_test, invalid_scancodes_and_basic_queries) {
-  keyboard_scancode bad_code = 0xFFFFFFFFU;
-  EXPECT_TRUE(keyboard_is_key_down(bad_code) == 0);
-  EXPECT_EQ(0U, keyboard_get_key_repeat_count(bad_code));
+TEST(input_keyboard_test, invalid_keys_and_basic_queries) {
+  EXPECT_TRUE(keyboard_is_key_down(VKEY_UNKNOWN) == 0);
 
   EXPECT_TRUE(keyboard_has_mods(KEYMOD_NONE) != 0);
-  cstr8 name_ptr = keyboard_get_scancode_name(4);
+  cstr8 name_ptr = keyboard_get_key_name(VKEY_A);
   EXPECT_NE(nullptr, name_ptr);
-
-  (void)keyboard_get_keycode(4, KEYMOD_NONE, 0);
+  EXPECT_TRUE(keyboard_vkey_is_valid(VKEY_A) != 0);
+  EXPECT_TRUE(keyboard_vkey_is_valid(VKEY_MEDIA_PLAY_PAUSE) != 0);
+  EXPECT_TRUE(keyboard_vkey_is_valid(VKEY_LANG_1) != 0);
+  EXPECT_NE(nullptr, keyboard_get_key_name(VKEY_A));
+  EXPECT_NE(nullptr, keyboard_get_key_display_name(VKEY_A, KEYMOD_NONE, 0));
 }
 
 TEST(input_keyboard_test, primary_device_matches_availability_expectations) {

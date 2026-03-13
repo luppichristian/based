@@ -13,7 +13,6 @@
 #include "basic/safe.h"
 
 func void tablet_internal_on_msg(msg* src);
-func void keyboard_internal_on_msg(msg* src);
 
 func mouse_button mouse_button_from_sdl(Uint8 button) {
   switch (button) {
@@ -52,7 +51,6 @@ func Uint8 mouse_button_to_sdl(mouse_button button) {
 func void msg_notify_internal_listeners(const msg* src) {
   profile_func_begin;
   msg* src_mut = (msg*)src;
-  keyboard_internal_on_msg(src_mut);
   tablet_internal_on_msg(src_mut);
   profile_func_end;
 }
@@ -577,10 +575,8 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
           &(msg_core_keyboard_data) {
               .window = window_from_native_id((up)src->key.windowID),
               .device = devices_make_id(DEVICE_TYPE_KEYBOARD, (u64)src->key.which),
-              .scancode = (keyboard_scancode)src->key.scancode,
-              .keycode = (keyboard_keycode)src->key.key,
+              .key = keyboard_internal_vkey_from_scancode((u32)src->key.scancode),
               .modifiers = (keymod)src->key.mod,
-              .raw = (keyboard_raw_key)src->key.raw,
               .down = src->key.down ? true : false,
               .repeat = src->key.repeat ? true : false,
           });
@@ -1108,14 +1104,18 @@ func b32 msg_to_sdl_event(msg* src, SDL_Event* out_event) {
 
     case SDL_EVENT_KEY_DOWN:
     case SDL_EVENT_KEY_UP:
+      u32 scancode = keyboard_internal_scancode_from_vkey(msg_core_get_keyboard(src)->key);
       out_event->key.type = (SDL_EventType)src->type;
       out_event->key.timestamp = (Uint64)src->timestamp;
       out_event->key.windowID = (SDL_WindowID)window_to_native_id(msg_core_get_keyboard(src)->window);
       out_event->key.which = (SDL_KeyboardID)devices_get_instance(msg_core_get_keyboard(src)->device);
-      out_event->key.scancode = (SDL_Scancode)msg_core_get_keyboard(src)->scancode;
-      out_event->key.key = (SDL_Keycode)msg_core_get_keyboard(src)->keycode;
+      out_event->key.scancode = (SDL_Scancode)scancode;
+      out_event->key.key =
+          (SDL_Keycode)keyboard_internal_keycode_from_vkey(msg_core_get_keyboard(src)->key,
+                                                           msg_core_get_keyboard(src)->modifiers,
+                                                           msg_core_get_keyboard(src)->down);
       out_event->key.mod = (SDL_Keymod)msg_core_get_keyboard(src)->modifiers;
-      out_event->key.raw = (Uint16)msg_core_get_keyboard(src)->raw;
+      out_event->key.raw = 0;
       out_event->key.down = msg_core_get_keyboard(src)->down != 0;
       out_event->key.repeat = msg_core_get_keyboard(src)->repeat != 0;
       profile_func_end;

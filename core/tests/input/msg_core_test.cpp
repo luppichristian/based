@@ -6,7 +6,7 @@
 TEST(input_msg_core_test, keyboard_fill_and_get_roundtrip_uses_type_defaults) {
   msg key_msg = {};
   msg_core_keyboard_data key_data = {};
-  key_data.scancode = 12;
+  key_data.key = VKEY_I;
   key_data.down = 1;
   key_data.repeat = 0;
   key_data.modifiers = KEYMOD_CTRL;
@@ -17,7 +17,7 @@ TEST(input_msg_core_test, keyboard_fill_and_get_roundtrip_uses_type_defaults) {
 
   msg_core_keyboard_data* out_key = msg_core_get_keyboard(&key_msg);
   ASSERT_NE(nullptr, out_key);
-  EXPECT_EQ(12U, out_key->scancode);
+  EXPECT_EQ(VKEY_I, out_key->key);
   EXPECT_TRUE(out_key->down != 0);
   EXPECT_EQ(KEYMOD_CTRL, out_key->modifiers);
 }

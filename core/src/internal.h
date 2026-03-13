@@ -5,6 +5,7 @@
 
 #include "../include/input/camera.h"
 #include "../include/input/devices.h"
+#include "../include/input/keyboard.h"
 #include "../include/input/msg.h"
 #include "../include/input/sensor.h"
 #include "../include/interface/monitor.h"
@@ -26,6 +27,11 @@ func u64 devices_get_audio_native_id(device src);
 
 func b32 msg_from_native(const void* native_event, msg* out_msg);
 func b32 msg_to_native(const msg* src, void* native_event);
+
+func b32 keyboard_internal_scancode_is_valid(u32 scancode);
+func u32 keyboard_internal_scancode_from_vkey(vkey key);
+func vkey keyboard_internal_vkey_from_scancode(u32 scancode);
+func i32 keyboard_internal_keycode_from_vkey(vkey key, keymod modifiers, b32 key_event);
 
 func sensor sensor_from_native_id(up native_id);
 func up sensor_to_native_id(sensor src);

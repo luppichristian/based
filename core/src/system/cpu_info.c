@@ -12,7 +12,7 @@
 #include <stddef.h>
 #include <string.h>
 
-#if defined(COMPILER_MSVC) && (defined(ARCH_X86) || defined(ARCH_X86_64))
+#if defined(PLATFORM_WINDOWS) && (defined(ARCH_X86) || defined(ARCH_X86_64))
 #  include <intrin.h>
 #elif (defined(COMPILER_GCC) || defined(COMPILER_CLANG) || defined(COMPILER_APPLE_CLANG)) && \
     (defined(ARCH_X86) || defined(ARCH_X86_64))
@@ -71,7 +71,7 @@ func b32 cpu_read_cpuid(u32 leaf_id, u32 subleaf_id, i32 out_regs[4]) {
     return false;
   }
   assert(out_regs != NULL);
-#  if defined(COMPILER_MSVC)
+#  if defined(PLATFORM_WINDOWS)
   __cpuidex(out_regs, (i32)leaf_id, (i32)subleaf_id);
   profile_func_end;
   return true;
