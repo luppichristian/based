@@ -67,7 +67,10 @@
 #include "input/touch.h"
 
 // Include interface modules.
+#include "interface/cursor.h"
+#include "interface/dpi.h"
 #include "interface/dialog.h"
+#include "interface/icon.h"
 #include "interface/monitor.h"
 #include "interface/window.h"
 

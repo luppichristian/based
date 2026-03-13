@@ -1,8 +1,8 @@
 // MIT License
 // Copyright (c) 2026 Christian Luppi
 
-#include "test_common.hpp"
 #include "internal.h"
+#include "test_common.hpp"
 
 TEST(interface_monitor_test, id_conversion_and_invalid_queries) {
   monitor mon_id = monitor_from_native_id(123);
@@ -10,10 +10,8 @@ TEST(interface_monitor_test, id_conversion_and_invalid_queries) {
   EXPECT_EQ((up)123, monitor_to_native_id(mon_id));
   EXPECT_TRUE(monitor_id_is_valid(nullptr) == 0);
 
-  monitor_rect out_rect = {};
+  r2_i32 out_rect = {};
   monitor_mode out_mode = {};
-  EXPECT_TRUE(monitor_get_bounds(nullptr, &out_rect) == 0);
-  EXPECT_TRUE(monitor_get_usable_bounds(nullptr, &out_rect) == 0);
   EXPECT_TRUE(monitor_get_mode(nullptr, 0, &out_mode) == 0);
   EXPECT_TRUE(monitor_get_current_mode(nullptr, &out_mode) == 0);
   EXPECT_TRUE(monitor_get_desktop_mode(nullptr, &out_mode) == 0);
@@ -23,12 +21,12 @@ TEST(interface_monitor_test, id_conversion_and_invalid_queries) {
 }
 
 TEST(interface_monitor_test, count_and_primary_monitor_queries) {
-  sz count_val = monitor_get_count();
-  monitor out_id = nullptr;
+  sz count_val = monitor_get_total_count();
   if (count_val == 0) {
-    EXPECT_TRUE(monitor_get_id(0, &out_id) == 0);
+    EXPECT_EQ(nullptr, monitor_get_from_idx(0));
   } else {
-    EXPECT_TRUE(monitor_get_id(0, &out_id) != 0);
+    monitor out_id = monitor_get_from_idx(0);
+    EXPECT_NE(nullptr, out_id);
     EXPECT_TRUE(monitor_id_is_valid(out_id) != 0);
     EXPECT_NE(nullptr, monitor_get_name(out_id));
   }

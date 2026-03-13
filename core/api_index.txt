@@ -1,4 +1,10 @@
 === include\based_core.h ===
+70: #include "interface/cursor.h"
+71: #include "interface/dpi.h"
+72: #include "interface/dialog.h"
+73: #include "interface/icon.h"
+74: #include "interface/monitor.h"
+75: #include "interface/window.h"
 
 === include\basic\assert.h ===
 20: func void _assert(b32 condition, const char* msg, callsite site);
@@ -561,20 +567,46 @@
 14: typedef enum mouse_button {
 22: typedef enum mouse_wheel_direction {
 28: typedef struct mouse_state {
-35: func b32 mouse_is_available(void);
-38: func b32 mouse_get_primary_device_id(device_id* out_id);
-42: func mouse_state mouse_get_state(input_key key);
-45: func mouse_state mouse_get_global_state(input_key key);
-48: func mouse_state mouse_get_relative_state(input_key key);
-51: func b32 mouse_is_button_down(input_key key, u8 button);
-54: func b32 mouse_is_button_pressed(input_key key, u8 button);
-57: func b32 mouse_is_button_released(input_key key, u8 button);
-59: func b32 mouse_set_cursor_visible(b32 visible);
-60: func b32 mouse_is_cursor_visible(void);
-61: func b32 mouse_set_capture(b32 enabled);
-62: func b32 mouse_is_captured(void);
-63: func b32 mouse_set_relative_mode(b32 enabled);
-64: func b32 mouse_is_relative_mode(void);
+39: func b32 mouse_is_available(void);
+42: func b32 mouse_get_primary_device_id(device_id* out_id);
+46: func mouse_state mouse_get_state(input_key key);
+49: func mouse_state mouse_get_global_state(input_key key);
+52: func mouse_state mouse_get_relative_state(input_key key);
+55: func b32 mouse_is_button_down(input_key key, u8 button);
+58: func b32 mouse_is_button_pressed(input_key key, u8 button);
+61: func b32 mouse_is_button_released(input_key key, u8 button);
+
+=== include\interface\cursor.h ===
+13: func b32 cursor_set_icon(icon icon_id);
+14: func b32 cursor_reset_icon(void);
+16: func b32 cursor_set_visible(b32 visible);
+17: func b32 cursor_is_visible(void);
+19: func b32 cursor_set_capture(window opt_window, b32 enabled);
+20: func b32 cursor_is_captured(window opt_window);
+22: func b32 cursor_set_relative_mode(window opt_window, b32 enabled);
+23: func b32 cursor_is_relative_mode(window opt_window);
+25: func b32 cursor_warp(window opt_window, f32 xpos, f32 ypos);
+
+=== include\interface\dpi.h ===
+13: typedef struct dpi_metrics {
+19: func dpi_metrics dpi_metrics_make_default(void);
+20: func b32 dpi_get_monitor_metrics(monitor monitor_id, dpi_metrics* out_metrics);
+21: func b32 dpi_get_window_metrics(window window_id, dpi_metrics* out_metrics);
+23: func f32 dpi_scale_f32(f32 value, f32 scale);
+24: func i32 dpi_scale_i32(i32 value, f32 scale);
+
+=== include\interface\icon.h ===
+12: typedef void* icon;
+14: typedef enum icon_system {
+37: func b32 icon_id_is_valid(icon src);
+38: func icon icon_create_rgba(i32 width, i32 height, const u8* rgba_pixels, i32 hot_xpos, i32 hot_ypos);
+39: func icon icon_create_system(icon_system system_icon);
+40: func b32 icon_destroy(icon icon_id);
+42: func b32 icon_get_size(icon icon_id, i32* out_width, i32* out_height);
+43: func b32 icon_get_hotspot(icon icon_id, i32* out_xpos, i32* out_ypos);
+44: func b32 icon_get_system(icon icon_id, icon_system* out_system_icon);
+45: func b32 icon_is_rgba(icon icon_id);
+46: func b32 icon_is_system(icon icon_id);
 
 === include\input\msg.h ===
 22: typedef enum msg_handler_stage {
@@ -1733,16 +1765,15 @@
 93: func b32 dialog_open_folder(window owner, cstr8 default_location, b32 allow_many, dialog_file_callback* callback, void* user_data);
 
 === include\interface\monitor.h ===
-15: typedef struct monitor_rect {
 22: typedef struct monitor_mode {
 29: typedef enum monitor_orientation {
 38: func b32 monitor_id_is_valid(monitor src);
-41: func sz monitor_get_count(void);
-42: func b32 monitor_get_id(sz idx, monitor* out_id);
+41: func sz monitor_get_total_count(void);
+42: func monitor monitor_get_from_idx(sz idx);
 43: func monitor monitor_get_primary_id(void);
 44: func cstr8 monitor_get_name(monitor id);
-47: func b32 monitor_get_bounds(monitor id, monitor_rect* out_rect);
-48: func b32 monitor_get_usable_bounds(monitor id, monitor_rect* out_rect);
+47: func r2_i32 monitor_get_bounds(monitor id);
+48: func r2_i32 monitor_get_usable_bounds(monitor id);
 51: func sz monitor_get_mode_count(monitor id);
 52: func b32 monitor_get_mode(monitor id, sz idx, monitor_mode* out_mode);
 53: func b32 monitor_get_current_mode(monitor id, monitor_mode* out_mode);
@@ -1752,26 +1783,39 @@
 59: func monitor_orientation monitor_get_orientation(monitor id);
 
 === include\interface\window.h ===
-17: func b32 window_id_is_valid(window src);
-20: func sz window_get_count(void);
-21: func b32 window_get_id(sz idx, window* out_id);
-22: func b32 window_is_valid(window id);
-25: func window window_create(cstr8 title, i32 width, i32 height, u64 flags);
-26: func b32 window_destroy(window id);
-29: func b32 window_show(window id);
-30: func b32 window_hide(window id);
-33: func b32 window_mv(window id, i32 xpos, i32 ypos);
-34: func b32 window_get_position(window id, i32* out_xpos, i32* out_ypos);
-37: func b32 window_resize(window id, i32 width, i32 height);
-38: func b32 window_get_size(window id, i32* out_width, i32* out_height);
-41: func b32 window_set_fullscreen(window id, b32 enabled);
-42: func b32 window_is_fullscreen(window id);
-45: func b32 window_minimize(window id);
-46: func b32 window_maximize(window id);
-47: func b32 window_restore(window id);
-48: func b32 window_focus(window id);
-51: func cstr8 window_get_title(window id);
-52: func b32 window_set_title(window id, cstr8 title);
-53: func b32 window_get_monitor_id(window id, monitor* out_monitor_id);
+15: typedef void* window;
+17: typedef enum window_mode {
+24: typedef enum window_center_axis {
+32: func b32 window_id_is_valid(window src);
+35: func sz window_get_total_count(void);
+36: func window window_get_from_idx(sz idx);
+37: func b32 window_is_valid(window window_id);
+40: func window window_create(cstr8 title, i32 width, i32 height, window_mode mode, u64 flags);
+41: func b32 window_destroy(window window_id);
+44: func b32 window_is_hidden(window window_id);
+47: func b32 window_show(window window_id);
+50: func b32 window_hide(window window_id);
+54: func b32 window_set_pos(window window_id, i32 xpos, i32 ypos);
+57: func b32 window_get_pos(window window_id, i32* out_xpos, i32* out_ypos);
+61: func b32 window_set_size(window window_id, i32 width, i32 height);
+64: func b32 window_get_size(window window_id, i32* out_width, i32* out_height);
+68: func b32 window_set_mode(window window_id, window_mode mode);
+71: func window_mode window_get_mode(window window_id);
+75: func b32 window_is_minimized(window window_id);
+78: func b32 window_is_maximized(window window_id);
+81: func b32 window_has_input_focus(window window_id);
+84: func b32 window_has_mouse_focus(window window_id);
+87: func b32 window_is_topmost(window window_id);
+90: func b32 window_minimize(window window_id);
+93: func b32 window_maximize(window window_id);
+96: func b32 window_restore(window window_id);
+99: func b32 window_focus(window window_id);
+102: func b32 window_set_topmost(window window_id, b32 enabled);
+106: func cstr8 window_get_title(window window_id);
+109: func b32 window_set_title(window window_id, cstr8 title);
+112: func b32 window_set_icon(window window_id, icon icon_id);
+115: func b32 window_get_monitor(window window_id, monitor* out_monitor_id);
+118: func b32 window_get_creation_monitor(window window_id, monitor* out_monitor_id);
+122: func b32 window_center_in_monitor(window window_id, monitor monitor_id, window_center_axis axis_mask);
 
 

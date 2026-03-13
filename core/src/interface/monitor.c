@@ -26,7 +26,7 @@ func up monitor_to_native_id(monitor src) {
 // Global Monitor Enumeration
 // =========================================================================
 
-func sz monitor_get_count(void) {
+func sz monitor_get_total_count(void) {
   profile_func_begin;
   int count = 0;
   SDL_DisplayID* ids = SDL_GetDisplays(&count);
@@ -43,18 +43,14 @@ func sz monitor_get_count(void) {
   return count > 0 ? (sz)count : 0;
 }
 
-func b32 monitor_get_id(sz idx, monitor* out_id) {
+func monitor monitor_get_from_idx(sz idx) {
   profile_func_begin;
   int count = 0;
   SDL_DisplayID* ids = SDL_GetDisplays(&count);
   b32 found = ids != NULL && idx < (sz)count;
-
-  if (out_id) {
-    *out_id = NULL;
-  }
-
-  if (found && out_id) {
-    *out_id = monitor_from_native_id((up)ids[idx]);
+  monitor out_monitor = NULL;
+  if (found) {
+    out_monitor = monitor_from_native_id((up)ids[idx]);
   }
 
   if (ids) {
@@ -62,7 +58,7 @@ func b32 monitor_get_id(sz idx, monitor* out_id) {
   }
 
   profile_func_end;
-  return found;
+  return out_monitor;
 }
 
 func monitor monitor_get_primary_id(void) {
@@ -87,48 +83,54 @@ func cstr8 monitor_get_name(monitor id) {
 // Monitor Geometry
 // =========================================================================
 
-func b32 monitor_get_bounds(monitor id, monitor_rect* out_rect) {
+func r2_i32 monitor_get_bounds(monitor id) {
+  r2_i32 out_rect = {0};
+  if (!monitor_id_is_valid(id)) {
+    return out_rect;
+  }
   profile_func_begin;
+
   SDL_Rect bounds = {0};
 
-  if (!monitor_id_is_valid(id) || out_rect == NULL ||
+  if (!monitor_id_is_valid(id) ||
       !SDL_GetDisplayBounds((SDL_DisplayID)monitor_to_native_id(id), &bounds)) {
-    thread_log_error("Failed to query monitor bounds id=%llu out_rect=%p error=%s",
+    thread_log_error("Failed to query monitor bounds id=%llu error=%s",
                      (unsigned long long)monitor_to_native_id(id),
-                     (void*)out_rect,
                      SDL_GetError());
     profile_func_end;
-    return false;
+    return out_rect;
   }
 
-  out_rect->x = bounds.x;
-  out_rect->y = bounds.y;
-  out_rect->width = bounds.w;
-  out_rect->height = bounds.h;
+  out_rect.min.x = bounds.x;
+  out_rect.min.y = bounds.y;
+  out_rect.max.x = bounds.x + bounds.w;
+  out_rect.max.y = bounds.y + bounds.h;
   profile_func_end;
-  return true;
+  return out_rect;
 }
 
-func b32 monitor_get_usable_bounds(monitor id, monitor_rect* out_rect) {
+func r2_i32 monitor_get_usable_bounds(monitor id) {
+  r2_i32 out_rect = {0};
+  if (!monitor_id_is_valid(id)) {
+    return out_rect;
+  }
   profile_func_begin;
-  SDL_Rect bounds = {0};
 
-  if (!monitor_id_is_valid(id) || out_rect == NULL ||
-      !SDL_GetDisplayUsableBounds((SDL_DisplayID)monitor_to_native_id(id), &bounds)) {
-    thread_log_error("Failed to query monitor usable bounds id=%llu out_rect=%p error=%s",
+  SDL_Rect bounds = {0};
+  if (!SDL_GetDisplayUsableBounds((SDL_DisplayID)monitor_to_native_id(id), &bounds)) {
+    thread_log_error("Failed to query monitor usable bounds id=%llu error=%s",
                      (unsigned long long)monitor_to_native_id(id),
-                     (void*)out_rect,
                      SDL_GetError());
     profile_func_end;
-    return false;
+    return out_rect;
   }
 
-  out_rect->x = bounds.x;
-  out_rect->y = bounds.y;
-  out_rect->width = bounds.w;
-  out_rect->height = bounds.h;
+  out_rect.min.x = bounds.x;
+  out_rect.min.y = bounds.y;
+  out_rect.max.x = bounds.x + bounds.w;
+  out_rect.max.y = bounds.y + bounds.h;
   profile_func_end;
-  return true;
+  return out_rect;
 }
 
 // =========================================================================

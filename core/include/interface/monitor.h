@@ -5,19 +5,13 @@
 
 #include "../basic/primitive_types.h"
 #include "../strings/cstrings.h"
+#include "../basic/third_party.h"
 
 // =========================================================================
 c_begin;
 // =========================================================================
 
 typedef void* monitor;
-
-typedef struct monitor_rect {
-  i32 x;
-  i32 y;
-  i32 width;
-  i32 height;
-} monitor_rect;
 
 typedef struct monitor_mode {
   i32 width;
@@ -38,14 +32,15 @@ typedef enum monitor_orientation {
 func b32 monitor_id_is_valid(monitor src);
 
 // Global monitor enumeration.
-func sz monitor_get_count(void);
-func b32 monitor_get_id(sz idx, monitor* out_id);
+func sz monitor_get_total_count(void);
+func monitor monitor_get_from_idx(sz idx);
+
+// Get primary monitor of the system.
 func monitor monitor_get_primary_id(void);
-func cstr8 monitor_get_name(monitor id);
 
 // Monitor geometry.
-func b32 monitor_get_bounds(monitor id, monitor_rect* out_rect);
-func b32 monitor_get_usable_bounds(monitor id, monitor_rect* out_rect);
+func r2_i32 monitor_get_bounds(monitor id);
+func r2_i32 monitor_get_usable_bounds(monitor id);
 
 // Display mode enumeration.
 func sz monitor_get_mode_count(monitor id);
@@ -54,6 +49,7 @@ func b32 monitor_get_current_mode(monitor id, monitor_mode* out_mode);
 func b32 monitor_get_desktop_mode(monitor id, monitor_mode* out_mode);
 
 // Convenience queries.
+func cstr8 monitor_get_name(monitor id);
 func f32 monitor_get_refresh_rate(monitor id);
 func f32 monitor_get_content_scale(monitor id);
 func monitor_orientation monitor_get_orientation(monitor id);

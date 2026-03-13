@@ -148,65 +148,6 @@ func b32 mouse_is_button_released(input_key key, u8 button) {
   return true;
 }
 
-func b32 mouse_set_cursor_visible(b32 visible) {
-  profile_func_begin;
-  b32 result = visible != 0 ? (b32)SDL_ShowCursor() : (b32)SDL_HideCursor();
-  profile_func_end;
-  return result != 0 ? true : false;
-}
-
-func b32 mouse_is_cursor_visible(void) {
-  b32 result = SDL_CursorVisible();
-  return result;
-}
-
-func b32 mouse_set_capture(b32 enabled) {
-  profile_func_begin;
-  b32 result = SDL_CaptureMouse(enabled != 0);
-  profile_func_end;
-  return result;
-}
-
-func b32 mouse_is_captured(void) {
-  profile_func_begin;
-  SDL_Window* focus_window = SDL_GetMouseFocus();
-  if (focus_window == NULL) {
-    profile_func_end;
-    return false;
-  }
-
-  SDL_WindowFlags window_flags = SDL_GetWindowFlags(focus_window);
-  b32 result = (window_flags & SDL_WINDOW_MOUSE_CAPTURE) != 0 ? true : false;
-  profile_func_end;
-  return result;
-}
-
-func b32 mouse_set_relative_mode(b32 enabled) {
-  profile_func_begin;
-  SDL_Window* focus_window = SDL_GetMouseFocus();
-  if (focus_window == NULL) {
-    profile_func_end;
-    return false;
-  }
-
-  b32 result = SDL_SetWindowRelativeMouseMode(focus_window, enabled != 0) ? true : false;
-  profile_func_end;
-  return result;
-}
-
-func b32 mouse_is_relative_mode(void) {
-  profile_func_begin;
-  SDL_Window* focus_window = SDL_GetMouseFocus();
-  if (focus_window == NULL) {
-    profile_func_end;
-    return false;
-  }
-
-  b32 result = SDL_GetWindowRelativeMouseMode(focus_window) ? true : false;
-  profile_func_end;
-  return result;
-}
-
 func void mouse_internal_on_msg(msg* src) {
   profile_func_begin;
   if (src == NULL || (src->type != MSG_CORE_TYPE_MOUSE_BUTTON_DOWN && src->type != MSG_CORE_TYPE_MOUSE_BUTTON_UP)) {
