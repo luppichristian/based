@@ -52,7 +52,7 @@ func b32 huffman_tree_has_symbol(const huffman_tree* tree, u8 symbol);
 // If the symbol is absent, a zero-initialized code is returned.
 func huffman_code huffman_tree_get_code(const huffman_tree* tree, u8 symbol);
 
-// Returns the bit at the requested position within a Huffman code.
+// Returns the bit at the requested pos within a Huffman code.
 // Bits are ordered from the root toward the leaf.
 func b32 huffman_code_get_bit(const huffman_code* code, sz bit_idx);
 

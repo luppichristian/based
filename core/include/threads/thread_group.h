@@ -15,7 +15,7 @@ c_begin;
 // =========================================================================
 
 // Entry-point for a thread group member.
-// idx is the thread's zero-based position within the group.
+// idx is the thread's zero-based pos within the group.
 // arg is the shared user argument passed to thread_group_create.
 typedef i32 (*thread_group_func)(u32 idx, void* arg);
 

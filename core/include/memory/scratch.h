@@ -14,7 +14,7 @@ c_begin;
 // =========================================================================
 
 // A lightweight checkpoint into an arena's state. Capturing a scratch saves the
-// identity and cursor position of the tail block at that moment. Releasing it
+// identity and cursor pos of the tail block at that moment. Releasing it
 // rewinds the tail block's cursor and frees any blocks that were auto-allocated
 // after the checkpoint was taken.
 //

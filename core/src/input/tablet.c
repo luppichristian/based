@@ -33,10 +33,10 @@ func u64 tablet_hash_path(cstr8 src) {
 }
 
 func b32 tablet_is_available(void) {
-  return tablet_get_count() > 0;
+  return tablet_get_total_count() > 0;
 }
 
-func sz tablet_get_count(void) {
+func sz tablet_get_total_count(void) {
   SDL_hid_device_info* head = SDL_hid_enumerate(0, 0);
   SDL_hid_device_info* entry = head;
   sz total = 0;

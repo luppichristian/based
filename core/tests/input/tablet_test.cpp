@@ -15,7 +15,7 @@ TEST(input_tablet_test, invalid_queries_are_rejected_safely) {
 }
 
 TEST(input_tablet_test, count_and_device_id_consistency) {
-  sz count_val = tablet_get_count();
+  sz count_val = tablet_get_total_count();
   EXPECT_TRUE((tablet_is_available() != 0) == (count_val > 0));
 
   device_id out_id = {};

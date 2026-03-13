@@ -15,22 +15,19 @@ c_begin;
 typedef void* sensor;
 
 // Returns 1 if src refers to a concrete sensor id, 0 otherwise.
-func b32 sensor_id_is_valid(sensor src);
+func b32 sensor_is_valid(sensor src);
 
 // Returns the number of currently known sensor devices.
-func sz sensor_get_count(void);
+func sz sensor_get_total_count(void);
 
 // Writes the sensor id at idx into out_id. Returns 1 on success, 0 otherwise.
-func b32 sensor_get_id(sz idx, sensor* out_id);
+func b32 sensor_get_from_idx(sz idx, sensor* out_id);
 
 // Returns a backend-defined sensor name for id, or NULL when unavailable.
 func cstr8 sensor_get_name(sensor id);
 
 // Returns the SDL-compatible sensor kind for id.
 func sensor_kind sensor_get_kind(sensor id);
-
-// Returns the backend-specific non-portable sensor kind for id.
-func i32 sensor_get_non_portable_kind(sensor id);
 
 // Device lifecycle and sample retrieval.
 func b32 sensor_open(sensor id);

@@ -8,10 +8,10 @@
 #include "basic/profiler.h"
 
 func b32 touch_is_available(void) {
-  return touch_get_count() > 0;
+  return touch_get_total_count() > 0;
 }
 
-func sz touch_get_count(void) {
+func sz touch_get_total_count(void) {
   profile_func_begin;
   int count = 0;
   SDL_TouchID* ids = SDL_GetTouchDevices(&count);

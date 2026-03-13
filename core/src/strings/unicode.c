@@ -250,7 +250,7 @@ func sz utf16_codepoint_count(cstr16 src, sz src_size) {
 // Conversion — shared emit helper
 // =========================================================================
 
-// Writes unit_cnt units from units[] into dst at position *out_cnt, if space allows.
+// Writes unit_cnt units from units[] into dst at pos *out_cnt, if space allows.
 // When dst is NULL the write is skipped (count-only mode).
 static void emit_c8(c8* dst, sz dst_cap, sz* out_cnt, cstr8 units, sz unit_cnt) {
   if (dst != NULL && *out_cnt + unit_cnt <= dst_cap) {

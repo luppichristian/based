@@ -5,10 +5,8 @@
 
 TEST(input_keyboard_test, invalid_scancodes_and_basic_queries) {
   keyboard_scancode bad_code = 0xFFFFFFFFU;
-  EXPECT_TRUE(keyboard_is_key_down(INPUT_KEY_DEFAULT, bad_code) == 0);
-  EXPECT_TRUE(keyboard_is_key_pressed(INPUT_KEY_DEFAULT, bad_code) == 0);
-  EXPECT_TRUE(keyboard_is_key_released(INPUT_KEY_DEFAULT, bad_code) == 0);
-  EXPECT_EQ(0U, keyboard_get_key_repeat_count(INPUT_KEY_DEFAULT, bad_code));
+  EXPECT_TRUE(keyboard_is_key_down(bad_code) == 0);
+  EXPECT_EQ(0U, keyboard_get_key_repeat_count(bad_code));
 
   EXPECT_TRUE(keyboard_has_mods(KEYMOD_NONE) != 0);
   cstr8 name_ptr = keyboard_get_scancode_name(4);

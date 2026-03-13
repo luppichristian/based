@@ -42,7 +42,7 @@ func camera_state_entry* camera_find_state(SDL_CameraID camera_id, b32 create_if
   return NULL;
 }
 
-func b32 camera_id_is_valid(camera src) {
+func b32 camera_is_valid(camera src) {
   return src != NULL;
 }
 
@@ -54,7 +54,7 @@ func up camera_to_native_id(camera src) {
   return (up)src;
 }
 
-func sz camera_get_count(void) {
+func sz camera_get_total_count(void) {
   profile_func_begin;
   int count = 0;
   SDL_CameraID* ids = SDL_GetCameras(&count);
@@ -102,7 +102,7 @@ func b32 camera_get_id(sz idx, camera* out_id) {
 
 func cstr8 camera_get_name(camera id) {
   profile_func_begin;
-  if (!camera_id_is_valid(id)) {
+  if (!camera_is_valid(id)) {
     thread_log_warn("Rejected camera name query for invalid camera");
     profile_func_end;
     return NULL;
@@ -116,25 +116,25 @@ func cstr8 camera_get_name(camera id) {
   return result;
 }
 
-func camera_position camera_get_position(camera id) {
+func camera_pos camera_get_pos(camera id) {
   profile_func_begin;
-  if (!camera_id_is_valid(id)) {
-    thread_log_warn("Rejected camera position query for invalid camera");
+  if (!camera_is_valid(id)) {
+    thread_log_warn("Rejected camera pos query for invalid camera");
     profile_func_end;
-    return CAMERA_POSITION_UNKNOWN;
+    return CAMERA_POS_UNKNOWN;
   }
 
-  camera_position result = CAMERA_POSITION_UNKNOWN;
+  camera_pos result = CAMERA_POS_UNKNOWN;
   switch (SDL_GetCameraPosition((SDL_CameraID)camera_to_native_id(id))) {
     case SDL_CAMERA_POSITION_FRONT_FACING:
-      result = CAMERA_POSITION_FRONT_FACING;
+      result = CAMERA_POS_FRONT_FACING;
       break;
     case SDL_CAMERA_POSITION_BACK_FACING:
-      result = CAMERA_POSITION_BACK_FACING;
+      result = CAMERA_POS_BACK_FACING;
       break;
     case SDL_CAMERA_POSITION_UNKNOWN:
     default:
-      result = CAMERA_POSITION_UNKNOWN;
+      result = CAMERA_POS_UNKNOWN;
       break;
   }
   profile_func_end;
@@ -143,7 +143,7 @@ func camera_position camera_get_position(camera id) {
 
 func b32 camera_open(camera id) {
   profile_func_begin;
-  if (!camera_id_is_valid(id)) {
+  if (!camera_is_valid(id)) {
     thread_log_error("Rejected camera open for invalid camera");
     profile_func_end;
     return false;
@@ -162,7 +162,7 @@ func b32 camera_open(camera id) {
 
 func b32 camera_close(camera id) {
   profile_func_begin;
-  if (!camera_id_is_valid(id)) {
+  if (!camera_is_valid(id)) {
     thread_log_error("Rejected camera close for invalid camera");
     profile_func_end;
     return false;
@@ -181,7 +181,7 @@ func b32 camera_close(camera id) {
 
 func b32 camera_start(camera id) {
   profile_func_begin;
-  if (!camera_id_is_valid(id)) {
+  if (!camera_is_valid(id)) {
     thread_log_error("Rejected camera start for invalid camera");
     profile_func_end;
     return false;
@@ -200,7 +200,7 @@ func b32 camera_start(camera id) {
 
 func b32 camera_stop(camera id) {
   profile_func_begin;
-  if (!camera_id_is_valid(id)) {
+  if (!camera_is_valid(id)) {
     thread_log_error("Rejected camera stop for invalid camera");
     profile_func_end;
     return false;
@@ -222,7 +222,7 @@ func b32 camera_read(camera id, buffer* out_frame) {
   if (out_frame != NULL) {
     *out_frame = (buffer) {0};
   }
-  if (!camera_id_is_valid(id) || out_frame == NULL) {
+  if (!camera_is_valid(id) || out_frame == NULL) {
     thread_log_error("Rejected camera read camera=%lld out_frame=%p",
                      (long long)camera_to_native_id(id),
                      (void*)out_frame);

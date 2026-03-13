@@ -4,7 +4,6 @@
 #pragma once
 
 #include "../interface/window.h"
-#include "capture.h"
 #include "devices.h"
 
 // =========================================================================
@@ -48,17 +47,10 @@ func b32 keyboard_is_available(void);
 func b32 keyboard_get_primary_device_id(device_id* out_id);
 
 // Returns 1 if the key identified by scancode is currently pressed, 0 otherwise.
-// key selects the capture stream used by one-shot queries.
-func b32 keyboard_is_key_down(input_key key, keyboard_scancode scancode);
-
-// Returns 1 if the key identified by scancode was pressed since last query for key, 0 otherwise.
-func b32 keyboard_is_key_pressed(input_key key, keyboard_scancode scancode);
-
-// Returns 1 if the key identified by scancode was released since last query for key, 0 otherwise.
-func b32 keyboard_is_key_released(input_key key, keyboard_scancode scancode);
+func b32 keyboard_is_key_down(keyboard_scancode scancode);
 
 // Returns the current repeat-event count for scancode while held.
-func u32 keyboard_get_key_repeat_count(input_key key, keyboard_scancode scancode);
+func u32 keyboard_get_key_repeat_count(keyboard_scancode scancode);
 
 // Returns the current keyboard modifier bitmask.
 func keymod keyboard_get_mods(void);
@@ -70,7 +62,7 @@ func b32 keyboard_has_mods(keymod required_mods);
 func b32 keyboard_has_mods_exact(keymod required_mods, keymod forbidden_mods);
 
 // Returns 1 when scancode is down and modifier requirements are satisfied.
-func b32 keyboard_is_key_down_mod(input_key key, keyboard_scancode scancode, keymod required_mods, keymod forbidden_mods);
+func b32 keyboard_is_key_down_mod(keyboard_scancode scancode, keymod required_mods, keymod forbidden_mods);
 
 // Resolves a keycode for scancode under the supplied modifier state.
 func keyboard_keycode keyboard_get_keycode(keyboard_scancode scancode, keymod modifiers, b32 key_event);

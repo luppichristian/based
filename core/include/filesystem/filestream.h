@@ -94,7 +94,7 @@ func b32 filestream_write_exact(filestream* stm, const void* src, sz size);
 // Seeks the current cursor. Returns 1 on success, 0 otherwise.
 func b32 filestream_seek(filestream* stm, i64 offset, filestream_seek_basis basis);
 
-// Returns the current cursor position.
+// Returns the current cursor pos.
 func sz filestream_tell(const filestream* stm);
 
 // Returns the logical byte size of the underlying stream.

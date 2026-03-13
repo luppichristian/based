@@ -13,17 +13,17 @@ c_begin;
 
 typedef void* camera;
 
-typedef enum camera_position {
-  CAMERA_POSITION_UNKNOWN = 0,
-  CAMERA_POSITION_FRONT_FACING = 1,
-  CAMERA_POSITION_BACK_FACING = 2,
-} camera_position;
+typedef enum camera_pos {
+  CAMERA_POS_UNKNOWN = 0,
+  CAMERA_POS_FRONT_FACING = 1,
+  CAMERA_POS_BACK_FACING = 2,
+} camera_pos;
 
 // Returns 1 if src refers to a concrete camera id, 0 otherwise.
-func b32 camera_id_is_valid(camera src);
+func b32 camera_is_valid(camera src);
 
 // Returns the number of currently known camera devices.
-func sz camera_get_count(void);
+func sz camera_get_total_count(void);
 
 // Writes the camera id at idx into out_id. Returns 1 on success, 0 otherwise.
 func b32 camera_get_id(sz idx, camera* out_id);
@@ -31,8 +31,8 @@ func b32 camera_get_id(sz idx, camera* out_id);
 // Returns a backend-defined camera name for id, or NULL when unavailable.
 func cstr8 camera_get_name(camera id);
 
-// Returns the camera physical position for id.
-func camera_position camera_get_position(camera id);
+// Returns the camera physical pos for id.
+func camera_pos camera_get_pos(camera id);
 
 // Device lifecycle and frame retrieval.
 func b32 camera_open(camera id);

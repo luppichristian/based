@@ -389,7 +389,7 @@ func b32 window_set_pos(window window_id, i32 xpos, i32 ypos) {
 
   b32 result = SDL_SetWindowPosition(window_ptr, xpos, ypos) ? true : false;
   if (!result) {
-    thread_log_error("Failed to set window position id=%llu xpos=%d ypos=%d error=%s",
+    thread_log_error("Failed to set window pos id=%llu xpos=%d ypos=%d error=%s",
                      (unsigned long long)window_to_native_id(window_id),
                      xpos,
                      ypos,
@@ -409,7 +409,7 @@ func b32 window_get_pos(window window_id, i32* out_xpos, i32* out_ypos) {
 
   b32 result = SDL_GetWindowPosition(window_ptr, out_xpos, out_ypos) ? true : false;
   if (!result) {
-    thread_log_error("Failed to get window position id=%llu error=%s", (unsigned long long)window_to_native_id(window_id), SDL_GetError());
+    thread_log_error("Failed to get window pos id=%llu error=%s", (unsigned long long)window_to_native_id(window_id), SDL_GetError());
   }
   profile_func_end;
   return result;

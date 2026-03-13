@@ -10,11 +10,9 @@ TEST(input_gamepads_test, invalid_slots_and_buttons_return_safe_defaults) {
   device_id out_id = {};
   EXPECT_TRUE(gamepads_get_device_id(GAMEPADS_MAX_COUNT, &out_id) == 0);
   EXPECT_TRUE(gamepads_has_button(GAMEPADS_MAX_COUNT, GAMEPAD_BUTTON_SOUTH) == 0);
-  EXPECT_TRUE(gamepads_get_button(INPUT_KEY_DEFAULT, GAMEPADS_MAX_COUNT, GAMEPAD_BUTTON_SOUTH) == 0);
-  EXPECT_TRUE(gamepads_is_button_pressed(INPUT_KEY_DEFAULT, GAMEPADS_MAX_COUNT, GAMEPAD_BUTTON_SOUTH) == 0);
-  EXPECT_TRUE(gamepads_is_button_released(INPUT_KEY_DEFAULT, GAMEPADS_MAX_COUNT, GAMEPAD_BUTTON_SOUTH) == 0);
+  EXPECT_TRUE(gamepads_get_button(GAMEPADS_MAX_COUNT, GAMEPAD_BUTTON_SOUTH) == 0);
   EXPECT_TRUE(gamepads_has_axis(GAMEPADS_MAX_COUNT, GAMEPAD_AXIS_LEFTX) == 0);
-  EXPECT_EQ(0, gamepads_get_axis(INPUT_KEY_DEFAULT, GAMEPADS_MAX_COUNT, GAMEPAD_AXIS_LEFTX));
+  EXPECT_EQ(0, gamepads_get_axis(GAMEPADS_MAX_COUNT, GAMEPAD_AXIS_LEFTX));
 }
 
 TEST(input_gamepads_test, axis_deadzone_api_works_without_hardware) {

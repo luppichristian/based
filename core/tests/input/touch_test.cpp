@@ -14,7 +14,7 @@ TEST(input_touch_test, invalid_device_queries_return_safe_defaults) {
 }
 
 TEST(input_touch_test, count_and_device_id_consistency) {
-  sz count_val = touch_get_count();
+  sz count_val = touch_get_total_count();
   EXPECT_TRUE((touch_is_available() != 0) == (count_val > 0));
 
   device_id out_id = {};

@@ -35,7 +35,7 @@ typedef struct touch_finger_state {
 func b32 touch_is_available(void);
 
 // Returns the number of currently known touch devices.
-func sz touch_get_count(void);
+func sz touch_get_total_count(void);
 
 // Writes the touch device id at idx into out_id. Returns 1 on success, 0 otherwise.
 func b32 touch_get_device_id(sz idx, device_id* out_id);

@@ -62,7 +62,7 @@ typedef struct tablet_pen_state {
 func b32 tablet_is_available(void);
 
 // Returns the number of currently known tablet devices.
-func sz tablet_get_count(void);
+func sz tablet_get_total_count(void);
 
 // Writes the tablet device id at idx into out_id. Returns 1 on success, 0 otherwise.
 func b32 tablet_get_device_id(sz idx, device_id* out_id);

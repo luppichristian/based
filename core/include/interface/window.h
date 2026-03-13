@@ -61,7 +61,7 @@ func b32 window_hide(window window_id);
 // Moves window_id to xpos/ypos. Returns 1 on success, 0 otherwise.
 func b32 window_set_pos(window window_id, i32 xpos, i32 ypos);
 
-// Writes the current window position into out_xpos/out_ypos. Returns 1 on success, 0 otherwise.
+// Writes the current window pos into out_xpos/out_ypos. Returns 1 on success, 0 otherwise.
 func b32 window_get_pos(window window_id, i32* out_xpos, i32* out_ypos);
 
 // Size.

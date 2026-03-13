@@ -456,40 +456,18 @@
 73: func b32 pathwatch_allow_out_of_scope_links(pathwatch* watcher, b32 enabled);
 76: func cstr8 pathwatch_get_last_error(void);
 
-=== include\input\bindings.h ===
-21: typedef struct binding_keyboard_combo {
-28: typedef struct binding_mouse_combo {
-33: typedef struct binding_gamepad_combo {
-40: typedef struct binding_desc {
-49: func void bindings_clear(void);
-52: func b32 bindings_add(const binding_desc* desc);
-55: func b32 bindings_remove(u32 binding_id);
-58: func b32 bindings_has(u32 binding_id);
-61: func b32 bindings_set_enabled(u32 binding_id, b32 enabled);
-64: func b32 bindings_is_down(u32 binding_id);
-67: func b32 bindings_is_pressed(input_key key, u32 binding_id);
-70: func b32 bindings_is_released(input_key key, u32 binding_id);
-73: func void bindings_on_msg(const msg* src);
-
 === include\input\camera.h ===
-16: typedef enum camera_position {
-23: func b32 camera_id_is_valid(camera src);
-26: func sz camera_get_count(void);
+16: typedef enum camera_pos {
+23: func b32 camera_is_valid(camera src);
+26: func sz camera_get_total_count(void);
 29: func b32 camera_get_id(sz idx, camera* out_id);
 32: func cstr8 camera_get_name(camera id);
-35: func camera_position camera_get_position(camera id);
+35: func camera_pos camera_get_pos(camera id);
 38: func b32 camera_open(camera id);
 39: func b32 camera_close(camera id);
 40: func b32 camera_start(camera id);
 41: func b32 camera_stop(camera id);
 42: func b32 camera_read(camera id, buffer* out_frame);
-
-=== include\input\capture.h ===
-22: func b32 input_capture_acquire_key(input_key key);
-26: func void input_capture_release_key(input_key key);
-29: func void input_capture_release_all_keys(void);
-33: func sz input_capture_get_slot(input_key key);
-36: func u32 input_capture_get_slot_epoch(sz slot_idx);
 
 === include\input\clipboard.h ===
 13: func b32 clipboard_has_text(void);
@@ -525,67 +503,54 @@
 81: func b32 gamepads_get_device_id(sz slot_idx, device_id* out_id);
 84: func cstr8 gamepads_get_name(sz slot_idx);
 87: func b32 gamepads_has_button(sz slot_idx, gamepad_button button);
-91: func b32 gamepads_get_button(input_key key, sz slot_idx, gamepad_button button);
-94: func b32 gamepads_is_button_pressed(input_key key, sz slot_idx, gamepad_button button);
-97: func b32 gamepads_is_button_released(input_key key, sz slot_idx, gamepad_button button);
-100: func b32 gamepads_has_axis(sz slot_idx, gamepad_axis axis);
-103: func i16 gamepads_get_axis(input_key key, sz slot_idx, gamepad_axis axis);
-104: func b32 gamepads_set_rumble(sz slot_idx, u16 low_freq, u16 high_freq, u32 duration_ms);
-105: func b32 gamepads_set_led(sz slot_idx, u8 red, u8 green, u8 blue);
-106: func b32 gamepads_set_axis_deadzone(sz slot_idx, gamepad_axis axis, i16 deadzone);
-107: func i16 gamepads_get_axis_deadzone(sz slot_idx, gamepad_axis axis);
-
-=== include\input\input_state.h ===
-19: typedef struct input_state {
-40: func void input_state_clear(input_state* src);
-43: func b32 input_state_capture(input_key key, input_state* out_state);
-46: func void input_state_apply_msg(input_state* src, const msg* event_msg);
-49: func sz input_state_serialized_size(void);
-52: func b32 input_state_serialize(const input_state* src, void* dst, sz dst_cap, sz* out_size);
-55: func b32 input_state_deserialize(const void* src, sz src_size, input_state* out_state);
+93: func b32 gamepads_get_button(sz slot_idx, gamepad_button button);
+96: func b32 gamepads_has_axis(sz slot_idx, gamepad_axis axis);
+99: func i16 gamepads_get_axis(sz slot_idx, gamepad_axis axis);
+102: func b32 gamepads_set_rumble(sz slot_idx, u16 low_freq, u16 high_freq, u32 duration_ms);
+103: func b32 gamepads_set_led(sz slot_idx, u8 red, u8 green, u8 blue);
+104: func b32 gamepads_set_axis_deadzone(sz slot_idx, gamepad_axis axis, i16 deadzone);
+105: func i16 gamepads_get_axis_deadzone(sz slot_idx, gamepad_axis axis);
 
 === include\input\keyboard.h ===
 15: typedef enum keymod {
 41: func b32 keyboard_is_available(void);
 44: func b32 keyboard_get_primary_device_id(device_id* out_id);
-48: func b32 keyboard_is_key_down(input_key key, keyboard_scancode scancode);
-51: func b32 keyboard_is_key_pressed(input_key key, keyboard_scancode scancode);
-54: func b32 keyboard_is_key_released(input_key key, keyboard_scancode scancode);
-57: func u32 keyboard_get_key_repeat_count(input_key key, keyboard_scancode scancode);
-60: func keymod keyboard_get_mods(void);
-63: func b32 keyboard_has_mods(keymod required_mods);
-66: func b32 keyboard_has_mods_exact(keymod required_mods, keymod forbidden_mods);
-69: func b32 keyboard_is_key_down_mod(input_key key, keyboard_scancode scancode, keymod required_mods, keymod forbidden_mods);
-72: func keyboard_keycode keyboard_get_keycode(keyboard_scancode scancode, keymod modifiers, b32 key_event);
-75: func cstr8 keyboard_get_scancode_name(keyboard_scancode scancode);
-77: func b32 keyboard_start_text_input(window opt_window);
-78: func b32 keyboard_stop_text_input(window opt_window);
-79: func b32 keyboard_is_text_input_active(window opt_window);
-80: func b32 keyboard_set_text_input_area(window opt_window, i32 xpos, i32 ypos, i32 width, i32 height);
+50: func b32 keyboard_is_key_down(keyboard_scancode scancode);
+53: func u32 keyboard_get_key_repeat_count(keyboard_scancode scancode);
+57: func keymod keyboard_get_mods(void);
+60: func b32 keyboard_has_mods(keymod required_mods);
+63: func b32 keyboard_has_mods_exact(keymod required_mods, keymod forbidden_mods);
+65: func b32 keyboard_is_key_down_mod(keyboard_scancode scancode, keymod required_mods, keymod forbidden_mods);
+68: func keyboard_keycode keyboard_get_keycode(keyboard_scancode scancode, keymod modifiers, b32 key_event);
+71: func cstr8 keyboard_get_scancode_name(keyboard_scancode scancode);
+74: func b32 keyboard_start_text_input(window opt_window);
+75: func b32 keyboard_stop_text_input(window opt_window);
+76: func b32 keyboard_is_text_input_active(window opt_window);
+77: func b32 keyboard_set_text_input_area(window opt_window, i32 xpos, i32 ypos, i32 width, i32 height);
 
 === include\input\mouse.h ===
 14: typedef enum mouse_button {
 22: typedef enum mouse_wheel_direction {
-28: typedef struct mouse_state {
-39: func b32 mouse_is_available(void);
-42: func b32 mouse_get_primary_device_id(device_id* out_id);
-46: func mouse_state mouse_get_state(input_key key);
-49: func mouse_state mouse_get_global_state(input_key key);
-52: func mouse_state mouse_get_relative_state(input_key key);
-55: func b32 mouse_is_button_down(input_key key, u8 button);
-58: func b32 mouse_is_button_pressed(input_key key, u8 button);
-61: func b32 mouse_is_button_released(input_key key, u8 button);
+30: typedef u32 mouse_state;
+35: func b32 mouse_is_available(void);
+38: func b32 mouse_get_primary_device_id(device_id* out_id);
+41: func mouse_state mouse_get_state(void);
+44: func b32 mouse_is_button_down(mouse_button button);
 
 === include\interface\cursor.h ===
-13: func b32 cursor_set_icon(icon icon_id);
-14: func b32 cursor_reset_icon(void);
-16: func b32 cursor_set_visible(b32 visible);
-17: func b32 cursor_is_visible(void);
-19: func b32 cursor_set_capture(window opt_window, b32 enabled);
-20: func b32 cursor_is_captured(window opt_window);
-22: func b32 cursor_set_relative_mode(window opt_window, b32 enabled);
-23: func b32 cursor_is_relative_mode(window opt_window);
-25: func b32 cursor_warp(window opt_window, f32 xpos, f32 ypos);
+13: typedef struct cursor_pos {
+19: func b32 cursor_set_icon(icon icon_id);
+22: func b32 cursor_reset_icon(void);
+25: func b32 cursor_set_visible(b32 visible);
+28: func b32 cursor_is_visible(void);
+32: func b32 cursor_set_capture(window opt_window, b32 enabled);
+35: func b32 cursor_is_captured(window opt_window);
+39: func b32 cursor_set_relative_mode(window opt_window, b32 enabled);
+42: func b32 cursor_is_relative_mode(window opt_window);
+45: func cursor_pos cursor_get_pos(void);
+48: func cursor_pos cursor_get_global_pos(void);
+51: func cursor_pos cursor_get_relative_pos(void);
+55: func b32 cursor_warp(window opt_window, f32 xpos, f32 ypos);
 
 === include\interface\dpi.h ===
 13: typedef struct dpi_metrics {
@@ -767,12 +732,11 @@
 640: func msg_core_global_ctx_data* msg_core_get_global_ctx(msg* src);
 
 === include\input\sensor.h ===
-18: func b32 sensor_id_is_valid(sensor src);
-21: func sz sensor_get_count(void);
-24: func b32 sensor_get_id(sz idx, sensor* out_id);
+18: func b32 sensor_is_valid(sensor src);
+21: func sz sensor_get_total_count(void);
+24: func b32 sensor_get_from_idx(sz idx, sensor* out_id);
 27: func cstr8 sensor_get_name(sensor id);
 30: func sensor_kind sensor_get_kind(sensor id);
-33: func i32 sensor_get_non_portable_kind(sensor id);
 36: func b32 sensor_open(sensor id);
 37: func b32 sensor_close(sensor id);
 38: func b32 sensor_start(sensor id);
@@ -785,7 +749,7 @@
 37: typedef enum tablet_button {
 44: typedef struct tablet_pen_state {
 58: func b32 tablet_is_available(void);
-61: func sz tablet_get_count(void);
+61: func sz tablet_get_total_count(void);
 64: func b32 tablet_get_device_id(sz idx, device_id* out_id);
 67: func b32 tablet_get_last_pen_state(tablet_pen_state* out_state);
 70: func b32 tablet_read_hid_report(device_id id, void* dst, sz capacity, sz* out_size, i32 timeout_ms);
@@ -794,7 +758,7 @@
 15: typedef enum touch_device_kind {
 23: typedef struct touch_finger_state {
 31: func b32 touch_is_available(void);
-34: func sz touch_get_count(void);
+34: func sz touch_get_total_count(void);
 37: func b32 touch_get_device_id(sz idx, device_id* out_id);
 40: func touch_device_kind touch_get_device_kind(device_id id);
 43: func sz touch_get_finger_count(device_id id);

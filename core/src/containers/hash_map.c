@@ -311,7 +311,7 @@ func b32 hash_map_remove(hash_map* map, u64 key) {
     }
     if (slot->key == key) {
       // Backward-shift deletion: pull subsequent entries one step closer to
-      // their ideal positions, maintaining the Robin Hood invariant without
+      // their ideal poss, maintaining the Robin Hood invariant without
       // needing tombstones.
       sz cur = pos;
       safe_for (;;) {

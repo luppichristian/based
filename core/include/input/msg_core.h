@@ -5,14 +5,14 @@
 
 #include "../basic/assert.h"
 #include "../basic/codespace.h"
-#include "../utils/log_state.h"
 #include "../basic/primitive_types.h"
 #include "../context/global_ctx.h"
 #include "../context/thread_ctx.h"
 #include "../filesystem/pathwatch.h"
-#include "../strings/cstrings.h"
 #include "../interface/monitor.h"
 #include "../interface/window.h"
+#include "../strings/cstrings.h"
+#include "../utils/log_state.h"
 #include "camera.h"
 #include "devices.h"
 #include "gamepads.h"
@@ -115,7 +115,7 @@ typedef enum msg_core_type {
   MSG_CORE_TYPE_DROP_TEXT = 0x1001,
   MSG_CORE_TYPE_DROP_BEGIN = 0x1002,
   MSG_CORE_TYPE_DROP_COMPLETE = 0x1003,
-  MSG_CORE_TYPE_DROP_POSITION = 0x1004,
+  MSG_CORE_TYPE_DROP_POS = 0x1004,
   MSG_CORE_TYPE_AUDIO_DEVICE_ADDED = 0x1100,
   MSG_CORE_TYPE_AUDIO_DEVICE_REMOVED = 0x1101,
   MSG_CORE_TYPE_AUDIO_DEVICE_FORMAT_CHANGED = 0x1102,

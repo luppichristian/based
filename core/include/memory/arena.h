@@ -138,7 +138,7 @@ func void* _arena_realloc(
 // Lifecycle
 // =========================================================================
 
-// Resets the cursor of every block back to its post-header position, making all
+// Resets the cursor of every block back to its post-header pos, making all
 // memory available for reuse. No blocks are released to the parent allocator.
 func void arena_clear(arena* arn);
 

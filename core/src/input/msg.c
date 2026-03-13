@@ -14,18 +14,46 @@
 
 func void tablet_internal_on_msg(msg* src);
 func void keyboard_internal_on_msg(msg* src);
-func void mouse_internal_on_msg(msg* src);
-func void gamepads_internal_on_msg(msg* src);
-func void bindings_internal_on_msg(const msg* src);
+
+func mouse_button mouse_button_from_sdl(Uint8 button) {
+  switch (button) {
+    case SDL_BUTTON_LEFT:
+      return MOUSE_BUTTON_LEFT;
+    case SDL_BUTTON_MIDDLE:
+      return MOUSE_BUTTON_MIDDLE;
+    case SDL_BUTTON_RIGHT:
+      return MOUSE_BUTTON_RIGHT;
+    case SDL_BUTTON_X1:
+      return MOUSE_BUTTON_X1;
+    case SDL_BUTTON_X2:
+      return MOUSE_BUTTON_X2;
+    default:
+      return MOUSE_BUTTON_COUNT;
+  }
+}
+
+func Uint8 mouse_button_to_sdl(mouse_button button) {
+  switch (button) {
+    case MOUSE_BUTTON_LEFT:
+      return SDL_BUTTON_LEFT;
+    case MOUSE_BUTTON_MIDDLE:
+      return SDL_BUTTON_MIDDLE;
+    case MOUSE_BUTTON_RIGHT:
+      return SDL_BUTTON_RIGHT;
+    case MOUSE_BUTTON_X1:
+      return SDL_BUTTON_X1;
+    case MOUSE_BUTTON_X2:
+      return SDL_BUTTON_X2;
+    default:
+      return 0;
+  }
+}
 
 func void msg_notify_internal_listeners(const msg* src) {
   profile_func_begin;
   msg* src_mut = (msg*)src;
   keyboard_internal_on_msg(src_mut);
-  mouse_internal_on_msg(src_mut);
-  gamepads_internal_on_msg(src_mut);
   tablet_internal_on_msg(src_mut);
-  bindings_internal_on_msg(src);
   profile_func_end;
 }
 
@@ -628,7 +656,7 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
           &(msg_core_mouse_button_data) {
               .window = window_from_native_id((up)src->button.windowID),
               .device = {.type = DEVICE_TYPE_MOUSE, .instance = (u64)src->button.which},
-              .button = (mouse_button)src->button.button,
+              .button = mouse_button_from_sdl((Uint8)src->button.button),
               .down = src->button.down ? true : false,
               .clicks = (u8)src->button.clicks,
               .x = src->button.x,
@@ -1156,7 +1184,7 @@ func b32 msg_to_sdl_event(msg* src, SDL_Event* out_event) {
       out_event->button.timestamp = (Uint64)src->timestamp;
       out_event->button.windowID = (SDL_WindowID)window_to_native_id(msg_core_get_mouse_button(src)->window);
       out_event->button.which = (SDL_MouseID)msg_core_get_mouse_button(src)->device.instance;
-      out_event->button.button = (Uint8)msg_core_get_mouse_button(src)->button;
+      out_event->button.button = mouse_button_to_sdl(msg_core_get_mouse_button(src)->button);
       out_event->button.down = msg_core_get_mouse_button(src)->down != 0;
       out_event->button.clicks = (Uint8)msg_core_get_mouse_button(src)->clicks;
       out_event->button.x = msg_core_get_mouse_button(src)->x;

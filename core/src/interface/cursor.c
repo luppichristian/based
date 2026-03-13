@@ -52,6 +52,13 @@ func SDL_Cursor* cursor_create_from_icon(icon id) {
   return cursor_ptr;
 }
 
+func cursor_pos cursor_make_pos(f32 xpos, f32 ypos) {
+  return (cursor_pos) {
+      .x = xpos,
+      .y = ypos,
+  };
+}
+
 func b32 cursor_set_icon(icon id) {
   profile_func_begin;
   if (!icon_id_is_valid(id)) {
@@ -157,6 +164,36 @@ func b32 cursor_is_relative_mode(window opt_window) {
   }
 
   b32 result = SDL_GetWindowRelativeMouseMode(window_ptr) ? true : false;
+  profile_func_end;
+  return result;
+}
+
+func cursor_pos cursor_get_pos(void) {
+  profile_func_begin;
+  f32 xpos = 0.0f;
+  f32 ypos = 0.0f;
+  SDL_GetMouseState(&xpos, &ypos);
+  cursor_pos result = cursor_make_pos(xpos, ypos);
+  profile_func_end;
+  return result;
+}
+
+func cursor_pos cursor_get_global_pos(void) {
+  profile_func_begin;
+  f32 xpos = 0.0f;
+  f32 ypos = 0.0f;
+  SDL_GetGlobalMouseState(&xpos, &ypos);
+  cursor_pos result = cursor_make_pos(xpos, ypos);
+  profile_func_end;
+  return result;
+}
+
+func cursor_pos cursor_get_relative_pos(void) {
+  profile_func_begin;
+  f32 xpos = 0.0f;
+  f32 ypos = 0.0f;
+  SDL_GetRelativeMouseState(&xpos, &ypos);
+  cursor_pos result = cursor_make_pos(xpos, ypos);
   profile_func_end;
   return result;
 }

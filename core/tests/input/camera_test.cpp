@@ -1,15 +1,15 @@
 // MIT License
 // Copyright (c) 2026 Christian Luppi
 
-#include "test_common.hpp"
 #include "internal.h"
+#include "test_common.hpp"
 
 TEST(input_camera_test, id_conversion_and_invalid_lifecycle_calls) {
   camera cam_id = camera_from_native_id(123);
-  EXPECT_TRUE(camera_id_is_valid(cam_id) != 0);
+  EXPECT_TRUE(camera_is_valid(cam_id) != 0);
   EXPECT_EQ((up)123, camera_to_native_id(cam_id));
 
-  EXPECT_TRUE(camera_id_is_valid(nullptr) == 0);
+  EXPECT_TRUE(camera_is_valid(nullptr) == 0);
   EXPECT_TRUE(camera_open(nullptr) == 0);
   EXPECT_TRUE(camera_start(nullptr) == 0);
   EXPECT_TRUE(camera_stop(nullptr) == 0);
@@ -22,7 +22,7 @@ TEST(input_camera_test, id_conversion_and_invalid_lifecycle_calls) {
 }
 
 TEST(input_camera_test, enumeration_consistency_when_devices_exist) {
-  sz count_val = camera_get_count();
+  sz count_val = camera_get_total_count();
   camera out_id = nullptr;
   if (count_val == 0) {
     EXPECT_TRUE(camera_get_id(0, &out_id) == 0);
@@ -30,9 +30,9 @@ TEST(input_camera_test, enumeration_consistency_when_devices_exist) {
   }
 
   ASSERT_TRUE(camera_get_id(0, &out_id) != 0);
-  EXPECT_TRUE(camera_id_is_valid(out_id) != 0);
-  camera_position pos_val = camera_get_position(out_id);
+  EXPECT_TRUE(camera_is_valid(out_id) != 0);
+  camera_pos pos_val = camera_get_pos(out_id);
   EXPECT_TRUE(
-      pos_val == CAMERA_POSITION_UNKNOWN || pos_val == CAMERA_POSITION_FRONT_FACING ||
-      pos_val == CAMERA_POSITION_BACK_FACING);
+      pos_val == CAMERA_POS_UNKNOWN || pos_val == CAMERA_POS_FRONT_FACING ||
+      pos_val == CAMERA_POS_BACK_FACING);
 }

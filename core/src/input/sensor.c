@@ -42,7 +42,7 @@ func sensor_state_entry* sensor_find_state(SDL_SensorID sensor_id, b32 create_if
   return NULL;
 }
 
-func b32 sensor_id_is_valid(sensor src) {
+func b32 sensor_is_valid(sensor src) {
   return src != NULL;
 }
 
@@ -54,7 +54,7 @@ func up sensor_to_native_id(sensor src) {
   return (up)src;
 }
 
-func sz sensor_get_count(void) {
+func sz sensor_get_total_count(void) {
   profile_func_begin;
   int count = 0;
   SDL_SensorID* ids = SDL_GetSensors(&count);
@@ -72,7 +72,7 @@ func sz sensor_get_count(void) {
   return result;
 }
 
-func b32 sensor_get_id(sz idx, sensor* out_id) {
+func b32 sensor_get_from_idx(sz idx, sensor* out_id) {
   profile_func_begin;
   int count = 0;
   SDL_SensorID* ids = SDL_GetSensors(&count);
@@ -102,7 +102,7 @@ func b32 sensor_get_id(sz idx, sensor* out_id) {
 
 func cstr8 sensor_get_name(sensor id) {
   profile_func_begin;
-  if (!sensor_id_is_valid(id)) {
+  if (!sensor_is_valid(id)) {
     thread_log_warn("Rejected sensor name query for invalid sensor");
     profile_func_end;
     return NULL;
@@ -118,7 +118,7 @@ func cstr8 sensor_get_name(sensor id) {
 
 func sensor_kind sensor_get_kind(sensor id) {
   profile_func_begin;
-  if (!sensor_id_is_valid(id)) {
+  if (!sensor_is_valid(id)) {
     thread_log_warn("Rejected sensor kind query for invalid sensor");
     profile_func_end;
     return SENSOR_KIND_INVALID;
@@ -129,21 +129,9 @@ func sensor_kind sensor_get_kind(sensor id) {
   return result;
 }
 
-func i32 sensor_get_non_portable_kind(sensor id) {
-  profile_func_begin;
-  if (!sensor_id_is_valid(id)) {
-    thread_log_warn("Rejected sensor non portable kind query for invalid sensor");
-    profile_func_end;
-    return -1;
-  }
-
-  profile_func_end;
-  return (i32)SDL_GetSensorNonPortableTypeForID((SDL_SensorID)sensor_to_native_id(id));
-}
-
 func b32 sensor_open(sensor id) {
   profile_func_begin;
-  if (!sensor_id_is_valid(id)) {
+  if (!sensor_is_valid(id)) {
     thread_log_error("Rejected sensor open for invalid sensor");
     profile_func_end;
     return false;
@@ -162,7 +150,7 @@ func b32 sensor_open(sensor id) {
 
 func b32 sensor_close(sensor id) {
   profile_func_begin;
-  if (!sensor_id_is_valid(id)) {
+  if (!sensor_is_valid(id)) {
     thread_log_error("Rejected sensor close for invalid sensor");
     profile_func_end;
     return false;
@@ -181,7 +169,7 @@ func b32 sensor_close(sensor id) {
 
 func b32 sensor_start(sensor id) {
   profile_func_begin;
-  if (!sensor_id_is_valid(id)) {
+  if (!sensor_is_valid(id)) {
     thread_log_error("Rejected sensor start for invalid sensor");
     profile_func_end;
     return false;
@@ -200,7 +188,7 @@ func b32 sensor_start(sensor id) {
 
 func b32 sensor_stop(sensor id) {
   profile_func_begin;
-  if (!sensor_id_is_valid(id)) {
+  if (!sensor_is_valid(id)) {
     thread_log_error("Rejected sensor stop for invalid sensor");
     profile_func_end;
     return false;
@@ -222,7 +210,7 @@ func b32 sensor_read(sensor id, buffer* out_samples) {
   if (out_samples != NULL) {
     *out_samples = (buffer) {0};
   }
-  if (!sensor_id_is_valid(id) || out_samples == NULL) {
+  if (!sensor_is_valid(id) || out_samples == NULL) {
     thread_log_error("Rejected sensor read sensor=%lld out_samples=%p",
                      (long long)sensor_to_native_id(id),
                      (void*)out_samples);
