@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "input/camera.h"
+#include "../internal.h"
 #include "context/thread_ctx.h"
 #include "../sdl3_include.h"
 #include "basic/profiler.h"
@@ -44,6 +45,14 @@ func camera_state_entry* camera_find_state(SDL_CameraID camera_id, b32 create_if
 
 func b32 camera_is_valid(camera src) {
   return src != NULL;
+}
+
+func camera camera_from_device(device src) {
+  if (devices_get_type(src) != DEVICE_TYPE_CAMERA) {
+    return NULL;
+  }
+
+  return (camera)(up)devices_get_instance(src);
 }
 
 func camera camera_from_native_id(up native_id) {

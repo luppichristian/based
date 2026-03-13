@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include "../interface/window.h"
 #include "devices.h"
 #include "vkeys.h"
 
@@ -14,9 +13,6 @@ c_begin;
 // =========================================================================
 // Keyboard
 // =========================================================================
-
-// Returns 1 if key is a known cross-platform virtual key, 0 otherwise.
-func b32 keyboard_vkey_is_valid(vkey key);
 
 // Returns 1 if a keyboard backend is available, 0 otherwise.
 func b32 keyboard_is_available(void);
@@ -44,12 +40,6 @@ func cstr8 keyboard_get_key_name(vkey key);
 
 // Returns a readable translated key name for key under the supplied keyboard layout state.
 func cstr8 keyboard_get_key_display_name(vkey key, keymod modifiers, b32 key_event);
-
-// IME/text-input control for an optional target window.
-func b32 keyboard_start_text_input(window opt_window);
-func b32 keyboard_stop_text_input(window opt_window);
-func b32 keyboard_is_text_input_active(window opt_window);
-func b32 keyboard_set_text_input_area(window opt_window, i32 xpos, i32 ypos, i32 width, i32 height);
 
 // =========================================================================
 c_end;

@@ -1,6 +1,7 @@
 // MIT License
 // Copyright (c) 2026 Christian Luppi
 
+#include "input/audio_device.h"
 #include "input/devices.h"
 #include "basic/assert.h"
 #include "context/thread_ctx.h"
@@ -172,35 +173,6 @@ func device_type devices_get_type(device src) {
   return handle ? handle->type : DEVICE_TYPE_UNKNOWN;
 }
 
-func b32 audio_device_type_is_valid(audio_device_type src) {
-  return src == AUDIO_DEVICE_TYPE_PLAYBACK || src == AUDIO_DEVICE_TYPE_RECORDING;
-}
-
-func cstr8 devices_get_audio_type_name(audio_device_type audio_type) {
-  profile_func_begin;
-  switch (audio_type) {
-    case AUDIO_DEVICE_TYPE_PLAYBACK:
-      profile_func_end;
-      return "playback";
-    case AUDIO_DEVICE_TYPE_RECORDING:
-      profile_func_end;
-      return "recording";
-    case AUDIO_DEVICE_TYPE_UNKNOWN:
-    default:
-      profile_func_end;
-      return "unknown";
-  }
-}
-
-func audio_device_type devices_get_audio_device_type(device dev_id) {
-  if (devices_get_type(dev_id) != DEVICE_TYPE_AUDIO) {
-    return AUDIO_DEVICE_TYPE_UNKNOWN;
-  }
-
-  return (devices_get_instance(dev_id) & DEVICES_AUDIO_RECORDING_BIT) != 0 ? AUDIO_DEVICE_TYPE_RECORDING
-                                                                           : AUDIO_DEVICE_TYPE_PLAYBACK;
-}
-
 func device devices_make_audio_device(u64 native_id, audio_device_type audio_type) {
   profile_func_begin;
   if (!audio_device_type_is_valid(audio_type)) {
@@ -221,30 +193,6 @@ func u64 devices_get_audio_native_id(device src) {
 
   profile_func_end;
   return devices_audio_decode_native_id(devices_get_instance(src));
-}
-
-func camera camera_from_device(device src) {
-  if (devices_get_type(src) != DEVICE_TYPE_CAMERA) {
-    return NULL;
-  }
-
-  return (camera)(up)devices_get_instance(src);
-}
-
-func sensor sensor_from_device(device src) {
-  if (devices_get_type(src) != DEVICE_TYPE_SENSOR) {
-    return NULL;
-  }
-
-  return (sensor)(up)devices_get_instance(src);
-}
-
-func monitor monitor_from_device(device src) {
-  if (devices_get_type(src) != DEVICE_TYPE_MONITOR) {
-    return NULL;
-  }
-
-  return (monitor)(up)devices_get_instance(src);
 }
 
 func sz devices_get_audio_count_for_type(audio_device_type audio_type) {
@@ -269,7 +217,7 @@ func sz devices_get_audio_count_for_type(audio_device_type audio_type) {
   return 0;
 }
 
-func device devices_get_audio_device(audio_device_type audio_type, sz idx) {
+func device devices_get_audio_device_by_type(audio_device_type audio_type, sz idx) {
   profile_func_begin;
   int count = 0;
   SDL_AudioDeviceID* ids = NULL;
@@ -475,8 +423,8 @@ func sz devices_get_count(device_type type) {
       return total;
     }
     case DEVICE_TYPE_AUDIO:
-      return devices_get_audio_count_for_type(AUDIO_DEVICE_TYPE_PLAYBACK) +
-             devices_get_audio_count_for_type(AUDIO_DEVICE_TYPE_RECORDING);
+      return audio_device_get_total_count(AUDIO_DEVICE_TYPE_PLAYBACK) +
+             audio_device_get_total_count(AUDIO_DEVICE_TYPE_RECORDING);
     case DEVICE_TYPE_CAMERA: {
       SDL_CameraID* ids = SDL_GetCameras(&count);
       if (ids) {
@@ -558,10 +506,10 @@ func device devices_get_device(device_type type, sz idx) {
       profile_func_end;
       return devices_find_tablet_by_idx(idx);
     case DEVICE_TYPE_AUDIO: {
-      sz playback_count = devices_get_audio_count_for_type(AUDIO_DEVICE_TYPE_PLAYBACK);
+      sz playback_count = audio_device_get_total_count(AUDIO_DEVICE_TYPE_PLAYBACK);
       profile_func_end;
-      return idx < playback_count ? devices_get_audio_device(AUDIO_DEVICE_TYPE_PLAYBACK, idx)
-                                  : devices_get_audio_device(AUDIO_DEVICE_TYPE_RECORDING, idx - playback_count);
+      return idx < playback_count ? devices_get_audio_device_by_type(AUDIO_DEVICE_TYPE_PLAYBACK, idx)
+                                  : devices_get_audio_device_by_type(AUDIO_DEVICE_TYPE_RECORDING, idx - playback_count);
     }
     case DEVICE_TYPE_CAMERA: {
       SDL_CameraID* ids = SDL_GetCameras(&count);
@@ -735,7 +683,8 @@ func b32 devices_get_info(device dev_id, device_info* out_info) {
     case DEVICE_TYPE_AUDIO: {
       int audio_count = 0;
       u64 native_id = devices_audio_decode_native_id(instance);
-      audio_device_type audio_type = devices_get_audio_device_type(dev_id);
+      audio_device_type audio_type = (instance & DEVICES_AUDIO_RECORDING_BIT) != 0 ? AUDIO_DEVICE_TYPE_RECORDING
+                                                                                   : AUDIO_DEVICE_TYPE_PLAYBACK;
       SDL_AudioDeviceID* ids = NULL;
       b32 found = false;
 

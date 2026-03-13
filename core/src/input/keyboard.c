@@ -6,7 +6,6 @@
 #include "../internal.h"
 #include "input/msg.h"
 #include "input/msg_core.h"
-#include "interface/window.h"
 #include "../sdl3_include.h"
 #include "basic/profiler.h"
 
@@ -14,20 +13,9 @@ func b32 keyboard_internal_scancode_is_valid(u32 scancode) {
   return scancode < (u32)SDL_SCANCODE_COUNT;
 }
 
-func b32 keyboard_vkey_is_valid(vkey key) {
-  switch (key) {
-#define BASED_VKEY_CASE(name, value) case name:
-    BASED_VKEY_LIST(BASED_VKEY_CASE)
-#undef BASED_VKEY_CASE
-    return true;
-    default:
-      return false;
-  }
-}
-
 func u32 keyboard_internal_scancode_from_vkey(vkey key) {
   profile_func_begin;
-  if (!keyboard_vkey_is_valid(key)) {
+  if (!vkey_is_valid(key)) {
     profile_func_end;
     return 0;
   }
@@ -50,7 +38,7 @@ func vkey keyboard_internal_vkey_from_scancode(u32 scancode) {
   }
 
   vkey key = (vkey)scancode;
-  if (!keyboard_vkey_is_valid(key)) {
+  if (!vkey_is_valid(key)) {
     profile_func_end;
     return VKEY_UNKNOWN;
   }
@@ -139,51 +127,6 @@ func cstr8 keyboard_get_key_display_name(vkey key, keymod modifiers, b32 key_eve
   }
 
   cstr8 result = SDL_GetKeyName((SDL_Keycode)keycode);
-  profile_func_end;
-  return result;
-}
-
-func b32 keyboard_start_text_input(window opt_window) {
-  profile_func_begin;
-  SDL_Window* window_ptr = NULL;
-  if (window_id_is_valid(opt_window)) {
-    window_ptr = SDL_GetWindowFromID((SDL_WindowID)window_to_native_id(opt_window));
-  }
-  b32 result = SDL_StartTextInput(window_ptr);
-  profile_func_end;
-  return result;
-}
-
-func b32 keyboard_stop_text_input(window opt_window) {
-  profile_func_begin;
-  SDL_Window* window_ptr = NULL;
-  if (window_id_is_valid(opt_window)) {
-    window_ptr = SDL_GetWindowFromID((SDL_WindowID)window_to_native_id(opt_window));
-  }
-  b32 result = SDL_StopTextInput(window_ptr);
-  profile_func_end;
-  return result;
-}
-
-func b32 keyboard_is_text_input_active(window opt_window) {
-  profile_func_begin;
-  SDL_Window* window_ptr = NULL;
-  if (window_id_is_valid(opt_window)) {
-    window_ptr = SDL_GetWindowFromID((SDL_WindowID)window_to_native_id(opt_window));
-  }
-  b32 result = SDL_TextInputActive(window_ptr) ? true : false;
-  profile_func_end;
-  return result;
-}
-
-func b32 keyboard_set_text_input_area(window opt_window, i32 xpos, i32 ypos, i32 width, i32 height) {
-  profile_func_begin;
-  SDL_Window* window_ptr = NULL;
-  if (window_id_is_valid(opt_window)) {
-    window_ptr = SDL_GetWindowFromID((SDL_WindowID)window_to_native_id(opt_window));
-  }
-  SDL_Rect area = {.x = xpos, .y = ypos, .w = width, .h = height};
-  b32 result = SDL_SetTextInputArea(window_ptr, &area, 0);
   profile_func_end;
   return result;
 }

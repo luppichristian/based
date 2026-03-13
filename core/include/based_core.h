@@ -51,10 +51,12 @@
 #include "filesystem/pathwatch.h"
 
 // Include input modules.
+#include "input/audio_device.h"
 #include "input/camera.h"
 #include "input/clipboard.h"
 #include "input/devices.h"
 #include "input/gamepads.h"
+#include "input/joystick.h"
 #include "input/keyboard.h"
 #include "input/mouse.h"
 #include "input/msg.h"
@@ -70,6 +72,7 @@
 #include "interface/dialog.h"
 #include "interface/icon.h"
 #include "interface/monitor.h"
+#include "interface/text_input.h"
 #include "interface/window.h"
 
 // Include process modules.

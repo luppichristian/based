@@ -267,6 +267,17 @@ typedef enum vkey {
 #undef BASED_VKEY_ENUM
 } vkey;
 
+func force_inline b32 vkey_is_valid(vkey key) {
+  switch (key) {
+#define BASED_VKEY_CASE(name, value) case name:
+    BASED_VKEY_LIST(BASED_VKEY_CASE)
+#undef BASED_VKEY_CASE
+    return true;
+    default:
+      return false;
+  }
+}
+
 // Key modifier bitmask compatible with backend events.
 typedef enum keymod {
   KEYMOD_NONE = 0x0000U,

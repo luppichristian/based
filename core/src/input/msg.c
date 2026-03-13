@@ -680,7 +680,7 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
       msg_core_fill_joystick_device(
           out_msg,
           &(msg_core_joystick_device_data) {
-              .device = devices_make_id(DEVICE_TYPE_JOYSTICK, (u64)src->jdevice.which),
+              .joystick = joystick_from_native_id((up)src->jdevice.which),
           });
       profile_func_end;
       return true;
@@ -689,7 +689,7 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
       msg_core_fill_joystick_axis(
           out_msg,
           &(msg_core_joystick_axis_data) {
-              .device = devices_make_id(DEVICE_TYPE_JOYSTICK, (u64)src->jaxis.which),
+              .joystick = joystick_from_native_id((up)src->jaxis.which),
               .axis = (u8)src->jaxis.axis,
               .value = (i16)src->jaxis.value,
           });
@@ -700,7 +700,7 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
       msg_core_fill_joystick_ball(
           out_msg,
           &(msg_core_joystick_ball_data) {
-              .device = devices_make_id(DEVICE_TYPE_JOYSTICK, (u64)src->jball.which),
+              .joystick = joystick_from_native_id((up)src->jball.which),
               .ball = (u8)src->jball.ball,
               .xrel = (i16)src->jball.xrel,
               .yrel = (i16)src->jball.yrel,
@@ -712,7 +712,7 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
       msg_core_fill_joystick_hat(
           out_msg,
           &(msg_core_joystick_hat_data) {
-              .device = devices_make_id(DEVICE_TYPE_JOYSTICK, (u64)src->jhat.which),
+              .joystick = joystick_from_native_id((up)src->jhat.which),
               .hat = (u8)src->jhat.hat,
               .value = (joystick_hat_state)src->jhat.value,
           });
@@ -724,7 +724,7 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
       msg_core_fill_joystick_button(
           out_msg,
           &(msg_core_joystick_button_data) {
-              .device = devices_make_id(DEVICE_TYPE_JOYSTICK, (u64)src->jbutton.which),
+              .joystick = joystick_from_native_id((up)src->jbutton.which),
               .button = (u8)src->jbutton.button,
               .down = src->jbutton.down ? true : false,
           });
@@ -735,8 +735,8 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
       msg_core_fill_joystick_battery(
           out_msg,
           &(msg_core_joystick_battery_data) {
-              .device = devices_make_id(DEVICE_TYPE_JOYSTICK, (u64)src->jbattery.which),
-              .state = (battery_state)src->jbattery.state,
+              .joystick = joystick_from_native_id((up)src->jbattery.which),
+              .state = joystick_battery_state_from_native((i32)src->jbattery.state),
               .percent = (i32)src->jbattery.percent,
           });
       profile_func_end;
@@ -817,8 +817,8 @@ func b32 msg_from_sdl(const SDL_Event* src, msg* out_msg) {
       msg_core_fill_audio_device(
           out_msg,
           &(msg_core_audio_device_data) {
-              .device = devices_make_audio_device(
-                  (u64)src->adevice.which,
+              .audio = audio_device_from_native_id(
+                  (up)src->adevice.which,
                   src->adevice.recording ? AUDIO_DEVICE_TYPE_RECORDING : AUDIO_DEVICE_TYPE_PLAYBACK),
           });
       profile_func_end;
@@ -1208,14 +1208,14 @@ func b32 msg_to_sdl_event(msg* src, SDL_Event* out_event) {
     case SDL_EVENT_JOYSTICK_UPDATE_COMPLETE:
       out_event->jdevice.type = (SDL_EventType)src->type;
       out_event->jdevice.timestamp = (Uint64)src->timestamp;
-      out_event->jdevice.which = (SDL_JoystickID)devices_get_instance(msg_core_get_joystick_device(src)->device);
+      out_event->jdevice.which = (SDL_JoystickID)joystick_to_native_id(msg_core_get_joystick_device(src)->joystick);
       profile_func_end;
       return true;
 
     case SDL_EVENT_JOYSTICK_AXIS_MOTION:
       out_event->jaxis.type = (SDL_EventType)src->type;
       out_event->jaxis.timestamp = (Uint64)src->timestamp;
-      out_event->jaxis.which = (SDL_JoystickID)devices_get_instance(msg_core_get_joystick_axis(src)->device);
+      out_event->jaxis.which = (SDL_JoystickID)joystick_to_native_id(msg_core_get_joystick_axis(src)->joystick);
       out_event->jaxis.axis = (Uint8)msg_core_get_joystick_axis(src)->axis;
       out_event->jaxis.value = (Sint16)msg_core_get_joystick_axis(src)->value;
       profile_func_end;
@@ -1224,7 +1224,7 @@ func b32 msg_to_sdl_event(msg* src, SDL_Event* out_event) {
     case SDL_EVENT_JOYSTICK_BALL_MOTION:
       out_event->jball.type = (SDL_EventType)src->type;
       out_event->jball.timestamp = (Uint64)src->timestamp;
-      out_event->jball.which = (SDL_JoystickID)devices_get_instance(msg_core_get_joystick_ball(src)->device);
+      out_event->jball.which = (SDL_JoystickID)joystick_to_native_id(msg_core_get_joystick_ball(src)->joystick);
       out_event->jball.ball = (Uint8)msg_core_get_joystick_ball(src)->ball;
       out_event->jball.xrel = (Sint16)msg_core_get_joystick_ball(src)->xrel;
       out_event->jball.yrel = (Sint16)msg_core_get_joystick_ball(src)->yrel;
@@ -1236,7 +1236,7 @@ func b32 msg_to_sdl_event(msg* src, SDL_Event* out_event) {
     case SDL_EVENT_JOYSTICK_HAT_MOTION:
       out_event->jhat.type = (SDL_EventType)src->type;
       out_event->jhat.timestamp = (Uint64)src->timestamp;
-      out_event->jhat.which = (SDL_JoystickID)devices_get_instance(msg_core_get_joystick_hat(src)->device);
+      out_event->jhat.which = (SDL_JoystickID)joystick_to_native_id(msg_core_get_joystick_hat(src)->joystick);
       out_event->jhat.hat = (Uint8)msg_core_get_joystick_hat(src)->hat;
       out_event->jhat.value = (Uint8)msg_core_get_joystick_hat(src)->value;
       profile_func_end;
@@ -1246,7 +1246,7 @@ func b32 msg_to_sdl_event(msg* src, SDL_Event* out_event) {
     case SDL_EVENT_JOYSTICK_BUTTON_UP:
       out_event->jbutton.type = (SDL_EventType)src->type;
       out_event->jbutton.timestamp = (Uint64)src->timestamp;
-      out_event->jbutton.which = (SDL_JoystickID)devices_get_instance(msg_core_get_joystick_button(src)->device);
+      out_event->jbutton.which = (SDL_JoystickID)joystick_to_native_id(msg_core_get_joystick_button(src)->joystick);
       out_event->jbutton.button = (Uint8)msg_core_get_joystick_button(src)->button;
       out_event->jbutton.down = msg_core_get_joystick_button(src)->down != 0;
       profile_func_end;
@@ -1255,8 +1255,8 @@ func b32 msg_to_sdl_event(msg* src, SDL_Event* out_event) {
     case SDL_EVENT_JOYSTICK_BATTERY_UPDATED:
       out_event->jbattery.type = (SDL_EventType)src->type;
       out_event->jbattery.timestamp = (Uint64)src->timestamp;
-      out_event->jbattery.which = (SDL_JoystickID)devices_get_instance(msg_core_get_joystick_battery(src)->device);
-      out_event->jbattery.state = (SDL_PowerState)msg_core_get_joystick_battery(src)->state;
+      out_event->jbattery.which = (SDL_JoystickID)joystick_to_native_id(msg_core_get_joystick_battery(src)->joystick);
+      out_event->jbattery.state = (SDL_PowerState)joystick_battery_state_to_native(msg_core_get_joystick_battery(src)->state);
       out_event->jbattery.percent = (int)msg_core_get_joystick_battery(src)->percent;
       profile_func_end;
       return true;
@@ -1327,9 +1327,9 @@ func b32 msg_to_sdl_event(msg* src, SDL_Event* out_event) {
     case SDL_EVENT_AUDIO_DEVICE_FORMAT_CHANGED:
       out_event->adevice.type = (SDL_EventType)src->type;
       out_event->adevice.timestamp = (Uint64)src->timestamp;
-      out_event->adevice.which = (SDL_AudioDeviceID)devices_get_audio_native_id(msg_core_get_audio_device(src)->device);
-      out_event->adevice.recording =
-          devices_get_audio_device_type(msg_core_get_audio_device(src)->device) == AUDIO_DEVICE_TYPE_RECORDING;
+      out_event->adevice.which = (SDL_AudioDeviceID)audio_device_to_native_id(msg_core_get_audio_device(src)->audio);
+      out_event->adevice.recording = audio_device_get_type(msg_core_get_audio_device(src)->audio) ==
+                                     AUDIO_DEVICE_TYPE_RECORDING;
       profile_func_end;
       return true;
 

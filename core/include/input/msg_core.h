@@ -13,9 +13,11 @@
 #include "../interface/window.h"
 #include "../strings/cstrings.h"
 #include "../utils/log_state.h"
+#include "audio_device.h"
 #include "camera.h"
 #include "devices.h"
 #include "gamepads.h"
+#include "joystick.h"
 #include "keyboard.h"
 #include "mouse.h"
 #include "msg.h"
@@ -284,19 +286,19 @@ typedef struct msg_core_mouse_wheel_data {
 
 // Joystick device connection payload.
 typedef struct msg_core_joystick_device_data {
-  device device;
+  joystick joystick;
 } msg_core_joystick_device_data;
 
 // Joystick axis payload.
 typedef struct msg_core_joystick_axis_data {
-  device device;
+  joystick joystick;
   u8 axis;
   i16 value;
 } msg_core_joystick_axis_data;
 
 // Joystick trackball payload.
 typedef struct msg_core_joystick_ball_data {
-  device device;
+  joystick joystick;
   u8 ball;
   i16 xrel;
   i16 yrel;
@@ -304,21 +306,21 @@ typedef struct msg_core_joystick_ball_data {
 
 // Joystick hat payload.
 typedef struct msg_core_joystick_hat_data {
-  device device;
+  joystick joystick;
   u8 hat;
   joystick_hat_state value;
 } msg_core_joystick_hat_data;
 
 // Joystick button payload.
 typedef struct msg_core_joystick_button_data {
-  device device;
+  joystick joystick;
   u8 button;
   b32 down;
 } msg_core_joystick_button_data;
 
 // Joystick battery payload.
 typedef struct msg_core_joystick_battery_data {
-  device device;
+  joystick joystick;
   battery_state state;
   i32 percent;
 } msg_core_joystick_battery_data;
@@ -362,7 +364,7 @@ typedef struct msg_core_gamepad_sensor_data {
 
 // Audio device payload.
 typedef struct msg_core_audio_device_data {
-  device device;
+  audio_device audio;
 } msg_core_audio_device_data;
 
 // Camera device payload.

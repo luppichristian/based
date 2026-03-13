@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "input/sensor.h"
+#include "../internal.h"
 #include "context/thread_ctx.h"
 #include "../sdl3_include.h"
 #include "basic/profiler.h"
@@ -44,6 +45,14 @@ func sensor_state_entry* sensor_find_state(SDL_SensorID sensor_id, b32 create_if
 
 func b32 sensor_is_valid(sensor src) {
   return src != NULL;
+}
+
+func sensor sensor_from_device(device src) {
+  if (devices_get_type(src) != DEVICE_TYPE_SENSOR) {
+    return NULL;
+  }
+
+  return (sensor)(up)devices_get_instance(src);
 }
 
 func sensor sensor_from_native_id(up native_id) {

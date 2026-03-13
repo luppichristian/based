@@ -4,16 +4,11 @@
 #pragma once
 
 #include "../basic/primitive_types.h"
+#include "../input/devices.h"
 #include "../strings/cstrings.h"
 #include "../basic/third_party.h"
 
-#ifndef BASED_CORE_OPAQUE_DEVICE_HANDLES_DEFINED
-#  define BASED_CORE_OPAQUE_DEVICE_HANDLES_DEFINED
-typedef void* device;
-typedef void* camera;
-typedef void* sensor;
 typedef void* monitor;
-#endif
 
 // =========================================================================
 c_begin;
@@ -36,6 +31,9 @@ typedef enum monitor_orientation {
 
 // Identifier conversion helpers.
 func b32 monitor_id_is_valid(monitor src);
+
+// Converts src into a monitor handle when it refers to a monitor device.
+func monitor monitor_from_device(device src);
 
 // Global monitor enumeration.
 func sz monitor_get_total_count(void);

@@ -3,8 +3,10 @@
 
 #pragma once
 
+#include "../include/input/audio_device.h"
 #include "../include/input/camera.h"
 #include "../include/input/devices.h"
+#include "../include/input/joystick.h"
 #include "../include/input/keyboard.h"
 #include "../include/input/msg.h"
 #include "../include/input/sensor.h"
@@ -16,6 +18,9 @@
 // =========================================================================
 c_begin;
 // =========================================================================
+
+func audio_device audio_device_from_native_id(up native_id, audio_device_type audio_type);
+func up audio_device_to_native_id(audio_device src);
 
 func camera camera_from_native_id(up native_id);
 func up camera_to_native_id(camera src);
@@ -35,6 +40,11 @@ func i32 keyboard_internal_keycode_from_vkey(vkey key, keymod modifiers, b32 key
 
 func sensor sensor_from_native_id(up native_id);
 func up sensor_to_native_id(sensor src);
+
+func joystick joystick_from_native_id(up native_id);
+func up joystick_to_native_id(joystick src);
+func battery_state joystick_battery_state_from_native(i32 native_state);
+func i32 joystick_battery_state_to_native(battery_state state);
 
 func monitor monitor_from_native_id(up native_id);
 func up monitor_to_native_id(monitor src);

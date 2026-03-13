@@ -8,6 +8,8 @@
 #include "../strings/cstrings.h"
 #include "devices.h"
 
+typedef void* camera;
+
 // =========================================================================
 c_begin;
 // =========================================================================
@@ -20,6 +22,9 @@ typedef enum camera_pos {
 
 // Returns 1 if src refers to a concrete camera id, 0 otherwise.
 func b32 camera_is_valid(camera src);
+
+// Converts src into a camera handle when it refers to a camera device.
+func camera camera_from_device(device src);
 
 // Returns the number of currently known camera devices.
 func sz camera_get_total_count(void);

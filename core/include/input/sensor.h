@@ -8,12 +8,28 @@
 #include "../strings/cstrings.h"
 #include "devices.h"
 
+typedef void* sensor;
+
 // =========================================================================
 c_begin;
 // =========================================================================
 
+typedef enum sensor_kind {
+  SENSOR_KIND_INVALID = -1,
+  SENSOR_KIND_UNKNOWN = 0,
+  SENSOR_KIND_ACCEL = 1,
+  SENSOR_KIND_GYRO = 2,
+  SENSOR_KIND_ACCEL_L = 3,
+  SENSOR_KIND_GYRO_L = 4,
+  SENSOR_KIND_ACCEL_R = 5,
+  SENSOR_KIND_GYRO_R = 6,
+} sensor_kind;
+
 // Returns 1 if src refers to a concrete sensor id, 0 otherwise.
 func b32 sensor_is_valid(sensor src);
+
+// Converts src into a sensor handle when it refers to a sensor device.
+func sensor sensor_from_device(device src);
 
 // Returns the number of currently known sensor devices.
 func sz sensor_get_total_count(void);

@@ -1,22 +1,25 @@
 === include\based_core.h ===
-54: #include "input/camera.h"
-55: #include "input/clipboard.h"
-56: #include "input/devices.h"
-57: #include "input/gamepads.h"
-58: #include "input/keyboard.h"
-59: #include "input/mouse.h"
-60: #include "input/msg.h"
-61: #include "input/msg_core.h"
-62: #include "input/sensor.h"
-63: #include "input/tablet.h"
-64: #include "input/touch.h"
-65: #include "input/vkeys.h"
+54: #include "input/audio_device.h"
+55: #include "input/camera.h"
+56: #include "input/clipboard.h"
+57: #include "input/devices.h"
+58: #include "input/gamepads.h"
+59: #include "input/joystick.h"
+60: #include "input/keyboard.h"
+61: #include "input/mouse.h"
+62: #include "input/msg.h"
+63: #include "input/msg_core.h"
+64: #include "input/sensor.h"
+65: #include "input/tablet.h"
+66: #include "input/touch.h"
+67: #include "input/vkeys.h"
 70: #include "interface/cursor.h"
 71: #include "interface/dpi.h"
 72: #include "interface/dialog.h"
 73: #include "interface/icon.h"
 74: #include "interface/monitor.h"
-75: #include "interface/window.h"
+75: #include "interface/text_input.h"
+76: #include "interface/window.h"
 82: #include "system/cpu_info.h"
 83: #include "system/hardware_info.h"
 84: #include "system/language.h"
@@ -473,18 +476,30 @@
 73: func b32 pathwatch_allow_out_of_scope_links(pathwatch* watcher, b32 enabled);
 76: func cstr8 pathwatch_get_last_error(void);
 
+=== include\input\audio_device.h ===
+14: typedef enum audio_device_type {
+21: func b32 audio_device_is_valid(audio_device src);
+24: func audio_device audio_device_from_device(device src);
+27: func b32 audio_device_type_is_valid(audio_device_type src);
+30: func cstr8 audio_device_get_type_name(audio_device_type audio_type);
+33: func sz audio_device_get_total_count(audio_device_type audio_type);
+36: func b32 audio_device_get_id(audio_device_type audio_type, sz idx, audio_device* out_id);
+39: func audio_device_type audio_device_get_type(audio_device aud_id);
+42: func cstr8 audio_device_get_name(audio_device aud_id);
+
 === include\input\camera.h ===
-16: typedef enum camera_pos {
-23: func b32 camera_is_valid(camera src);
-26: func sz camera_get_total_count(void);
-29: func b32 camera_get_id(sz idx, camera* out_id);
-32: func cstr8 camera_get_name(camera cam_id);
-35: func camera_pos camera_get_pos(camera cam_id);
-38: func b32 camera_open(camera cam_id);
-39: func b32 camera_close(camera cam_id);
-40: func b32 camera_start(camera cam_id);
-41: func b32 camera_stop(camera cam_id);
-42: func b32 camera_read(camera cam_id, buffer* out_frame);
+17: typedef enum camera_pos {
+24: func b32 camera_is_valid(camera src);
+27: func camera camera_from_device(device src);
+30: func sz camera_get_total_count(void);
+33: func b32 camera_get_id(sz idx, camera* out_id);
+36: func cstr8 camera_get_name(camera cam_id);
+39: func camera_pos camera_get_pos(camera cam_id);
+42: func b32 camera_open(camera cam_id);
+43: func b32 camera_close(camera cam_id);
+44: func b32 camera_start(camera cam_id);
+45: func b32 camera_stop(camera cam_id);
+46: func b32 camera_read(camera cam_id, buffer* out_frame);
 
 === include\input\clipboard.h ===
 13: func b32 clipboard_has_text(void);
@@ -496,26 +511,15 @@
 34: func b32 clipboard_clear(void);
 
 === include\input\devices.h ===
-26: typedef enum device_type {
-40: typedef enum battery_state {
-49: typedef enum audio_device_type {
-55: typedef enum sensor_kind {
-66: typedef enum joystick_hat_state {
-79: typedef struct device_info {
-90: func b32 device_is_valid(device src);
-93: func device_type devices_get_type(device src);
-96: func b32 audio_device_type_is_valid(audio_device_type src);
-99: func cstr8 devices_get_type_name(device_type type);
-102: func cstr8 devices_get_audio_type_name(audio_device_type audio_type);
-105: func sz devices_get_count(device_type type);
-108: func device devices_get_device(device_type type, sz idx);
-111: func device devices_get_audio_device(audio_device_type audio_type, sz idx);
-114: func audio_device_type devices_get_audio_device_type(device dev_id);
-117: func camera camera_from_device(device src);
-120: func sensor sensor_from_device(device src);
-123: func monitor monitor_from_device(device src);
-126: func b32 devices_is_connected(device dev_id);
-129: func b32 devices_get_info(device dev_id, device_info* out_info);
+20: typedef enum device_type {
+35: typedef struct device_info {
+46: func b32 device_is_valid(device src);
+49: func device_type devices_get_type(device src);
+52: func cstr8 devices_get_type_name(device_type type);
+55: func sz devices_get_count(device_type type);
+58: func device devices_get_device(device_type type, sz idx);
+61: func b32 devices_is_connected(device dev_id);
+64: func b32 devices_get_info(device dev_id, device_info* out_info);
 
 === include\input\gamepads.h ===
 17: typedef enum gamepad_button {
@@ -534,22 +538,37 @@
 104: func b32 gamepads_set_axis_deadzone(sz slot_idx, gamepad_axis axis, i16 deadzone);
 105: func i16 gamepads_get_axis_deadzone(sz slot_idx, gamepad_axis axis);
 
+=== include\input\joystick.h ===
+14: typedef enum battery_state {
+23: typedef enum joystick_hat_state {
+36: func b32 joystick_is_valid(joystick src);
+39: func joystick joystick_from_device(device src);
+42: func sz joystick_get_total_count(void);
+45: func b32 joystick_get_id(sz idx, joystick* out_id);
+48: func cstr8 joystick_get_name(joystick joy_id);
+51: func b32 joystick_is_connected(joystick joy_id);
+54: func sz joystick_get_axis_count(joystick joy_id);
+55: func sz joystick_get_ball_count(joystick joy_id);
+56: func sz joystick_get_hat_count(joystick joy_id);
+57: func sz joystick_get_button_count(joystick joy_id);
+60: func i16 joystick_get_axis(joystick joy_id, sz axis_idx);
+61: func b32 joystick_get_ball(joystick joy_id, sz ball_idx, i32* out_xrel, i32* out_yrel);
+62: func joystick_hat_state joystick_get_hat(joystick joy_id, sz hat_idx);
+63: func b32 joystick_get_button(joystick joy_id, sz button_idx);
+66: func battery_state joystick_get_battery(joystick joy_id, i32* out_percent);
+
 === include\input\keyboard.h ===
-15: typedef enum keymod {
-45: func b32 keyboard_vkey_is_valid(vkey key);
-48: func b32 keyboard_is_available(void);
-51: func device keyboard_get_primary_device(void);
-54: func b32 keyboard_is_key_down(vkey key);
-60: func keymod keyboard_get_mods(void);
-63: func b32 keyboard_has_mods(keymod required_mods);
-66: func b32 keyboard_has_mods_exact(keymod required_mods, keymod forbidden_mods);
-69: func b32 keyboard_is_key_down_mod(vkey key, keymod required_mods, keymod forbidden_mods);
-72: func cstr8 keyboard_get_key_name(vkey key);
-75: func cstr8 keyboard_get_key_display_name(vkey key, keymod modifiers, b32 key_event);
-78: func b32 keyboard_start_text_input(window opt_window);
-79: func b32 keyboard_stop_text_input(window opt_window);
-80: func b32 keyboard_is_text_input_active(window opt_window);
-81: func b32 keyboard_set_text_input_area(window opt_window, i32 xpos, i32 ypos, i32 width, i32 height);
+14: typedef enum keymod {
+44: func b32 keyboard_vkey_is_valid(vkey key);
+47: func b32 keyboard_is_available(void);
+50: func device keyboard_get_primary_device(void);
+53: func b32 keyboard_is_key_down(vkey key);
+59: func keymod keyboard_get_mods(void);
+62: func b32 keyboard_has_mods(keymod required_mods);
+65: func b32 keyboard_has_mods_exact(keymod required_mods, keymod forbidden_mods);
+68: func b32 keyboard_is_key_down_mod(vkey key, keymod required_mods, keymod forbidden_mods);
+71: func cstr8 keyboard_get_key_name(vkey key);
+74: func cstr8 keyboard_get_key_display_name(vkey key, keymod modifiers, b32 key_event);
 
 === include\input\vkeys.h ===
 142: typedef enum vkey {
@@ -577,6 +596,12 @@
 48: func cursor_pos cursor_get_global_pos(void);
 51: func cursor_pos cursor_get_relative_pos(void);
 55: func b32 cursor_warp(window opt_window, f32 xpos, f32 ypos);
+
+=== include\interface\text_input.h ===
+13: func b32 text_input_start(window opt_window);
+14: func b32 text_input_stop(window opt_window);
+15: func b32 text_input_is_active(window opt_window);
+16: func b32 text_input_set_area(window opt_window, i32 xpos, i32 ypos, i32 width, i32 height);
 
 === include\interface\dpi.h ===
 13: typedef struct dpi_metrics {
@@ -758,16 +783,18 @@
 640: func msg_core_global_ctx_data* msg_core_get_global_ctx(msg* src);
 
 === include\input\sensor.h ===
-18: func b32 sensor_is_valid(sensor src);
-21: func sz sensor_get_total_count(void);
-24: func b32 sensor_get_from_idx(sz idx, sensor* out_id);
-25: func cstr8 sensor_get_name(sensor sen_id);
-28: func sensor_kind sensor_get_kind(sensor sen_id);
-31: func b32 sensor_open(sensor sen_id);
-32: func b32 sensor_close(sensor sen_id);
-33: func b32 sensor_start(sensor sen_id);
-34: func b32 sensor_stop(sensor sen_id);
-35: func b32 sensor_read(sensor sen_id, buffer* out_samples);
+17: typedef enum sensor_kind {
+29: func b32 sensor_is_valid(sensor src);
+32: func sensor sensor_from_device(device src);
+35: func sz sensor_get_total_count(void);
+38: func b32 sensor_get_from_idx(sz idx, sensor* out_id);
+41: func cstr8 sensor_get_name(sensor sen_id);
+44: func sensor_kind sensor_get_kind(sensor sen_id);
+47: func b32 sensor_open(sensor sen_id);
+48: func b32 sensor_close(sensor sen_id);
+49: func b32 sensor_start(sensor sen_id);
+50: func b32 sensor_stop(sensor sen_id);
+51: func b32 sensor_read(sensor sen_id, buffer* out_samples);
 
 === include\input\tablet.h ===
 16: typedef enum tablet_axis {
@@ -1763,22 +1790,23 @@
 93: func b32 dialog_open_folder(window owner, cstr8 default_location, b32 allow_many, dialog_file_callback* callback, void* user_data);
 
 === include\interface\monitor.h ===
-22: typedef struct monitor_mode {
-29: typedef enum monitor_orientation {
-38: func b32 monitor_id_is_valid(monitor src);
-41: func sz monitor_get_total_count(void);
-42: func monitor monitor_get_from_idx(sz idx);
+17: typedef struct monitor_mode {
+24: typedef enum monitor_orientation {
+33: func b32 monitor_id_is_valid(monitor src);
+36: func monitor monitor_from_device(device src);
+39: func sz monitor_get_total_count(void);
+40: func monitor monitor_get_from_idx(sz idx);
 43: func monitor monitor_get_primary_id(void);
-44: func cstr8 monitor_get_name(monitor id);
-48: func r2_i32 monitor_get_bounds(monitor mon_id);
-49: func r2_i32 monitor_get_usable_bounds(monitor mon_id);
-52: func sz monitor_get_mode_count(monitor mon_id);
-53: func b32 monitor_get_mode(monitor mon_id, sz idx, monitor_mode* out_mode);
-54: func b32 monitor_get_current_mode(monitor mon_id, monitor_mode* out_mode);
-55: func b32 monitor_get_desktop_mode(monitor mon_id, monitor_mode* out_mode);
-58: func f32 monitor_get_refresh_rate(monitor mon_id);
-59: func f32 monitor_get_content_scale(monitor mon_id);
-60: func monitor_orientation monitor_get_orientation(monitor mon_id);
+46: func r2_i32 monitor_get_bounds(monitor mon_id);
+47: func r2_i32 monitor_get_usable_bounds(monitor mon_id);
+50: func sz monitor_get_mode_count(monitor mon_id);
+51: func b32 monitor_get_mode(monitor mon_id, sz idx, monitor_mode* out_mode);
+52: func b32 monitor_get_current_mode(monitor mon_id, monitor_mode* out_mode);
+53: func b32 monitor_get_desktop_mode(monitor mon_id, monitor_mode* out_mode);
+56: func cstr8 monitor_get_name(monitor mon_id);
+57: func f32 monitor_get_refresh_rate(monitor mon_id);
+58: func f32 monitor_get_content_scale(monitor mon_id);
+59: func monitor_orientation monitor_get_orientation(monitor mon_id);
 
 === include\interface\window.h ===
 15: typedef void* window;

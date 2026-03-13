@@ -9,9 +9,9 @@ TEST(input_keyboard_test, invalid_keys_and_basic_queries) {
   EXPECT_TRUE(keyboard_has_mods(KEYMOD_NONE) != 0);
   cstr8 name_ptr = keyboard_get_key_name(VKEY_A);
   EXPECT_NE(nullptr, name_ptr);
-  EXPECT_TRUE(keyboard_vkey_is_valid(VKEY_A) != 0);
-  EXPECT_TRUE(keyboard_vkey_is_valid(VKEY_MEDIA_PLAY_PAUSE) != 0);
-  EXPECT_TRUE(keyboard_vkey_is_valid(VKEY_LANG_1) != 0);
+  EXPECT_TRUE(vkey_is_valid(VKEY_A) != 0);
+  EXPECT_TRUE(vkey_is_valid(VKEY_MEDIA_PLAY_PAUSE) != 0);
+  EXPECT_TRUE(vkey_is_valid(VKEY_LANG_1) != 0);
   EXPECT_NE(nullptr, keyboard_get_key_name(VKEY_A));
   EXPECT_NE(nullptr, keyboard_get_key_display_name(VKEY_A, KEYMOD_NONE, 0));
 }

@@ -4,19 +4,10 @@
 #include "test_common.hpp"
 #include "internal.h"
 
-TEST(input_devices_test, type_names_and_audio_handle_encoding_roundtrip) {
+TEST(input_devices_test, type_names_are_stable) {
   EXPECT_STREQ("keyboard", devices_get_type_name(DEVICE_TYPE_KEYBOARD));
+  EXPECT_STREQ("audio", devices_get_type_name(DEVICE_TYPE_AUDIO));
   EXPECT_STREQ("unknown", devices_get_type_name(DEVICE_TYPE_UNKNOWN));
-  EXPECT_STREQ("playback", devices_get_audio_type_name(AUDIO_DEVICE_TYPE_PLAYBACK));
-  EXPECT_STREQ("recording", devices_get_audio_type_name(AUDIO_DEVICE_TYPE_RECORDING));
-
-  device aud_id = devices_make_audio_device(77, AUDIO_DEVICE_TYPE_RECORDING);
-  EXPECT_TRUE(device_is_valid(aud_id) != 0);
-  EXPECT_EQ(DEVICE_TYPE_AUDIO, devices_get_type(aud_id));
-  EXPECT_EQ(AUDIO_DEVICE_TYPE_RECORDING, devices_get_audio_device_type(aud_id));
-  EXPECT_EQ(77U, devices_get_audio_native_id(aud_id));
-
-  EXPECT_TRUE(audio_device_type_is_valid(AUDIO_DEVICE_TYPE_UNKNOWN) == 0);
 }
 
 TEST(input_devices_test, invalid_handles_are_reported_as_disconnected) {

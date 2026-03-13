@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Christian Luppi
 
 #include "interface/monitor.h"
+#include "../internal.h"
 #include "context/thread_ctx.h"
 #include "../sdl3_include.h"
 #include "basic/profiler.h"
@@ -12,6 +13,14 @@
 
 func b32 monitor_id_is_valid(monitor src) {
   return src != NULL;
+}
+
+func monitor monitor_from_device(device src) {
+  if (devices_get_type(src) != DEVICE_TYPE_MONITOR) {
+    return NULL;
+  }
+
+  return (monitor)(up)devices_get_instance(src);
 }
 
 func monitor monitor_from_native_id(up native_id) {
