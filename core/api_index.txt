@@ -1817,5 +1817,6 @@
 115: func b32 window_get_monitor(window window_id, monitor* out_monitor_id);
 118: func b32 window_get_creation_monitor(window window_id, monitor* out_monitor_id);
 122: func b32 window_center_in_monitor(window window_id, monitor monitor_id, window_center_axis axis_mask);
-
+136: func window window_get_keyboard_focus();
+137: func window window_get_cursor_focus();
 

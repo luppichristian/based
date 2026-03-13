@@ -351,9 +351,12 @@ func b32 window_show(window window_id) {
     return false;
   }
 
-  SDL_ShowWindow(window_ptr);
+  b32 result = SDL_ShowWindow(window_ptr) ? true : false;
+  if (!result) {
+    thread_log_error("Failed to show window id=%llu error=%s", (unsigned long long)window_to_native_id(window_id), SDL_GetError());
+  }
   profile_func_end;
-  return true;
+  return result;
 }
 
 func b32 window_hide(window window_id) {
@@ -364,9 +367,12 @@ func b32 window_hide(window window_id) {
     return false;
   }
 
-  SDL_HideWindow(window_ptr);
+  b32 result = SDL_HideWindow(window_ptr) ? true : false;
+  if (!result) {
+    thread_log_error("Failed to hide window id=%llu error=%s", (unsigned long long)window_to_native_id(window_id), SDL_GetError());
+  }
   profile_func_end;
-  return true;
+  return result;
 }
 
 // =========================================================================
@@ -381,9 +387,16 @@ func b32 window_set_pos(window window_id, i32 xpos, i32 ypos) {
     return false;
   }
 
-  SDL_SetWindowPosition(window_ptr, xpos, ypos);
+  b32 result = SDL_SetWindowPosition(window_ptr, xpos, ypos) ? true : false;
+  if (!result) {
+    thread_log_error("Failed to set window position id=%llu xpos=%d ypos=%d error=%s",
+                     (unsigned long long)window_to_native_id(window_id),
+                     xpos,
+                     ypos,
+                     SDL_GetError());
+  }
   profile_func_end;
-  return true;
+  return result;
 }
 
 func b32 window_get_pos(window window_id, i32* out_xpos, i32* out_ypos) {
@@ -394,9 +407,12 @@ func b32 window_get_pos(window window_id, i32* out_xpos, i32* out_ypos) {
     return false;
   }
 
-  SDL_GetWindowPosition(window_ptr, out_xpos, out_ypos);
+  b32 result = SDL_GetWindowPosition(window_ptr, out_xpos, out_ypos) ? true : false;
+  if (!result) {
+    thread_log_error("Failed to get window position id=%llu error=%s", (unsigned long long)window_to_native_id(window_id), SDL_GetError());
+  }
   profile_func_end;
-  return true;
+  return result;
 }
 
 // =========================================================================
@@ -411,9 +427,16 @@ func b32 window_set_size(window window_id, i32 width, i32 height) {
     return false;
   }
 
-  SDL_SetWindowSize(window_ptr, width, height);
+  b32 result = SDL_SetWindowSize(window_ptr, width, height) ? true : false;
+  if (!result) {
+    thread_log_error("Failed to set window size id=%llu width=%d height=%d error=%s",
+                     (unsigned long long)window_to_native_id(window_id),
+                     width,
+                     height,
+                     SDL_GetError());
+  }
   profile_func_end;
-  return true;
+  return result;
 }
 
 func b32 window_get_size(window window_id, i32* out_width, i32* out_height) {
@@ -424,9 +447,12 @@ func b32 window_get_size(window window_id, i32* out_width, i32* out_height) {
     return false;
   }
 
-  SDL_GetWindowSize(window_ptr, out_width, out_height);
+  b32 result = SDL_GetWindowSize(window_ptr, out_width, out_height) ? true : false;
+  if (!result) {
+    thread_log_error("Failed to get window size id=%llu error=%s", (unsigned long long)window_to_native_id(window_id), SDL_GetError());
+  }
   profile_func_end;
-  return true;
+  return result;
 }
 
 // =========================================================================
@@ -517,9 +543,12 @@ func b32 window_minimize(window window_id) {
     return false;
   }
 
-  SDL_MinimizeWindow(window_ptr);
+  b32 result = SDL_MinimizeWindow(window_ptr) ? true : false;
+  if (!result) {
+    thread_log_error("Failed to minimize window id=%llu error=%s", (unsigned long long)window_to_native_id(window_id), SDL_GetError());
+  }
   profile_func_end;
-  return true;
+  return result;
 }
 
 func b32 window_maximize(window window_id) {
@@ -530,9 +559,12 @@ func b32 window_maximize(window window_id) {
     return false;
   }
 
-  SDL_MaximizeWindow(window_ptr);
+  b32 result = SDL_MaximizeWindow(window_ptr) ? true : false;
+  if (!result) {
+    thread_log_error("Failed to maximize window id=%llu error=%s", (unsigned long long)window_to_native_id(window_id), SDL_GetError());
+  }
   profile_func_end;
-  return true;
+  return result;
 }
 
 func b32 window_restore(window window_id) {
@@ -543,9 +575,12 @@ func b32 window_restore(window window_id) {
     return false;
   }
 
-  SDL_RestoreWindow(window_ptr);
+  b32 result = SDL_RestoreWindow(window_ptr) ? true : false;
+  if (!result) {
+    thread_log_error("Failed to restore window id=%llu error=%s", (unsigned long long)window_to_native_id(window_id), SDL_GetError());
+  }
   profile_func_end;
-  return true;
+  return result;
 }
 
 func b32 window_focus(window window_id) {
@@ -556,9 +591,12 @@ func b32 window_focus(window window_id) {
     return false;
   }
 
-  SDL_RaiseWindow(window_ptr);
+  b32 result = SDL_RaiseWindow(window_ptr) ? true : false;
+  if (!result) {
+    thread_log_error("Failed to focus window id=%llu error=%s", (unsigned long long)window_to_native_id(window_id), SDL_GetError());
+  }
   profile_func_end;
-  return true;
+  return result;
 }
 
 func b32 window_set_topmost(window window_id, b32 enabled) {
@@ -573,6 +611,22 @@ func b32 window_set_topmost(window window_id, b32 enabled) {
   if (!result) {
     thread_log_error("Failed to set window topmost enabled=%u error=%s", (u32)enabled, SDL_GetError());
   }
+  profile_func_end;
+  return result;
+}
+
+func window window_get_keyboard_focus(void) {
+  profile_func_begin;
+  SDL_Window* window_ptr = SDL_GetKeyboardFocus();
+  window result = window_ptr != NULL ? window_from_native_id((up)SDL_GetWindowID(window_ptr)) : NULL;
+  profile_func_end;
+  return result;
+}
+
+func window window_get_cursor_focus(void) {
+  profile_func_begin;
+  SDL_Window* window_ptr = SDL_GetMouseFocus();
+  window result = window_ptr != NULL ? window_from_native_id((up)SDL_GetWindowID(window_ptr)) : NULL;
   profile_func_end;
   return result;
 }
@@ -601,9 +655,15 @@ func b32 window_set_title(window window_id, cstr8 title) {
     return false;
   }
 
-  SDL_SetWindowTitle(window_ptr, title);
+  b32 result = SDL_SetWindowTitle(window_ptr, title) ? true : false;
+  if (!result) {
+    thread_log_error("Failed to set window title id=%llu title=%s error=%s",
+                     (unsigned long long)window_to_native_id(window_id),
+                     title,
+                     SDL_GetError());
+  }
   profile_func_end;
-  return true;
+  return result;
 }
 
 func b32 window_set_icon(window window_id, icon icon_id) {
@@ -665,7 +725,10 @@ func b32 window_get_creation_monitor(window window_id, monitor* out_monitor_id) 
   return true;
 }
 
-func b32 window_center_in_monitor(window window_id, monitor monitor_id, window_center_axis axis_mask) {
+func b32 window_center_in_monitor(
+    window window_id,
+    monitor monitor_id,
+    window_center_axis axis_mask) {
   profile_func_begin;
   SDL_Window* window_ptr = window_resolve(window_id);
   if (window_ptr == NULL) {
@@ -706,7 +769,14 @@ func b32 window_center_in_monitor(window window_id, monitor monitor_id, window_c
     ypos = bounds.min.y + ((bounds_dim.y - height) / 2);
   }
 
-  SDL_SetWindowPosition(window_ptr, xpos, ypos);
+  b32 result = SDL_SetWindowPosition(window_ptr, xpos, ypos) ? true : false;
+  if (!result) {
+    thread_log_error("Failed to center window id=%llu xpos=%d ypos=%d error=%s",
+                     (unsigned long long)window_to_native_id(window_id),
+                     xpos,
+                     ypos,
+                     SDL_GetError());
+  }
   profile_func_end;
-  return true;
+  return result;
 }

@@ -132,6 +132,10 @@ func b32 window_center_in_monitor(
     monitor monitor_id,
     window_center_axis axis_mask);
 
+// Get currently focused window for keyboard or cursor.
+func window window_get_keyboard_focus();
+func window window_get_cursor_focus();
+
 // =========================================================================
 c_end;
 // =========================================================================
