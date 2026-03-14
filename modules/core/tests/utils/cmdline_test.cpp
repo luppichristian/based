@@ -4,7 +4,7 @@
 #include "test_common.hpp"
 
 TEST(utils_cmdline_test, build_empty) {
-  cmdline cmdl = cmdline_build(0, nullptr);
+  cmdline cmdl = cmdline_build(0, NULL);
   EXPECT_EQ(0U, cmdline_get_count(cmdl));
   EXPECT_TRUE(cmdline_is_empty(cmdl) != 0);
 }

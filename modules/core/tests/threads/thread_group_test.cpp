@@ -27,7 +27,7 @@ TEST(threads_thread_group_test, create) {
   EXPECT_NE(0, thread_group_is_valid(group));
   EXPECT_EQ(4U, thread_group_get_count(group));
 
-  thread_group_join_all(group, nullptr);
+  thread_group_join_all(group, NULL);
   EXPECT_NE(0, thread_group_destroy(group));
 }
 
@@ -38,7 +38,7 @@ TEST(threads_thread_group_test, create_named) {
   thread_group group = thread_group_create_named(2, thread_group_entry, results, setup, "worker");
   EXPECT_NE(0, thread_group_is_valid(group));
 
-  thread_group_join_all(group, nullptr);
+  thread_group_join_all(group, NULL);
   EXPECT_NE(0, thread_group_destroy(group));
 }
 
@@ -59,7 +59,7 @@ TEST(threads_thread_group_test, get) {
   thread null_thd = thread_group_get(group, 5);
   EXPECT_EQ(0, thread_is_valid(null_thd));
 
-  thread_group_join_all(group, nullptr);
+  thread_group_join_all(group, NULL);
   EXPECT_NE(0, thread_group_destroy(group));
 }
 
@@ -85,7 +85,7 @@ TEST(threads_thread_group_test, join_all) {
 
 TEST(threads_thread_group_test, detach_all) {
   ctx_setup setup = thread_get_setup();
-  thread_group group = thread_group_create(0, thread_group_entry_noarg, nullptr, setup);
+  thread_group group = thread_group_create(0, thread_group_entry_noarg, NULL, setup);
 
   EXPECT_EQ(0, thread_group_detach_all(group));
 }
@@ -104,7 +104,7 @@ TEST(threads_thread_group_test, parallel_execution) {
   };
 
   thread_group group = thread_group_create(num_threads, entry, counters, setup);
-  thread_group_join_all(group, nullptr);
+  thread_group_join_all(group, NULL);
 
   safe_for (u32 i = 0; i < num_threads; i++) {
     EXPECT_EQ(1000, counters[i]);
@@ -114,6 +114,6 @@ TEST(threads_thread_group_test, parallel_execution) {
 }
 
 TEST(threads_thread_group_test, destroy_null) {
-  thread_group group = nullptr;
+  thread_group group = NULL;
   EXPECT_EQ(0, thread_group_destroy(group));
 }

@@ -1,8 +1,8 @@
 // MIT License
 // Copyright (c) 2026 Christian Luppi
 
-#include "test_common.hpp"
 #include "internal.h"
+#include "test_common.hpp"
 
 TEST(input_devices_test, type_names_are_stable) {
   EXPECT_STREQ("keyboard", devices_get_type_name(DEVICE_TYPE_KEYBOARD));
@@ -11,13 +11,13 @@ TEST(input_devices_test, type_names_are_stable) {
 }
 
 TEST(input_devices_test, invalid_handles_are_reported_as_disconnected) {
-  device bad_id = nullptr;
+  device bad_id = NULL;
   EXPECT_TRUE(device_is_valid(bad_id) == 0);
   EXPECT_TRUE(devices_is_connected(bad_id) == 0);
-  EXPECT_TRUE(devices_get_info(bad_id, nullptr) == 0);
+  EXPECT_TRUE(devices_get_info(bad_id, NULL) == 0);
 
   sz key_count = devices_get_count(DEVICE_TYPE_KEYBOARD);
-  device out_id = nullptr;
+  device out_id = NULL;
   if (key_count == 0) {
     EXPECT_EQ(nullptr, devices_get_device(DEVICE_TYPE_KEYBOARD, 0));
   } else {

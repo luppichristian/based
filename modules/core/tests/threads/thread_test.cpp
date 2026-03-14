@@ -7,7 +7,7 @@ namespace {
 
   func i32 thread_entry_simple(void* arg) {
     i32* val = static_cast<i32*>(arg);
-    if (val != nullptr) {
+    if (val != NULL) {
       *val = 42;
     }
     return 0;
@@ -38,17 +38,17 @@ TEST(threads_thread_test, create_named) {
 #if defined(_WIN32)
   GTEST_SKIP() << "thread naming is unstable on this target";
 #endif
-  thread thd = thread_create_named(thread_entry_simple, nullptr, "test_thread", (ctx_setup) {0});
+  thread thd = thread_create_named(thread_entry_simple, NULL, "test_thread", (ctx_setup) {0});
   EXPECT_NE(0, thread_is_valid(thd));
 
   cstr8 name = thread_get_name(thd);
   EXPECT_NE(nullptr, name);
 
-  thread_join(thd, nullptr);
+  thread_join(thd, NULL);
 }
 
 TEST(threads_thread_test, get_id) {
-  thread thd = thread_create(thread_entry_simple, nullptr, (ctx_setup) {0});
+  thread thd = thread_create(thread_entry_simple, NULL, (ctx_setup) {0});
   EXPECT_NE(0, thread_is_valid(thd));
 
   u64 thread_identifier = 0;
@@ -60,11 +60,11 @@ TEST(threads_thread_test, get_id) {
   }
   EXPECT_NE(0ULL, thread_identifier);
 
-  thread_join(thd, nullptr);
+  thread_join(thd, NULL);
 }
 
 TEST(threads_thread_test, detach) {
-  thread thd = thread_create(thread_entry_simple, nullptr, (ctx_setup) {0});
+  thread thd = thread_create(thread_entry_simple, NULL, (ctx_setup) {0});
   EXPECT_NE(0, thread_is_valid(thd));
 
   thread_detach(thd);
@@ -81,7 +81,7 @@ TEST(threads_thread_test, multiple_threads) {
   }
 
   safe_for (i32 i = 0; i < num_threads; i++) {
-    thread_join(threads[i], nullptr);
+    thread_join(threads[i], NULL);
   }
 
   safe_for (i32 i = 0; i < num_threads; i++) {
@@ -90,7 +90,7 @@ TEST(threads_thread_test, multiple_threads) {
 }
 
 TEST(threads_thread_test, exit_code) {
-  thread thd = thread_create(thread_entry_sleep, nullptr, (ctx_setup) {0});
+  thread thd = thread_create(thread_entry_sleep, NULL, (ctx_setup) {0});
 
   i32 exit_code = -1;
   thread_join(thd, &exit_code);
@@ -117,7 +117,7 @@ TEST(threads_thread_test, parallel_execution) {
   }
 
   safe_for (i32 i = 0; i < num_threads; i++) {
-    thread_join(threads[i], nullptr);
+    thread_join(threads[i], NULL);
   }
 
   safe_for (i32 i = 0; i < num_threads; i++) {

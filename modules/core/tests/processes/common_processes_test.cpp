@@ -9,16 +9,16 @@ TEST(processes_common_processes_test, open_weblink_invalid) {
 }
 
 TEST(processes_common_processes_test, open_weblink_null) {
-  b32 result = process_open_weblink(nullptr);
+  b32 result = process_open_weblink(NULL);
   EXPECT_EQ(0, result);
 }
 
 TEST(processes_common_processes_test, open_file_window) {
-  b32 result = process_open_file_window(nullptr);
+  b32 result = process_open_file_window(NULL);
   EXPECT_NE(0, result);
 }
 
 TEST(processes_common_processes_test, open_terminal_null) {
-  b32 result = process_open_terminal(nullptr);
+  b32 result = process_open_terminal(NULL);
   EXPECT_NE(0, result);
 }

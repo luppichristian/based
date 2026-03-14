@@ -9,13 +9,13 @@ struct stack_node {
 };
 
 TEST(containers_stack_list_test, empty_macro) {
-  struct stack_node* head = nullptr;
+  struct stack_node* head = NULL;
 
   EXPECT_NE(0, STACK_LIST_EMPTY(head));
 }
 
 TEST(containers_stack_list_test, push_pop) {
-  struct stack_node* head = nullptr;
+  struct stack_node* head = NULL;
 
   struct stack_node node1 = {0};
   node1.value = 1;
@@ -32,7 +32,7 @@ TEST(containers_stack_list_test, push_pop) {
 }
 
 TEST(containers_stack_list_test, pop) {
-  struct stack_node* head = nullptr;
+  struct stack_node* head = NULL;
 
   struct stack_node node1 = {0};
   struct stack_node node2 = {0};
@@ -40,7 +40,7 @@ TEST(containers_stack_list_test, pop) {
   STACK_LIST_PUSH(head, &node1);
   STACK_LIST_PUSH(head, &node2);
 
-  struct stack_node* popped = nullptr;
+  struct stack_node* popped = NULL;
   STACK_LIST_POP(head, popped);
   EXPECT_EQ(&node2, popped);
   EXPECT_EQ(&node1, head);
@@ -51,7 +51,7 @@ TEST(containers_stack_list_test, pop) {
 }
 
 TEST(containers_stack_list_test, count) {
-  struct stack_node* head = nullptr;
+  struct stack_node* head = NULL;
   sz count = 0;
 
   STACK_LIST_COUNT(head, count);
@@ -68,7 +68,7 @@ TEST(containers_stack_list_test, count) {
 }
 
 TEST(containers_stack_list_test, head_macro) {
-  struct stack_node* head = nullptr;
+  struct stack_node* head = NULL;
 
   struct stack_node node1 = {0};
   node1.value = 42;
@@ -79,7 +79,7 @@ TEST(containers_stack_list_test, head_macro) {
 }
 
 TEST(containers_stack_list_test, next_macro) {
-  struct stack_node* head = nullptr;
+  struct stack_node* head = NULL;
 
   struct stack_node node1 = {0};
   struct stack_node node2 = {0};
@@ -91,7 +91,7 @@ TEST(containers_stack_list_test, next_macro) {
 }
 
 TEST(containers_stack_list_test, foreach) {
-  struct stack_node* head = nullptr;
+  struct stack_node* head = NULL;
 
   struct stack_node node1 = {0};
   struct stack_node node2 = {0};

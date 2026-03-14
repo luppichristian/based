@@ -4,8 +4,8 @@
 #pragma once
 
 #include "basic/primitive_types.h"
-#include "basic/utility_defines.h"
 #include "basic/safe.h"
+#include "basic/utility_defines.h"
 
 // =========================================================================
 c_begin;
@@ -23,12 +23,12 @@ Example:
   } free_node;
 */
 
-#define STACK_LIST_EMPTY(head) ((head) == nullptr)
+#define STACK_LIST_EMPTY(head) ((head) == NULL)
 
-#define STACK_LIST_COUNT(head, count) stmt(                                    \
-    (count) = 0;                                                               \
-    safe_for (typeof(head) _node = (head); _node != nullptr; _node = _node->next) { \
-      (count)++;                                                               \
+#define STACK_LIST_COUNT(head, count) stmt(                                      \
+    (count) = 0;                                                                 \
+    safe_for (typeof(head) _node = (head); _node != NULL; _node = _node->next) { \
+      (count)++;                                                                 \
     })
 
 #define STACK_LIST_HEAD(head) (head)
@@ -40,13 +40,13 @@ Example:
 
 #define STACK_LIST_POP(head, node) stmt( \
     (node) = (head);                     \
-    if ((head) != nullptr) {             \
+    if ((head) != NULL) {                \
       (head) = (head)->next;             \
-      (node)->next = nullptr;            \
+      (node)->next = NULL;               \
     })
 
 #define STACK_LIST_FOREACH(head, it) \
-  safe_for (typeof((head)) it = (head); (it) != nullptr; (it) = (it)->next)
+  safe_for (typeof((head)) it = (head); (it) != NULL; (it) = (it)->next)
 
 // =========================================================================
 c_end;

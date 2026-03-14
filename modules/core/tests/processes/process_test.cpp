@@ -5,10 +5,10 @@
 
 #if defined(_WIN32)
 #  define ECHO_CMD  "whoami.exe"
-#  define ECHO_ARGS "whoami.exe", nullptr
+#  define ECHO_ARGS "whoami.exe", NULL
 #else
 #  define ECHO_CMD  "/bin/echo"
-#  define ECHO_ARGS "/bin/echo", "hello", nullptr
+#  define ECHO_ARGS "/bin/echo", "hello", NULL
 #endif
 
 TEST(processes_process_test, options_default) {
@@ -28,7 +28,7 @@ TEST(processes_process_test, options_captured) {
 }
 
 TEST(processes_process_test, create_invalid) {
-  cstr8 const invalid_args[] = {nullptr};
+  cstr8 const invalid_args[] = {NULL};
   process prc = process_create(invalid_args);
   EXPECT_EQ(0, process_is_valid(prc));
 }
@@ -73,9 +73,9 @@ TEST(processes_process_test, wait_blocking) {
 
 TEST(processes_process_test, wait_nonblocking) {
 #if defined(_WIN32)
-  cstr8 const args[] = {"cmd.exe", "/c", "ping -n 4 127.0.0.1 > nul", nullptr};
+  cstr8 const args[] = {"cmd.exe", "/c", "ping -n 4 127.0.0.1 > nul", NULL};
 #else
-  cstr8 const args[] = {"/bin/sleep", "1", nullptr};
+  cstr8 const args[] = {"/bin/sleep", "1", NULL};
 #endif
   process prc = process_create(args);
   EXPECT_NE(0, process_is_valid(prc));
@@ -86,7 +86,7 @@ TEST(processes_process_test, wait_nonblocking) {
   EXPECT_EQ(-1, exit_code);
 
   process_kill(prc, 1);
-  process_wait(prc, 1, nullptr);
+  process_wait(prc, 1, NULL);
 
   process_destroy(prc);
 }
@@ -126,9 +126,9 @@ TEST(processes_process_test, kill) {
   opts.background = 1;
 
 #if defined(_WIN32)
-  cstr8 const args[] = {"cmd.exe", "/c", "ping -t localhost", nullptr};
+  cstr8 const args[] = {"cmd.exe", "/c", "ping -t localhost", NULL};
 #else
-  cstr8 const args[] = {"/bin/sleep", "60", nullptr};
+  cstr8 const args[] = {"/bin/sleep", "60", NULL};
 #endif
 
   process prc = process_create_with(args, opts);

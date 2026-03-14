@@ -51,7 +51,7 @@ TEST(threads_semaphore_test, wait_and_signal) {
   EXPECT_NE(0, thread_is_valid(thd));
 
   semaphore_signal(sem);
-  thread_join(thd, nullptr);
+  thread_join(thd, NULL);
 
   EXPECT_NE(0, semaphore_destroy(sem));
 }

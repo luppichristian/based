@@ -32,7 +32,7 @@ TEST(threads_thread_current_test, id_is_unique_per_thread) {
   thread thd = thread_create(thread_id_entry, &ctx, (ctx_setup) {0});
   EXPECT_NE(0, thread_is_valid(thd));
 
-  b32 joined = thread_join(thd, nullptr);
+  b32 joined = thread_join(thd, NULL);
   EXPECT_NE(0, joined);
 
   EXPECT_NE(0ULL, ctx.out_id[0]);

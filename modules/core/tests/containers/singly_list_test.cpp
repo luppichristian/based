@@ -9,15 +9,15 @@ struct singly_node {
 };
 
 TEST(containers_singly_list_test, empty_macro) {
-  struct singly_node* head = nullptr;
-  struct singly_node* tail = nullptr;
+  struct singly_node* head = NULL;
+  struct singly_node* tail = NULL;
 
   EXPECT_NE(0, SINGLY_LIST_EMPTY(head, tail));
 }
 
 TEST(containers_singly_list_test, push_front) {
-  struct singly_node* head = nullptr;
-  struct singly_node* tail = nullptr;
+  struct singly_node* head = NULL;
+  struct singly_node* tail = NULL;
 
   struct singly_node node1 = {0};
   node1.value = 1;
@@ -35,8 +35,8 @@ TEST(containers_singly_list_test, push_front) {
 }
 
 TEST(containers_singly_list_test, push_back) {
-  struct singly_node* head = nullptr;
-  struct singly_node* tail = nullptr;
+  struct singly_node* head = NULL;
+  struct singly_node* tail = NULL;
 
   struct singly_node node1 = {0};
   node1.value = 1;
@@ -54,8 +54,8 @@ TEST(containers_singly_list_test, push_back) {
 }
 
 TEST(containers_singly_list_test, pop_front) {
-  struct singly_node* head = nullptr;
-  struct singly_node* tail = nullptr;
+  struct singly_node* head = NULL;
+  struct singly_node* tail = NULL;
 
   struct singly_node node1 = {0};
   struct singly_node node2 = {0};
@@ -63,7 +63,7 @@ TEST(containers_singly_list_test, pop_front) {
   SINGLY_LIST_PUSH_BACK(head, tail, &node1);
   SINGLY_LIST_PUSH_BACK(head, tail, &node2);
 
-  struct singly_node* popped = nullptr;
+  struct singly_node* popped = NULL;
   SINGLY_LIST_POP_FRONT(head, tail, popped);
   EXPECT_EQ(&node1, popped);
   EXPECT_EQ(&node2, head);
@@ -76,8 +76,8 @@ TEST(containers_singly_list_test, pop_front) {
 }
 
 TEST(containers_singly_list_test, count) {
-  struct singly_node* head = nullptr;
-  struct singly_node* tail = nullptr;
+  struct singly_node* head = NULL;
+  struct singly_node* tail = NULL;
   sz count = 0;
 
   SINGLY_LIST_COUNT(head, tail, count);
@@ -94,8 +94,8 @@ TEST(containers_singly_list_test, count) {
 }
 
 TEST(containers_singly_list_test, head_tail) {
-  struct singly_node* head = nullptr;
-  struct singly_node* tail = nullptr;
+  struct singly_node* head = NULL;
+  struct singly_node* tail = NULL;
 
   struct singly_node node1 = {0};
   struct singly_node node2 = {0};
@@ -108,8 +108,8 @@ TEST(containers_singly_list_test, head_tail) {
 }
 
 TEST(containers_singly_list_test, foreach) {
-  struct singly_node* head = nullptr;
-  struct singly_node* tail = nullptr;
+  struct singly_node* head = NULL;
+  struct singly_node* tail = NULL;
 
   struct singly_node node1 = {0};
   struct singly_node node2 = {0};

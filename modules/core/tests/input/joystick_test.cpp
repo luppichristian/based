@@ -8,23 +8,23 @@ TEST(input_joystick_test, id_conversion_and_generic_conversion_roundtrip) {
   joystick joy_id = joystick_from_native_id(123);
   EXPECT_TRUE(joystick_is_valid(joy_id) != 0);
   EXPECT_EQ((up)123, joystick_to_native_id(joy_id));
-  EXPECT_TRUE(joystick_is_connected(nullptr) == 0);
-  EXPECT_EQ(0U, joystick_get_axis_count(nullptr));
-  EXPECT_EQ(0U, joystick_get_ball_count(nullptr));
-  EXPECT_EQ(0U, joystick_get_hat_count(nullptr));
-  EXPECT_EQ(0U, joystick_get_button_count(nullptr));
-  EXPECT_EQ(0, joystick_get_axis(nullptr, 0));
-  EXPECT_EQ(JOYSTICK_HAT_STATE_CENTERED, joystick_get_hat(nullptr, 0));
-  EXPECT_TRUE(joystick_get_button(nullptr, 0) == 0);
+  EXPECT_TRUE(joystick_is_connected(NULL) == 0);
+  EXPECT_EQ(0U, joystick_get_axis_count(NULL));
+  EXPECT_EQ(0U, joystick_get_ball_count(NULL));
+  EXPECT_EQ(0U, joystick_get_hat_count(NULL));
+  EXPECT_EQ(0U, joystick_get_button_count(NULL));
+  EXPECT_EQ(0, joystick_get_axis(NULL, 0));
+  EXPECT_EQ(JOYSTICK_HAT_STATE_CENTERED, joystick_get_hat(NULL, 0));
+  EXPECT_TRUE(joystick_get_button(NULL, 0) == 0);
 
   i32 xrel = 1;
   i32 yrel = 1;
-  EXPECT_TRUE(joystick_get_ball(nullptr, 0, &xrel, &yrel) == 0);
+  EXPECT_TRUE(joystick_get_ball(NULL, 0, &xrel, &yrel) == 0);
   EXPECT_EQ(0, xrel);
   EXPECT_EQ(0, yrel);
 
   i32 battery_percent = 42;
-  EXPECT_EQ(BATTERY_STATE_UNKNOWN, joystick_get_battery(nullptr, &battery_percent));
+  EXPECT_EQ(BATTERY_STATE_UNKNOWN, joystick_get_battery(NULL, &battery_percent));
   EXPECT_EQ(-1, battery_percent);
 
   EXPECT_EQ(BATTERY_STATE_UNKNOWN, joystick_battery_state_from_native(0));

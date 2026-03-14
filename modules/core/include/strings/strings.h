@@ -42,16 +42,16 @@ func b32 str8_cmp(str8 lhs, str8 rhs);
 // Returns 1 if lhs and rhs are equal ignoring ASCII case, 0 otherwise.
 func b32 str8_cmp_nocase(str8 lhs, str8 rhs);
 
-// Returns a pointer to the first occurrence of sub in str, or nullptr if not found.
+// Returns a pointer to the first occurrence of sub in str, or NULL if not found.
 func cstr8 str8_find(str8 str, cstr8 sub);
 
-// Returns a pointer to the first occurrence of chr in str, or nullptr if not found.
+// Returns a pointer to the first occurrence of chr in str, or NULL if not found.
 func cstr8 str8_find_char(str8 str, c8 chr);
 
-// Returns a pointer to the last occurrence of sub in str, or nullptr if not found.
+// Returns a pointer to the last occurrence of sub in str, or NULL if not found.
 func cstr8 str8_find_last(str8 str, cstr8 sub);
 
-// Returns a pointer to the last occurrence of chr in str, or nullptr if not found.
+// Returns a pointer to the last occurrence of chr in str, or NULL if not found.
 func cstr8 str8_find_last_char(str8 str, c8 chr);
 
 // Returns the number of times chr occurs in str.
@@ -170,16 +170,16 @@ func b32 str16_cmp(str16 lhs, str16 rhs);
 // Returns 1 if lhs and rhs are equal ignoring ASCII case, 0 otherwise.
 func b32 str16_cmp_nocase(str16 lhs, str16 rhs);
 
-// Returns a pointer to the first occurrence of sub in str, or nullptr if not found.
+// Returns a pointer to the first occurrence of sub in str, or NULL if not found.
 func cstr16 str16_find(str16 str, cstr16 sub);
 
-// Returns a pointer to the first occurrence of chr in str, or nullptr if not found.
+// Returns a pointer to the first occurrence of chr in str, or NULL if not found.
 func cstr16 str16_find_char(str16 str, c16 chr);
 
-// Returns a pointer to the last occurrence of sub in str, or nullptr if not found.
+// Returns a pointer to the last occurrence of sub in str, or NULL if not found.
 func cstr16 str16_find_last(str16 str, cstr16 sub);
 
-// Returns a pointer to the last occurrence of chr in str, or nullptr if not found.
+// Returns a pointer to the last occurrence of chr in str, or NULL if not found.
 func cstr16 str16_find_last_char(str16 str, c16 chr);
 
 // Returns the number of times chr occurs in str.
@@ -282,16 +282,16 @@ func b32 str32_cmp(str32 lhs, str32 rhs);
 // Returns 1 if lhs and rhs are equal ignoring ASCII case, 0 otherwise.
 func b32 str32_cmp_nocase(str32 lhs, str32 rhs);
 
-// Returns a pointer to the first occurrence of sub in str, or nullptr if not found.
+// Returns a pointer to the first occurrence of sub in str, or NULL if not found.
 func cstr32 str32_find(str32 str, cstr32 sub);
 
-// Returns a pointer to the first occurrence of chr in str, or nullptr if not found.
+// Returns a pointer to the first occurrence of chr in str, or NULL if not found.
 func cstr32 str32_find_char(str32 str, c32 chr);
 
-// Returns a pointer to the last occurrence of sub in str, or nullptr if not found.
+// Returns a pointer to the last occurrence of sub in str, or NULL if not found.
 func cstr32 str32_find_last(str32 str, cstr32 sub);
 
-// Returns a pointer to the last occurrence of chr in str, or nullptr if not found.
+// Returns a pointer to the last occurrence of chr in str, or NULL if not found.
 func cstr32 str32_find_last_char(str32 str, c32 chr);
 
 // Returns the number of times chr occurs in str.

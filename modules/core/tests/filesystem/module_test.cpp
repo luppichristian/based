@@ -13,7 +13,7 @@ TEST(filesystem_module_test, extension_is_available_and_invalid_open_fails) {
   EXPECT_TRUE(mod_is_open(&mod_val) == 0);
 
   EXPECT_EQ(nullptr, mod_get_func(&mod_val, "anything"));
-  EXPECT_EQ(nullptr, mod_get_func(nullptr, "anything"));
+  EXPECT_EQ(nullptr, mod_get_func(NULL, "anything"));
   EXPECT_EQ(nullptr, mod_get_func(&mod_val, nullptr));
 
   mod_close(&mod_val);

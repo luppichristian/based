@@ -4,8 +4,8 @@
 #pragma once
 
 #include "basic/primitive_types.h"
-#include "basic/utility_defines.h"
 #include "basic/safe.h"
+#include "basic/utility_defines.h"
 
 // =========================================================================
 c_begin;
@@ -25,26 +25,26 @@ Example:
   } frame_node;
 */
 
-#define RING_LIST_EMPTY(head) ((head) == nullptr)
+#define RING_LIST_EMPTY(head) ((head) == NULL)
 
 #define RING_LIST_COUNT(head, count) stmt( \
     (count) = 0;                           \
     typeof(head) _node = (head);           \
-    if (_node != nullptr) {                \
+    if (_node != NULL) {                \
       safe_while (true) {                  \
         (count)++;                         \
         _node = _node->next;               \
         if (_node == (head)) {             \
           break;                           \
-        }                                  \
-      }                                    \
-    })
+        }                                     \
+  }                                           \
+  })
 
 #define RING_LIST_HEAD(head) (head)
-#define RING_LIST_TAIL(head) ((head) != nullptr ? (head)->prev : nullptr)
+#define RING_LIST_TAIL(head) ((head) != NULL ? (head)->prev : NULL)
 
 #define RING_LIST_PUSH_FRONT(head, node) stmt( \
-    if ((head) == nullptr) {                   \
+    if ((head) == NULL) {                      \
       (node)->next = (node);                   \
       (node)->prev = (node);                   \
     } else {                                   \
@@ -55,7 +55,7 @@ Example:
     }(head) = (node);)
 
 #define RING_LIST_PUSH_BACK(head, node) stmt( \
-    if ((head) == nullptr) {                  \
+    if ((head) == NULL) {                     \
       (node)->next = (node);                  \
       (node)->prev = (node);                  \
       (head) = (node);                        \
@@ -68,34 +68,34 @@ Example:
 
 #define RING_LIST_POP_FRONT(head, node) stmt( \
     (node) = (head);                          \
-    if ((head) != nullptr) {                  \
+    if ((head) != NULL) {                     \
       if ((head)->next == (head)) {           \
-        (head) = nullptr;                     \
+        (head) = NULL;                        \
       } else {                                \
         (node)->next->prev = (node)->prev;    \
         (node)->prev->next = (node)->next;    \
         (head) = (node)->next;                \
       }                                       \
-      (node)->next = nullptr;                 \
-      (node)->prev = nullptr;                 \
+      (node)->next = NULL;                    \
+      (node)->prev = NULL;                    \
     })
 
-#define RING_LIST_POP_BACK(head, node) stmt(               \
-    (node) = ((head) != nullptr ? (head)->prev : nullptr); \
-    if ((node) != nullptr) {                               \
-      if ((head)->next == (head)) {                        \
-        (head) = nullptr;                                  \
-      } else {                                             \
-        (node)->prev->next = (head);                       \
-        (head)->prev = (node)->prev;                       \
-      }                                                    \
-      (node)->next = nullptr;                              \
-      (node)->prev = nullptr;                              \
+#define RING_LIST_POP_BACK(head, node) stmt(         \
+    (node) = ((head) != NULL ? (head)->prev : NULL); \
+    if ((node) != NULL) {                            \
+      if ((head)->next == (head)) {                  \
+        (head) = NULL;                               \
+      } else {                                       \
+        (node)->prev->next = (head);                 \
+        (head)->prev = (node)->prev;                 \
+      }                                              \
+      (node)->next = NULL;                           \
+      (node)->prev = NULL;                           \
     })
 
 #define RING_LIST_REMOVE(head, node) stmt( \
     if ((node)->next == (node)) {          \
-      (head) = nullptr;                    \
+      (head) = NULL;                       \
     } else {                               \
       (node)->prev->next = (node)->next;   \
       (node)->next->prev = (node)->prev;   \
@@ -103,8 +103,8 @@ Example:
         (head) = (node)->next;             \
       }                                    \
     }(node)                                \
-        ->next = nullptr;                  \
-    (node)->prev = nullptr;)
+        ->next = NULL;                     \
+    (node)->prev = NULL;)
 
 #define RING_LIST_INSERT_AFTER(head, after, node) stmt( \
     (void)(head);                                       \
@@ -122,14 +122,14 @@ Example:
       (head) = (node);                                    \
     })
 
-#define RING_LIST_FOREACH(head, it)                                               \
-  safe_for(typeof((head)) it = (head), _ring_head_##it = (head); (it) != nullptr; \
-           (it) = ((it)->next != _ring_head_##it ? (it)->next : nullptr))
+#define RING_LIST_FOREACH(head, it)                                             \
+  safe_for (typeof((head)) it = (head), _ring_head_##it = (head); (it) != NULL; \
+            (it) = ((it)->next != _ring_head_##it ? (it)->next : NULL))
 
-#define RING_LIST_FOREACH_REVERSE(head, it)                                                            \
-  safe_for(typeof((head)) it = ((head) != nullptr ? (head)->prev : nullptr), _ring_head_##it = (head); \
-           (it) != nullptr;                                                                            \
-           (it) = ((it) != _ring_head_##it ? (it)->prev : nullptr))
+#define RING_LIST_FOREACH_REVERSE(head, it)                                                       \
+  safe_for (typeof((head)) it = ((head) != NULL ? (head)->prev : NULL), _ring_head_##it = (head); \
+            (it) != NULL;                                                                         \
+            (it) = ((it) != _ring_head_##it ? (it)->prev : NULL))
 
 // =========================================================================
 c_end;

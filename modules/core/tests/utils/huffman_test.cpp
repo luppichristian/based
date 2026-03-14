@@ -71,7 +71,7 @@ TEST(utils_huffman_test, single_symbol_tree_decodes_without_consuming_bits) {
 
   u8 decoded_symbol = 0;
   sz next_bit_offset = 99;
-  ASSERT_TRUE(huffman_tree_decode_symbol(&tree, buffer_from(nullptr, 0), 99, &decoded_symbol, &next_bit_offset) != 0);
+  ASSERT_TRUE(huffman_tree_decode_symbol(&tree, buffer_from(NULL, 0), 99, &decoded_symbol, &next_bit_offset) != 0);
   EXPECT_EQ(7U, decoded_symbol);
   EXPECT_EQ(99U, next_bit_offset);
 }

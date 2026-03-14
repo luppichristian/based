@@ -105,7 +105,7 @@ TEST(threads_mutex_test, recursive_lock_by_different_thread) {
   EXPECT_EQ(0, result);
 
   atomic_u32_set(&done, 1);
-  thread_join(thd, nullptr);
+  thread_join(thd, NULL);
 
   EXPECT_NE(0, mutex_destroy(mtx));
 }
@@ -121,8 +121,8 @@ TEST(threads_mutex_test, critical_section_protection) {
   EXPECT_NE(0, thread_is_valid(thd1));
   EXPECT_NE(0, thread_is_valid(thd2));
 
-  thread_join(thd1, nullptr);
-  thread_join(thd2, nullptr);
+  thread_join(thd1, NULL);
+  thread_join(thd2, NULL);
 
   EXPECT_EQ(iterations * 2, counter);
   EXPECT_NE(0, mutex_destroy(mtx));

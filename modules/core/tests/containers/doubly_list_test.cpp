@@ -10,15 +10,15 @@ struct list_node {
 };
 
 TEST(containers_doubly_list_test, empty_macro) {
-  struct list_node* head = nullptr;
-  struct list_node* tail = nullptr;
+  struct list_node* head = NULL;
+  struct list_node* tail = NULL;
 
   EXPECT_NE(0, DOUBLY_LIST_EMPTY(head, tail));
 }
 
 TEST(containers_doubly_list_test, push_front) {
-  struct list_node* head = nullptr;
-  struct list_node* tail = nullptr;
+  struct list_node* head = NULL;
+  struct list_node* tail = NULL;
 
   struct list_node node1 = {0};
   node1.value = 1;
@@ -38,8 +38,8 @@ TEST(containers_doubly_list_test, push_front) {
 }
 
 TEST(containers_doubly_list_test, push_back) {
-  struct list_node* head = nullptr;
-  struct list_node* tail = nullptr;
+  struct list_node* head = NULL;
+  struct list_node* tail = NULL;
 
   struct list_node node1 = {0};
   node1.value = 1;
@@ -57,8 +57,8 @@ TEST(containers_doubly_list_test, push_back) {
 }
 
 TEST(containers_doubly_list_test, pop_front) {
-  struct list_node* head = nullptr;
-  struct list_node* tail = nullptr;
+  struct list_node* head = NULL;
+  struct list_node* tail = NULL;
 
   struct list_node node1 = {0};
   struct list_node node2 = {0};
@@ -66,7 +66,7 @@ TEST(containers_doubly_list_test, pop_front) {
   DOUBLY_LIST_PUSH_BACK(head, tail, &node1);
   DOUBLY_LIST_PUSH_BACK(head, tail, &node2);
 
-  struct list_node* popped = nullptr;
+  struct list_node* popped = NULL;
   DOUBLY_LIST_POP_FRONT(head, tail, popped);
   EXPECT_EQ(&node1, popped);
   EXPECT_EQ(&node2, head);
@@ -79,8 +79,8 @@ TEST(containers_doubly_list_test, pop_front) {
 }
 
 TEST(containers_doubly_list_test, pop_back) {
-  struct list_node* head = nullptr;
-  struct list_node* tail = nullptr;
+  struct list_node* head = NULL;
+  struct list_node* tail = NULL;
 
   struct list_node node1 = {0};
   struct list_node node2 = {0};
@@ -88,7 +88,7 @@ TEST(containers_doubly_list_test, pop_back) {
   DOUBLY_LIST_PUSH_BACK(head, tail, &node1);
   DOUBLY_LIST_PUSH_BACK(head, tail, &node2);
 
-  struct list_node* popped = nullptr;
+  struct list_node* popped = NULL;
   DOUBLY_LIST_POP_BACK(head, tail, popped);
   EXPECT_EQ(&node2, popped);
   EXPECT_EQ(&node1, tail);
@@ -100,8 +100,8 @@ TEST(containers_doubly_list_test, pop_back) {
 }
 
 TEST(containers_doubly_list_test, remove) {
-  struct list_node* head = nullptr;
-  struct list_node* tail = nullptr;
+  struct list_node* head = NULL;
+  struct list_node* tail = NULL;
 
   struct list_node node1 = {0};
   struct list_node node2 = {0};
@@ -123,8 +123,8 @@ TEST(containers_doubly_list_test, remove) {
 }
 
 TEST(containers_doubly_list_test, insert_after) {
-  struct list_node* head = nullptr;
-  struct list_node* tail = nullptr;
+  struct list_node* head = NULL;
+  struct list_node* tail = NULL;
 
   struct list_node node1 = {0};
   struct list_node node2 = {0};
@@ -139,8 +139,8 @@ TEST(containers_doubly_list_test, insert_after) {
 }
 
 TEST(containers_doubly_list_test, insert_before) {
-  struct list_node* head = nullptr;
-  struct list_node* tail = nullptr;
+  struct list_node* head = NULL;
+  struct list_node* tail = NULL;
 
   struct list_node node1 = {0};
   struct list_node node2 = {0};
@@ -155,8 +155,8 @@ TEST(containers_doubly_list_test, insert_before) {
 }
 
 TEST(containers_doubly_list_test, count) {
-  struct list_node* head = nullptr;
-  struct list_node* tail = nullptr;
+  struct list_node* head = NULL;
+  struct list_node* tail = NULL;
   sz count = 0;
 
   DOUBLY_LIST_COUNT(head, tail, count);
@@ -173,8 +173,8 @@ TEST(containers_doubly_list_test, count) {
 }
 
 TEST(containers_doubly_list_test, head_tail) {
-  struct list_node* head = nullptr;
-  struct list_node* tail = nullptr;
+  struct list_node* head = NULL;
+  struct list_node* tail = NULL;
 
   struct list_node node1 = {0};
   struct list_node node2 = {0};
@@ -187,8 +187,8 @@ TEST(containers_doubly_list_test, head_tail) {
 }
 
 TEST(containers_doubly_list_test, foreach) {
-  struct list_node* head = nullptr;
-  struct list_node* tail = nullptr;
+  struct list_node* head = NULL;
+  struct list_node* tail = NULL;
 
   struct list_node node1 = {0};
   struct list_node node2 = {0};
@@ -211,8 +211,8 @@ TEST(containers_doubly_list_test, foreach) {
 }
 
 TEST(containers_doubly_list_test, foreach_reverse) {
-  struct list_node* head = nullptr;
-  struct list_node* tail = nullptr;
+  struct list_node* head = NULL;
+  struct list_node* tail = NULL;
 
   struct list_node node1 = {0};
   struct list_node node2 = {0};

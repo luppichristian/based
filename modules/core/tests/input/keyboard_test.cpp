@@ -18,7 +18,7 @@ TEST(input_keyboard_test, invalid_keys_and_basic_queries) {
 
 TEST(input_keyboard_test, primary_device_matches_availability_expectations) {
   device out_id = keyboard_get_primary_device();
-  if (out_id != nullptr) {
+  if (out_id != NULL) {
     EXPECT_TRUE(device_is_valid(out_id) != 0);
     EXPECT_EQ(DEVICE_TYPE_KEYBOARD, devices_get_type(out_id));
   }

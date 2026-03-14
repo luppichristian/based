@@ -4,8 +4,8 @@
 #pragma once
 
 #include "basic/primitive_types.h"
-#include "basic/utility_defines.h"
 #include "basic/safe.h"
+#include "basic/utility_defines.h"
 
 // =========================================================================
 c_begin;
@@ -24,31 +24,31 @@ Example:
   } job_node;
 */
 
-#define DOUBLY_LIST_EMPTY(head, tail) ((head) == nullptr)
+#define DOUBLY_LIST_EMPTY(head, tail) ((head) == NULL)
 
-#define DOUBLY_LIST_COUNT(head, tail, count) stmt(                             \
-    (void)(tail);                                                              \
-    (count) = 0;                                                               \
-    safe_for (typeof(head) _node = (head); _node != nullptr; _node = _node->next) { \
-      (count)++;                                                               \
+#define DOUBLY_LIST_COUNT(head, tail, count) stmt(                               \
+    (void)(tail);                                                                \
+    (count) = 0;                                                                 \
+    safe_for (typeof(head) _node = (head); _node != NULL; _node = _node->next) { \
+      (count)++;                                                                 \
     })
 
 #define DOUBLY_LIST_HEAD(head, tail) (head)
 #define DOUBLY_LIST_TAIL(head, tail) (tail)
 
 #define DOUBLY_LIST_PUSH_FRONT(head, tail, node) stmt( \
-    (node)->prev = nullptr;                            \
+    (node)->prev = NULL;                               \
     (node)->next = (head);                             \
-    if ((head) != nullptr) {                           \
+    if ((head) != NULL) {                              \
       (head)->prev = (node);                           \
     } else {                                           \
       (tail) = (node);                                 \
     }(head) = (node);)
 
 #define DOUBLY_LIST_PUSH_BACK(head, tail, node) stmt( \
-    (node)->next = nullptr;                           \
+    (node)->next = NULL;                              \
     (node)->prev = (tail);                            \
-    if ((tail) != nullptr) {                          \
+    if ((tail) != NULL) {                             \
       (tail)->next = (node);                          \
     } else {                                          \
       (head) = (node);                                \
@@ -56,46 +56,46 @@ Example:
 
 #define DOUBLY_LIST_POP_FRONT(head, tail, node) stmt( \
     (node) = (head);                                  \
-    if ((head) != nullptr) {                          \
+    if ((head) != NULL) {                             \
       (head) = (head)->next;                          \
-      if ((head) != nullptr) {                        \
-        (head)->prev = nullptr;                       \
+      if ((head) != NULL) {                           \
+        (head)->prev = NULL;                          \
       } else {                                        \
-        (tail) = nullptr;                             \
+        (tail) = NULL;                                \
       }                                               \
-      (node)->next = nullptr;                         \
+      (node)->next = NULL;                            \
     })
 
 #define DOUBLY_LIST_POP_BACK(head, tail, node) stmt( \
     (node) = (tail);                                 \
-    if ((tail) != nullptr) {                         \
+    if ((tail) != NULL) {                            \
       (tail) = (tail)->prev;                         \
-      if ((tail) != nullptr) {                       \
-        (tail)->next = nullptr;                      \
+      if ((tail) != NULL) {                          \
+        (tail)->next = NULL;                         \
       } else {                                       \
-        (head) = nullptr;                            \
+        (head) = NULL;                               \
       }                                              \
-      (node)->prev = nullptr;                        \
+      (node)->prev = NULL;                           \
     })
 
 #define DOUBLY_LIST_REMOVE(head, tail, node) stmt( \
-    if ((node)->prev != nullptr) {                 \
+    if ((node)->prev != NULL) {                    \
       (node)->prev->next = (node)->next;           \
     } else {                                       \
       (head) = (node)->next;                       \
-    } if ((node)->next != nullptr) {               \
+    } if ((node)->next != NULL) {                  \
       (node)->next->prev = (node)->prev;           \
     } else {                                       \
       (tail) = (node)->prev;                       \
     }(node)                                        \
-        ->next = nullptr;                          \
-    (node)->prev = nullptr;)
+        ->next = NULL;                             \
+    (node)->prev = NULL;)
 
 #define DOUBLY_LIST_INSERT_AFTER(head, tail, after, node) stmt( \
     (void)(head);                                               \
     (node)->prev = (after);                                     \
     (node)->next = (after)->next;                               \
-    if ((after)->next != nullptr) {                             \
+    if ((after)->next != NULL) {                                \
       (after)->next->prev = (node);                             \
     } else {                                                    \
       (tail) = (node);                                          \
@@ -106,7 +106,7 @@ Example:
     (void)(tail);                                                 \
     (node)->next = (before);                                      \
     (node)->prev = (before)->prev;                                \
-    if ((before)->prev != nullptr) {                              \
+    if ((before)->prev != NULL) {                                 \
       (before)->prev->next = (node);                              \
     } else {                                                      \
       (head) = (node);                                            \
@@ -114,10 +114,10 @@ Example:
         ->prev = (node);)
 
 #define DOUBLY_LIST_FOREACH(head, tail, it) \
-  safe_for (typeof((head)) it = (head); (it) != nullptr; (it) = (it)->next)
+  safe_for (typeof((head)) it = (head); (it) != NULL; (it) = (it)->next)
 
 #define DOUBLY_LIST_FOREACH_REVERSE(head, tail, it) \
-  safe_for (typeof((tail)) it = (tail); (it) != nullptr; (it) = (it)->prev)
+  safe_for (typeof((tail)) it = (tail); (it) != NULL; (it) = (it)->prev)
 
 // =========================================================================
 c_end;

@@ -94,7 +94,7 @@ TEST(threads_condvar_test, signal_wakes_one) {
   condvar_signal(cond);
   mutex_unlock(mtx);
 
-  thread_join(thd, nullptr);
+  thread_join(thd, NULL);
 
   EXPECT_NE(0, condvar_destroy(cond));
   EXPECT_NE(0, mutex_destroy(mtx));
@@ -125,7 +125,7 @@ TEST(threads_condvar_test, broadcast_wakes_all) {
   mutex_unlock(mtx);
 
   safe_for (i32 i = 0; i < num_waiters; i++) {
-    thread_join(threads[i], nullptr);
+    thread_join(threads[i], NULL);
   }
 
   EXPECT_NE(0, condvar_destroy(cond));
@@ -168,7 +168,7 @@ TEST(threads_condvar_test, producer_consumer) {
     mutex_unlock(mtx);
   }
 
-  thread_join(producer, nullptr);
+  thread_join(producer, NULL);
 
   EXPECT_EQ(9, last_received);
 

@@ -34,7 +34,7 @@ TEST(memory_allocator_test, create_default) {
 
 TEST(memory_allocator_test, custom_callbacks) {
   allocator alloc = {0};
-  alloc.user_data = nullptr;
+  alloc.user_data = NULL;
   alloc.alloc_fn = test_alloc;
   alloc.dealloc_fn = test_free;
   test_allocated_size = 0;

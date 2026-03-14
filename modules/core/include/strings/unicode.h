@@ -72,42 +72,42 @@ func sz utf16_codepoint_count(cstr16 src, sz src_size);
 // =========================================================================
 
 // Converts the UTF-8 sequence [src, src + src_size) to UTF-16.
-// Writes at most dst_cap c16 units into dst. If dst is nullptr, only counts output units.
-// Returns the number of c16 units written (or required when dst is nullptr).
+// Writes at most dst_cap c16 units into dst. If dst is NULL, only counts output units.
+// Returns the number of c16 units written (or required when dst is NULL).
 // Invalid sequences are replaced with UNICODE_REPLACEMENT_CHAR.
 func sz utf8_to_utf16(cstr8 src, sz src_size, c16* dst, sz dst_cap);
 
 // Converts the UTF-8 sequence [src, src + src_size) to UTF-32.
-// Writes at most dst_cap c32 units into dst. If dst is nullptr, only counts output units.
-// Returns the number of c32 units written (or required when dst is nullptr).
+// Writes at most dst_cap c32 units into dst. If dst is NULL, only counts output units.
+// Returns the number of c32 units written (or required when dst is NULL).
 // Invalid sequences are replaced with UNICODE_REPLACEMENT_CHAR.
 func sz utf8_to_utf32(cstr8 src, sz src_size, c32* dst, sz dst_cap);
 
 // Converts the UTF-16 sequence [src, src + src_size) to UTF-8.
 // src_size is measured in c16 units.
-// Writes at most dst_cap bytes into dst. If dst is nullptr, only counts output bytes.
-// Returns the number of bytes written (or required when dst is nullptr).
+// Writes at most dst_cap bytes into dst. If dst is NULL, only counts output bytes.
+// Returns the number of bytes written (or required when dst is NULL).
 // Invalid sequences are replaced with UNICODE_REPLACEMENT_CHAR.
 func sz utf16_to_utf8(cstr16 src, sz src_size, c8* dst, sz dst_cap);
 
 // Converts the UTF-16 sequence [src, src + src_size) to UTF-32.
 // src_size is measured in c16 units.
-// Writes at most dst_cap c32 units into dst. If dst is nullptr, only counts output units.
-// Returns the number of c32 units written (or required when dst is nullptr).
+// Writes at most dst_cap c32 units into dst. If dst is NULL, only counts output units.
+// Returns the number of c32 units written (or required when dst is NULL).
 // Invalid sequences are replaced with UNICODE_REPLACEMENT_CHAR.
 func sz utf16_to_utf32(cstr16 src, sz src_size, c32* dst, sz dst_cap);
 
 // Converts the UTF-32 sequence [src, src + src_size) to UTF-8.
 // src_size is measured in c32 units.
-// Writes at most dst_cap bytes into dst. If dst is nullptr, only counts output bytes.
-// Returns the number of bytes written (or required when dst is nullptr).
+// Writes at most dst_cap bytes into dst. If dst is NULL, only counts output bytes.
+// Returns the number of bytes written (or required when dst is NULL).
 // Invalid codepoints are replaced with UNICODE_REPLACEMENT_CHAR.
 func sz utf32_to_utf8(cstr32 src, sz src_size, c8* dst, sz dst_cap);
 
 // Converts the UTF-32 sequence [src, src + src_size) to UTF-16.
 // src_size is measured in c32 units.
-// Writes at most dst_cap c16 units into dst. If dst is nullptr, only counts output units.
-// Returns the number of c16 units written (or required when dst is nullptr).
+// Writes at most dst_cap c16 units into dst. If dst is NULL, only counts output units.
+// Returns the number of c16 units written (or required when dst is NULL).
 // Invalid codepoints are replaced with UNICODE_REPLACEMENT_CHAR.
 func sz utf32_to_utf16(cstr32 src, sz src_size, c16* dst, sz dst_cap);
 

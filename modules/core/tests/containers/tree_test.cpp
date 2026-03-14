@@ -24,7 +24,7 @@ TEST(containers_tree_test, next_preorder) {
   child1.next_sibling = &child2;
   child2.prev_sibling = &child1;
 
-  struct tree_node* next = nullptr;
+  struct tree_node* next = NULL;
 
   TREE_NEXT_PREORDER(&root, &root, next);
   EXPECT_EQ(&child1, next);

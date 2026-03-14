@@ -1,7 +1,7 @@
 // MIT License
 // Copyright (c) 2026 Christian Luppi
 
-#define SDL_COMPILE_TIME_ASSERT(name, x) static_assert(x)
+#define SDL_COMPILE_TIME_ASSERT(name, x) _Static_assert(x, #name)
 
 #define SDL_MAIN_HANDLED 1
 

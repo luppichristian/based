@@ -55,10 +55,10 @@ TEST(interface_icon_test, invalid_icon_queries_are_safe) {
   i32 value = 0;
   icon_system system_icon = ICON_SYSTEM_DEFAULT;
 
-  EXPECT_EQ(nullptr, icon_create_rgba(0, 0, nullptr, 0, 0));
+  EXPECT_EQ(nullptr, icon_create_rgba(0, 0, NULL, 0, 0));
   EXPECT_EQ(nullptr, icon_create_system((icon_system)99));
-  EXPECT_TRUE(icon_destroy(nullptr) == 0);
-  EXPECT_TRUE(icon_get_size(nullptr, &value, &value) == 0);
-  EXPECT_TRUE(icon_get_hotspot(nullptr, &value, &value) == 0);
-  EXPECT_TRUE(icon_get_system(nullptr, &system_icon) == 0);
+  EXPECT_TRUE(icon_destroy(NULL) == 0);
+  EXPECT_TRUE(icon_get_size(NULL, &value, &value) == 0);
+  EXPECT_TRUE(icon_get_hotspot(NULL, &value, &value) == 0);
+  EXPECT_TRUE(icon_get_system(NULL, &system_icon) == 0);
 }

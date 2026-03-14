@@ -41,10 +41,10 @@ func b32 buffer_cmp(buffer a, buffer b);
 // Ignores size, compares up to the smaller size of the two buffers.
 func b32 buffer_cmp_common(buffer a, buffer b);
 
-// Returns a pointer to the data at the specified offset, or nullptr if the offset is out of bounds.
+// Returns a pointer to the data at the specified offset, or NULL if the offset is out of bounds.
 func void* buffer_get_ptr(buffer buff, sz offset);
 
-// Returns a pointer to the data at the specified offset, or nullptr if the offset is out of bounds.
+// Returns a pointer to the data at the specified offset, or NULL if the offset is out of bounds.
 // Also checks that the read size does not exceed the buffer size.
 func void* buffer_get_data(buffer buff, sz offset, sz read_size);
 

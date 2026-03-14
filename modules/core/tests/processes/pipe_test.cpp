@@ -5,19 +5,19 @@
 
 #if defined(_WIN32)
 #  define CAT_CMD  "cmd.exe"
-#  define CAT_ARGS "cmd.exe", "/c", "more", nullptr
+#  define CAT_ARGS "cmd.exe", "/c", "more", NULL
 #else
 #  define CAT_CMD  "/bin/cat"
-#  define CAT_ARGS "/bin/cat", nullptr
+#  define CAT_ARGS "/bin/cat", NULL
 #endif
 
 TEST(processes_pipe_test, stdin_invalid) {
   process_options opts = process_options_default();
 
 #if defined(_WIN32)
-  cstr8 const args[] = {"cmd.exe", "/c", "exit 0", nullptr};
+  cstr8 const args[] = {"cmd.exe", "/c", "exit 0", NULL};
 #else
-  cstr8 const args[] = {"/bin/true", nullptr};
+  cstr8 const args[] = {"/bin/true", NULL};
 #endif
 
   process prc = process_create_with(args, opts);
@@ -26,7 +26,7 @@ TEST(processes_pipe_test, stdin_invalid) {
   pipe pin = pipe_stdin(prc);
   EXPECT_EQ(nullptr, pin);
 
-  process_wait(prc, 1, nullptr);
+  process_wait(prc, 1, NULL);
   process_destroy(prc);
 }
 
@@ -35,9 +35,9 @@ TEST(processes_pipe_test, stdout_valid) {
   opts.pipe_stdout = 1;
 
 #if defined(_WIN32)
-  cstr8 const args[] = {"cmd.exe", "/c", "echo test", nullptr};
+  cstr8 const args[] = {"cmd.exe", "/c", "echo test", NULL};
 #else
-  cstr8 const args[] = {"/bin/echo", "test", nullptr};
+  cstr8 const args[] = {"/bin/echo", "test", NULL};
 #endif
 
   process prc = process_create_with(args, opts);
@@ -47,7 +47,7 @@ TEST(processes_pipe_test, stdout_valid) {
   EXPECT_NE(nullptr, pout);
   EXPECT_NE(0, pipe_is_valid(pout));
 
-  process_wait(prc, 1, nullptr);
+  process_wait(prc, 1, NULL);
   process_destroy(prc);
 }
 
@@ -56,9 +56,9 @@ TEST(processes_pipe_test, stderr_valid) {
   opts.pipe_stderr = 1;
 
 #if defined(_WIN32)
-  cstr8 const args[] = {"cmd.exe", "/c", "echo test 1>&2", nullptr};
+  cstr8 const args[] = {"cmd.exe", "/c", "echo test 1>&2", NULL};
 #else
-  cstr8 const args[] = {"/bin/sh", "-c", "echo test >&2", nullptr};
+  cstr8 const args[] = {"/bin/sh", "-c", "echo test >&2", NULL};
 #endif
 
   process prc = process_create_with(args, opts);
@@ -68,7 +68,7 @@ TEST(processes_pipe_test, stderr_valid) {
   EXPECT_NE(nullptr, perr);
   EXPECT_NE(0, pipe_is_valid(perr));
 
-  process_wait(prc, 1, nullptr);
+  process_wait(prc, 1, NULL);
   process_destroy(prc);
 }
 
@@ -77,9 +77,9 @@ TEST(processes_pipe_test, pipe_read) {
   opts.pipe_stdout = 1;
 
 #if defined(_WIN32)
-  cstr8 const args[] = {"whoami.exe", nullptr};
+  cstr8 const args[] = {"whoami.exe", NULL};
 #else
-  cstr8 const args[] = {"/bin/echo", "pipe", nullptr};
+  cstr8 const args[] = {"/bin/echo", "pipe", NULL};
 #endif
 
   process prc = process_create_with(args, opts);
@@ -121,7 +121,7 @@ TEST(processes_pipe_test, pipe_write) {
 
   pipe_close(pin);
 
-  process_wait(prc, 1, nullptr);
+  process_wait(prc, 1, NULL);
   process_destroy(prc);
 }
 
@@ -130,9 +130,9 @@ TEST(processes_pipe_test, pipe_poll_readable) {
   opts.pipe_stdout = 1;
 
 #if defined(_WIN32)
-  cstr8 const args[] = {"cmd.exe", "/c", "echo test", nullptr};
+  cstr8 const args[] = {"cmd.exe", "/c", "echo test", NULL};
 #else
-  cstr8 const args[] = {"/bin/echo", "test", nullptr};
+  cstr8 const args[] = {"/bin/echo", "test", NULL};
 #endif
 
   process prc = process_create_with(args, opts);
@@ -144,7 +144,7 @@ TEST(processes_pipe_test, pipe_poll_readable) {
   b32 readable = pipe_poll_readable(pout, 1000);
   EXPECT_NE(0, readable);
 
-  process_wait(prc, 1, nullptr);
+  process_wait(prc, 1, NULL);
   process_destroy(prc);
 }
 

@@ -5,7 +5,7 @@
 
 namespace {
   b32 archive_test_iterate_count(const archive_entry_info* info_ptr, void* user_data) {
-    if (info_ptr == nullptr || user_data == nullptr) {
+    if (info_ptr == NULL || user_data == NULL) {
       return 0;
     }
     sz* count_ptr = (sz*)user_data;

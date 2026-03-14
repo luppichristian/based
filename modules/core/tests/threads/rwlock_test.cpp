@@ -155,7 +155,7 @@ TEST(threads_rwlock_test, writer_excludes_reader) {
   EXPECT_EQ(0, result);
 
   atomic_u32_set(&reader_can_proceed, 1);
-  thread_join(writer, nullptr);
+  thread_join(writer, NULL);
 
   result = rwlock_try_read_lock(lock);
   EXPECT_NE(0, result);

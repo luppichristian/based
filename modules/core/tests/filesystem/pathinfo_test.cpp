@@ -46,6 +46,6 @@ TEST(filesystem_pathinfo_test, invalid_inputs_return_failure) {
   path bad_path = path_from_cstr("");
   pathinfo info_val = {};
   EXPECT_TRUE(pathinfo_get(&bad_path, &info_val) == 0);
-  EXPECT_TRUE(pathinfo_get(nullptr, &info_val) == 0);
-  EXPECT_TRUE(pathinfo_get(&bad_path, nullptr) == 0);
+  EXPECT_TRUE(pathinfo_get(NULL, &info_val) == 0);
+  EXPECT_TRUE(pathinfo_get(&bad_path, NULL) == 0);
 }

@@ -21,19 +21,19 @@ namespace {
 
 TEST(containers_sort_test, check_unsorted) {
   i32 arr[] = {3, 1, 2};
-  b32 result = sort_check(arr, 3, sizeof(i32), compare_int, nullptr);
+  b32 result = sort_check(arr, 3, sizeof(i32), compare_int, NULL);
   EXPECT_EQ(0, result);
 }
 
 TEST(containers_sort_test, check_sorted) {
   i32 arr[] = {1, 2, 3};
-  b32 result = sort_check(arr, 3, sizeof(i32), compare_int, nullptr);
+  b32 result = sort_check(arr, 3, sizeof(i32), compare_int, NULL);
   EXPECT_NE(0, result);
 }
 
 TEST(containers_sort_test, bubble_sort) {
   i32 arr[] = {3, 1, 4, 1, 5, 9, 2, 6};
-  sz result = sort_bubble(arr, 8, sizeof(i32), compare_int, nullptr);
+  sz result = sort_bubble(arr, 8, sizeof(i32), compare_int, NULL);
   EXPECT_EQ(8U, result);
 
   EXPECT_EQ(1, arr[0]);
@@ -48,7 +48,7 @@ TEST(containers_sort_test, bubble_sort) {
 
 TEST(containers_sort_test, bubble_sort_already_sorted) {
   i32 arr[] = {1, 2, 3, 4, 5};
-  sz result = sort_bubble(arr, 5, sizeof(i32), compare_int, nullptr);
+  sz result = sort_bubble(arr, 5, sizeof(i32), compare_int, NULL);
   EXPECT_EQ(5U, result);
   EXPECT_EQ(1, arr[0]);
   EXPECT_EQ(5, arr[4]);
@@ -56,7 +56,7 @@ TEST(containers_sort_test, bubble_sort_already_sorted) {
 
 TEST(containers_sort_test, selection_sort) {
   i32 arr[] = {3, 1, 4, 1, 5, 9, 2, 6};
-  sz result = sort_selection(arr, 8, sizeof(i32), compare_int, nullptr);
+  sz result = sort_selection(arr, 8, sizeof(i32), compare_int, NULL);
   EXPECT_EQ(8U, result);
 
   EXPECT_EQ(1, arr[0]);
@@ -71,7 +71,7 @@ TEST(containers_sort_test, selection_sort) {
 
 TEST(containers_sort_test, insertion_sort) {
   i32 arr[] = {3, 1, 4, 1, 5, 9, 2, 6};
-  sz result = sort_insertion(arr, 8, sizeof(i32), compare_int, nullptr);
+  sz result = sort_insertion(arr, 8, sizeof(i32), compare_int, NULL);
   EXPECT_EQ(8U, result);
 
   EXPECT_EQ(1, arr[0]);
@@ -87,7 +87,7 @@ TEST(containers_sort_test, insertion_sort) {
 TEST(containers_sort_test, quick_sort) {
   allocator zero_alloc = {0};
   i32 arr[] = {3, 1, 4, 1, 5, 9, 2, 6};
-  sz result = sort_quick(arr, 8, sizeof(i32), compare_int, nullptr, zero_alloc);
+  sz result = sort_quick(arr, 8, sizeof(i32), compare_int, NULL, zero_alloc);
   EXPECT_EQ(8U, result);
 
   EXPECT_EQ(1, arr[0]);
@@ -103,7 +103,7 @@ TEST(containers_sort_test, quick_sort) {
 TEST(containers_sort_test, merge_sort) {
   allocator zero_alloc = {0};
   i32 arr[] = {3, 1, 4, 1, 5, 9, 2, 6};
-  sz result = sort_merge(arr, 8, sizeof(i32), compare_int, nullptr, zero_alloc);
+  sz result = sort_merge(arr, 8, sizeof(i32), compare_int, NULL, zero_alloc);
   EXPECT_EQ(8U, result);
 
   EXPECT_EQ(1, arr[0]);
@@ -119,7 +119,7 @@ TEST(containers_sort_test, merge_sort) {
 TEST(containers_sort_test, reverse_sort) {
   allocator zero_alloc = {0};
   i32 arr[] = {1, 2, 3, 4, 5};
-  sz result = sort_quick(arr, 5, sizeof(i32), compare_int_reverse, nullptr, zero_alloc);
+  sz result = sort_quick(arr, 5, sizeof(i32), compare_int_reverse, NULL, zero_alloc);
   EXPECT_EQ(5U, result);
 
   EXPECT_EQ(5, arr[0]);
@@ -133,11 +133,11 @@ TEST(containers_sort_test, single_element) {
   allocator zero_alloc = {0};
   i32 arr[] = {42};
 
-  sz result = sort_bubble(arr, 1, sizeof(i32), compare_int, nullptr);
+  sz result = sort_bubble(arr, 1, sizeof(i32), compare_int, NULL);
   EXPECT_EQ(1U, result);
   EXPECT_EQ(42, arr[0]);
 
-  result = sort_quick(arr, 1, sizeof(i32), compare_int, nullptr, zero_alloc);
+  result = sort_quick(arr, 1, sizeof(i32), compare_int, NULL, zero_alloc);
   EXPECT_EQ(1U, result);
 }
 
@@ -145,10 +145,10 @@ TEST(containers_sort_test, empty_array) {
   allocator zero_alloc = {0};
   i32 arr[] = {0};
 
-  sz result = sort_bubble(arr, 0, sizeof(i32), compare_int, nullptr);
+  sz result = sort_bubble(arr, 0, sizeof(i32), compare_int, NULL);
   EXPECT_EQ(0U, result);
 
-  result = sort_quick(arr, 0, sizeof(i32), compare_int, nullptr, zero_alloc);
+  result = sort_quick(arr, 0, sizeof(i32), compare_int, NULL, zero_alloc);
   EXPECT_EQ(0U, result);
 }
 

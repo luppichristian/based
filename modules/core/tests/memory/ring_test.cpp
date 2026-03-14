@@ -5,7 +5,7 @@
 
 TEST(memory_ring_test, create_with_buffer) {
   u8 buf[256];
-  ring rng = ring_create(buf, sizeof(buf), nullptr);
+  ring rng = ring_create(buf, sizeof(buf), NULL);
   EXPECT_EQ(0U, ring_size(&rng));
   EXPECT_EQ(sizeof(buf), ring_capacity(&rng));
   EXPECT_EQ(sizeof(buf), ring_space(&rng));
@@ -14,7 +14,7 @@ TEST(memory_ring_test, create_with_buffer) {
 
 TEST(memory_ring_test, create_alloc) {
   allocator zero_alloc = {0};
-  ring rng = ring_create_alloc(zero_alloc, 256, nullptr);
+  ring rng = ring_create_alloc(zero_alloc, 256, NULL);
   EXPECT_EQ(0U, ring_size(&rng));
   EXPECT_EQ(256U, ring_capacity(&rng));
   ring_destroy(&rng);
@@ -22,7 +22,7 @@ TEST(memory_ring_test, create_alloc) {
 
 TEST(memory_ring_test, write_single) {
   u8 buf[256];
-  ring rng = ring_create(buf, sizeof(buf), nullptr);
+  ring rng = ring_create(buf, sizeof(buf), NULL);
   u8 data[] = {1, 2, 3, 4, 5};
   sz written = ring_write(&rng, data, sizeof(data));
   EXPECT_EQ(5U, written);
@@ -33,7 +33,7 @@ TEST(memory_ring_test, write_single) {
 
 TEST(memory_ring_test, write_overflow) {
   u8 buf[16];
-  ring rng = ring_create(buf, sizeof(buf), nullptr);
+  ring rng = ring_create(buf, sizeof(buf), NULL);
   u8 data[32];
   buffer_set8(buffer_from(data, sizeof(data)), 0xAB);
   sz written = ring_write(&rng, data, sizeof(data));
@@ -45,7 +45,7 @@ TEST(memory_ring_test, write_overflow) {
 
 TEST(memory_ring_test, read_basic) {
   u8 buf[256];
-  ring rng = ring_create(buf, sizeof(buf), nullptr);
+  ring rng = ring_create(buf, sizeof(buf), NULL);
   u8 write_data[] = {10, 20, 30, 40, 50};
   ring_write(&rng, write_data, sizeof(write_data));
 
@@ -63,7 +63,7 @@ TEST(memory_ring_test, read_basic) {
 
 TEST(memory_ring_test, read_partial) {
   u8 buf[256];
-  ring rng = ring_create(buf, sizeof(buf), nullptr);
+  ring rng = ring_create(buf, sizeof(buf), NULL);
   u8 write_data[] = {1, 2, 3, 4, 5};
   ring_write(&rng, write_data, sizeof(write_data));
 
@@ -78,7 +78,7 @@ TEST(memory_ring_test, read_partial) {
 
 TEST(memory_ring_test, peek) {
   u8 buf[256];
-  ring rng = ring_create(buf, sizeof(buf), nullptr);
+  ring rng = ring_create(buf, sizeof(buf), NULL);
   u8 write_data[] = {100, 101, 102, 103, 104};
   ring_write(&rng, write_data, sizeof(write_data));
 
@@ -97,7 +97,7 @@ TEST(memory_ring_test, peek) {
 
 TEST(memory_ring_test, skip) {
   u8 buf[256];
-  ring rng = ring_create(buf, sizeof(buf), nullptr);
+  ring rng = ring_create(buf, sizeof(buf), NULL);
   u8 write_data[] = {1, 2, 3, 4, 5};
   ring_write(&rng, write_data, sizeof(write_data));
 
@@ -115,7 +115,7 @@ TEST(memory_ring_test, skip) {
 
 TEST(memory_ring_test, clear) {
   u8 buf[256];
-  ring rng = ring_create(buf, sizeof(buf), nullptr);
+  ring rng = ring_create(buf, sizeof(buf), NULL);
   u8 data[] = {1, 2, 3};
   ring_write(&rng, data, sizeof(data));
   EXPECT_GT(ring_size(&rng), 0U);
@@ -128,7 +128,7 @@ TEST(memory_ring_test, clear) {
 
 TEST(memory_ring_test, wrap_around_write_read) {
   u8 buf[16];
-  ring rng = ring_create(buf, sizeof(buf), nullptr);
+  ring rng = ring_create(buf, sizeof(buf), NULL);
 
   u8 first[10];
   buffer_set8(buffer_from(first, 10), 0xAA);
@@ -155,7 +155,7 @@ TEST(memory_ring_test, wrap_around_write_read) {
 
 TEST(memory_ring_test, empty_read) {
   u8 buf[256];
-  ring rng = ring_create(buf, sizeof(buf), nullptr);
+  ring rng = ring_create(buf, sizeof(buf), NULL);
   u8 read_data[10] = {0xFF};
   sz read_count = ring_read(&rng, read_data, 10);
   EXPECT_EQ(0U, read_count);
@@ -164,7 +164,7 @@ TEST(memory_ring_test, empty_read) {
 
 TEST(memory_ring_test, empty_peek) {
   u8 buf[256];
-  ring rng = ring_create(buf, sizeof(buf), nullptr);
+  ring rng = ring_create(buf, sizeof(buf), NULL);
   u8 peek_data[10] = {0xFF};
   sz peek_count = ring_peek(&rng, peek_data, 10);
   EXPECT_EQ(0U, peek_count);

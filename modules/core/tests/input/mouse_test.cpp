@@ -13,7 +13,7 @@ TEST(input_mouse_test, invalid_buttons_and_state_queries_are_safe) {
 
 TEST(input_mouse_test, primary_device_query_is_consistent) {
   device out_id = mouse_get_primary_device();
-  if (out_id != nullptr) {
+  if (out_id != NULL) {
     EXPECT_TRUE(device_is_valid(out_id) != 0);
     EXPECT_EQ(DEVICE_TYPE_MOUSE, devices_get_type(out_id));
   }

@@ -22,7 +22,7 @@ namespace {
   }
 
   b32 directory_test_count_entries(const dir_entry* entry_ptr, void* user_data) {
-    if (entry_ptr == nullptr || user_data == nullptr) {
+    if (entry_ptr == NULL || user_data == NULL) {
       return 0;
     }
     sz* count_ptr = (sz*)user_data;

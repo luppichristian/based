@@ -5,7 +5,7 @@
 
 TEST(memory_scratch_test, begin_end_basic) {
   allocator zero_alloc = {0};
-  arena arn = arena_create(zero_alloc, nullptr, 4096);
+  arena arn = arena_create(zero_alloc, NULL, 4096);
 
   i32* val = arena_alloc_array(&arn, i32, 10);
   val[0] = 42;
@@ -31,7 +31,7 @@ TEST(memory_scratch_test, begin_end_basic) {
 
 TEST(memory_scratch_test, multiple_scratches) {
   allocator zero_alloc = {0};
-  arena arn = arena_create(zero_alloc, nullptr, 4096);
+  arena arn = arena_create(zero_alloc, NULL, 4096);
 
   i32* first = arena_alloc_array(&arn, i32, 5);
   first[0] = 1;
@@ -65,7 +65,7 @@ TEST(memory_scratch_test, multiple_scratches) {
 
 TEST(memory_scratch_test, scratch_on_empty_arena) {
   allocator zero_alloc = {0};
-  arena arn = arena_create(zero_alloc, nullptr, 4096);
+  arena arn = arena_create(zero_alloc, NULL, 4096);
 
   EXPECT_EQ(0U, arena_total_used(&arn));
 
@@ -85,7 +85,7 @@ TEST(memory_scratch_test, scratch_on_empty_arena) {
 
 TEST(memory_scratch_test, nested_allocations_released) {
   allocator zero_alloc = {0};
-  arena arn = arena_create(zero_alloc, nullptr, 4096);
+  arena arn = arena_create(zero_alloc, NULL, 4096);
 
   scratch scr = scratch_begin(&arn);
 
@@ -107,7 +107,7 @@ TEST(memory_scratch_test, nested_allocations_released) {
 
 TEST(memory_scratch_test, preserve_original_allocation) {
   allocator zero_alloc = {0};
-  arena arn = arena_create(zero_alloc, nullptr, 4096);
+  arena arn = arena_create(zero_alloc, NULL, 4096);
 
   u8* original = arena_alloc_array(&arn, u8, 100);
   buffer_set8(buffer_from(original, 100), 0xAA);

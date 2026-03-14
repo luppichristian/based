@@ -4,10 +4,10 @@
 #include "test_common.hpp"
 
 TEST(input_clipboard_test, invalid_arguments_and_basic_text_cycle) {
-  EXPECT_TRUE(clipboard_set_text(nullptr) == 0);
-  EXPECT_TRUE(clipboard_get_text(nullptr, 16) == 0);
-  EXPECT_TRUE(clipboard_set_data(nullptr, buffer_from(nullptr, 0)) == 0);
-  EXPECT_TRUE(clipboard_get_data(nullptr, buffer_from(nullptr, 0), nullptr) == 0);
+  EXPECT_TRUE(clipboard_set_text(NULL) == 0);
+  EXPECT_TRUE(clipboard_get_text(NULL, 16) == 0);
+  EXPECT_TRUE(clipboard_set_data(NULL, buffer_from(NULL, 0)) == 0);
+  EXPECT_TRUE(clipboard_get_data(NULL, buffer_from(NULL, 0), NULL) == 0);
 
   b32 set_ok = clipboard_set_text("based clipboard test");
   if (set_ok != 0) {
@@ -28,7 +28,7 @@ TEST(input_clipboard_test, generic_media_data_cycle) {
 
   ASSERT_TRUE(clipboard_set_data("image/png", buffer_from(media_bytes, size_of(media_bytes))) != 0);
   EXPECT_TRUE(clipboard_has_data("image/png") != 0);
-  EXPECT_TRUE(clipboard_get_data("image/png", buffer_from(nullptr, 0), &data_size) != 0);
+  EXPECT_TRUE(clipboard_get_data("image/png", buffer_from(NULL, 0), &data_size) != 0);
   EXPECT_EQ(size_of(media_bytes), data_size);
   EXPECT_TRUE(clipboard_get_data("image/png", buffer_from(tiny_bytes, size_of(tiny_bytes)), &data_size) == 0);
   EXPECT_EQ(size_of(media_bytes), data_size);

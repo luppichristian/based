@@ -137,7 +137,7 @@ TEST(strings_unicode_test, utf8_to_utf16_multibyte) {
 
 TEST(strings_unicode_test, utf8_to_utf16_count) {
   c8 src[] = "hello";
-  sz count = utf8_to_utf16(src, 5, nullptr, 0);
+  sz count = utf8_to_utf16(src, 5, NULL, 0);
   EXPECT_EQ(5U, count);
 }
 
@@ -160,7 +160,7 @@ TEST(strings_unicode_test, utf8_to_utf32_multibyte) {
 
 TEST(strings_unicode_test, utf8_to_utf32_count) {
   c8 src[] = "hello";
-  sz count = utf8_to_utf32(src, 5, nullptr, 0);
+  sz count = utf8_to_utf32(src, 5, NULL, 0);
   EXPECT_EQ(5U, count);
 }
 
@@ -190,7 +190,7 @@ TEST(strings_unicode_test, utf16_to_utf8_surrogate) {
 
 TEST(strings_unicode_test, utf16_to_utf8_count) {
   c16 src[] = {'h', 'e', 'l', 'l', 'o', 0};
-  sz count = utf16_to_utf8(src, 5, nullptr, 0);
+  sz count = utf16_to_utf8(src, 5, NULL, 0);
   EXPECT_EQ(5U, count);
 }
 
@@ -212,7 +212,7 @@ TEST(strings_unicode_test, utf16_to_utf32_surrogate) {
 
 TEST(strings_unicode_test, utf16_to_utf32_count) {
   c16 src[] = {'h', 'e', 'l', 'l', 'o', 0};
-  sz count = utf16_to_utf32(src, 5, nullptr, 0);
+  sz count = utf16_to_utf32(src, 5, NULL, 0);
   EXPECT_EQ(5U, count);
 }
 
@@ -242,7 +242,7 @@ TEST(strings_unicode_test, utf32_to_utf8_invalid) {
 
 TEST(strings_unicode_test, utf32_to_utf8_count) {
   c32 src[] = {'h', 'e', 'l', 'l', 'o', 0};
-  sz count = utf32_to_utf8(src, 5, nullptr, 0);
+  sz count = utf32_to_utf8(src, 5, NULL, 0);
   EXPECT_EQ(5U, count);
 }
 
@@ -273,6 +273,6 @@ TEST(strings_unicode_test, utf32_to_utf16_invalid) {
 
 TEST(strings_unicode_test, utf32_to_utf16_count) {
   c32 src[] = {'h', 'e', 'l', 'l', 'o', 0};
-  sz count = utf32_to_utf16(src, 5, nullptr, 0);
+  sz count = utf32_to_utf16(src, 5, NULL, 0);
   EXPECT_EQ(5U, count);
 }

@@ -9,21 +9,21 @@ TEST(input_camera_test, id_conversion_and_invalid_lifecycle_calls) {
   EXPECT_TRUE(camera_is_valid(cam_id) != 0);
   EXPECT_EQ((up)123, camera_to_native_id(cam_id));
 
-  EXPECT_TRUE(camera_is_valid(nullptr) == 0);
-  EXPECT_TRUE(camera_open(nullptr) == 0);
-  EXPECT_TRUE(camera_start(nullptr) == 0);
-  EXPECT_TRUE(camera_stop(nullptr) == 0);
-  EXPECT_TRUE(camera_close(nullptr) == 0);
+  EXPECT_TRUE(camera_is_valid(NULL) == 0);
+  EXPECT_TRUE(camera_open(NULL) == 0);
+  EXPECT_TRUE(camera_start(NULL) == 0);
+  EXPECT_TRUE(camera_stop(NULL) == 0);
+  EXPECT_TRUE(camera_close(NULL) == 0);
 
   buffer frame_buf = {};
-  EXPECT_TRUE(camera_read(nullptr, &frame_buf) == 0);
-  EXPECT_TRUE(frame_buf.ptr == nullptr);
+  EXPECT_TRUE(camera_read(NULL, &frame_buf) == 0);
+  EXPECT_TRUE(frame_buf.ptr == NULL);
   EXPECT_EQ(0U, frame_buf.size);
 }
 
 TEST(input_camera_test, enumeration_consistency_when_devices_exist) {
   sz count_val = camera_get_total_count();
-  camera out_id = nullptr;
+  camera out_id = NULL;
   if (count_val == 0) {
     EXPECT_TRUE(camera_get_id(0, &out_id) == 0);
     return;

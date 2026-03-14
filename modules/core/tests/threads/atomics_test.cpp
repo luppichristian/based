@@ -195,7 +195,7 @@ TEST(threads_atomics_test, u64_cmpex) {
 }
 
 TEST(threads_atomics_test, ptr_get_set) {
-  atomic_ptr atm = {nullptr};
+  atomic_ptr atm = {NULL};
   EXPECT_EQ(nullptr, atomic_ptr_get(&atm));
 
   int value = 42;
@@ -253,7 +253,7 @@ TEST(threads_atomics_test, concurrent_increment) {
   }
 
   safe_for (u32 idx = 0; idx < num_threads; idx++) {
-    thread_join(threads[idx], nullptr);
+    thread_join(threads[idx], NULL);
   }
 
   EXPECT_EQ(num_threads * increments_per_thread, atomic_u32_get(&counter));

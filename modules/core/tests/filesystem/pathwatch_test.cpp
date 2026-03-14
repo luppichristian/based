@@ -6,21 +6,21 @@
 TEST(filesystem_pathwatch_test, invalid_arguments_are_rejected) {
   path watch_path = path_from_cstr(".");
   path out_path = path_from_cstr("");
-  EXPECT_TRUE(pathwatch_start(nullptr) == 0);
-  EXPECT_TRUE(pathwatch_stop(nullptr) == 0);
-  EXPECT_TRUE(pathwatch_pause(nullptr) == 0);
-  EXPECT_TRUE(pathwatch_resume(nullptr) == 0);
-  EXPECT_TRUE(pathwatch_add(nullptr, &watch_path, 1) == 0);
-  EXPECT_TRUE(pathwatch_remove(nullptr, 1) == 0);
-  EXPECT_TRUE(pathwatch_remove_path(nullptr, &watch_path) == 0);
+  EXPECT_TRUE(pathwatch_start(NULL) == 0);
+  EXPECT_TRUE(pathwatch_stop(NULL) == 0);
+  EXPECT_TRUE(pathwatch_pause(NULL) == 0);
+  EXPECT_TRUE(pathwatch_resume(NULL) == 0);
+  EXPECT_TRUE(pathwatch_add(NULL, &watch_path, 1) == 0);
+  EXPECT_TRUE(pathwatch_remove(NULL, 1) == 0);
+  EXPECT_TRUE(pathwatch_remove_path(NULL, &watch_path) == 0);
   EXPECT_TRUE(pathwatch_get_path(0, &out_path) == 0);
-  EXPECT_TRUE(pathwatch_follow_symlinks(nullptr, 1) == 0);
-  EXPECT_TRUE(pathwatch_allow_out_of_scope_links(nullptr, 1) == 0);
+  EXPECT_TRUE(pathwatch_follow_symlinks(NULL, 1) == 0);
+  EXPECT_TRUE(pathwatch_allow_out_of_scope_links(NULL, 1) == 0);
 }
 
 TEST(filesystem_pathwatch_test, lifecycle_controls_work_when_watcher_is_created) {
   pathwatch watcher = pathwatch_create(1);
-  if (watcher.native_handle == nullptr) {
+  if (watcher.native_handle == NULL) {
     GTEST_SKIP() << "pathwatch backend not available";
   }
 

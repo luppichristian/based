@@ -10,13 +10,13 @@ struct ring_node {
 };
 
 TEST(containers_ring_list_test, empty_macro) {
-  struct ring_node* head = nullptr;
+  struct ring_node* head = NULL;
 
   EXPECT_NE(0, RING_LIST_EMPTY(head));
 }
 
 TEST(containers_ring_list_test, push_front) {
-  struct ring_node* head = nullptr;
+  struct ring_node* head = NULL;
 
   struct ring_node node1 = {0};
   node1.value = 1;
@@ -33,7 +33,7 @@ TEST(containers_ring_list_test, push_front) {
 }
 
 TEST(containers_ring_list_test, push_back) {
-  struct ring_node* head = nullptr;
+  struct ring_node* head = NULL;
 
   struct ring_node node1 = {0};
   node1.value = 1;
@@ -50,7 +50,7 @@ TEST(containers_ring_list_test, push_back) {
 }
 
 TEST(containers_ring_list_test, pop_front) {
-  struct ring_node* head = nullptr;
+  struct ring_node* head = NULL;
 
   struct ring_node node1 = {0};
   struct ring_node node2 = {0};
@@ -58,7 +58,7 @@ TEST(containers_ring_list_test, pop_front) {
   RING_LIST_PUSH_BACK(head, &node1);
   RING_LIST_PUSH_BACK(head, &node2);
 
-  struct ring_node* popped = nullptr;
+  struct ring_node* popped = NULL;
   RING_LIST_POP_FRONT(head, popped);
   EXPECT_EQ(&node1, popped);
   EXPECT_EQ(&node2, head);
@@ -69,7 +69,7 @@ TEST(containers_ring_list_test, pop_front) {
 }
 
 TEST(containers_ring_list_test, pop_back) {
-  struct ring_node* head = nullptr;
+  struct ring_node* head = NULL;
 
   struct ring_node node1 = {0};
   struct ring_node node2 = {0};
@@ -77,7 +77,7 @@ TEST(containers_ring_list_test, pop_back) {
   RING_LIST_PUSH_BACK(head, &node1);
   RING_LIST_PUSH_BACK(head, &node2);
 
-  struct ring_node* popped = nullptr;
+  struct ring_node* popped = NULL;
   RING_LIST_POP_BACK(head, popped);
   EXPECT_EQ(&node2, popped);
   EXPECT_EQ(&node1, head);
@@ -88,7 +88,7 @@ TEST(containers_ring_list_test, pop_back) {
 }
 
 TEST(containers_ring_list_test, remove) {
-  struct ring_node* head = nullptr;
+  struct ring_node* head = NULL;
 
   struct ring_node node1 = {0};
   struct ring_node node2 = {0};
@@ -108,7 +108,7 @@ TEST(containers_ring_list_test, remove) {
 }
 
 TEST(containers_ring_list_test, head_tail) {
-  struct ring_node* head = nullptr;
+  struct ring_node* head = NULL;
 
   struct ring_node node1 = {0};
   struct ring_node node2 = {0};
@@ -121,7 +121,7 @@ TEST(containers_ring_list_test, head_tail) {
 }
 
 TEST(containers_ring_list_test, count) {
-  struct ring_node* head = nullptr;
+  struct ring_node* head = NULL;
   sz count = 0;
 
   RING_LIST_COUNT(head, count);
@@ -138,7 +138,7 @@ TEST(containers_ring_list_test, count) {
 }
 
 TEST(containers_ring_list_test, foreach) {
-  struct ring_node* head = nullptr;
+  struct ring_node* head = NULL;
 
   struct ring_node node1 = {0};
   struct ring_node node2 = {0};
@@ -161,7 +161,7 @@ TEST(containers_ring_list_test, foreach) {
 }
 
 TEST(containers_ring_list_test, foreach_reverse) {
-  struct ring_node* head = nullptr;
+  struct ring_node* head = NULL;
 
   struct ring_node node1 = {0};
   struct ring_node node2 = {0};

@@ -122,8 +122,8 @@
 59: #define tril(x) (bil(x) * 1000ll)
 
 === include\containers\binary_tree.h ===
-28: #define BINARY_TREE_IS_ROOT(node) ((node)->parent == nullptr)
-29: #define BINARY_TREE_IS_LEAF(node) ((node)->left == nullptr && (node)->right == nullptr)
+28: #define BINARY_TREE_IS_ROOT(node) ((node)->parent == NULL)
+29: #define BINARY_TREE_IS_LEAF(node) ((node)->left == NULL && (node)->right == NULL)
 32: #define BINARY_TREE_FIRST_INORDER(root, out) stmt( \
 38: #define BINARY_TREE_NEXT_INORDER(root, node, out) stmt( \
 61: #define BINARY_TREE_FIRST_POSTORDER(root, out) stmt( \
@@ -153,7 +153,7 @@
 91: #define BITSET_FOREACH_SET(arr, word_count, idx) \
 
 === include\containers\doubly_list.h ===
-26: #define DOUBLY_LIST_EMPTY(head, tail) ((head) == nullptr)
+26: #define DOUBLY_LIST_EMPTY(head, tail) ((head) == NULL)
 28: #define DOUBLY_LIST_COUNT(head, tail, count) stmt( \
 35: #define DOUBLY_LIST_HEAD(head, tail) (head)
 36: #define DOUBLY_LIST_TAIL(head, tail) (tail)
@@ -186,10 +186,10 @@
 75: #define HASH_MAP_FOREACH(map, it) \
 
 === include\containers\ring_list.h ===
-27: #define RING_LIST_EMPTY(head) ((head) == nullptr)
+27: #define RING_LIST_EMPTY(head) ((head) == NULL)
 29: #define RING_LIST_COUNT(head, count) stmt( \
 39: #define RING_LIST_HEAD(head) (head)
-40: #define RING_LIST_TAIL(head) ((head) != nullptr ? (head)->prev : nullptr)
+40: #define RING_LIST_TAIL(head) ((head) != NULL ? (head)->prev : NULL)
 42: #define RING_LIST_PUSH_FRONT(head, node) stmt( \
 53: #define RING_LIST_PUSH_BACK(head, node) stmt( \
 65: #define RING_LIST_POP_FRONT(head, node) stmt( \
@@ -201,7 +201,7 @@
 125: #define RING_LIST_FOREACH_REVERSE(head, it) \
 
 === include\containers\singly_list.h ===
-25: #define SINGLY_LIST_EMPTY(head, tail) ((head) == nullptr)
+25: #define SINGLY_LIST_EMPTY(head, tail) ((head) == NULL)
 27: #define SINGLY_LIST_COUNT(head, tail, count) stmt( \
 34: #define SINGLY_LIST_HEAD(head, tail) (head)
 35: #define SINGLY_LIST_TAIL(head, tail) (tail)
@@ -221,7 +221,7 @@
 111: func sz sort_radix64(u64* ptr, sz elem_count);
 
 === include\containers\stack_list.h ===
-25: #define STACK_LIST_EMPTY(head) ((head) == nullptr)
+25: #define STACK_LIST_EMPTY(head) ((head) == NULL)
 27: #define STACK_LIST_COUNT(head, count) stmt( \
 33: #define STACK_LIST_HEAD(head) (head)
 34: #define STACK_LIST_NEXT(node) ((node)->next)
@@ -230,8 +230,8 @@
 47: #define STACK_LIST_FOREACH(head, it) \
 
 === include\containers\tree.h ===
-31: #define TREE_IS_ROOT(node) ((node)->parent == nullptr)
-32: #define TREE_IS_LEAF(node) ((node)->first_child == nullptr)
+31: #define TREE_IS_ROOT(node) ((node)->parent == NULL)
+32: #define TREE_IS_LEAF(node) ((node)->first_child == NULL)
 35: #define TREE_NEXT_PREORDER(root, node, out) stmt( \
 53: #define TREE_INSERT_CHILD_FRONT(parent, node) stmt( \
 64: #define TREE_INSERT_CHILD_BACK(parent, node) stmt( \

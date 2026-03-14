@@ -44,7 +44,7 @@ TEST(utils_compress_test, empty_buffers_round_trip) {
   buffer compressed = {};
   buffer decompressed = {};
 
-  ASSERT_EQ(COMPRESS_ERROR_NONE, compress_encode(buffer_from(nullptr, 0), alloc, &compressed));
+  ASSERT_EQ(COMPRESS_ERROR_NONE, compress_encode(buffer_from(NULL, 0), alloc, &compressed));
   ASSERT_EQ(COMPRESS_ERROR_NONE, compress_decode(compressed, alloc, &decompressed));
   EXPECT_EQ(0U, decompressed.size);
 

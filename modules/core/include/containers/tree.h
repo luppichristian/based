@@ -4,8 +4,8 @@
 #pragma once
 
 #include "basic/primitive_types.h"
-#include "basic/utility_defines.h"
 #include "basic/safe.h"
+#include "basic/utility_defines.h"
 
 // =========================================================================
 c_begin;
@@ -29,33 +29,33 @@ Example:
 */
 
 // Structural predicates.
-#define TREE_IS_ROOT(node) ((node)->parent == nullptr)
-#define TREE_IS_LEAF(node) ((node)->first_child == nullptr)
+#define TREE_IS_ROOT(node) ((node)->parent == NULL)
+#define TREE_IS_LEAF(node) ((node)->first_child == NULL)
 
 // Traversal helpers.
-#define TREE_NEXT_PREORDER(root, node, out) stmt(                                     \
-    typeof((root)) _tree_root = (root);                                               \
-    typeof((node)) _tree_cursor = (node);                                             \
-    (out) = nullptr;                                                                  \
-    if (_tree_root != nullptr && _tree_cursor != nullptr) {                           \
-      if (_tree_cursor->first_child != nullptr) {                                     \
-        (out) = _tree_cursor->first_child;                                            \
-      } else {                                                                        \
-        safe_while (_tree_cursor != _tree_root && _tree_cursor->next_sibling == nullptr) { \
-          _tree_cursor = _tree_cursor->parent;                                        \
-        }                                                                             \
-        if (_tree_cursor != _tree_root) {                                             \
-          (out) = _tree_cursor->next_sibling;                                         \
-        }                                                                             \
-      }                                                                               \
+#define TREE_NEXT_PREORDER(root, node, out) stmt(                                       \
+    typeof((root)) _tree_root = (root);                                                 \
+    typeof((node)) _tree_cursor = (node);                                               \
+    (out) = NULL;                                                                       \
+    if (_tree_root != NULL && _tree_cursor != NULL) {                                   \
+      if (_tree_cursor->first_child != NULL) {                                          \
+        (out) = _tree_cursor->first_child;                                              \
+      } else {                                                                          \
+        safe_while (_tree_cursor != _tree_root && _tree_cursor->next_sibling == NULL) { \
+          _tree_cursor = _tree_cursor->parent;                                          \
+        }                                                                               \
+        if (_tree_cursor != _tree_root) {                                               \
+          (out) = _tree_cursor->next_sibling;                                           \
+        }                                                                               \
+      }                                                                                 \
     })
 
 // Mutation helpers.
 #define TREE_INSERT_CHILD_FRONT(parent, node) stmt( \
     (node)->parent = (parent);                      \
-    (node)->prev_sibling = nullptr;                 \
+    (node)->prev_sibling = NULL;                    \
     (node)->next_sibling = (parent)->first_child;   \
-    if ((parent)->first_child != nullptr) {         \
+    if ((parent)->first_child != NULL) {            \
       (parent)->first_child->prev_sibling = (node); \
     } else {                                        \
       (parent)->last_child = (node);                \
@@ -64,9 +64,9 @@ Example:
 
 #define TREE_INSERT_CHILD_BACK(parent, node) stmt( \
     (node)->parent = (parent);                     \
-    (node)->next_sibling = nullptr;                \
+    (node)->next_sibling = NULL;                   \
     (node)->prev_sibling = (parent)->last_child;   \
-    if ((parent)->last_child != nullptr) {         \
+    if ((parent)->last_child != NULL) {            \
       (parent)->last_child->next_sibling = (node); \
     } else {                                       \
       (parent)->first_child = (node);              \
@@ -77,9 +77,9 @@ Example:
     (node)->parent = (before)->parent;               \
     (node)->next_sibling = (before);                 \
     (node)->prev_sibling = (before)->prev_sibling;   \
-    if ((before)->prev_sibling != nullptr) {         \
+    if ((before)->prev_sibling != NULL) {            \
       (before)->prev_sibling->next_sibling = (node); \
-    } else if ((before)->parent != nullptr) {        \
+    } else if ((before)->parent != NULL) {           \
       (before)->parent->first_child = (node);        \
     }(before)                                        \
         ->prev_sibling = (node);)
@@ -88,37 +88,37 @@ Example:
     (node)->parent = (after)->parent;               \
     (node)->prev_sibling = (after);                 \
     (node)->next_sibling = (after)->next_sibling;   \
-    if ((after)->next_sibling != nullptr) {         \
+    if ((after)->next_sibling != NULL) {            \
       (after)->next_sibling->prev_sibling = (node); \
-    } else if ((after)->parent != nullptr) {        \
+    } else if ((after)->parent != NULL) {           \
       (after)->parent->last_child = (node);         \
     }(after)                                        \
         ->next_sibling = (node);)
 
 #define TREE_REMOVE(node) stmt(                                  \
-    if ((node)->prev_sibling != nullptr) {                       \
+    if ((node)->prev_sibling != NULL) {                          \
       (node)->prev_sibling->next_sibling = (node)->next_sibling; \
-    } else if ((node)->parent != nullptr) {                      \
+    } else if ((node)->parent != NULL) {                         \
       (node)->parent->first_child = (node)->next_sibling;        \
-    } if ((node)->next_sibling != nullptr) {                     \
+    } if ((node)->next_sibling != NULL) {                        \
       (node)->next_sibling->prev_sibling = (node)->prev_sibling; \
-    } else if ((node)->parent != nullptr) {                      \
+    } else if ((node)->parent != NULL) {                         \
       (node)->parent->last_child = (node)->prev_sibling;         \
     }(node)                                                      \
-        ->parent = nullptr;                                      \
-    (node)->prev_sibling = nullptr;                              \
-    (node)->next_sibling = nullptr;)
+        ->parent = NULL;                                         \
+    (node)->prev_sibling = NULL;                                 \
+    (node)->next_sibling = NULL;)
 
 // Typed traversal macros.
 #define TREE_FOREACH_CHILDREN(parent, it) \
-  safe_for (typeof(((parent)->first_child)) it = (parent)->first_child; (it) != nullptr; (it) = (it)->next_sibling)
+  safe_for (typeof(((parent)->first_child)) it = (parent)->first_child; (it) != NULL; (it) = (it)->next_sibling)
 
 #define TREE_FOREACH_CHILDREN_REVERSE(parent, it) \
-  safe_for (typeof(((parent)->last_child)) it = (parent)->last_child; (it) != nullptr; (it) = (it)->prev_sibling)
+  safe_for (typeof(((parent)->last_child)) it = (parent)->last_child; (it) != NULL; (it) = (it)->prev_sibling)
 
-#define TREE_FOREACH_PREORDER(root, it)               \
-  safe_for (typeof(((root))) it = (root); (it) != nullptr; \
-       (it) = ({ typeof((root)) _tree_next = nullptr; TREE_NEXT_PREORDER((root), (it), _tree_next); _tree_next; }))
+#define TREE_FOREACH_PREORDER(root, it)                 \
+  safe_for (typeof(((root))) it = (root); (it) != NULL; \
+            (it) = ({ typeof((root)) _tree_next = NULL; TREE_NEXT_PREORDER((root), (it), _tree_next); _tree_next; }))
 
 // =========================================================================
 c_end;

@@ -137,7 +137,7 @@ TEST(memory_vmem_test, realloc_shrink) {
 }
 
 TEST(memory_vmem_test, realloc_null) {
-  void* ptr = vmem_realloc(nullptr, 0, 1024);
+  void* ptr = vmem_realloc(NULL, 0, 1024);
   EXPECT_NE(nullptr, ptr);
   vmem_free(ptr, 1024);
 }

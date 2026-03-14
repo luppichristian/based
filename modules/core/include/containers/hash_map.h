@@ -5,9 +5,9 @@
 
 #include "basic/keyword_defines.h"
 #include "basic/primitive_types.h"
+#include "basic/safe.h"
 #include "basic/utility_defines.h"
 #include "memory/allocator.h"
-#include "basic/safe.h"
 
 // =========================================================================
 c_begin;
@@ -73,9 +73,9 @@ func b32 hash_map_remove(hash_map* map, u64 key);
 // Iteration over occupied slots.
 func hash_map_slot* hash_map_next(hash_map* map, hash_map_iter* iter);
 
-#define HASH_MAP_FOREACH(map, it)                                                                                \
+#define HASH_MAP_FOREACH(map, it)                                                                                     \
   safe_for (hash_map_iter cat_exp(_hash_map_iter_, it) = 0; cat_exp(_hash_map_iter_, it) < hash_map_capacity((map));) \
-    safe_for (hash_map_slot * (it) = hash_map_next((map), &cat_exp(_hash_map_iter_, it)); (it) != nullptr; (it) = nullptr)
+    safe_for (hash_map_slot*(it) = hash_map_next((map), &cat_exp(_hash_map_iter_, it)); (it) != NULL; (it) = NULL)
 
 // =========================================================================
 c_end;

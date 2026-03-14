@@ -66,16 +66,16 @@ func b32 cstr8_append_vformat(c8* dst, sz dst_cap, cstr8 fmt, va_list args);
 // Returns 1 if at least one value was read successfully, 0 otherwise.
 func b32 cstr8_scan(cstr8 str, cstr8 fmt, ...);
 
-// Returns a pointer to the first occurrence of sub in str, or nullptr if not found.
+// Returns a pointer to the first occurrence of sub in str, or NULL if not found.
 func cstr8 cstr8_find(cstr8 str, cstr8 sub);
 
-// Returns a pointer to the last occurrence of sub in str, or nullptr if not found.
+// Returns a pointer to the last occurrence of sub in str, or NULL if not found.
 func cstr8 cstr8_find_last(cstr8 str, cstr8 sub);
 
-// Returns a pointer to the first occurrence of chr in str, or nullptr if not found.
+// Returns a pointer to the first occurrence of chr in str, or NULL if not found.
 func cstr8 cstr8_find_char(cstr8 str, c8 chr);
 
-// Returns a pointer to the last occurrence of chr in str, or nullptr if not found.
+// Returns a pointer to the last occurrence of chr in str, or NULL if not found.
 func cstr8 cstr8_find_last_char(cstr8 str, c8 chr);
 
 // Returns the number of times chr occurs in str.
@@ -178,16 +178,16 @@ func sz cstr16_append_char(c16* dst, sz dst_cap, c16 chr);
 // Truncates str to at most length units and null-terminates. No-op if length >= current length.
 func void cstr16_truncate(c16* str, sz length);
 
-// Returns a pointer to the first occurrence of sub in str, or nullptr if not found.
+// Returns a pointer to the first occurrence of sub in str, or NULL if not found.
 func cstr16 cstr16_find(cstr16 str, cstr16 sub);
 
-// Returns a pointer to the last occurrence of sub in str, or nullptr if not found.
+// Returns a pointer to the last occurrence of sub in str, or NULL if not found.
 func cstr16 cstr16_find_last(cstr16 str, cstr16 sub);
 
-// Returns a pointer to the first occurrence of chr in str, or nullptr if not found.
+// Returns a pointer to the first occurrence of chr in str, or NULL if not found.
 func cstr16 cstr16_find_char(cstr16 str, c16 chr);
 
-// Returns a pointer to the last occurrence of chr in str, or nullptr if not found.
+// Returns a pointer to the last occurrence of chr in str, or NULL if not found.
 func cstr16 cstr16_find_last_char(cstr16 str, c16 chr);
 
 // Returns the number of times chr occurs in str.
@@ -286,16 +286,16 @@ func sz cstr32_append_char(c32* dst, sz dst_cap, c32 chr);
 // Truncates str to at most length units and null-terminates. No-op if length >= current length.
 func void cstr32_truncate(c32* str, sz length);
 
-// Returns a pointer to the first occurrence of sub in str, or nullptr if not found.
+// Returns a pointer to the first occurrence of sub in str, or NULL if not found.
 func cstr32 cstr32_find(cstr32 str, cstr32 sub);
 
-// Returns a pointer to the last occurrence of sub in str, or nullptr if not found.
+// Returns a pointer to the last occurrence of sub in str, or NULL if not found.
 func cstr32 cstr32_find_last(cstr32 str, cstr32 sub);
 
-// Returns a pointer to the first occurrence of chr in str, or nullptr if not found.
+// Returns a pointer to the first occurrence of chr in str, or NULL if not found.
 func cstr32 cstr32_find_char(cstr32 str, c32 chr);
 
-// Returns a pointer to the last occurrence of chr in str, or nullptr if not found.
+// Returns a pointer to the last occurrence of chr in str, or NULL if not found.
 func cstr32 cstr32_find_last_char(cstr32 str, c32 chr);
 
 // Returns the number of times chr occurs in str.

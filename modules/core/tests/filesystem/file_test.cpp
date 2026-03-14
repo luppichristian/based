@@ -81,9 +81,9 @@ TEST(filesystem_file_test, atomic_write_and_invalid_arguments) {
   ASSERT_TRUE(file_get_size(&src_path, &file_size) != 0);
   EXPECT_EQ(size_of(payload_data), file_size);
 
-  EXPECT_TRUE(file_create(nullptr) == 0);
-  EXPECT_TRUE(file_delete(nullptr) == 0);
-  EXPECT_TRUE(file_get_size(nullptr, &file_size) == 0);
+  EXPECT_TRUE(file_create(NULL) == 0);
+  EXPECT_TRUE(file_delete(NULL) == 0);
+  EXPECT_TRUE(file_get_size(NULL, &file_size) == 0);
 
   EXPECT_TRUE(dir_remove_recursive(&root_path) != 0);
 }

@@ -10,7 +10,7 @@ namespace {
   } msg_test_handler_state;
 
   b32 msg_test_count_handler(msg* src, void* user_data) {
-    if (src == nullptr || user_data == nullptr) {
+    if (src == NULL || user_data == NULL) {
       return 1;
     }
     msg_test_handler_state* state_ptr = (msg_test_handler_state*)user_data;
@@ -22,7 +22,7 @@ namespace {
   }
 
   b32 msg_test_filter_reject_type(const msg* src, void* user_data) {
-    if (src == nullptr || user_data == nullptr) {
+    if (src == NULL || user_data == NULL) {
       return 1;
     }
     u32 blocked_type = *(u32*)user_data;
@@ -32,7 +32,7 @@ namespace {
 
 TEST(input_msg_test, add_remove_handler_and_dispatch) {
   msg_clear_handlers();
-  msg_set_filter(nullptr, nullptr);
+  msg_set_filter(NULL, NULL);
 
   msg_test_handler_state state_val = {};
   msg_handler_desc desc_val = {};
@@ -57,7 +57,7 @@ TEST(input_msg_test, add_remove_handler_and_dispatch) {
 
 TEST(input_msg_test, handler_filter_matches_category_and_type) {
   msg_clear_handlers();
-  msg_set_filter(nullptr, nullptr);
+  msg_set_filter(NULL, NULL);
 
   msg_test_handler_state state_val = {};
   msg_handler_desc desc_val = {};
@@ -98,13 +98,13 @@ TEST(input_msg_test, filter_blocks_post_immediately) {
   blocked_msg.type = blocked_type;
   EXPECT_TRUE(msg_post(&blocked_msg) == 0);
 
-  msg_set_filter(nullptr, nullptr);
+  msg_set_filter(NULL, NULL);
   ASSERT_TRUE(msg_post(&blocked_msg) != 0);
 }
 
 TEST(input_msg_test, handler_can_cancel_post_immediately) {
   msg_clear_handlers();
-  msg_set_filter(nullptr, nullptr);
+  msg_set_filter(NULL, NULL);
 
   msg_test_handler_state state_val = {};
   state_val.cancel_post = 1;

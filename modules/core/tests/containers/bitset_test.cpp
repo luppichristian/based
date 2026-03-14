@@ -131,7 +131,7 @@ TEST(containers_bitset_test, find_next_set) {
   BITSET_FIND_NEXT_SET(arr, word_count, 50, idx);
   EXPECT_EQ(50, idx);
 
-  BITSET_FIND_NEXT_SET(nullptr, word_count, 0, idx);
+  BITSET_FIND_NEXT_SET(NULL, word_count, 0, idx);
   EXPECT_EQ(-1, idx);
 }
 
