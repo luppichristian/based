@@ -333,8 +333,6 @@ global_var entry_run_callbacks run_callbacks = {0};
 
 int main_run_internal(int argc, char** argv) {
   profile_func_begin;
-  global_log_info("Using run entry point");
-  global_log_trace("main_run_internal argc=%d argv=%p", argc, (void*)argv);
 
   if (!entry_init(entry_cmdline_current)) {
     global_log_fatal("Entry initialization failed");

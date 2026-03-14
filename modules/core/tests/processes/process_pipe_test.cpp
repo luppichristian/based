@@ -11,7 +11,7 @@
 #  define CAT_ARGS "/bin/cat", NULL
 #endif
 
-TEST(processes_pipe_test, stdin_invalid) {
+TEST(processes_process_pipe_test, stdin_invalid) {
   process_options opts = process_options_default();
 
 #if defined(_WIN32)
@@ -23,14 +23,14 @@ TEST(processes_pipe_test, stdin_invalid) {
   process prc = process_create_with(args, opts);
   EXPECT_NE(0, process_is_valid(prc));
 
-  pipe pin = pipe_stdin(prc);
+  process_pipe pin = process_pipe_stdin(prc);
   EXPECT_EQ(nullptr, pin);
 
   process_wait(prc, 1, NULL);
   process_destroy(prc);
 }
 
-TEST(processes_pipe_test, stdout_valid) {
+TEST(processes_process_pipe_test, stdout_valid) {
   process_options opts = process_options_default();
   opts.pipe_stdout = 1;
 
@@ -43,15 +43,15 @@ TEST(processes_pipe_test, stdout_valid) {
   process prc = process_create_with(args, opts);
   EXPECT_NE(0, process_is_valid(prc));
 
-  pipe pout = pipe_stdout(prc);
+  process_pipe pout = process_pipe_stdout(prc);
   EXPECT_NE(nullptr, pout);
-  EXPECT_NE(0, pipe_is_valid(pout));
+  EXPECT_NE(0, process_pipe_is_valid(pout));
 
   process_wait(prc, 1, NULL);
   process_destroy(prc);
 }
 
-TEST(processes_pipe_test, stderr_valid) {
+TEST(processes_process_pipe_test, stderr_valid) {
   process_options opts = process_options_default();
   opts.pipe_stderr = 1;
 
@@ -64,15 +64,15 @@ TEST(processes_pipe_test, stderr_valid) {
   process prc = process_create_with(args, opts);
   EXPECT_NE(0, process_is_valid(prc));
 
-  pipe perr = pipe_stderr(prc);
+  process_pipe perr = process_pipe_stderr(prc);
   EXPECT_NE(nullptr, perr);
-  EXPECT_NE(0, pipe_is_valid(perr));
+  EXPECT_NE(0, process_pipe_is_valid(perr));
 
   process_wait(prc, 1, NULL);
   process_destroy(prc);
 }
 
-TEST(processes_pipe_test, pipe_read) {
+TEST(processes_process_pipe_test, process_pipe_read) {
   process_options opts = process_options_default();
   opts.pipe_stdout = 1;
 
@@ -85,14 +85,14 @@ TEST(processes_pipe_test, pipe_read) {
   process prc = process_create_with(args, opts);
   EXPECT_NE(0, process_is_valid(prc));
 
-  pipe pout = pipe_stdout(prc);
+  process_pipe pout = process_pipe_stdout(prc);
   EXPECT_NE(nullptr, pout);
 
   i32 exit_code = -1;
   EXPECT_NE(0, process_wait(prc, 1, &exit_code));
 
   c8 buffer[256] = {0};
-  sz bytes_read = pipe_read(pout, buffer, sizeof(buffer) - 1);
+  sz bytes_read = process_pipe_read(pout, buffer, sizeof(buffer) - 1);
 
   EXPECT_GT(bytes_read, 0U);
   EXPECT_GT(cstr8_len(buffer), 0U);
@@ -101,7 +101,7 @@ TEST(processes_pipe_test, pipe_read) {
   process_destroy(prc);
 }
 
-TEST(processes_pipe_test, pipe_write) {
+TEST(processes_process_pipe_test, process_pipe_write) {
   process_options opts = process_options_default();
   opts.pipe_stdin = 1;
   opts.pipe_stdout = 1;
@@ -111,21 +111,21 @@ TEST(processes_pipe_test, pipe_write) {
   process prc = process_create_with(args, opts);
   EXPECT_NE(0, process_is_valid(prc));
 
-  pipe pin = pipe_stdin(prc);
+  process_pipe pin = process_pipe_stdin(prc);
   EXPECT_NE(nullptr, pin);
 
   const c8 test_data[] = "test input data\n";
-  sz bytes_written = pipe_write(pin, test_data, sizeof(test_data) - 1);
+  sz bytes_written = process_pipe_write(pin, test_data, sizeof(test_data) - 1);
 
   EXPECT_GT(bytes_written, 0U);
 
-  pipe_close(pin);
+  process_pipe_close(pin);
 
   process_wait(prc, 1, NULL);
   process_destroy(prc);
 }
 
-TEST(processes_pipe_test, pipe_poll_readable) {
+TEST(processes_process_pipe_test, process_pipe_poll_readable) {
   process_options opts = process_options_default();
   opts.pipe_stdout = 1;
 
@@ -138,17 +138,17 @@ TEST(processes_pipe_test, pipe_poll_readable) {
   process prc = process_create_with(args, opts);
   EXPECT_NE(0, process_is_valid(prc));
 
-  pipe pout = pipe_stdout(prc);
+  process_pipe pout = process_pipe_stdout(prc);
   EXPECT_NE(nullptr, pout);
 
-  b32 readable = pipe_poll_readable(pout, 1000);
+  b32 readable = process_pipe_poll_readable(pout, 1000);
   EXPECT_NE(0, readable);
 
   process_wait(prc, 1, NULL);
   process_destroy(prc);
 }
 
-TEST(processes_pipe_test, pipe_close) {
+TEST(processes_process_pipe_test, process_pipe_close) {
   process_options opts = process_options_default();
   opts.pipe_stdin = 1;
   opts.pipe_stdout = 1;
@@ -158,10 +158,10 @@ TEST(processes_pipe_test, pipe_close) {
   process prc = process_create_with(args, opts);
   EXPECT_NE(0, process_is_valid(prc));
 
-  pipe pin = pipe_stdin(prc);
+  process_pipe pin = process_pipe_stdin(prc);
   EXPECT_NE(nullptr, pin);
 
-  pipe_close(pin);
+  process_pipe_close(pin);
 
   i32 exit_code = -1;
   b32 waited = process_wait(prc, 1, &exit_code);

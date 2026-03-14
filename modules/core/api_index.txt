@@ -981,22 +981,22 @@
 98: func allocator vmem_get_allocator(void);
 102: func vmem_stats vmem_get_stats(void);
 
-=== include\processes\pipe.h ===
-22: func pipe _pipe_stdin(process prc, callsite site);
-26: func pipe _pipe_stdout(process prc, callsite site);
-30: func pipe _pipe_stderr(process prc, callsite site);
-33: func b32 pipe_is_valid(pipe pip);
-37: func sz pipe_read(pipe pip, void* ptr, sz size);
-41: func sz pipe_write(pipe pip, const void* ptr, sz size);
-43: func sz pipe_read_nonblocking(pipe pip, void* ptr, sz size);
-44: func sz pipe_write_nonblocking(pipe pip, const void* ptr, sz size);
-45: func b32 pipe_poll_readable(pipe pip, i32 timeout_ms);
-48: func b32 pipe_flush(pipe pip);
-52: func void _pipe_close(pipe pip, callsite site);
-54: #define pipe_stdin(prc) \
-56: #define pipe_stdout(prc) \
-58: #define pipe_stderr(prc) \
-60: #define pipe_close(pip) \
+=== include\processes\process_pipe.h ===
+22: func process_pipe _process_pipe_stdin(process prc, callsite site);
+26: func process_pipe _process_pipe_stdout(process prc, callsite site);
+30: func process_pipe _process_pipe_stderr(process prc, callsite site);
+33: func b32 process_pipe_is_valid(process_pipe pip);
+37: func sz process_pipe_read(process_pipe pip, void* ptr, sz size);
+41: func sz process_pipe_write(process_pipe pip, const void* ptr, sz size);
+43: func sz process_pipe_read_nonblocking(process_pipe pip, void* ptr, sz size);
+44: func sz process_pipe_write_nonblocking(process_pipe pip, const void* ptr, sz size);
+45: func b32 process_pipe_poll_readable(process_pipe pip, i32 timeout_ms);
+48: func b32 process_pipe_flush(process_pipe pip);
+52: func void _process_pipe_close(process_pipe pip, callsite site);
+54: #define process_pipe_stdin(prc) \
+56: #define process_pipe_stdout(prc) \
+58: #define process_pipe_stderr(prc) \
+60: #define process_pipe_close(pip) \
 
 === include\processes\common_processes.h ===
 9: func b32 process_open_weblink(cstr8 url);

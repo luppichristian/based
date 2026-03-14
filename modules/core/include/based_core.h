@@ -77,7 +77,7 @@
 
 // Include process modules.
 #include "processes/common_processes.h"
-#include "processes/pipe.h"
+#include "processes/process_pipe.h"
 #include "processes/process.h"
 #include "processes/process_current.h"
 

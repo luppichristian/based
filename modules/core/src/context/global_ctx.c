@@ -109,7 +109,7 @@ func b32 global_ctx_quit(void) {
 }
 
 func b32 global_ctx_is_init(void) {
-  return atomic_i32_get(&process_global_ctx_init) == 2;
+  return atomic_i32_get(&process_global_ctx_init) == 1;
 }
 
 func global_ctx* global_ctx_get(void) {
