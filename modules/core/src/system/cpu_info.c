@@ -14,7 +14,7 @@
 
 #if defined(PLATFORM_WINDOWS) && (defined(ARCH_X86) || defined(ARCH_X86_64))
 #  include <intrin.h>
-#elif (defined(ARCH_X86) || defined(ARCH_X86_64)
+#elif defined(ARCH_X86) || defined(ARCH_X86_64)
 #  include <cpuid.h>
 #endif
 
