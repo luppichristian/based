@@ -72,10 +72,10 @@ func b32 semaphore_is_valid(semaphore sem) {
   return sem != NULL;
 }
 
-func void semaphore_wait(semaphore sem) {
+func void semaphore_acquire(semaphore sem) {
   profile_func_begin;
   if (sem == NULL) {
-    thread_log_error("Rejected semaphore wait for invalid handle");
+    thread_log_error("Rejected semaphore acquire for invalid handle");
     profile_func_end;
     return;
   }
@@ -84,10 +84,10 @@ func void semaphore_wait(semaphore sem) {
   profile_func_end;
 }
 
-func b32 semaphore_try_wait(semaphore sem) {
+func b32 semaphore_try_acquire(semaphore sem) {
   profile_func_begin;
   if (sem == NULL) {
-    thread_log_error("Rejected semaphore try wait for invalid handle");
+    thread_log_error("Rejected semaphore try acquire for invalid handle");
     profile_func_end;
     return false;
   }
@@ -96,10 +96,10 @@ func b32 semaphore_try_wait(semaphore sem) {
   return SDL_TryWaitSemaphore((SDL_Semaphore*)sem);
 }
 
-func b32 semaphore_wait_timeout(semaphore sem, u32 millis) {
+func b32 semaphore_acquire_timeout(semaphore sem, u32 millis) {
   profile_func_begin;
   if (sem == NULL) {
-    thread_log_error("Rejected semaphore wait timeout for invalid handle");
+    thread_log_error("Rejected semaphore acquire timeout for invalid handle");
     profile_func_end;
     return false;
   }
@@ -108,10 +108,10 @@ func b32 semaphore_wait_timeout(semaphore sem, u32 millis) {
   return SDL_WaitSemaphoreTimeout((SDL_Semaphore*)sem, (Sint32)millis);
 }
 
-func void semaphore_signal(semaphore sem) {
+func void semaphore_release(semaphore sem) {
   profile_func_begin;
   if (sem == NULL) {
-    thread_log_error("Rejected semaphore signal for invalid handle");
+    thread_log_error("Rejected semaphore release for invalid handle");
     profile_func_end;
     return;
   }

@@ -11,7 +11,7 @@ namespace {
 
   func i32 semaphore_wait_entry(void* arg) {
     semaphore_wait_ctx* ctx = (semaphore_wait_ctx*)arg;
-    semaphore_wait(ctx->sem);
+    semaphore_acquire(ctx->sem);
     return 0;
   }
 
@@ -26,18 +26,18 @@ TEST(threads_semaphore_test, create_destroy) {
 TEST(threads_semaphore_test, initial_count) {
   semaphore sem = semaphore_create(2);
 
-  b32 result = semaphore_try_wait(sem);
+  b32 result = semaphore_try_acquire(sem);
   EXPECT_NE(0, result);
 
-  result = semaphore_try_wait(sem);
+  result = semaphore_try_acquire(sem);
   EXPECT_NE(0, result);
 
-  result = semaphore_try_wait(sem);
+  result = semaphore_try_acquire(sem);
   EXPECT_EQ(0, result);
 
-  semaphore_signal(sem);
+  semaphore_release(sem);
 
-  result = semaphore_try_wait(sem);
+  result = semaphore_try_acquire(sem);
   EXPECT_NE(0, result);
 
   EXPECT_NE(0, semaphore_destroy(sem));
@@ -50,7 +50,7 @@ TEST(threads_semaphore_test, wait_and_signal) {
   thread thd = thread_create(semaphore_wait_entry, &ctx, (ctx_setup) {0});
   EXPECT_NE(0, thread_is_valid(thd));
 
-  semaphore_signal(sem);
+  semaphore_release(sem);
   thread_join(thd, NULL);
 
   EXPECT_NE(0, semaphore_destroy(sem));
@@ -59,7 +59,7 @@ TEST(threads_semaphore_test, wait_and_signal) {
 TEST(threads_semaphore_test, try_wait_success) {
   semaphore sem = semaphore_create(1);
 
-  b32 result = semaphore_try_wait(sem);
+  b32 result = semaphore_try_acquire(sem);
   EXPECT_NE(0, result);
 
   EXPECT_NE(0, semaphore_destroy(sem));
@@ -68,7 +68,7 @@ TEST(threads_semaphore_test, try_wait_success) {
 TEST(threads_semaphore_test, try_wait_failure) {
   semaphore sem = semaphore_create(0);
 
-  b32 result = semaphore_try_wait(sem);
+  b32 result = semaphore_try_acquire(sem);
   EXPECT_EQ(0, result);
 
   EXPECT_NE(0, semaphore_destroy(sem));
@@ -77,7 +77,7 @@ TEST(threads_semaphore_test, try_wait_failure) {
 TEST(threads_semaphore_test, wait_timeout_success) {
   semaphore sem = semaphore_create(1);
 
-  b32 result = semaphore_wait_timeout(sem, 1000);
+  b32 result = semaphore_acquire_timeout(sem, 1000);
   EXPECT_NE(0, result);
 
   EXPECT_NE(0, semaphore_destroy(sem));
@@ -86,7 +86,7 @@ TEST(threads_semaphore_test, wait_timeout_success) {
 TEST(threads_semaphore_test, wait_timeout_failure) {
   semaphore sem = semaphore_create(0);
 
-  b32 result = semaphore_wait_timeout(sem, 50);
+  b32 result = semaphore_acquire_timeout(sem, 50);
   EXPECT_EQ(0, result);
 
   EXPECT_NE(0, semaphore_destroy(sem));
@@ -95,20 +95,20 @@ TEST(threads_semaphore_test, wait_timeout_failure) {
 TEST(threads_semaphore_test, multiple_signals) {
   semaphore sem = semaphore_create(0);
 
-  semaphore_signal(sem);
-  semaphore_signal(sem);
-  semaphore_signal(sem);
+  semaphore_release(sem);
+  semaphore_release(sem);
+  semaphore_release(sem);
 
-  b32 result = semaphore_try_wait(sem);
+  b32 result = semaphore_try_acquire(sem);
   EXPECT_NE(0, result);
 
-  result = semaphore_try_wait(sem);
+  result = semaphore_try_acquire(sem);
   EXPECT_NE(0, result);
 
-  result = semaphore_try_wait(sem);
+  result = semaphore_try_acquire(sem);
   EXPECT_NE(0, result);
 
-  result = semaphore_try_wait(sem);
+  result = semaphore_try_acquire(sem);
   EXPECT_EQ(0, result);
 
   EXPECT_NE(0, semaphore_destroy(sem));

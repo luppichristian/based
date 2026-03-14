@@ -237,7 +237,7 @@ func u64 process_id(void) {
 #elif defined(PLATFORM_UNIX)
   u64 res = (u64)getpid();
   profile_func_end;
-  return;
+  return res;
 #else
   invalid_code_path;
   profile_func_end;

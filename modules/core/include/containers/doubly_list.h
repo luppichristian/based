@@ -26,11 +26,11 @@ Example:
 
 #define DOUBLY_LIST_EMPTY(head, tail) ((head) == NULL)
 
-#define DOUBLY_LIST_COUNT(head, tail, count) stmt(                               \
-    (void)(tail);                                                                \
-    (count) = 0;                                                                 \
-    safe_for (typeof(head) _node = (head); _node != NULL; _node = _node->next) { \
-      (count)++;                                                                 \
+#define DOUBLY_LIST_COUNT(head, tail, count) stmt(                                \
+    (void)(tail);                                                                 \
+    (count) = 0;                                                                  \
+    safe_for (type_of(head) _node = (head); _node != NULL; _node = _node->next) { \
+      (count)++;                                                                  \
     })
 
 #define DOUBLY_LIST_HEAD(head, tail) (head)
@@ -114,10 +114,10 @@ Example:
         ->prev = (node);)
 
 #define DOUBLY_LIST_FOREACH(head, tail, it) \
-  safe_for (typeof((head)) it = (head); (it) != NULL; (it) = (it)->next)
+  safe_for (type_of((head)) it = (head); (it) != NULL; (it) = (it)->next)
 
 #define DOUBLY_LIST_FOREACH_REVERSE(head, tail, it) \
-  safe_for (typeof((tail)) it = (tail); (it) != NULL; (it) = (it)->prev)
+  safe_for (type_of((tail)) it = (tail); (it) != NULL; (it) = (it)->prev)
 
 // =========================================================================
 c_end;

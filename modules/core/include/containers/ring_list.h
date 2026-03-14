@@ -29,7 +29,7 @@ Example:
 
 #define RING_LIST_COUNT(head, count) stmt( \
     (count) = 0;                           \
-    typeof(head) _node = (head);           \
+    type_of(head) _node = (head);          \
     if (_node != NULL) {                \
       safe_while (true) {                  \
         (count)++;                         \
@@ -122,13 +122,13 @@ Example:
       (head) = (node);                                    \
     })
 
-#define RING_LIST_FOREACH(head, it)                                             \
-  safe_for (typeof((head)) it = (head), _ring_head_##it = (head); (it) != NULL; \
+#define RING_LIST_FOREACH(head, it)                                              \
+  safe_for (type_of((head)) it = (head), _ring_head_##it = (head); (it) != NULL; \
             (it) = ((it)->next != _ring_head_##it ? (it)->next : NULL))
 
-#define RING_LIST_FOREACH_REVERSE(head, it)                                                       \
-  safe_for (typeof((head)) it = ((head) != NULL ? (head)->prev : NULL), _ring_head_##it = (head); \
-            (it) != NULL;                                                                         \
+#define RING_LIST_FOREACH_REVERSE(head, it)                                                        \
+  safe_for (type_of((head)) it = ((head) != NULL ? (head)->prev : NULL), _ring_head_##it = (head); \
+            (it) != NULL;                                                                          \
             (it) = ((it) != _ring_head_##it ? (it)->prev : NULL))
 
 // =========================================================================

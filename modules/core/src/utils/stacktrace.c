@@ -6,6 +6,7 @@
 #include "basic/profiler.h"
 #include "platform_includes.h"
 #include "basic/safe.h"
+#include "basic/third_party.h"
 
 func sz stacktrace_capture(stacktrace_frame* out_frames, sz out_capacity, sz skip_frames) {
   profile_func_begin;

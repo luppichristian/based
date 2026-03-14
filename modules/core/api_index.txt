@@ -1469,10 +1469,10 @@
 18: #define semaphore_create(initial_count) _semaphore_create(initial_count, CALLSITE_HERE)
 19: #define semaphore_destroy(sem)          _semaphore_destroy(sem, CALLSITE_HERE)
 22: func b32 semaphore_is_valid(semaphore sem);
-27: func void semaphore_wait(semaphore sem);
-31: func b32 semaphore_try_wait(semaphore sem);
-35: func b32 semaphore_wait_timeout(semaphore sem, u32 millis);
-38: func void semaphore_signal(semaphore sem);
+27: func void semaphore_acquire(semaphore sem);
+31: func b32 semaphore_try_acquire(semaphore sem);
+35: func b32 semaphore_acquire_timeout(semaphore sem, u32 millis);
+38: func void semaphore_release(semaphore sem);
 
 === include\threads\spinlock.h ===
 15: func spinlock _spinlock_create(callsite site);

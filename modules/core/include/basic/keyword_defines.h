@@ -114,7 +114,7 @@ If ALL_GLOBAL_VARS_STATIC is defined, all global variables will be declared as s
 #define size_of(x) sizeof(x)
 
 // type_of — alias for compiler-supported typeof.
-#define type_of(x) typeof(x)
+#define type_of(x) __typeof__(x)
 
 // likely / unlikely — branch prediction hints.
 #define likely(x)   __builtin_expect(!!(x), 1)

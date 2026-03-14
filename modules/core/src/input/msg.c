@@ -948,7 +948,7 @@ func b32 msg_to_sdl_event(msg* src, SDL_Event* out_event) {
       return true;
 
     case SDL_EVENT_KEY_DOWN:
-    case SDL_EVENT_KEY_UP:
+    case SDL_EVENT_KEY_UP:   {
       u32 scancode = keyboard_internal_scancode_from_vkey(msg_core_get_keyboard(src)->key);
       out_event->key.type = (SDL_EventType)src->type;
       out_event->key.timestamp = (Uint64)src->timestamp;
@@ -965,6 +965,7 @@ func b32 msg_to_sdl_event(msg* src, SDL_Event* out_event) {
       out_event->key.repeat = msg_core_get_keyboard(src)->repeat != 0;
       profile_func_end;
       return true;
+    }
 
     case SDL_EVENT_TEXT_EDITING:
       out_event->edit.type = (SDL_EventType)src->type;

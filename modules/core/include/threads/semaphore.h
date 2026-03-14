@@ -25,21 +25,21 @@ func b32 _semaphore_destroy(semaphore sem, callsite site);
 // Returns true if the given semaphore handle is valid, false otherwise.
 func b32 semaphore_is_valid(semaphore sem);
 
-// Waits (decrements) the given semaphore.
+// Acquires (decrements) the given semaphore.
 // If the semaphore's count is greater than zero, this function will decrement the count and return
-// immediately. If the count is zero, this function will block until another thread increments the count.
-func void semaphore_wait(semaphore sem);
+// immediately. If the count is zero, this function will block until another thread releases the count.
+func void semaphore_acquire(semaphore sem);
 
-// Tries to decrement the semaphore without blocking.
+// Tries to acquire the semaphore without blocking.
 // Returns true if the count was positive and was decremented, false if the count is zero.
-func b32 semaphore_try_wait(semaphore sem);
+func b32 semaphore_try_acquire(semaphore sem);
 
-// Waits up to millis milliseconds for the semaphore count to become positive, then decrements it.
-// Returns true if the semaphore was decremented, false if the timeout elapsed.
-func b32 semaphore_wait_timeout(semaphore sem, u32 millis);
+// Waits up to millis milliseconds to acquire the semaphore.
+// Returns true if the semaphore was acquired, false if the timeout elapsed.
+func b32 semaphore_acquire_timeout(semaphore sem, u32 millis);
 
-// Increments the given semaphore, potentially unblocking a waiting thread.
-func void semaphore_signal(semaphore sem);
+// Releases the given semaphore, potentially unblocking a waiting thread.
+func void semaphore_release(semaphore sem);
 
 // =========================================================================
 c_end;

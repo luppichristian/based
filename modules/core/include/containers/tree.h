@@ -34,8 +34,8 @@ Example:
 
 // Traversal helpers.
 #define TREE_NEXT_PREORDER(root, node, out) stmt(                                       \
-    typeof((root)) _tree_root = (root);                                                 \
-    typeof((node)) _tree_cursor = (node);                                               \
+    type_of((root)) _tree_root = (root);                                                \
+    type_of((node)) _tree_cursor = (node);                                              \
     (out) = NULL;                                                                       \
     if (_tree_root != NULL && _tree_cursor != NULL) {                                   \
       if (_tree_cursor->first_child != NULL) {                                          \
@@ -111,14 +111,14 @@ Example:
 
 // Typed traversal macros.
 #define TREE_FOREACH_CHILDREN(parent, it) \
-  safe_for (typeof(((parent)->first_child)) it = (parent)->first_child; (it) != NULL; (it) = (it)->next_sibling)
+  safe_for (type_of(((parent)->first_child)) it = (parent)->first_child; (it) != NULL; (it) = (it)->next_sibling)
 
 #define TREE_FOREACH_CHILDREN_REVERSE(parent, it) \
-  safe_for (typeof(((parent)->last_child)) it = (parent)->last_child; (it) != NULL; (it) = (it)->prev_sibling)
+  safe_for (type_of(((parent)->last_child)) it = (parent)->last_child; (it) != NULL; (it) = (it)->prev_sibling)
 
-#define TREE_FOREACH_PREORDER(root, it)                 \
-  safe_for (typeof(((root))) it = (root); (it) != NULL; \
-            (it) = ({ typeof((root)) _tree_next = NULL; TREE_NEXT_PREORDER((root), (it), _tree_next); _tree_next; }))
+#define TREE_FOREACH_PREORDER(root, it)                  \
+  safe_for (type_of(((root))) it = (root); (it) != NULL; \
+            (it) = ({ type_of((root)) _tree_next = NULL; TREE_NEXT_PREORDER((root), (it), _tree_next); _tree_next; }))
 
 // =========================================================================
 c_end;
