@@ -86,6 +86,11 @@ utils/                       # Core utility work areas for new submodules and sc
 
 Keep this tree accurate as core evolves.
 
+## Related Modules
+
+- `../gfx/` is the sibling gfx module that builds on top of core.
+- Keep shared foundational facilities in `core`; higher-level rendering and backend-facing APIs should live in `gfx` unless they are broadly reusable across all modules.
+
 ## Core Keywords Sheet
 
 - `func`: function declaration alias; becomes `static` when `ALL_FUNCS_STATIC` is defined.

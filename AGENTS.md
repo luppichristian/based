@@ -9,7 +9,8 @@
 This file is the authoritative **project-wide** guide. Keep module-specific guidance in each module's own `AGENTS.md`.
 
 Current module layout:
-- `core/` - the core module (see `core/AGENTS.md` for all core-specific rules, API/layout notes, and maintenance requirements). Always read this, since all modules depend on the core module.
+- `modules/core/` - the core module (see `modules/core/AGENTS.md` for all core-specific rules, API/layout notes, and maintenance requirements). Always read this, since all modules depend on the core module.
+- `modules/gfx/` - the gfx module (see `modules/gfx/AGENTS.md` for gfx-specific rules, API/layout notes, and maintenance requirements). This module builds on top of `core` and is the home for rendering, graphics device, and backend-facing graphics work.
 
 If modules are added, removed, or reorganized, update this file in the same change and ensure each affected module has its own up-to-date `AGENTS.md`.
 
@@ -21,7 +22,7 @@ If modules are added, removed, or reorganized, update this file in the same chan
 - Use modular naming in CMake targets to avoid collisions: `based-<module>` (for example `based-core`).
 - Keep cross-module build and dependency wiring in top-level CMake files coherent when module structure changes.
 - Never use functions from C/C++ standard directly. Always check for functions implemented in based modules. If you don't find the function you need, ask the user.
-- Core foundational headers under `core/include/basic/` define shared project language and helpers and should be treated as canonical:
+- Core foundational headers under `modules/core/include/basic/` define shared project language and helpers and should be treated as canonical:
   - `keyword_defines.h` for project keywords/qualifiers. Keep usage aligned with the canonical set:
     `thread_local`, `dll_export`, `dll_import`, `static_assert`, `no_return`, `force_inline`, `no_inline`,
     `align_as(x)`, `align_of(x)`, `size_of(x)`, `likely(x)`, `unlikely(x)`, `read_only`, `c_begin`, `c_end`,
@@ -59,7 +60,7 @@ If modules are added, removed, or reorganized, update this file in the same chan
   - `thread_log_debug` / `global_log_debug`: developer-focused state, branch decisions, sizes/counts, and diagnostics useful during debugging.
   - `thread_log_verbose` / `global_log_verbose`: more detailed step-by-step diagnostics that are noisier than normal debug logs.
   - `thread_log_trace` / `global_log_trace`: very fine-grained tracing for hot paths, frequent operations, or detailed flow tracking.
-- Keep usage aligned with `core/include/utils/log_state.h`, `core/include/context/thread_ctx.h`, and `core/include/context/global_ctx.h`.
+  - Keep usage aligned with `modules/core/include/utils/log_state.h`, `modules/core/include/context/thread_ctx.h`, and `modules/core/include/context/global_ctx.h`.
 
 ## Global Vs Thread Context
 
@@ -73,17 +74,27 @@ If modules are added, removed, or reorganized, update this file in the same chan
 
 ```text
 cmake/                       # CMake helper modules (dependency fetch/setup helpers)
-core/                        # Core module
-  AGENTS.md                  # Core-module specific coding and layout guide
-  CMakeLists.txt             # Core-module build targets
-  include/                   # Core public headers
-    basic/                   # Foundational keywords, callsite, utility macros
-  src/                       # Core implementations
-  tests/                     # Core tests
-  utils/                     # Core utility work areas and in-progress submodules
-    digits/                  # Digits utility module workspace
-    random_series/           # Random-series utility module workspace
-  api_index.txt              # Core public API index
+modules/                     # Project modules
+  core/                      # Core module
+    AGENTS.md                # Core-module specific coding and layout guide
+    CMakeLists.txt           # Core-module build targets
+    include/                 # Core public headers
+      basic/                 # Foundational keywords, callsite, utility macros
+    src/                     # Core implementations
+    tests/                   # Core tests
+    utils/                   # Core utility work areas and in-progress submodules
+      digits/                # Digits utility module workspace
+      random_series/         # Random-series utility module workspace
+    api_index.txt            # Core public API index
+  gfx/                       # Gfx module
+    AGENTS.md                # Gfx-module specific coding and layout guide
+    CMakeLists.txt           # Gfx-module build targets
+    include/                 # Gfx public headers
+      gfx/                   # Gfx public API groups
+    src/                     # Gfx implementations
+    tests/                   # Gfx tests
+    utils/                   # Gfx utility work areas and backend scaffolding
+    api_index.txt            # Gfx public API index
 CMakeLists.txt               # Top-level project configuration and module wiring
 ```
 

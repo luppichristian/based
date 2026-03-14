@@ -33,8 +33,14 @@ option(BASED_BUILD_TESTS         "Build tests"                  ON)
 option(BASED_ENABLE_FETCHCONTENT "Enable FetchContent for deps" ON)
 option(BASED_PROFILER_ENABLED    "Enable Tracy profiler"        ON)
 
+# Configuration options for modules
+option(BASED_ENABLE_MODULE_GRAPHICS "Enable graphics module"    ON)
+
 # =========================================================================
 # Modules
 # =========================================================================
 
-add_subdirectory(core)
+add_subdirectory(modules/core)
+if(BASED_ENABLE_MODULE_GRAPHICS)
+    add_subdirectory(modules/gfx)
+endif()
