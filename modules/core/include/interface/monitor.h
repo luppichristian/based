@@ -4,9 +4,9 @@
 #pragma once
 
 #include "../basic/primitive_types.h"
+#include "../basic/third_party.h"
 #include "../input/devices.h"
 #include "../strings/cstrings.h"
-#include "../basic/third_party.h"
 
 typedef void* monitor;
 

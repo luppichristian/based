@@ -16,11 +16,7 @@
 #    define TRACY_ENABLE    1
 #    define TRACY_CALLSTACK 32
 #  endif
-
-// Include Tracy profiler, macros expand to nothing if tracy is disabled.
 #  include <tracy/TracyC.h>
-
-// Helper functions for convenience
 #  define profile_func_begin TracyCZoneN(__tracy_zone_ctx, __func__, 1)
 #  define profile_func_end   TracyCZoneEnd(__tracy_zone_ctx)
 #else

@@ -5,9 +5,9 @@
 
 #include "../basic/codespace.h"
 #include "../basic/primitive_types.h"
-#include "../threads/mutex.h"
-#include "../memory/arena.h"
 #include "../basic/utility_defines.h"
+#include "../memory/arena.h"
+#include "../threads/mutex.h"
 
 // =========================================================================
 c_begin;

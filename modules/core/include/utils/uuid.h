@@ -4,8 +4,8 @@
 #pragma once
 
 #include "../basic/primitive_types.h"
-#include "../strings/strings.h"
 #include "../basic/third_party.h"
+#include "../strings/strings.h"
 #include "random_series.h"
 
 // =========================================================================

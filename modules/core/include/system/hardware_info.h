@@ -3,9 +3,9 @@
 
 #pragma once
 
+#include "../strings/cstrings.h"
 #include "cpu_info.h"
 #include "system_runtime.h"
-#include "../strings/cstrings.h"
 
 // =========================================================================
 c_begin;

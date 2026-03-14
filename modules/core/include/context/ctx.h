@@ -3,10 +3,10 @@
 
 #pragma once
 
-#include "../utils/log_state.h"
 #include "../memory/arena.h"
 #include "../memory/heap.h"
 #include "../threads/mutex.h"
+#include "../utils/log_state.h"
 
 // =========================================================================
 c_begin;

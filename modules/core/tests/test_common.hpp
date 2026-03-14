@@ -3,8 +3,9 @@
 
 #pragma once
 
-// Tracy cant work with GoogleTest
-#define BASED_PROFILER_ENABLED 0
+#if defined BASED_PROFILER_ENABLED
+#  error "test_common.hpp: BASED_PROFILER_ENABLED is not supported for unit tests"
+#endif
 
 #include <gtest/gtest.h>
 

@@ -33,7 +33,7 @@ func void sort_swap_bytes(void* lhs_ptr, void* rhs_ptr, sz elem_size) {
   u8* lhs_bytes = (u8*)lhs_ptr;
   u8* rhs_bytes = (u8*)rhs_ptr;
 
-  safe_for(sz byte_idx = 0; byte_idx < elem_size; ++byte_idx) {
+  safe_for (sz byte_idx = 0; byte_idx < elem_size; ++byte_idx) {
     u8 tmp_byte = lhs_bytes[byte_idx];
     lhs_bytes[byte_idx] = rhs_bytes[byte_idx];
     rhs_bytes[byte_idx] = tmp_byte;
@@ -80,7 +80,7 @@ func sz sort_partition(
       elem_size);
 
   sz stw_idx = beg_idx;
-  safe_for(sz cmp_idx = beg_idx; cmp_idx < lst_idx; ++cmp_idx) {
+  safe_for (sz cmp_idx = beg_idx; cmp_idx < lst_idx; ++cmp_idx) {
     void* cmp_ptr = sort_elem_ptr(base_ptr, cmp_idx, elem_size);
     void* piv_ptr = sort_elem_ptr(base_ptr, lst_idx, elem_size);
     if (compare(cmp_ptr, piv_ptr, user_data) < 0) {
@@ -290,7 +290,7 @@ func b32 sort_check(
   assert(compare != NULL);
 
   const u8* base_ptr = (const u8*)ptr;
-  safe_for(sz idx = 1; idx < elem_count; ++idx) {
+  safe_for (sz idx = 1; idx < elem_count; ++idx) {
     const void* lhs_ptr = sort_elem_ptr_const(base_ptr, idx - 1, elem_size);
     const void* rhs_ptr = sort_elem_ptr_const(base_ptr, idx, elem_size);
     if (compare(lhs_ptr, rhs_ptr, user_data) > 0) {
@@ -321,9 +321,9 @@ func sz sort_bubble(
   }
 
   u8* base_ptr = (u8*)ptr;
-  safe_for(sz out_idx = elem_count; out_idx > 1; --out_idx) {
+  safe_for (sz out_idx = elem_count; out_idx > 1; --out_idx) {
     b32 swapped = false;
-    safe_for(sz idx = 1; idx < out_idx; ++idx) {
+    safe_for (sz idx = 1; idx < out_idx; ++idx) {
       void* lhs_ptr = sort_elem_ptr(base_ptr, idx - 1, elem_size);
       void* rhs_ptr = sort_elem_ptr(base_ptr, idx, elem_size);
       if (compare(lhs_ptr, rhs_ptr, user_data) > 0) {
@@ -470,7 +470,7 @@ func sz sort_merge(
   }
 
   u8* base_ptr = (u8*)ptr;
-  safe_for(sz run_size = 1; run_size < elem_count;) {
+  safe_for (sz run_size = 1; run_size < elem_count;) {
     sz left_idx = 0;
     safe_while (left_idx < elem_count) {
       sz mid_idx = elem_count;
@@ -535,9 +535,9 @@ func sz sort_selection(
   }
 
   u8* base_ptr = (u8*)ptr;
-  safe_for(sz out_idx = 0; out_idx < elem_count; ++out_idx) {
+  safe_for (sz out_idx = 0; out_idx < elem_count; ++out_idx) {
     sz min_idx = out_idx;
-    safe_for(sz idx = out_idx + 1; idx < elem_count; ++idx) {
+    safe_for (sz idx = out_idx + 1; idx < elem_count; ++idx) {
       void* cur_ptr = sort_elem_ptr(base_ptr, idx, elem_size);
       void* min_ptr = sort_elem_ptr(base_ptr, min_idx, elem_size);
       if (compare(cur_ptr, min_ptr, user_data) < 0) {
@@ -575,7 +575,7 @@ func sz sort_insertion(
   }
 
   u8* base_ptr = (u8*)ptr;
-  safe_for(sz out_idx = 1; out_idx < elem_count; ++out_idx) {
+  safe_for (sz out_idx = 1; out_idx < elem_count; ++out_idx) {
     sz cur_idx = out_idx;
     safe_while (cur_idx > 0) {
       void* lhs_ptr = sort_elem_ptr(base_ptr, cur_idx - 1, elem_size);

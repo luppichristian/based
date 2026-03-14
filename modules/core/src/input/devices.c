@@ -16,7 +16,7 @@ typedef struct device_handle_entry {
 } device_handle_entry;
 
 static const u64 DEVICES_AUDIO_RECORDING_BIT = 1ULL << 63;
-static const sz DEVICES_HANDLE_CAP = 1024;
+#define DEVICES_HANDLE_CAP ((sz)1024)
 
 global_var device_handle_entry device_handles[DEVICES_HANDLE_CAP] = {0};
 

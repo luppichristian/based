@@ -14,7 +14,7 @@ typedef struct camera_state_entry {
   b32 is_started;
 } camera_state_entry;
 
-static const sz CAMERA_STATE_CAP = 64;
+#define CAMERA_STATE_CAP ((sz)64)
 global_var camera_state_entry camera_states[CAMERA_STATE_CAP] = {0};
 
 func camera_state_entry* camera_find_state(SDL_CameraID camera_id, b32 create_if_missing) {

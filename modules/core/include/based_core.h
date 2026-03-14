@@ -68,8 +68,8 @@
 
 // Include interface modules.
 #include "interface/cursor.h"
-#include "interface/dpi.h"
 #include "interface/dialog.h"
+#include "interface/dpi.h"
 #include "interface/icon.h"
 #include "interface/monitor.h"
 #include "interface/text_input.h"
@@ -77,9 +77,9 @@
 
 // Include process modules.
 #include "processes/common_processes.h"
-#include "processes/process_pipe.h"
 #include "processes/process.h"
 #include "processes/process_current.h"
+#include "processes/process_pipe.h"
 
 // Include system modules.
 #include "system/cpu_info.h"

@@ -9,7 +9,7 @@
   func sz NAME(TYPE value) {               \
     profile_func_begin;                    \
     sz digits = 1;                         \
-    safe_while (value >= (TYPE)10) {            \
+    safe_while (value >= (TYPE)10) {       \
       value /= (TYPE)10;                   \
       digits++;                            \
     }                                      \
@@ -17,21 +17,21 @@
     return digits;                         \
   }
 
-#define DIGITS_DEFINE_SIGNED(NAME, TYPE) \
-  func sz NAME(TYPE value) {             \
-    profile_func_begin;                  \
-    TYPE current = value;                \
-    sz digits = 1;                       \
-    safe_while (current <= (TYPE) - 10 ||     \
-           current >= (TYPE)10) {        \
-      current /= (TYPE)10;               \
-      digits++;                          \
-    }                                    \
-    if (value < (TYPE)0) {               \
-      digits++;                          \
-    }                                    \
-    profile_func_end;                    \
-    return digits;                       \
+#define DIGITS_DEFINE_SIGNED(NAME, TYPE)  \
+  func sz NAME(TYPE value) {              \
+    profile_func_begin;                   \
+    TYPE current = value;                 \
+    sz digits = 1;                        \
+    safe_while (current <= (TYPE) - 10 || \
+                current >= (TYPE)10) {    \
+      current /= (TYPE)10;                \
+      digits++;                           \
+    }                                     \
+    if (value < (TYPE)0) {                \
+      digits++;                           \
+    }                                     \
+    profile_func_end;                     \
+    return digits;                        \
   }
 
 DIGITS_DEFINE_UNSIGNED(u8_digits, u8)
